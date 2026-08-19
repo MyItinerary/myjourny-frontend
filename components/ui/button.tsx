@@ -25,6 +25,8 @@ const buttonVariants = cva(
         xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        // Figma "Large Buttons": 48px pill CTA used across onboarding.
+        cta: "h-12 gap-2 rounded-full px-4 py-3 text-base has-[>svg]:px-4 disabled:bg-[#e0e0e0] disabled:text-[#bdbdbd]",
         icon: "size-8",
         "icon-xs":
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
@@ -44,11 +46,18 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  nativeButton,
+  render,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
+      render={render}
+      // `render` almost always swaps in a non-<button> element (e.g. next/link);
+      // default nativeButton off in that case so Base UI doesn't warn, while
+      // still letting a caller override explicitly if their `render` is a <button>.
+      nativeButton={nativeButton ?? !render}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
