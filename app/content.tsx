@@ -41,19 +41,13 @@ export function HomeContent() {
     <div className="flex flex-1 flex-col">
       <HeroSection />
 
-      {/* Onboarded accounts see their personalized rail before the generic
-          marketing pitch; guests see the pitch first. */}
-      {isAccount ? (
-        <>
-          {popularExperiencesSection}
-          {whyBookWithUsSection}
-        </>
-      ) : (
-        <>
-          {whyBookWithUsSection}
-          {popularExperiencesSection}
-        </>
-      )}
+      <ExperienceRailSection
+        key="popular-experiences"
+        heading="Popular experiences near you"
+        subheading="Hand-picked spots people are loving right now."
+        items={popularExperiences}
+      />
+      <WhyBookWithUsSection key="why-book-with-us" />
 
       <CategoriesSection categories={isAccount ? accountCategories : guestCategories} />
 

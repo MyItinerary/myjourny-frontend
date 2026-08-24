@@ -48,12 +48,12 @@ export function Footer() {
           onValueChange={(value) => setActiveCategory(value as string)}
           className="mt-6"
         >
-          <TabsList variant="line" className="w-full justify-start gap-3 overflow-x-auto border-b border-[#f5f5f5] p-0">
+          <TabsList variant="line" className="h-auto w-full justify-start gap-2 overflow-x-auto border-0 bg-transparent p-0">
             {inspirationCategories.map((category) => (
               <TabsTrigger
                 key={category.id}
                 value={category.id}
-                className="rounded-none pb-2 text-sm font-medium text-[#bdbdbd] data-active:text-[#212121] data-active:after:bg-brand"
+                className="flex items-start justify-center gap-2 rounded-none px-4 pt-0 pb-2 text-sm font-medium text-[#757575] border-t-0 border-x-0 border-b-2 border-transparent transition-all after:hidden hover:text-foreground data-active:border-t-0 data-active:border-x-0 data-active:border-b-[#F5032D] data-active:text-[#0d0d0d] data-active:shadow-none"
               >
                 {category.label}
               </TabsTrigger>

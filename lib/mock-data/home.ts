@@ -127,3 +127,38 @@ export const cities: City[] = [
   { id: "kano", name: "Kano", imageSrc: "/images/home/cities/abuja.jpg" },
   { id: "owerri", name: "Owerri", imageSrc: "/images/home/cities/calabar.jpg" },
 ];
+
+export type Destination = {
+  id: string;
+  city: string;
+  description: string;
+};
+
+export const suggestedDestinations: Destination[] = [
+  {
+    id: "lagos",
+    city: "Lagos, Nigeria",
+    description: "For it’s relentless energy",
+  },
+  {
+    id: "abuja",
+    city: "Abuja, Nigeria",
+    description: "For it’s elegance, green, calm.",
+  },
+  {
+    id: "port-harcourt",
+    city: "Port Harcourt, Nigeria",
+    description: "For it’s rich culture, endless flavor",
+  },
+  {
+    id: "ibadan",
+    city: "Ibadan, Nigeria",
+    description: "For it’s rich Nigerian history",
+  },
+  {
+    id: "calabar",
+    city: "Calabar, Nigeria",
+    description: "For it’s tourism",
+  },
+];
+

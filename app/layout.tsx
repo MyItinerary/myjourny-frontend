@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { TikTok_Sans, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import "@fontsource/tiktok-sans/400.css";
+import "@fontsource/tiktok-sans/500.css";
+import "@fontsource/tiktok-sans/600.css";
+import "@fontsource/tiktok-sans/700.css";
+import "@fontsource/tiktok-sans/800.css";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-
-// Figma's brand font. Loaded variable so every weight is available via font-*.
-const tiktokSans = TikTok_Sans({
-  variable: "--font-tiktok-sans",
-  subsets: ["latin"],
-  weight: "variable",
-  axes: ["opsz", "wdth"],
-});
 
 // Placeholder — no monospace usage confirmed in the designs yet.
 const geistMono = Geist_Mono({
@@ -26,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${tiktokSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Providers>{children}</Providers>
