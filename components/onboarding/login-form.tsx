@@ -1,34 +1,61 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
 import { PasswordInput } from "@/components/onboarding/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useGoogleAuth, useLogin } from "@/lib/queries/auth";
 
 // Figma "Welcome back!" login shell (2068:24743 / 2068:25586).
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Not the same as login.isPending/googleAuth.isPending — those flip once
+  // the initial request settles, but completeAuth() chains a /auth/me
+  // fetch inside its own onSuccess. These stay true until navigation
+  // actually happens (or the attempt fails), covering the whole gap.
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isGoogleAuthenticating, setIsGoogleAuthenticating] = useState(false);
   const router = useRouter();
+  const login = useLogin();
+  const googleAuth = useGoogleAuth();
 
   const canContinue = email.length > 0 && password.length > 0;
+  const isBusy = isLoggingIn || isGoogleAuthenticating;
 
   return (
     <form
       className="flex w-full max-w-[345px] flex-col items-center gap-6 lg:max-w-[402px]"
       onSubmit={(e) => {
         e.preventDefault();
-        if (canContinue) router.push("/onboarding/get-to-know-you");
+        if (!canContinue || isBusy) return;
+        setIsLoggingIn(true);
+        login.mutate(
+          { email, password },
+          {
+            onSuccess: () => router.push("/"),
+            onError: () => setIsLoggingIn(false),
+          }
+        );
       }}
     >
-      <Button type="button" variant="outline" size="cta" className="w-full">
-        <Image src="/icons/google.svg" alt="" width={24} height={24} />
-        Continue with Google
-      </Button>
+      <GoogleAuthButton
+        loading={isGoogleAuthenticating}
+        onCredential={(credential) => {
+          setIsGoogleAuthenticating(true);
+          googleAuth.mutate(
+            { token: credential },
+            {
+              onSuccess: () => router.push("/"),
+              onError: () => setIsGoogleAuthenticating(false),
+            }
+          );
+        }}
+      />
 
       <div className="flex w-full items-center gap-3">
         <span aria-hidden className="h-px flex-1 bg-border" />
@@ -59,8 +86,13 @@ export function LoginForm() {
         </Link>
       </div>
 
-      <Button type="submit" size="cta" disabled={!canContinue} className="w-full">
-        Continue
+      <Button
+        type="submit"
+        size="cta"
+        disabled={!canContinue || isBusy}
+        className="w-full"
+      >
+        {isLoggingIn ? "Signing in…" : "Continue"}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">

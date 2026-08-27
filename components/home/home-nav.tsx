@@ -1,15 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { HeartIcon, HomeSmileIcon, ImageIcon, MenuIcon } from "@/components/icons/nav-icons";
+import { HeartIcon, HomeSmileIcon, ImageIcon, MenuIcon, UserIcon } from "@/components/icons/nav-icons";
+import { useSession } from "@/lib/auth/session-store";
 
 // Figma: "Desktop nav" (2001:7998) / "Mobile nav" (2001:7972 — logo +
-// hamburger button), part of the Hero section. Identical between guest and
-// account in the current file (no signed-in nav variant yet — no avatar),
-// so it ships as one shared component either way.
+// hamburger button), part of the Hero section. "Get started" swaps for the
+// account icon once signed in; everything else stays the same either way.
 export function HomeNav({ className }: { className?: string }) {
+  const { user } = useSession();
+
   return (
     <header className={cn("relative z-10 flex items-center justify-between px-6 py-4 lg:px-20 lg:py-6", className)}>
       <Link href="/" aria-label="MyJourny home" className="shrink-0">
@@ -58,9 +62,20 @@ export function HomeNav({ className }: { className?: string }) {
         <Link href="#" className="text-base font-medium text-foreground">
           Become a guide
         </Link>
-        <Button size="cta" render={<Link href="/onboarding" />}>
-          Get started
-        </Button>
+        {user ? (
+          // TODO: no account/profile page built yet to link this to.
+          <Link
+            href="#"
+            aria-label="Account"
+            className="flex size-12 items-center justify-center rounded-[12px] bg-[#F4F2EE] text-foreground"
+          >
+            <UserIcon className="size-12" />
+          </Link>
+        ) : (
+          <Button size="cta" render={<Link href="/onboarding" />}>
+            Get started
+          </Button>
+        )}
       </div>
     </header>
   );

@@ -47,6 +47,20 @@ export function ImageIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function UserIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path
+        d="M16.5 30.6667C18.4465 28.6021 21.0892 27.3333 24 27.3333C26.9108 27.3333 29.5535 28.6021 31.5 30.6667M27.75 20.25C27.75 22.3211 26.0711 24 24 24C21.9289 24 20.25 22.3211 20.25 20.25C20.25 18.1789 21.9289 16.5 24 16.5C26.0711 16.5 27.75 18.1789 27.75 20.25Z"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function MenuIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
