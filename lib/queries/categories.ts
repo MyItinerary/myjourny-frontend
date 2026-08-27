@@ -18,6 +18,12 @@ export type Category = {
 // seeds), while the live GET /categories reconciles in the background —
 // no loading state, no network wait, but still using the real fetch as
 // source of truth per mobile-app's proven pattern.
+//
+// initialDataUpdatedAt: 0 is load-bearing, not decorative — without it,
+// React Query treats `initialData` as freshly-fetched for the whole
+// staleTime window and never actually calls the backend on mount. Caught
+// this the hard way: no /categories request was showing up in the network
+// tab at all.
 export function useCategories(categoryType: string, fallback: Category[]) {
   return useQuery({
     queryKey: ["categories", categoryType],
@@ -28,6 +34,7 @@ export function useCategories(categoryType: string, fallback: Category[]) {
       return data;
     },
     initialData: fallback,
+    initialDataUpdatedAt: 0,
     staleTime: 5 * 60_000,
   });
 }
