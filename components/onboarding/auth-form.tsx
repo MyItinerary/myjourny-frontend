@@ -58,6 +58,12 @@ export function AuthForm({
 }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Not the same as googleAuth.isPending — that flips once the /auth/google
+  // request settles, but completeAuth() chains a /auth/me fetch inside its
+  // own onSuccess. This stays true until navigation actually happens (or
+  // the attempt fails), covering the whole gap so the button doesn't look
+  // idle while work is still happening.
+  const [isGoogleAuthenticating, setIsGoogleAuthenticating] = useState(false);
   const router = useRouter();
   const googleAuth = useGoogleAuth();
 
@@ -76,12 +82,17 @@ export function AuthForm({
       {showGoogle && (
         <>
           <GoogleAuthButton
-            onCredential={(credential) =>
+            loading={isGoogleAuthenticating}
+            onCredential={(credential) => {
+              setIsGoogleAuthenticating(true);
               googleAuth.mutate(
                 { token: credential },
-                { onSuccess: () => router.push(googleSuccessHref) }
-              )
-            }
+                {
+                  onSuccess: () => router.push(googleSuccessHref),
+                  onError: () => setIsGoogleAuthenticating(false),
+                }
+              );
+            }}
           />
 
           <div className="flex w-full items-center gap-3">
@@ -102,7 +113,12 @@ export function AuthForm({
         className="w-full"
       />
 
-      <Button type="submit" size="cta" disabled={!email || isSubmitting} className="w-full">
+      <Button
+        type="submit"
+        size="cta"
+        disabled={!email || isSubmitting || isGoogleAuthenticating}
+        className="w-full"
+      >
         {submitLabel}
       </Button>
 

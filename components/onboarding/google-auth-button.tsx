@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Loader2Icon } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ interface GoogleAuthButtonProps {
   onCredential: (credential: string) => void;
   onError?: () => void;
   className?: string;
+  /** True while a credential is being exchanged/signed in — shows a spinner and blocks another attempt. */
+  loading?: boolean;
 }
 
 // @react-oauth/google's <GoogleLogin> only renders Google's own stock
@@ -30,6 +33,7 @@ export function GoogleAuthButton({
   onCredential,
   onError,
   className,
+  loading = false,
 }: GoogleAuthButtonProps) {
   return (
     <div className={cn("relative h-12 w-full", className)}>
@@ -39,27 +43,35 @@ export function GoogleAuthButton({
         size="cta"
         tabIndex={-1}
         aria-hidden
+        disabled={loading}
         className="pointer-events-none w-full"
       >
-        <Image src="/icons/google.svg" alt="" width={24} height={24} />
-        {label}
+        {loading ? (
+          <Loader2Icon className="size-5 animate-spin" />
+        ) : (
+          <Image src="/icons/google.svg" alt="" width={24} height={24} />
+        )}
+        {loading ? "Signing in…" : label}
       </Button>
 
-      <div
-        className={cn(
-          "absolute inset-0 overflow-hidden rounded-full opacity-0",
-          "[&_>div]:!h-full [&_>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full"
-        )}
-      >
-        <GoogleLogin
-          onSuccess={(response) => {
-            if (response.credential) onCredential(response.credential);
-          }}
-          onError={onError}
-          text="continue_with"
-          width="360"
-        />
-      </div>
+      {/* Hidden while loading so a second click/credential can't fire mid-request. */}
+      {!loading && (
+        <div
+          className={cn(
+            "absolute inset-0 overflow-hidden rounded-full opacity-0",
+            "[&_>div]:!h-full [&_>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full"
+          )}
+        >
+          <GoogleLogin
+            onSuccess={(response) => {
+              if (response.credential) onCredential(response.credential);
+            }}
+            onError={onError}
+            text="continue_with"
+            width="360"
+          />
+        </div>
+      )}
     </div>
   );
 }

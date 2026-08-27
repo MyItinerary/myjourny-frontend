@@ -14,25 +14,47 @@ import { useGoogleAuth, useLogin } from "@/lib/queries/auth";
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Not the same as login.isPending/googleAuth.isPending — those flip once
+  // the initial request settles, but completeAuth() chains a /auth/me
+  // fetch inside its own onSuccess. These stay true until navigation
+  // actually happens (or the attempt fails), covering the whole gap.
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isGoogleAuthenticating, setIsGoogleAuthenticating] = useState(false);
   const router = useRouter();
   const login = useLogin();
   const googleAuth = useGoogleAuth();
 
   const canContinue = email.length > 0 && password.length > 0;
+  const isBusy = isLoggingIn || isGoogleAuthenticating;
 
   return (
     <form
       className="flex w-full max-w-[345px] flex-col items-center gap-6 lg:max-w-[402px]"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!canContinue) return;
-        login.mutate({ email, password }, { onSuccess: () => router.push("/") });
+        if (!canContinue || isBusy) return;
+        setIsLoggingIn(true);
+        login.mutate(
+          { email, password },
+          {
+            onSuccess: () => router.push("/"),
+            onError: () => setIsLoggingIn(false),
+          }
+        );
       }}
     >
       <GoogleAuthButton
-        onCredential={(credential) =>
-          googleAuth.mutate({ token: credential }, { onSuccess: () => router.push("/") })
-        }
+        loading={isGoogleAuthenticating}
+        onCredential={(credential) => {
+          setIsGoogleAuthenticating(true);
+          googleAuth.mutate(
+            { token: credential },
+            {
+              onSuccess: () => router.push("/"),
+              onError: () => setIsGoogleAuthenticating(false),
+            }
+          );
+        }}
       />
 
       <div className="flex w-full items-center gap-3">
@@ -67,10 +89,10 @@ export function LoginForm() {
       <Button
         type="submit"
         size="cta"
-        disabled={!canContinue || login.isPending}
+        disabled={!canContinue || isBusy}
         className="w-full"
       >
-        Continue
+        {isLoggingIn ? "Signing in…" : "Continue"}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
