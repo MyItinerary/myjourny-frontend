@@ -67,7 +67,7 @@ export function HomeNav({ className }: { className?: string }) {
           <Link
             href="#"
             aria-label="Account"
-            className="flex size-12 items-center justify-center rounded-[12px] bg-muted text-foreground"
+            className="flex size-12 items-center justify-center rounded-[12px] bg-[#F4F2EE] text-foreground"
           >
             <UserIcon className="size-12" />
           </Link>
