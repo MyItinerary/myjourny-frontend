@@ -17,14 +17,17 @@ interface BottomLink {
 interface PasswordFormProps {
   continueHref: string;
   bottomLink: BottomLink;
+  /** Called on submit; navigates to `continueHref` only if this resolves truthy. */
+  onSubmit?: (values: { password: string }) => Promise<boolean> | boolean;
 }
 
 // Figma "Create a secure Password" shell — two PasswordInputs, an info row,
 // Continue, terms, bottom link. Shared by the sign-up Password step
 // (2068:24915) and the Forgot-password Reset-password screen (2068:24939).
-export function PasswordForm({ continueHref, bottomLink }: PasswordFormProps) {
+export function PasswordForm({ continueHref, bottomLink, onSubmit }: PasswordFormProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const canContinue = password.length > 0 && password === confirmPassword;
@@ -32,9 +35,13 @@ export function PasswordForm({ continueHref, bottomLink }: PasswordFormProps) {
   return (
     <form
       className="flex w-full max-w-[345px] flex-col items-center gap-4 lg:max-w-[402px]"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        if (canContinue) router.push(continueHref);
+        if (!canContinue || isSubmitting) return;
+        setIsSubmitting(true);
+        const shouldContinue = onSubmit ? await onSubmit({ password }) : true;
+        setIsSubmitting(false);
+        if (shouldContinue) router.push(continueHref);
       }}
     >
       <div className="flex w-full flex-col gap-4">
@@ -57,7 +64,7 @@ export function PasswordForm({ continueHref, bottomLink }: PasswordFormProps) {
         </p>
       </div>
 
-      <Button type="submit" size="cta" disabled={!canContinue} className="w-full">
+      <Button type="submit" size="cta" disabled={!canContinue || isSubmitting} className="w-full">
         Continue
       </Button>
 

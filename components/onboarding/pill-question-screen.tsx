@@ -28,6 +28,8 @@ interface PillQuestionScreenProps {
   backHref: string;
   /** Desktop pill layout — most screens are a 2-col grid, a couple are a single column. */
   gridClassName?: string;
+  /** Called with the final selection right before navigating to continueHref. */
+  onContinue?: (selected: string[]) => void;
 }
 
 // Shared shell for every "Check box pills" question screen (pace, interests,
@@ -41,9 +43,15 @@ export function PillQuestionScreen({
   continueHref,
   backHref,
   gridClassName,
+  onContinue,
 }: PillQuestionScreenProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const router = useRouter();
+
+  function handleContinue() {
+    onContinue?.(selected);
+    router.push(continueHref);
+  }
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -96,7 +104,7 @@ export function PillQuestionScreen({
         <Button
           size="cta"
           disabled={!canContinue}
-          onClick={() => router.push(continueHref)}
+          onClick={handleContinue}
           className="hidden w-[238px] self-center lg:flex"
         >
           Continue
@@ -105,7 +113,7 @@ export function PillQuestionScreen({
 
       <OnboardingBottomBar
         disabled={!canContinue}
-        onContinue={() => router.push(continueHref)}
+        onContinue={handleContinue}
         className="lg:hidden"
       />
     </div>

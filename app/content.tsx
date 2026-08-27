@@ -1,7 +1,6 @@
 "use client";
 
-import { useSession } from "@/lib/mock-session";
-import { MockSessionToggle } from "@/components/home/mock-session-toggle";
+import { useSession } from "@/lib/auth/session-store";
 import { HeroSection } from "@/components/home/hero-section";
 import { WhyBookWithUsSection } from "@/components/home/why-book-with-us-section";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
@@ -69,8 +68,6 @@ export function HomeContent() {
 
       <CtaSection />
       <Footer />
-
-      <MockSessionToggle />
     </div>
   );
 }

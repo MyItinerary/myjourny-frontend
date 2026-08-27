@@ -1,12 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useGoogleAuth } from "@/lib/queries/auth";
 
 interface BottomLink {
   prompt: string;
@@ -21,6 +22,18 @@ interface AuthFormProps {
   showGoogle?: boolean;
   showTerms?: boolean;
   bottomLink?: BottomLink;
+  /** Where a successful Google sign-in lands — always skips the password step. */
+  googleSuccessHref?: string;
+  /**
+   * Called on submit before navigating. Return `true` to navigate to
+   * `continueHref`, a string to navigate there instead (e.g. with a query
+   * string built from the entered email), or `false` to stay put. Defaults
+   * to always continuing — the plain email-collection steps don't call the
+   * backend themselves.
+   */
+  onEmailSubmit?: (email: string) => Promise<boolean | string> | boolean | string;
+  /** Fired the first time the email input is focused. */
+  onEmailFocus?: () => void;
 }
 
 const defaultBottomLink: BottomLink = {
@@ -39,24 +52,37 @@ export function AuthForm({
   showGoogle = true,
   showTerms = true,
   bottomLink = defaultBottomLink,
+  googleSuccessHref = "/onboarding/get-to-know-you",
+  onEmailSubmit,
+  onEmailFocus,
 }: AuthFormProps) {
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const googleAuth = useGoogleAuth();
 
   return (
     <form
       className="flex w-full max-w-[345px] flex-col items-center gap-6 lg:max-w-[402px]"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        if (email) router.push(continueHref);
+        if (!email || isSubmitting) return;
+        setIsSubmitting(true);
+        const result = onEmailSubmit ? await onEmailSubmit(email) : true;
+        setIsSubmitting(false);
+        if (result) router.push(typeof result === "string" ? result : continueHref);
       }}
     >
       {showGoogle && (
         <>
-          <Button type="button" variant="outline" size="cta" className="w-full">
-            <Image src="/icons/google.svg" alt="" width={24} height={24} />
-            Continue with Google
-          </Button>
+          <GoogleAuthButton
+            onCredential={(credential) =>
+              googleAuth.mutate(
+                { token: credential },
+                { onSuccess: () => router.push(googleSuccessHref) }
+              )
+            }
+          />
 
           <div className="flex w-full items-center gap-3">
             <span aria-hidden className="h-px flex-1 bg-border" />
@@ -72,10 +98,11 @@ export function AuthForm({
         placeholder={emailPlaceholder}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        onFocus={onEmailFocus}
         className="w-full"
       />
 
-      <Button type="submit" size="cta" disabled={!email} className="w-full">
+      <Button type="submit" size="cta" disabled={!email || isSubmitting} className="w-full">
         {submitLabel}
       </Button>
 

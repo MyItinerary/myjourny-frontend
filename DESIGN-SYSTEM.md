@@ -32,29 +32,32 @@ All routes built, typechecked, built, and screenshot-verified against
 Figma at both breakpoints (desktop 1440px / mobile 393px). Flow order:
 
 **Auth** (`app/onboarding/`, `app/login/`):
-1. **Sign up** (`/onboarding`) — `2068:24661`/`2068:25512`. Split
-   layout: [components/onboarding/auth-form.tsx](components/onboarding/auth-form.tsx)
+1. **Sign up** (`/onboarding`) — `2068:24661`/`2068:25512` (initial) and
+   `2068:24874`/`2068:25697` (email-focused state). Split layout:
+   [components/onboarding/auth-form.tsx](components/onboarding/auth-form.tsx)
    left, [onboarding-slide.tsx](components/onboarding/onboarding-slide.tsx)
-   hero photo right.
-2. **Email step** (`/onboarding/email`) — `2068:24874`/`2068:25697`.
-   Reuses `AuthForm`.
-3. **Password step** (`/onboarding/password`) — `2068:24915`+dup
+   hero photo right. One route, not two — the heading/subtitle swap to the
+   "What's your Email Address?" copy the moment the email field is
+   focused ([content.tsx](app/onboarding/content.tsx)), instead of a
+   second full-page navigation for the same field (a former
+   `/onboarding/email` route asked for the same email twice in a row).
+2. **Password step** (`/onboarding/password`) — `2068:24915`+dup
    `2068:24962` / `2068:25734`+dup `2068:25773`. New
    [password-form.tsx](components/onboarding/password-form.tsx) (two
    [password-input.tsx](components/onboarding/password-input.tsx)
    fields + info row).
-4. **Login** (`/login`) — `2068:24743`+dup `2068:24830` /
+3. **Login** (`/login`) — `2068:24743`+dup `2068:24830` /
    `2068:25586`+dup `2068:25657`. New
    [login-form.tsx](components/onboarding/login-form.tsx) (email +
    password + "Forgot password?").
-5. **Forgot password** (`/login/forgot-password`,
+4. **Forgot password** (`/login/forgot-password`,
    `.../check-email`, `.../reset`, `.../success`) — `2068:24787`+dup
    `2068:24802`, `2068:24817`, `2068:24939`+dup `2068:24986`,
    `2068:25009`. Reuses `AuthForm` (Google/terms hidden),
    `PasswordForm`, and the plain split shell for the no-form Success
    screen.
 
-Screens 1–5 all share
+Screens 1–4 all share
 [auth-screen-layout.tsx](components/onboarding/auth-screen-layout.tsx)
 (logo, heading/subtitle at Display/7 32px desktop · Display/8 24px
 mobile, hero photo panel). Known simplification: per-screen heading
@@ -62,19 +65,28 @@ wrap-width/line-break points aren't pixel-tuned per screen (generic
 container width instead) — a deliberate small tradeoff for reuse
 across 6+ screens, not an oversight.
 
-**Preference questions** (`app/onboarding/`):
-6. **Intro** (`/onboarding/get-to-know-you`) — `2068:25022`/`2068:25821`.
-7. **Pace** (`/onboarding/pace`) — `2068:25046`+`2068:25080` /
+**Preference questions** (`app/onboarding/`): Pace/Who-with/Budget now fetch
+their live options from itin (`GET /categories?category_type=...`, see
+[lib/queries/categories.ts](lib/queries/categories.ts)) instead of hardcoded
+option arrays — same icons/copy/option counts as before, just validated
+against real backend slugs (`itin#41` added the 3 that were missing:
+`exploratory`, `low_interaction`, `flexible`). All 5 screens now report
+their selection to
+[lib/onboarding/preferences-store.ts](lib/onboarding/preferences-store.ts),
+flushed as one `PUT /profile/me` (+ `completed: true`) on `curating`'s
+mount ([content.tsx](app/onboarding/curating/content.tsx)).
+5. **Intro** (`/onboarding/get-to-know-you`) — `2068:25022`/`2068:25821`.
+6. **Pace** (`/onboarding/pace`) — `2068:25046`+`2068:25080` /
    `2068:25851`+`2068:25879`.
-8. **Interests** (`/onboarding/interests`) — `2068:25114`+`2068:25178`
+7. **Interests** (`/onboarding/interests`) — `2068:25114`+`2068:25178`
    / `2068:26001`+`2068:26053`.
-9. **Who you go with** (`/onboarding/who-with`) — `2068:25242`+`2068:25286`
+8. **Who you go with** (`/onboarding/who-with`) — `2068:25242`+`2068:25286`
    / `2068:26233`+`2068:26263`.
-10. **Budget** (`/onboarding/budget`) — `2068:25330`+`2068:25370` /
-    `2068:26105`+`2068:26135`.
-11. **What lights you up** (`/onboarding/vibe`) — `2068:25410`+`2068:25450`
+9. **Budget** (`/onboarding/budget`) — `2068:25330`+`2068:25370` /
+   `2068:26105`+`2068:26135`.
+10. **What lights you up** (`/onboarding/vibe`) — `2068:25410`+`2068:25450`
     / `2068:26165`+`2068:26199`.
-12. **Curating** (`/onboarding/curating`, final loading) —
+11. **Curating** (`/onboarding/curating`, final loading) —
     `2068:25490`/`2068:25907`.
 
 Shared Figma components across these: `Myjourny logo update`,
@@ -88,9 +100,15 @@ default placeholder box entirely.
 **Not built / known gaps:** Curating's mobile decorative
 floating-chip background (cosmetic only, disclosed in
 [app/onboarding/curating/page.tsx](app/onboarding/curating/page.tsx));
-`/legal/terms`, `/legal/privacy`, `/login/forgot-password` target
-pages exist only as links, not built pages; no real backend — every
-"Continue" just navigates client-side.
+`/legal/terms`, `/legal/privacy` target pages exist only as links, not
+built pages. Signup/login/Google sign-in/forgot-password (magic link) are
+now wired to the itin backend — see
+[lib/queries/auth.ts](lib/queries/auth.ts) and
+[lib/auth/session-store.ts](lib/auth/session-store.ts); logout has a ready
+`useLogout()` hook but isn't reachable from any nav yet (no signed-in nav
+variant — see the TODO in
+[components/home/home-nav.tsx](components/home/home-nav.tsx)), and email
+verification is deferred (itin has no verification-send endpoint yet).
 
 ## Homepage ✅ (guest + onboarded account)
 
