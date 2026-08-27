@@ -69,7 +69,7 @@ export function HomeNav({ className }: { className?: string }) {
             aria-label="Account"
             className="flex size-12 items-center justify-center rounded-xl bg-muted text-foreground"
           >
-            <UserIcon className="size-6" />
+            <UserIcon className="size-12" />
           </Link>
         ) : (
           <Button size="cta" render={<Link href="/onboarding" />}>
