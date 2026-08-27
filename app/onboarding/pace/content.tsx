@@ -8,7 +8,7 @@ import {
 } from "@/components/icons/onboarding-icons";
 import { PillQuestionScreen, type PillOption } from "@/components/onboarding/pill-question-screen";
 import { useCategories, type Category } from "@/lib/queries/categories";
-import { setPreference } from "@/lib/onboarding/preferences-store";
+import { getPreferences, setPreference } from "@/lib/onboarding/preferences-store";
 
 // Keyed by itin's energy_level category slugs — icon/label/description stay
 // exactly as pixel-verified; only the id (now a real backend slug, not an
@@ -50,6 +50,10 @@ export function PaceContent() {
       continueHref="/onboarding/interests"
       backHref="/onboarding/get-to-know-you"
       onContinue={(selected) => setPreference("energyLevel", selected[0])}
+      getInitialSelected={() => {
+        const value = getPreferences().energyLevel;
+        return value ? [value] : undefined;
+      }}
     />
   );
 }

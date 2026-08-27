@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ComponentType, SVGProps } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,14 @@ interface PillQuestionScreenProps {
   gridClassName?: string;
   /** Called with the final selection right before navigating to continueHref. */
   onContinue?: (selected: string[]) => void;
+  /**
+   * Lazily reads a previously-persisted selection for this screen (e.g.
+   * from preferences-store, if you came back or refreshed mid-quiz).
+   * Read in an effect after mount, not during render — the server (and
+   * the first client render, to match it) always renders no selection,
+   * so this can't cause a hydration mismatch.
+   */
+  getInitialSelected?: () => string[] | undefined;
 }
 
 // Shared shell for every "Check box pills" question screen (pace, interests,
@@ -44,9 +52,17 @@ export function PillQuestionScreen({
   backHref,
   gridClassName,
   onContinue,
+  getInitialSelected,
 }: PillQuestionScreenProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    const initial = getInitialSelected?.();
+    if (initial && initial.length > 0) setSelected(initial);
+    // Only ever meant to run once, right after mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleContinue() {
     onContinue?.(selected);

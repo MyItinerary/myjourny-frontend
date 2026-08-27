@@ -10,7 +10,7 @@ import {
   UtensilsCrossedIcon,
 } from "@/components/icons/interests-icons";
 import { PillQuestionScreen } from "@/components/onboarding/pill-question-screen";
-import { setPreference } from "@/lib/onboarding/preferences-store";
+import { getPreferences, setPreference } from "@/lib/onboarding/preferences-store";
 
 const options = [
   {
@@ -68,6 +68,7 @@ export function InterestsContent() {
       continueHref="/onboarding/who-with"
       backHref="/onboarding/pace"
       onContinue={(selected) => setPreference("interests", selected)}
+      getInitialSelected={() => getPreferences().interests}
     />
   );
 }

@@ -8,7 +8,7 @@ import {
 } from "@/components/icons/who-with-icons";
 import { PillQuestionScreen, type PillOption } from "@/components/onboarding/pill-question-screen";
 import { useCategories, type Category } from "@/lib/queries/categories";
-import { setPreference } from "@/lib/onboarding/preferences-store";
+import { getPreferences, setPreference } from "@/lib/onboarding/preferences-store";
 
 // Keyed by itin's social_style category slugs. Important: `open` already
 // means "Big group energy" in production (mobile-app + helm both use it
@@ -57,6 +57,10 @@ export function WhoWithContent() {
       continueHref="/onboarding/budget"
       backHref="/onboarding/interests"
       onContinue={(selected) => setPreference("socialStyle", selected[0])}
+      getInitialSelected={() => {
+        const value = getPreferences().socialStyle;
+        return value ? [value] : undefined;
+      }}
     />
   );
 }

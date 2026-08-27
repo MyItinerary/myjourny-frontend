@@ -3,7 +3,7 @@
 import { CoinsStackedIcon } from "@/components/icons/budget-icons";
 import { PillQuestionScreen, type PillOption } from "@/components/onboarding/pill-question-screen";
 import { useCategories, type Category } from "@/lib/queries/categories";
-import { setPreference } from "@/lib/onboarding/preferences-store";
+import { getPreferences, setPreference } from "@/lib/onboarding/preferences-store";
 
 // Keyed by itin's budget_level category slugs. "Flexible" is a newer
 // category (itin#41) — it's now a real saved value, not the omit-the-field
@@ -49,6 +49,10 @@ export function BudgetContent() {
       continueHref="/onboarding/vibe"
       backHref="/onboarding/who-with"
       onContinue={(selected) => setPreference("budgetRange", selected[0])}
+      getInitialSelected={() => {
+        const value = getPreferences().budgetRange;
+        return value ? [value] : undefined;
+      }}
     />
   );
 }
