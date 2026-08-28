@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Loader2Icon } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
@@ -22,12 +23,18 @@ interface GoogleAuthButtonProps {
 // height). So we render the real, functional GoogleLogin invisibly on top
 // of our styled decorative button and let clicks fall through to it.
 //
-// This depends on Google's rendered button/iframe filling its container,
-// which isn't a guaranteed contract on their end — if a future
-// @react-oauth/google or Google Identity Services update changes that
-// sizing behavior, the click target here can drift from the visible
-// button. Worth a visual/click smoke test after any upgrade of that
-// dependency.
+// Root-caused bug (reported: button not clickable): GoogleLogin's `width`
+// isn't a CSS size — it's passed straight to Google's own
+// google.accounts.id.renderButton(), which bakes a button of that EXACT
+// pixel width into the iframe on Google's side. A hardcoded width="360"
+// only lined up with the real container by coincidence; forcing the
+// iframe element to `w-full` via CSS just stretches its outer box, it
+// can't rescale content Google already rendered for 360px — so wherever
+// the actual container isn't exactly 360px (any breakpoint/layout this
+// button appears in), the real clickable area drifts out from under the
+// visible decorative button and clicks land on dead space. Fixed by
+// measuring the real container with a ResizeObserver and always passing
+// its exact current width, so the two can never drift apart.
 export function GoogleAuthButton({
   label = "Continue with Google",
   onCredential,
@@ -35,8 +42,22 @@ export function GoogleAuthButton({
   className,
   loading = false,
 }: GoogleAuthButtonProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [buttonWidth, setButtonWidth] = useState(360);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const width = entry?.contentRect.width;
+      if (width) setButtonWidth(Math.round(width));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className={cn("relative h-12 w-full", className)}>
+    <div ref={containerRef} className={cn("relative h-12 w-full", className)}>
       <Button
         type="button"
         variant="outline"
@@ -68,7 +89,7 @@ export function GoogleAuthButton({
             }}
             onError={onError}
             text="continue_with"
-            width="360"
+            width={buttonWidth}
           />
         </div>
       )}
