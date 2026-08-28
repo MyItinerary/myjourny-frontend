@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { HomeNav } from "@/components/home/home-nav";
+import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
 import { suggestedDestinations } from "@/lib/mock-data/home";
 
 // Figma: "Hero" (2001:9143 guest / 2001:9153 account) — pixel-identical
@@ -43,16 +44,21 @@ export function HeroSection() {
 }
 
 function SearchBar({ className }: { className?: string }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"where" | "when" | "who" | null>(null);
   const [selectedWhere, setSelectedWhere] = useState<string>("");
+  const [selectedWhereId, setSelectedWhereId] = useState<string>("");
   const [selectedWhen, setSelectedWhen] = useState<string>("");
   const [guests, setGuests] = useState({
     adults: 0,
     children: 0,
     infants: 0,
   });
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 7, 1)); // August 2026
-  const [selectedDay, setSelectedDay] = useState<number | null>(1); // 1st active by default per design
+  // 1st of the current month active by default per design — text stays
+  // empty ("Select dates") until the user actually picks something.
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  );
   const searchBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,26 +78,6 @@ function SearchBar({ className }: { className?: string }) {
     totalGuests > 0
       ? `${totalGuests} guest${totalGuests > 1 ? "s" : ""}${guests.infants > 0 ? `, ${guests.infants} infant${guests.infants > 1 ? "s" : ""}` : ""}`
       : "Select guests";
-
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth();
-  const monthName = monthNames[currentMonth];
-
-  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay(); // 0 = Sun
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-  const handlePrevMonth = () => {
-    setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
-  };
 
   const guestTypes = [
     {
@@ -173,7 +159,9 @@ function SearchBar({ className }: { className?: string }) {
       <button
         type="button"
         aria-label="Search"
-        className="flex size-11 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 lg:self-auto"
+        disabled={!selectedWhereId}
+        onClick={() => selectedWhereId && router.push(`/cities/${selectedWhereId}`)}
+        className="flex size-11 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto"
       >
         <Image src="/icons/search-lg.svg" alt="" width={20} height={20} className="invert" />
       </button>
@@ -191,7 +179,9 @@ function SearchBar({ className }: { className?: string }) {
                 type="button"
                 onClick={() => {
                   setSelectedWhere(dest.city);
+                  setSelectedWhereId(dest.id);
                   setActiveTab(null);
+                  router.push(`/cities/${dest.id}`);
                 }}
                 className="flex w-full items-center gap-[14.5px] rounded-xl p-1 text-left transition-colors hover:bg-[#F4F2EE]/70"
               >
@@ -221,88 +211,20 @@ function SearchBar({ className }: { className?: string }) {
       {/* Calendar Dropdown Modal */}
       {activeTab === "when" && (
         <div className="absolute top-[calc(100%+12px)] left-0 lg:left-[170px] z-50 flex w-[430px] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-          {/* Preset Buttons */}
-          <div className="flex items-center gap-2">
-            {["Today", "Tomorrow", "This weekend"].map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => {
-                  setSelectedWhen(preset);
-                  setActiveTab(null);
-                }}
-                className="rounded-[20px] border border-[#E0E0E0] bg-white px-3 py-0.5 text-center font-sans text-[12px] font-normal leading-[24px] text-[#130404] transition-colors hover:bg-[#F4F2EE]"
-              >
-                {preset}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex w-full flex-col gap-3 pt-1">
-            {/* Days of week header */}
-            <div className="grid grid-cols-7 text-center font-sans text-[12px] font-normal leading-4 text-[#6F6B72]">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="py-1">
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* Month header */}
-            <div className="flex items-center justify-between py-1">
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                aria-label="Previous month"
-                className="flex size-8 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE]"
-              >
-                <ChevronLeft className="size-4" />
-              </button>
-              <span className="font-sans text-base font-bold leading-6 text-[#130404]">
-                {monthName}
-              </span>
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                aria-label="Next month"
-                className="flex size-8 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE]"
-              >
-                <ChevronRight className="size-4" />
-              </button>
-            </div>
-
-            {/* Dates grid */}
-            <div className="grid grid-cols-7 gap-y-1 text-center">
-              {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-10 w-full" />
-              ))}
-
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const isSelected = selectedDay === day;
-                return (
-                  <div key={day} className="flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedDay(day);
-                        setSelectedWhen(`${monthName} ${day}`);
-                        setActiveTab(null);
-                      }}
-                      className={cn(
-                        "flex h-10 w-10 items-center justify-center text-center font-sans text-[14px] font-normal leading-[22px] transition-colors",
-                        isSelected
-                          ? "rounded-[8px] bg-[#F5032D] font-medium text-white shadow-sm"
-                          : "rounded-[8px] text-[#333134] hover:bg-[#F4F2EE]"
-                      )}
-                    >
-                      {day}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <DatePickerCalendar
+            selectedDate={selectedDate}
+            presets={computeDatePresets()}
+            onSelect={(date) => {
+              setSelectedDate(date);
+              const preset = computeDatePresets().find(
+                (p) => p.date.toDateString() === date.toDateString()
+              );
+              setSelectedWhen(
+                preset?.label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" })
+              );
+              setActiveTab(null);
+            }}
+          />
         </div>
       )}
 

@@ -10,6 +10,7 @@ import {
   useSession,
   type SessionUser,
 } from "@/lib/auth/session-store";
+import { clearPreferences } from "@/lib/onboarding/preferences-store";
 
 type Tokens = { access_token: string; refresh_token: string; token_type: string };
 
@@ -44,6 +45,14 @@ function notifySessionRoute() {
 // placeholder immediately (so `apiClient` is authorized for the follow-up
 // call) then fill in the real user from /auth/me.
 async function completeAuth(tokens: Tokens, placeholderEmail: string | null) {
+  // The onboarding quiz's localStorage draft is browser-scoped, not
+  // account-scoped — clear it the moment a session becomes "about this
+  // specific account" (register, login, or Google, whichever this is) so
+  // a stale/abandoned draft from a previous account never leaks into a
+  // brand-new registration's quiz screens. For register this fires before
+  // the quiz UI ever mounts, so it can't clobber anything the current
+  // signup is about to write.
+  clearPreferences();
   setAuth(tokens, { id: "", email: placeholderEmail, fullName: null, avatarUrl: null });
   try {
     const me = await fetchMe();

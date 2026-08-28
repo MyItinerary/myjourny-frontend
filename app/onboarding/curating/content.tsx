@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { InterstitialScreen } from "@/components/onboarding/interstitial-screen";
@@ -13,6 +14,7 @@ import { useUpdateProfile } from "@/lib/queries/profile";
 // the logo/illustration/heading/button content (what actually carries
 // meaning) is implemented 1:1.
 export function CuratingContent() {
+  const router = useRouter();
   const updateProfile = useUpdateProfile();
   const hasFlushed = useRef(false);
 
@@ -20,6 +22,12 @@ export function CuratingContent() {
     // StrictMode/fast-refresh can mount this twice — only flush once.
     if (hasFlushed.current) return;
     hasFlushed.current = true;
+
+    // Keep "Hang tight while we do our thing" true even on a fast
+    // connection — wait for whichever is longer, the save or this floor —
+    // then auto-continue. The "Continue" button (InterstitialScreen below)
+    // still lets an impatient user skip ahead immediately either way.
+    const minVisibleTime = new Promise<void>((resolve) => setTimeout(resolve, 1200));
 
     const { energyLevel, interests, socialStyle, budgetRange, tripIntent } = getPreferences();
     updateProfile.mutate(
@@ -32,10 +40,16 @@ export function CuratingContent() {
         completed: true,
       },
       {
-        onSuccess: clearPreferences,
+        onSuccess: () => {
+          clearPreferences();
+          minVisibleTime.then(() => router.replace("/"));
+        },
         // The interstitial still lets the user continue into the app even
         // if this save failed — it's a background sync, not a form gate.
-        onError: () => toast.error("Couldn't save your preferences. You can update them later."),
+        onError: () => {
+          toast.error("Couldn't save your preferences. You can update them later.");
+          minVisibleTime.then(() => router.replace("/"));
+        },
       }
     );
     // Runs once on mount by design — getPreferences()/updateProfile aren't

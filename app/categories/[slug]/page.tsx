@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { categoriesBySlug, getCategoryListing } from "@/lib/mock-data/home";
-import { CategoryContent } from "./content";
+import { categoriesBySlug } from "@/lib/mock-data/home";
+import { CategoryPageContent } from "./category-content";
 
 export async function generateMetadata({
   params,
@@ -21,8 +21,7 @@ export default async function CategoryPage({
 }) {
   const { slug } = await params;
   const category = categoriesBySlug.get(slug);
-  const items = getCategoryListing(slug);
-  if (!category || !items) notFound();
+  if (!category) notFound();
 
-  return <CategoryContent label={category.label} items={items} />;
+  return <CategoryPageContent slug={slug} label={category.label} />;
 }

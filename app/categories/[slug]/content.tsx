@@ -10,6 +10,7 @@ import { Footer } from "@/components/home/footer";
 import { CategoryHeader } from "@/components/categories/category-header";
 import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
+import { useSession } from "@/lib/auth/session-store";
 import { cities, otherExperiences } from "@/lib/mock-data/home";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 
@@ -17,7 +18,18 @@ import type { ExperienceItem } from "@/lib/mock-data/home";
 // single-category results listing. Reuses the standard desktop `HomeNav`;
 // mobile gets a page-specific back+search header instead (2001:12377),
 // inlined here since no other page uses this compact search bar yet.
-export function CategoryContent({ label, items }: { label: string; items: ExperienceItem[] }) {
+export function CategoryContent({
+  label,
+  items,
+  isLoading = false,
+}: {
+  label: string;
+  items: ExperienceItem[];
+  isLoading?: boolean;
+}) {
+  const { user } = useSession();
+  const isAccount = user !== null;
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="hidden lg:block">
@@ -41,11 +53,11 @@ export function CategoryContent({ label, items }: { label: string; items: Experi
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-9">
         <CategoryHeader label={label} />
         <div className="mt-6 lg:mt-9">
-          <CategoryResultsGrid items={items} />
+          <CategoryResultsGrid items={items} isLoading={isLoading} />
         </div>
       </div>
 
-      <CitiesSection cities={cities} variant="category" />
+      <CitiesSection cities={cities} variant="category" isAccount={isAccount} />
 
       <ExperienceRailSection
         heading="Other experiences you might find interesting"

@@ -5,6 +5,8 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSession } from "@/lib/auth/session-store";
+import { groupChildrenByParentSlug, useInterestCategories } from "@/lib/queries/categories";
 import { inspirationCategories, inspirationSubcategories } from "@/lib/mock-data/home";
 
 // Figma: "Footer" (2001:8924/2001:8949) — identical between guest/account.
@@ -35,6 +37,20 @@ const linkColumns = [
 
 export function Footer() {
   const [activeCategory, setActiveCategory] = useState(inspirationCategories[0].id);
+  const { user } = useSession();
+  const isAccount = user !== null;
+
+  // Tabs stay driven by the static list either way — real parent
+  // slugs/labels already match it 1:1, so there's nothing to gain (and a
+  // loading flash to lose) by fetching parents too. Only the subcategory
+  // row below switches to real data for signed-in users.
+  const categoriesQuery = useInterestCategories();
+  const childrenByParent = categoriesQuery.data
+    ? groupChildrenByParentSlug(categoriesQuery.data)
+    : null;
+  const activeSubcategories = isAccount
+    ? (childrenByParent?.get(activeCategory) ?? []).map((c) => ({ id: c.slug, label: c.text }))
+    : inspirationSubcategories;
 
   return (
     <footer className="bg-[#fafafa]">
@@ -61,11 +77,12 @@ export function Footer() {
           </TabsList>
         </Tabs>
 
-        {/* Figma only specs subcategory content for the first tab — same
-            placeholder row shown regardless of the active tab until the
-            rest of the taxonomy exists. */}
+        {/* Figma only specs subcategory content for the first tab — guests
+            still see that same static placeholder regardless of the active
+            tab (itin's categories endpoint is auth-only); signed-in users
+            get each tab's real children. */}
         <div className="mt-8 flex flex-wrap items-center gap-6">
-          {inspirationSubcategories.map((subcategory) => (
+          {activeSubcategories.map((subcategory) => (
             <div key={subcategory.id} className="flex flex-col pr-4">
               <span className="text-sm font-medium text-[#0d0d0d]">{subcategory.label}</span>
               <span className="pt-0.5 text-[13px] text-[#4a4540]">Subcategory</span>
