@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
@@ -26,9 +27,17 @@ export function ExperienceCardVertical({
   currency = "NGN",
   priceFrom,
   className,
+  id,
 }: ExperienceCardProps) {
   return (
-    <article className={cn("flex w-full flex-col gap-3", className)}>
+    // relative + a lower z-index Link covering the card, so the save
+    // button (higher z-index) stays independently clickable instead of
+    // being nested inside the link (invalid HTML, breaks click handling).
+    <article className={cn("relative flex w-full flex-col gap-3", className)}>
+      {id && (
+        <Link href={`/experiences/${id}`} className="absolute inset-0 z-0" aria-label={title} />
+      )}
+
       {/* Figma keeps the photo a fixed 212px tall in every desktop context
           (345px rail cards and 277.5px category-grid cards alike). */}
       <div className="relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted lg:aspect-auto lg:h-[212px]">
@@ -36,13 +45,13 @@ export function ExperienceCardVertical({
         <button
           type="button"
           aria-label="Save experience"
-          className="absolute top-[13px] right-[13px] flex size-9 items-center justify-center rounded-full bg-white text-foreground shadow-sm transition-colors hover:text-brand"
+          className="absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white text-foreground shadow-sm transition-colors hover:text-brand"
         >
           <HeartRoundedIcon className="size-5" />
         </button>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="pointer-events-none flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-brand">{category}</span>
           <h3 className="font-heading line-clamp-2 text-lg font-medium text-foreground">{title}</h3>

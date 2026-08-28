@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { StarIcon } from "@/components/icons/shared-icons";
@@ -15,6 +16,8 @@ export interface ExperienceCardProps {
   priceFrom: number;
   currency?: string;
   className?: string;
+  /** Links to /experiences/{id} when present — mock/placeholder cards can omit it. */
+  id?: string;
 }
 
 function formatPrice(amount: number, currency: string) {
@@ -36,9 +39,10 @@ export function ExperienceCard({
   priceFrom,
   currency = "NGN",
   className,
+  id,
 }: ExperienceCardProps) {
-  return (
-    <article className={cn("group flex items-start gap-3 bg-card px-4 py-3", className)}>
+  const content = (
+    <>
       <div className="relative size-[113px] shrink-0 overflow-hidden rounded-[16.7px] bg-muted">
         <Image
           src={imageSrc}
@@ -72,6 +76,18 @@ export function ExperienceCard({
           </span>
         </p>
       </div>
-    </article>
+    </>
   );
+
+  const articleClassName = cn("group flex items-start gap-3 bg-card px-4 py-3", className);
+
+  if (id) {
+    return (
+      <Link href={`/experiences/${id}`} className={articleClassName}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <article className={articleClassName}>{content}</article>;
 }

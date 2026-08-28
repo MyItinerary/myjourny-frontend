@@ -8,7 +8,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { ExperienceCard } from "@/components/experiences/experience-card";
+import { ExperienceCardSkeleton } from "@/components/experiences/experience-card-skeleton";
 import { ExperienceCardVertical } from "@/components/experiences/experience-card-vertical";
+import { ExperienceCardVerticalSkeleton } from "@/components/experiences/experience-card-vertical-skeleton";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +35,8 @@ interface ExperienceRailSectionProps {
   /** Category page uses the wider 1212px column (150px side margins). */
   wide?: boolean;
   className?: string;
+  /** Renders skeleton cards in place of `items` — same wrapper markup, no layout shift once real data arrives. */
+  isLoading?: boolean;
 }
 
 function chunk<T>(list: T[], size: number): T[][] {
@@ -49,6 +53,7 @@ export function ExperienceRailSection({
   seeMoreHref,
   wide = false,
   className,
+  isLoading = false,
 }: ExperienceRailSectionProps) {
   const headingBlock = (center: boolean) => (
     <div
@@ -86,14 +91,24 @@ export function ExperienceRailSection({
           {/* Bleeds past the right page margin like the design (cards clip at
               the viewport edge, not at the content column). */}
           <div className={cn("mt-[34px] -mr-6", wide ? "lg:-mr-[150px]" : "lg:-mr-[306px]")}>
-            {/* basis includes the pl gap: 345px card + 24px (mobile) / 34px (lg) */}
-            <CarouselContent className="-ml-6 lg:-ml-[34px]">
-              {items.map((item) => (
-                <CarouselItem key={item.id} className="basis-[369px] pl-6 lg:basis-[379px] lg:pl-[34px]">
-                  <ExperienceCardVertical {...item} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
+            {isLoading ? (
+              // Skeletons don't need to be draggable/scrollable — skip the
+              // Carousel machinery entirely and just render a plain row.
+              <div className="flex gap-6 overflow-hidden lg:gap-[34px]">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <ExperienceCardVerticalSkeleton key={index} className="w-[345px] shrink-0" />
+                ))}
+              </div>
+            ) : (
+              /* basis includes the pl gap: 345px card + 24px (mobile) / 34px (lg) */
+              <CarouselContent className="-ml-6 lg:-ml-[34px]">
+                {items.map((item) => (
+                  <CarouselItem key={item.id} className="basis-[369px] pl-6 lg:basis-[379px] lg:pl-[34px]">
+                    <ExperienceCardVertical {...item} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            )}
           </div>
         </Carousel>
       </section>
@@ -117,18 +132,26 @@ export function ExperienceRailSection({
       {/* Mobile: 3 horizontally-scrollable rows of 360px cards; desktop: the
           design's static 2-col grid. */}
       <div className="mt-6 flex flex-col gap-6 lg:hidden">
-        {chunk(items, 2).map((row, index) => (
-          <div key={index} className="-mr-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pr-6">
-            {row.map((item) => (
-              <ExperienceCard key={item.id} {...item} className="w-[360px] shrink-0 snap-start p-0" />
+        {isLoading
+          ? chunk(Array.from({ length: 6 }), 2).map((row, index) => (
+              <div key={index} className="-mr-6 flex gap-3 overflow-hidden pr-6">
+                {row.map((_, itemIndex) => (
+                  <ExperienceCardSkeleton key={itemIndex} className="w-[360px] shrink-0 p-0" />
+                ))}
+              </div>
+            ))
+          : chunk(items, 2).map((row, index) => (
+              <div key={index} className="-mr-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pr-6">
+                {row.map((item) => (
+                  <ExperienceCard key={item.id} {...item} className="w-[360px] shrink-0 snap-start p-0" />
+                ))}
+              </div>
             ))}
-          </div>
-        ))}
       </div>
       <div className="mt-[31px] hidden grid-cols-2 gap-x-6 gap-y-[31px] lg:grid">
-        {items.map((item) => (
-          <ExperienceCard key={item.id} {...item} />
-        ))}
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, index) => <ExperienceCardSkeleton key={index} />)
+          : items.map((item) => <ExperienceCard key={item.id} {...item} />)}
       </div>
     </section>
   );

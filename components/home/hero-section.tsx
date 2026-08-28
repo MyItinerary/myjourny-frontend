@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -43,8 +44,10 @@ export function HeroSection() {
 }
 
 function SearchBar({ className }: { className?: string }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"where" | "when" | "who" | null>(null);
   const [selectedWhere, setSelectedWhere] = useState<string>("");
+  const [selectedWhereId, setSelectedWhereId] = useState<string>("");
   const [selectedWhen, setSelectedWhen] = useState<string>("");
   const [guests, setGuests] = useState({
     adults: 0,
@@ -173,7 +176,9 @@ function SearchBar({ className }: { className?: string }) {
       <button
         type="button"
         aria-label="Search"
-        className="flex size-11 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 lg:self-auto"
+        disabled={!selectedWhereId}
+        onClick={() => selectedWhereId && router.push(`/cities/${selectedWhereId}`)}
+        className="flex size-11 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto"
       >
         <Image src="/icons/search-lg.svg" alt="" width={20} height={20} className="invert" />
       </button>
@@ -191,7 +196,9 @@ function SearchBar({ className }: { className?: string }) {
                 type="button"
                 onClick={() => {
                   setSelectedWhere(dest.city);
+                  setSelectedWhereId(dest.id);
                   setActiveTab(null);
+                  router.push(`/cities/${dest.id}`);
                 }}
                 className="flex w-full items-center gap-[14.5px] rounded-xl p-1 text-left transition-colors hover:bg-[#F4F2EE]/70"
               >

@@ -1,6 +1,12 @@
 "use client";
 
 import { useSession } from "@/lib/auth/session-store";
+import { useGeolocation } from "@/lib/hooks/use-geolocation";
+import {
+  experienceMatchToCardProps,
+  useBrowsingHistory,
+  useRecommendedExperiences,
+} from "@/lib/queries/experiences";
 import { HeroSection } from "@/components/home/hero-section";
 import { WhyBookWithUsSection } from "@/components/home/why-book-with-us-section";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
@@ -18,14 +24,59 @@ import {
 } from "@/lib/mock-data/home";
 
 // Figma "Home" (2001:9142 guest / 2001:9152 account, mobile 2001:9168 /
-// 2001:9462) — both states share the same 9 sections; only the order (and
-// the categories content) changes once a user is signed in and onboarded.
-// See DESIGN-SYSTEM.md for the full node id map.
+// 2001:9462) — both states share the same 9 sections. Guests see
+// Why-book-with-us before the personalized rails (nothing personalized to
+// show yet, and guests stay on mock data — see DESIGN-SYSTEM.md/the
+// homepage-integration plan for why: itin has no unauthenticated
+// recommendations/categories endpoints). Signed-in accounts see
+// Popular-experiences promoted right after Hero instead, backed by real
+// itin data. See DESIGN-SYSTEM.md for the full node id map.
 export function HomeContent() {
   const { user } = useSession();
   const isAccount = user !== null;
 
-  const popularExperiencesSection = (
+  const geolocation = useGeolocation();
+  const hasCoords = typeof geolocation === "object";
+
+  // "Popular near you" waits for geolocation to settle (either resolves
+  // with coordinates, or "unavailable" — never fires against a still-
+  // pending result). Once settled without coordinates, it falls to the
+  // same location-agnostic call "Top picks" always uses.
+  const popularQuery = useRecommendedExperiences({
+    latitude: hasCoords ? geolocation.latitude : undefined,
+    longitude: hasCoords ? geolocation.longitude : undefined,
+    offset: 0,
+    limit: 10,
+    enabled: isAccount && geolocation !== "pending",
+  });
+  const topPicksQuery = useRecommendedExperiences({
+    offset: 10,
+    limit: 10,
+    enabled: isAccount,
+  });
+  const browsingHistoryQuery = useBrowsingHistory(10);
+
+  const popularIsLoading = isAccount && (geolocation === "pending" || popularQuery.isFetching);
+  const topPicksIsLoading = isAccount && topPicksQuery.isFetching;
+  const browsingHistoryIsLoading = isAccount && browsingHistoryQuery.isFetching;
+
+  const realPopularItems = (popularQuery.data ?? []).map(experienceMatchToCardProps);
+  const realTopPicksItems = (topPicksQuery.data ?? []).map(experienceMatchToCardProps);
+  const realBrowsingHistoryItems = (browsingHistoryQuery.data ?? []).map(
+    experienceMatchToCardProps
+  );
+
+  const popularSection = isAccount ? (
+    !popularIsLoading && realPopularItems.length === 0 ? null : (
+      <ExperienceRailSection
+        key="popular-experiences"
+        heading="Popular experiences near you"
+        subheading="Hand-picked spots people are loving right now."
+        items={realPopularItems}
+        isLoading={popularIsLoading}
+      />
+    )
+  ) : (
     <ExperienceRailSection
       key="popular-experiences"
       heading="Popular experiences near you"
@@ -40,31 +91,60 @@ export function HomeContent() {
     <div className="flex flex-1 flex-col">
       <HeroSection />
 
-      <ExperienceRailSection
-        key="popular-experiences"
-        heading="Popular experiences near you"
-        subheading="Hand-picked spots people are loving right now."
-        items={popularExperiences}
-      />
-      <WhyBookWithUsSection key="why-book-with-us" />
+      {/* Order differs by session state — see the note above the component. */}
+      {isAccount ? (
+        <>
+          {popularSection}
+          {whyBookWithUsSection}
+        </>
+      ) : (
+        <>
+          {whyBookWithUsSection}
+          {popularSection}
+        </>
+      )}
 
       <CategoriesSection categories={isAccount ? accountCategories : guestCategories} />
 
-      <ExperienceRailSection
-        heading="Top picks right now"
-        subheading="What’s happening in Lagos"
-        items={topPicks}
-        cardVariant="vertical"
-      />
+      {isAccount ? (
+        !topPicksIsLoading && realTopPicksItems.length === 0 ? null : (
+          <ExperienceRailSection
+            heading="Top picks right now"
+            subheading="What’s happening around you"
+            items={realTopPicksItems}
+            cardVariant="vertical"
+            isLoading={topPicksIsLoading}
+          />
+        )
+      ) : (
+        <ExperienceRailSection
+          heading="Top picks right now"
+          subheading="What’s happening in Lagos"
+          items={topPicks}
+          cardVariant="vertical"
+        />
+      )}
 
-      <CitiesSection cities={cities} />
+      <CitiesSection cities={cities} isAccount={isAccount} />
 
-      <ExperienceRailSection
-        heading="Based on your browsing history"
-        subheading="A few things we noticed you're drawn to."
-        items={browsingHistoryExperiences}
-        cardVariant="vertical"
-      />
+      {isAccount ? (
+        !browsingHistoryIsLoading && realBrowsingHistoryItems.length === 0 ? null : (
+          <ExperienceRailSection
+            heading="Based on your browsing history"
+            subheading="A few things we noticed you're drawn to."
+            items={realBrowsingHistoryItems}
+            cardVariant="vertical"
+            isLoading={browsingHistoryIsLoading}
+          />
+        )
+      ) : (
+        <ExperienceRailSection
+          heading="Based on your browsing history"
+          subheading="A few things we noticed you're drawn to."
+          items={browsingHistoryExperiences}
+          cardVariant="vertical"
+        />
+      )}
 
       <CtaSection />
       <Footer />
