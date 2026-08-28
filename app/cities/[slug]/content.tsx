@@ -7,8 +7,8 @@ import { experienceMatchToCardProps, useRecommendedExperiences } from "@/lib/que
 // duplicating it — it only ever needed `label` + `items`, which is exactly
 // what a city listing needs too.
 export function CityContent({ cityName }: { cityName: string }) {
-  const { data } = useRecommendedExperiences({ city: cityName });
+  const { data, isLoading } = useRecommendedExperiences({ city: cityName });
   const items = (data ?? []).map(experienceMatchToCardProps);
 
-  return <CategoryContent label={cityName} items={items} />;
+  return <CategoryContent label={cityName} items={items} isLoading={isLoading} />;
 }
