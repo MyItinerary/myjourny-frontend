@@ -189,6 +189,30 @@ export function useExperienceDetail(id: string) {
   });
 }
 
+// Matches itin's ExperiencePriceOut DTO (app/core/dto/experience_price.py).
+// An experience can have multiple price tiers (e.g. "Standard", "Group") —
+// booking now requires picking one via experience_price_id.
+export type ExperiencePrice = {
+  id: string;
+  experience_id: string;
+  label: string;
+  description?: string | null;
+  amount: number;
+};
+
+export function useExperiencePrices(experienceId: string) {
+  return useQuery({
+    queryKey: ["experiences", "prices", experienceId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ExperiencePrice[]>("/experience-prices/", {
+        params: { experience_id: experienceId },
+      });
+      return data;
+    },
+    enabled: !!experienceId,
+  });
+}
+
 // Matches itin's BookingOut DTO (app/core/dto/booking.py) — only the
 // fields the booking panel actually needs.
 export type BookingOut = {
@@ -200,6 +224,7 @@ export type BookingOut = {
 
 export type CreateBookingPayload = {
   experience_id: string;
+  experience_price_id: string;
   guide_id: string;
   requested_datetime?: string; // ISO datetime
   party_size?: number;
