@@ -73,16 +73,34 @@ export function useRecommendedExperiences(params: {
   return useQuery({
     queryKey: ["experiences", "recommendations", params],
     queryFn: async () => {
-      const { data } = await apiClient.get<ExperienceMatch[]>("/experiences/recommendations", {
-        params: {
-          latitude: params.latitude ?? undefined,
-          longitude: params.longitude ?? undefined,
-          city: params.city,
-          offset: params.offset ?? 0,
-          limit: params.limit ?? 10,
-        },
-      });
-      return data;
+      const baseParams = {
+        latitude: params.latitude ?? undefined,
+        longitude: params.longitude ?? undefined,
+        city: params.city,
+        offset: params.offset ?? 0,
+        limit: params.limit ?? 10,
+      };
+      try {
+        const { data } = await apiClient.get<ExperienceMatch[]>(
+          "/experiences/recommendations",
+          { params: baseParams }
+        );
+        return data;
+      } catch (error) {
+        // A backend that hasn't picked up the optional-lat/long change yet
+        // (e.g. not redeployed) still 422s on missing latitude/longitude —
+        // retry once with 0/0 dummy coordinates rather than surfacing that
+        // for what should be a perfectly valid "no location" request.
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 422 && (baseParams.latitude === undefined || baseParams.longitude === undefined)) {
+          const { data } = await apiClient.get<ExperienceMatch[]>(
+            "/experiences/recommendations",
+            { params: { ...baseParams, latitude: baseParams.latitude ?? 0, longitude: baseParams.longitude ?? 0 } }
+          );
+          return data;
+        }
+        throw error;
+      }
     },
     enabled: params.enabled ?? true,
   });
