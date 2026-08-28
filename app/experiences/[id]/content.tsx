@@ -24,6 +24,8 @@ import {
   useExperienceDetail,
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
+import { useSavedExperienceIds, useToggleSaved } from "@/lib/queries/saved";
+import { cn } from "@/lib/utils";
 
 export function ExperienceDetailContent({ id }: { id: string }) {
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
@@ -31,6 +33,11 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const similarItems = (similarQuery.data ?? [])
     .filter((m) => m.experience_id !== id)
     .map(experienceMatchToCardProps);
+
+  const { data: savedIds } = useSavedExperienceIds();
+  const toggleSaved = useToggleSaved();
+  const isSaved = savedIds?.has(id) ?? false;
+  const handleToggleSaved = () => toggleSaved.mutate({ experienceId: id, isSaved });
 
   if (isLoading) {
     return (
@@ -72,8 +79,13 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           <ChevronLeft className="size-5 text-foreground" />
         </Link>
         <div className="flex items-center gap-2">
-          <button type="button" aria-label="Add to wishlist" className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm">
-            <Heart className="size-[18px] text-foreground" />
+          <button
+            type="button"
+            aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
+            onClick={handleToggleSaved}
+            className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm"
+          >
+            <Heart className={cn("size-[18px]", isSaved ? "fill-brand text-brand" : "text-foreground")} />
           </button>
           <button type="button" aria-label="Share" className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm">
             <Share2 className="size-[18px] text-foreground" />
@@ -93,9 +105,9 @@ export function ExperienceDetailContent({ id }: { id: string }) {
         <div className="mt-2 hidden items-start justify-between gap-4 lg:flex">
           <h1 className="font-heading text-[32px] font-extrabold text-foreground">{experience.title}</h1>
           <div className="flex shrink-0 items-center gap-4 pt-2 text-sm font-medium text-foreground">
-            <button type="button" className="flex items-center gap-1.5">
-              <Heart className="size-4" />
-              Add to wishlist
+            <button type="button" onClick={handleToggleSaved} className="flex items-center gap-1.5">
+              <Heart className={cn("size-4", isSaved && "fill-brand text-brand")} />
+              {isSaved ? "Saved" : "Add to wishlist"}
             </button>
             <button type="button" className="flex items-center gap-1.5">
               <Share2 className="size-4" />

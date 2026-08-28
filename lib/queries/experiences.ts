@@ -1,8 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
+
+function apiErrorMessage(error: unknown, fallback: string) {
+  const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+  return detail ?? fallback;
+}
 
 // Matches itin's ExperienceMatch DTO (app/core/dto/experience.py) — what
 // GET /experiences/recommendations and GET /experiences/browsing-history
@@ -139,6 +145,12 @@ export type ExperienceDetail = {
   duration_minutes?: number | null;
   group_size_min?: number | null;
   group_size_max?: number | null;
+  // "YYYY-MM-DD" when the experience is a fixed one-off event — used to
+  // prefill the booking calendar. schedule_type/recurrence_* also exist on
+  // the DTO for recurring experiences, but resolving a recurrence rule
+  // into real occurrence dates isn't attempted here (see booking panel).
+  event_start_date?: string | null;
+  schedule_type?: string | null;
   price_from?: number | null;
   currency?: string | null;
   interest_tags?: string[] | null;
@@ -171,5 +183,42 @@ export function useExperienceDetail(id: string) {
       return data;
     },
     enabled: !!id,
+  });
+}
+
+// Matches itin's BookingOut DTO (app/core/dto/booking.py) — only the
+// fields the booking panel actually needs.
+export type BookingOut = {
+  id: string;
+  status: string;
+  payment_status: string;
+  url?: string | null;
+};
+
+export type CreateBookingPayload = {
+  experience_id: string;
+  guide_id: string;
+  requested_datetime?: string; // ISO datetime
+  party_size?: number;
+};
+
+// POST /bookings/ — creates a Booking row and (unless the experience has
+// an external booking_url) a real Paystack/Stripe checkout session,
+// returning { url } to redirect the browser to. platform: "web" makes
+// itin's success/cancel redirects target the frontend instead of the
+// mobile app's myjourny:// deep link (see itin PR: web-aware booking
+// redirects).
+export function useCreateBooking() {
+  return useMutation({
+    mutationFn: async (payload: CreateBookingPayload) => {
+      const { data } = await apiClient.post<BookingOut>("/bookings/", {
+        ...payload,
+        payment_flow: "checkout",
+        platform: "web",
+      });
+      return data;
+    },
+    onError: (error) =>
+      toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again.")),
   });
 }

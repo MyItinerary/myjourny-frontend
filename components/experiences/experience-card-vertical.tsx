@@ -1,9 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 import { HeartRoundedIcon, StarIcon } from "@/components/icons/shared-icons";
+import { useSavedExperienceIds, useToggleSaved } from "@/lib/queries/saved";
 
 // Figma: "Experience card" inside "Top picks right now" (2001:8528) — a
 // different card shape from the horizontal `ExperienceCard` used in the
@@ -29,6 +32,10 @@ export function ExperienceCardVertical({
   className,
   id,
 }: ExperienceCardProps) {
+  const { data: savedIds } = useSavedExperienceIds();
+  const toggleSaved = useToggleSaved();
+  const isSaved = !!id && !!savedIds?.has(id);
+
   return (
     // relative + a lower z-index Link covering the card, so the save
     // button (higher z-index) stays independently clickable instead of
@@ -44,10 +51,15 @@ export function ExperienceCardVertical({
         <Image src={imageSrc} alt={imageAlt} fill unoptimized sizes="345px" className="object-cover" />
         <button
           type="button"
-          aria-label="Save experience"
-          className="absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white text-foreground shadow-sm transition-colors hover:text-brand"
+          aria-label={isSaved ? "Remove from wishlist" : "Save experience"}
+          onClick={() => id && toggleSaved.mutate({ experienceId: id, isSaved })}
+          disabled={!id}
+          className={cn(
+            "absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors",
+            isSaved ? "text-brand" : "text-foreground hover:text-brand"
+          )}
         >
-          <HeartRoundedIcon className="size-5" />
+          <HeartRoundedIcon className={cn("size-5", isSaved && "fill-brand")} />
         </button>
       </div>
 
