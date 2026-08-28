@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { ChevronDownIcon } from "@/components/icons/shared-icons";
 
@@ -18,9 +19,12 @@ import { cn } from "@/lib/utils";
 export function CitiesSection({
   cities,
   variant = "home",
+  isAccount = false,
 }: {
   cities: City[];
   variant?: "home" | "category";
+  /** Tiles only link to /cities/{id} when true — that page has nothing real to show a guest (same login-gate as the rest of the real homepage data). */
+  isAccount?: boolean;
 }) {
   const visibleCount = variant === "category" ? 10 : 8;
   const [expanded, setExpanded] = useState(false);
@@ -57,15 +61,28 @@ export function CitiesSection({
             variant === "category" ? "lg:grid-cols-5" : "lg:grid-cols-4"
           )}
         >
-          {visible.map((city) => (
-            <div key={city.id} className="relative h-[170px] w-[251px] overflow-hidden rounded-2xl bg-muted lg:w-auto">
-              <Image src={city.imageSrc} alt="" fill sizes="(min-width: 1024px) 25vw, 251px" className="object-cover" />
-              <div aria-hidden className="absolute inset-0 bg-black/20" />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl font-semibold whitespace-nowrap text-white">
-                {city.name}
-              </span>
-            </div>
-          ))}
+          {visible.map((city) => {
+            const tile = (
+              <>
+                <Image src={city.imageSrc} alt="" fill sizes="(min-width: 1024px) 25vw, 251px" className="object-cover" />
+                <div aria-hidden className="absolute inset-0 bg-black/20" />
+                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl font-semibold whitespace-nowrap text-white">
+                  {city.name}
+                </span>
+              </>
+            );
+            const tileClassName = "relative h-[170px] w-[251px] overflow-hidden rounded-2xl bg-muted lg:w-auto";
+
+            return isAccount ? (
+              <Link key={city.id} href={`/cities/${city.id}`} className={tileClassName}>
+                {tile}
+              </Link>
+            ) : (
+              <div key={city.id} className={tileClassName}>
+                {tile}
+              </div>
+            );
+          })}
         </div>
       </div>
 

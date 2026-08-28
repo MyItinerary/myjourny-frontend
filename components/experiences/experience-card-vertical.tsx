@@ -1,8 +1,12 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 import { HeartRoundedIcon, StarIcon } from "@/components/icons/shared-icons";
+import { useSavedExperienceIds, useToggleSaved } from "@/lib/queries/saved";
 
 // Figma: "Experience card" inside "Top picks right now" (2001:8528) — a
 // different card shape from the horizontal `ExperienceCard` used in the
@@ -26,23 +30,40 @@ export function ExperienceCardVertical({
   currency = "NGN",
   priceFrom,
   className,
+  id,
 }: ExperienceCardProps) {
+  const { data: savedIds } = useSavedExperienceIds();
+  const toggleSaved = useToggleSaved();
+  const isSaved = !!id && !!savedIds?.has(id);
+
   return (
-    <article className={cn("flex w-full flex-col gap-3", className)}>
+    // relative + a lower z-index Link covering the card, so the save
+    // button (higher z-index) stays independently clickable instead of
+    // being nested inside the link (invalid HTML, breaks click handling).
+    <article className={cn("relative flex w-full flex-col gap-3", className)}>
+      {id && (
+        <Link href={`/experiences/${id}`} className="absolute inset-0 z-0" aria-label={title} />
+      )}
+
       {/* Figma keeps the photo a fixed 212px tall in every desktop context
           (345px rail cards and 277.5px category-grid cards alike). */}
       <div className="relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted lg:aspect-auto lg:h-[212px]">
-        <Image src={imageSrc} alt={imageAlt} fill sizes="345px" className="object-cover" />
+        <Image src={imageSrc} alt={imageAlt} fill unoptimized sizes="345px" className="object-cover" />
         <button
           type="button"
-          aria-label="Save experience"
-          className="absolute top-[13px] right-[13px] flex size-9 items-center justify-center rounded-full bg-white text-foreground shadow-sm transition-colors hover:text-brand"
+          aria-label={isSaved ? "Remove from wishlist" : "Save experience"}
+          onClick={() => id && toggleSaved.mutate({ experienceId: id, isSaved })}
+          disabled={!id}
+          className={cn(
+            "absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors",
+            isSaved ? "text-brand" : "text-foreground hover:text-brand"
+          )}
         >
-          <HeartRoundedIcon className="size-5" />
+          <HeartRoundedIcon className={cn("size-5", isSaved && "fill-brand")} />
         </button>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="pointer-events-none flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-brand">{category}</span>
           <h3 className="font-heading line-clamp-2 text-lg font-medium text-foreground">{title}</h3>

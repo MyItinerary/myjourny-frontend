@@ -8,7 +8,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { ExperienceCard } from "@/components/experiences/experience-card";
+import { ExperienceCardSkeleton } from "@/components/experiences/experience-card-skeleton";
 import { ExperienceCardVertical } from "@/components/experiences/experience-card-vertical";
+import { ExperienceCardVerticalSkeleton } from "@/components/experiences/experience-card-vertical-skeleton";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +35,12 @@ interface ExperienceRailSectionProps {
   /** Category page uses the wider 1212px column (150px side margins). */
   wide?: boolean;
   className?: string;
+  /** Renders skeleton cards in place of `items` — same wrapper markup, no layout shift once real data arrives. */
+  isLoading?: boolean;
+  /** Vertical variant only. Overrides the default 1512px-grid outer container — pages that don't live on that grid (e.g. the 1200px experience detail page) pass their own matching container so the section lines up with the rest of their content instead of the homepage's margins. */
+  containerClassName?: string;
+  /** Vertical variant only. Must match containerClassName's right padding so the carousel's right-edge bleed lines up (defaults to the homepage's -mr-6/-lg:mr-[...] pairing). */
+  bleedClassName?: string;
 }
 
 function chunk<T>(list: T[], size: number): T[][] {
@@ -49,6 +57,9 @@ export function ExperienceRailSection({
   seeMoreHref,
   wide = false,
   className,
+  isLoading = false,
+  containerClassName,
+  bleedClassName,
 }: ExperienceRailSectionProps) {
   const headingBlock = (center: boolean) => (
     <div
@@ -70,8 +81,11 @@ export function ExperienceRailSection({
     return (
       <section
         className={cn(
-          "mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[77px] lg:pb-[79px]",
-          wide ? "lg:px-[150px]" : "lg:px-[306px]",
+          containerClassName ??
+            cn(
+              "mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[77px] lg:pb-[79px]",
+              wide ? "lg:px-[150px]" : "lg:px-[306px]"
+            ),
           className
         )}
       >
@@ -85,15 +99,30 @@ export function ExperienceRailSection({
           </div>
           {/* Bleeds past the right page margin like the design (cards clip at
               the viewport edge, not at the content column). */}
-          <div className={cn("mt-[34px] -mr-6", wide ? "lg:-mr-[150px]" : "lg:-mr-[306px]")}>
-            {/* basis includes the pl gap: 345px card + 24px (mobile) / 34px (lg) */}
-            <CarouselContent className="-ml-6 lg:-ml-[34px]">
-              {items.map((item) => (
-                <CarouselItem key={item.id} className="basis-[369px] pl-6 lg:basis-[379px] lg:pl-[34px]">
-                  <ExperienceCardVertical {...item} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
+          <div
+            className={cn(
+              "mt-[34px]",
+              bleedClassName ?? cn("-mr-6", wide ? "lg:-mr-[150px]" : "lg:-mr-[306px]")
+            )}
+          >
+            {isLoading ? (
+              // Skeletons don't need to be draggable/scrollable — skip the
+              // Carousel machinery entirely and just render a plain row.
+              <div className="flex gap-6 overflow-hidden lg:gap-[34px]">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <ExperienceCardVerticalSkeleton key={index} className="w-[345px] shrink-0" />
+                ))}
+              </div>
+            ) : (
+              /* basis includes the pl gap: 345px card + 24px (mobile) / 34px (lg) */
+              <CarouselContent className="-ml-6 lg:-ml-[34px]">
+                {items.map((item) => (
+                  <CarouselItem key={item.id} className="basis-[369px] pl-6 lg:basis-[379px] lg:pl-[34px]">
+                    <ExperienceCardVertical {...item} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            )}
           </div>
         </Carousel>
       </section>
@@ -114,21 +143,28 @@ export function ExperienceRailSection({
         ) : null}
       </div>
 
-      {/* Mobile: 3 horizontally-scrollable rows of 360px cards; desktop: the
-          design's static 2-col grid. */}
+      {/* Mobile shows top 3, desktop shows top 6 (2x3 grid) — per Figma. */}
       <div className="mt-6 flex flex-col gap-6 lg:hidden">
-        {chunk(items, 2).map((row, index) => (
-          <div key={index} className="-mr-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pr-6">
-            {row.map((item) => (
-              <ExperienceCard key={item.id} {...item} className="w-[360px] shrink-0 snap-start p-0" />
+        {isLoading
+          ? chunk(Array.from({ length: 3 }), 2).map((row, index) => (
+              <div key={index} className="-mr-6 flex gap-3 overflow-hidden pr-6">
+                {row.map((_, itemIndex) => (
+                  <ExperienceCardSkeleton key={itemIndex} className="w-[360px] shrink-0 p-0" />
+                ))}
+              </div>
+            ))
+          : chunk(items.slice(0, 3), 2).map((row, index) => (
+              <div key={index} className="-mr-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pr-6">
+                {row.map((item) => (
+                  <ExperienceCard key={item.id} {...item} className="w-[360px] shrink-0 snap-start p-0" />
+                ))}
+              </div>
             ))}
-          </div>
-        ))}
       </div>
       <div className="mt-[31px] hidden grid-cols-2 gap-x-6 gap-y-[31px] lg:grid">
-        {items.map((item) => (
-          <ExperienceCard key={item.id} {...item} />
-        ))}
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, index) => <ExperienceCardSkeleton key={index} />)
+          : items.slice(0, 6).map((item) => <ExperienceCard key={item.id} {...item} />)}
       </div>
     </section>
   );
