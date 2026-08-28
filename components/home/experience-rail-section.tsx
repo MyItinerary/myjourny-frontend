@@ -37,6 +37,10 @@ interface ExperienceRailSectionProps {
   className?: string;
   /** Renders skeleton cards in place of `items` — same wrapper markup, no layout shift once real data arrives. */
   isLoading?: boolean;
+  /** Vertical variant only. Overrides the default 1512px-grid outer container — pages that don't live on that grid (e.g. the 1200px experience detail page) pass their own matching container so the section lines up with the rest of their content instead of the homepage's margins. */
+  containerClassName?: string;
+  /** Vertical variant only. Must match containerClassName's right padding so the carousel's right-edge bleed lines up (defaults to the homepage's -mr-6/-lg:mr-[...] pairing). */
+  bleedClassName?: string;
 }
 
 function chunk<T>(list: T[], size: number): T[][] {
@@ -54,6 +58,8 @@ export function ExperienceRailSection({
   wide = false,
   className,
   isLoading = false,
+  containerClassName,
+  bleedClassName,
 }: ExperienceRailSectionProps) {
   const headingBlock = (center: boolean) => (
     <div
@@ -75,8 +81,11 @@ export function ExperienceRailSection({
     return (
       <section
         className={cn(
-          "mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[77px] lg:pb-[79px]",
-          wide ? "lg:px-[150px]" : "lg:px-[306px]",
+          containerClassName ??
+            cn(
+              "mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[77px] lg:pb-[79px]",
+              wide ? "lg:px-[150px]" : "lg:px-[306px]"
+            ),
           className
         )}
       >
@@ -90,7 +99,12 @@ export function ExperienceRailSection({
           </div>
           {/* Bleeds past the right page margin like the design (cards clip at
               the viewport edge, not at the content column). */}
-          <div className={cn("mt-[34px] -mr-6", wide ? "lg:-mr-[150px]" : "lg:-mr-[306px]")}>
+          <div
+            className={cn(
+              "mt-[34px]",
+              bleedClassName ?? cn("-mr-6", wide ? "lg:-mr-[150px]" : "lg:-mr-[306px]")
+            )}
+          >
             {isLoading ? (
               // Skeletons don't need to be draggable/scrollable — skip the
               // Carousel machinery entirely and just render a plain row.

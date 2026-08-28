@@ -209,6 +209,13 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           heading="Similar experiences"
           items={similarItems}
           cardVariant="vertical"
+          // This page lives in a 1200px column (px-6 at every breakpoint),
+          // not the homepage's 1512px/lg:px-[306px] grid — match it here so
+          // the heading and cards start at the same left edge as the
+          // breadcrumb/gallery/reviews above, instead of the homepage's
+          // wider default margins.
+          containerClassName="mx-auto w-full max-w-[1200px] px-6 pt-[77px] pb-[77px] lg:pb-[79px]"
+          bleedClassName="-mr-6"
         />
       )}
 
