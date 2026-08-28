@@ -28,6 +28,8 @@ interface PillQuestionScreenProps {
   backHref: string;
   /** Desktop pill layout — most screens are a 2-col grid, a couple are a single column. */
   gridClassName?: string;
+  /** Exact distance between bottom of logo and the illustration/image container on desktop. */
+  logoGap?: string;
 }
 
 // Shared shell for every "Check box pills" question screen (pace, interests,
@@ -41,6 +43,7 @@ export function PillQuestionScreen({
   continueHref,
   backHref,
   gridClassName,
+  logoGap = "144.85px",
 }: PillQuestionScreenProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const router = useRouter();
@@ -59,17 +62,20 @@ export function PillQuestionScreen({
   const canContinue = selected.length > 0;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-muted to-background lg:items-center lg:justify-center lg:px-6 lg:py-16">
+    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-muted to-background px-4 py-8 lg:items-center lg:px-6 lg:pt-[86px] lg:pb-16">
       <OnboardingHeader
         heading={heading}
         subtitle={subtitle}
         backHref={backHref}
         className="lg:hidden"
       />
-      <OnboardingLogo className="hidden lg:absolute lg:top-[86px] lg:left-1/2 lg:block lg:w-[211px] lg:-translate-x-1/2" />
+      <OnboardingLogo className="hidden lg:block lg:w-[211px]" />
 
       <div className="flex flex-1 flex-col gap-6 px-4 lg:w-[696px] lg:flex-none">
-        <div className="hidden flex-col items-center gap-[26px] text-center lg:flex">
+        <div
+          className="hidden flex-col items-center gap-[26px] text-center lg:flex"
+          style={{ marginTop: logoGap }}
+        >
           <div
             aria-hidden
             className="h-[79px] w-[86px] rounded-lg border border-[#f5f5f5] bg-white"

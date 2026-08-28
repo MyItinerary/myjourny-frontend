@@ -43,6 +43,7 @@ export function BudgetContent() {
       maxSelected={1}
       continueHref="/onboarding/vibe"
       backHref="/onboarding/who-with"
+      logoGap="152.8px"
     />
   );
 }

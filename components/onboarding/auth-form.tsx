@@ -53,7 +53,13 @@ export function AuthForm({
     >
       {showGoogle && (
         <>
-          <Button type="button" variant="outline" size="cta" className="w-full">
+          <Button
+            type="button"
+            variant="outline"
+            size="cta"
+            className="w-full cursor-pointer"
+            onClick={() => router.push("/onboarding/get-to-know-you")}
+          >
             <Image src="/icons/google.svg" alt="" width={24} height={24} />
             Continue with Google
           </Button>
