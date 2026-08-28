@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, Heart, MapPin, Share2 } from "lucide-react";
 
@@ -27,7 +27,16 @@ import {
 import { useSavedExperienceIds, useToggleSaved } from "@/lib/queries/saved";
 import { cn } from "@/lib/utils";
 
+// "YYYY-MM-DD" (itin's event_start_date) parsed as a local date, not UTC —
+// splitting the parts avoids `new Date("YYYY-MM-DD")`'s UTC-midnight
+// parsing shifting the day backward in negative-offset time zones.
+function parseIsoDateLocal(value: string): Date {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function ExperienceDetailContent({ id }: { id: string }) {
+  const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
   const similarQuery = useRecommendedExperiences({ offset: 0, limit: 10 });
   const similarItems = (similarQuery.data ?? [])
@@ -51,13 +60,17 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   if (isError || !experience) {
     return (
       <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-4 px-6 py-24 text-center">
-        <p className="text-lg font-medium text-foreground">Couldn't load this experience</p>
+        <p className="text-lg font-medium text-foreground">Couldn&apos;t load this experience</p>
         <Link href="/" className="text-brand">
           Back to home
         </Link>
       </div>
     );
   }
+
+  const eventStartDate = experience.event_start_date
+    ? parseIsoDateLocal(experience.event_start_date)
+    : null;
 
   const images = experience.images?.length
     ? experience.images
@@ -191,7 +204,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
             {location && (
               <section>
-                <h2 className="font-heading text-xl font-bold text-foreground">Where you'll be</h2>
+                <h2 className="font-heading text-xl font-bold text-foreground">Where you&apos;ll be</h2>
                 <div className="relative mt-4 flex h-[280px] w-full items-center justify-center rounded-2xl bg-muted">
                   <div className="flex flex-col items-center gap-1 text-foreground">
                     <MapPin className="size-6 fill-brand text-brand" />
@@ -209,9 +222,12 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
           <ExperienceBookingPanel
             className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
+            experienceId={experience.id}
+            guideId={experience.guide_id}
             priceFrom={experience.price_from ?? 0}
             currency={experience.currency ?? "NGN"}
             durationLabel={durationLabel}
+            eventStartDate={eventStartDate}
           />
         </div>
       </div>
@@ -233,7 +249,36 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
       <Footer />
 
-      <ExperienceBookingBar priceFrom={experience.price_from ?? 0} currency={experience.currency ?? "NGN"} />
+      <ExperienceBookingBar
+        priceFrom={experience.price_from ?? 0}
+        currency={experience.currency ?? "NGN"}
+        onBookNow={() => setMobileBookingOpen(true)}
+      />
+
+      {/* Mobile bottom sheet — reuses the same ExperienceBookingPanel form
+          shown in the desktop sidebar rather than duplicating it. */}
+      {mobileBookingOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setMobileBookingOpen(false)}
+            className="absolute inset-0 bg-black/40"
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl">
+            <ExperienceBookingPanel
+              className="rounded-t-2xl rounded-b-none border-b-0"
+              experienceId={experience.id}
+              guideId={experience.guide_id}
+              priceFrom={experience.price_from ?? 0}
+              currency={experience.currency ?? "NGN"}
+              durationLabel={durationLabel}
+              eventStartDate={eventStartDate}
+              onClose={() => setMobileBookingOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
