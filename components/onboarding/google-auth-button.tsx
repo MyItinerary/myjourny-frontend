@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Loader2Icon } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
@@ -16,18 +17,10 @@ interface GoogleAuthButtonProps {
   loading?: boolean;
 }
 
-// @react-oauth/google's <GoogleLogin> only renders Google's own stock
-// button UI (theme/shape/size/text options, no custom children) — it can't
-// reproduce our pixel-verified pill button (custom icon, copy, 48px
-// height). So we render the real, functional GoogleLogin invisibly on top
-// of our styled decorative button and let clicks fall through to it.
-//
-// This depends on Google's rendered button/iframe filling its container,
-// which isn't a guaranteed contract on their end — if a future
-// @react-oauth/google or Google Identity Services update changes that
-// sizing behavior, the click target here can drift from the visible
-// button. Worth a visual/click smoke test after any upgrade of that
-// dependency.
+// GoogleLogin only renders Google's own stock button UI, so the real one
+// renders invisibly on top of our styled decorative button. Its `width` is
+// a fixed pixel value baked server-side by Google, not CSS — measured live
+// via ResizeObserver so it always matches the real container.
 export function GoogleAuthButton({
   label = "Continue with Google",
   onCredential,
@@ -35,8 +28,22 @@ export function GoogleAuthButton({
   className,
   loading = false,
 }: GoogleAuthButtonProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [buttonWidth, setButtonWidth] = useState(360);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const width = entry?.contentRect.width;
+      if (width) setButtonWidth(Math.round(width));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className={cn("relative h-12 w-full", className)}>
+    <div ref={containerRef} className={cn("relative h-12 w-full", className)}>
       <Button
         type="button"
         variant="outline"
@@ -68,7 +75,7 @@ export function GoogleAuthButton({
             }}
             onError={onError}
             text="continue_with"
-            width="360"
+            width={buttonWidth}
           />
         </div>
       )}
