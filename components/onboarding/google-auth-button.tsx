@@ -54,6 +54,9 @@ export function GoogleAuthButton({
           }}
           onError={onError}
           text="continue_with"
+          theme="outline"
+          shape="pill"
+          size="large"
           width={buttonWidth}
         />
       )}
