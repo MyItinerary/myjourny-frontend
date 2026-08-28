@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { apiErrorMessage } from "@/lib/api-error";
 import {
   clearAuth,
   setAuth,
@@ -29,12 +30,6 @@ function toSessionUser(me: MeResponse): SessionUser {
 async function fetchMe(): Promise<MeResponse> {
   const { data } = await apiClient.get<MeResponse>("/auth/me");
   return data;
-}
-
-function authErrorMessage(error: unknown, fallback: string) {
-  const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data
-    ?.detail;
-  return detail ?? fallback;
 }
 
 function notifySessionRoute() {
@@ -76,7 +71,7 @@ export function useRegister() {
     },
     onSuccess: (tokens, variables) => completeAuth(tokens, variables.email),
     onError: (error) =>
-      toast.error(authErrorMessage(error, "Couldn't create your account. Please try again.")),
+      toast.error(apiErrorMessage(error, "Couldn't create your account. Please try again.")),
   });
 }
 
@@ -90,7 +85,7 @@ export function useLogin() {
       return data;
     },
     onSuccess: (tokens, variables) => completeAuth(tokens, variables.email),
-    onError: (error) => toast.error(authErrorMessage(error, "Incorrect email or password.")),
+    onError: (error) => toast.error(apiErrorMessage(error, "Incorrect email or password.")),
   });
 }
 
@@ -109,7 +104,7 @@ export function useGoogleAuth() {
     },
     onSuccess: (tokens) => completeAuth(tokens, null),
     onError: (error) =>
-      toast.error(authErrorMessage(error, "Couldn't sign in with Google. Please try again.")),
+      toast.error(apiErrorMessage(error, "Couldn't sign in with Google. Please try again.")),
   });
 }
 
@@ -123,7 +118,7 @@ export function useRequestPasswordReset() {
       return data;
     },
     onError: (error) =>
-      toast.error(authErrorMessage(error, "Something went wrong. Please try again.")),
+      toast.error(apiErrorMessage(error, "Something went wrong. Please try again.")),
   });
 }
 
@@ -137,7 +132,7 @@ export function useResetPasswordWithToken() {
       return data;
     },
     onError: (error) =>
-      toast.error(authErrorMessage(error, "Invalid or expired reset link. Please try again.")),
+      toast.error(apiErrorMessage(error, "Invalid or expired reset link. Please try again.")),
   });
 }
 

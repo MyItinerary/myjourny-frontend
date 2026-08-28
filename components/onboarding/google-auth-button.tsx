@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { Loader2Icon } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 
-import { Button } from "@/components/ui/button";
+// import Image from "next/image";
+// import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface GoogleAuthButtonProps {
@@ -17,12 +17,13 @@ interface GoogleAuthButtonProps {
   loading?: boolean;
 }
 
-// GoogleLogin only renders Google's own stock button UI, so the real one
-// renders invisibly on top of our styled decorative button. Its `width` is
-// a fixed pixel value baked server-side by Google, not CSS — measured live
-// via ResizeObserver so it always matches the real container.
+// Using Google's real stock button directly instead of the pixel-designed
+// overlay trick (see git history) — that relied on Google's iframe filling
+// a container sized for our custom button, which kept drifting out of
+// alignment with the real clickable area. Design version commented out
+// below for now; swap back once the real button can be styled to match
+// without breaking clickability.
 export function GoogleAuthButton({
-  label = "Continue with Google",
   onCredential,
   onError,
   className,
@@ -43,42 +44,38 @@ export function GoogleAuthButton({
   }, []);
 
   return (
-    <div ref={containerRef} className={cn("relative h-12 w-full", className)}>
+    <div ref={containerRef} className={cn("flex h-12 w-full items-center justify-center", className)}>
+      {loading ? (
+        <Loader2Icon className="size-5 animate-spin" />
+      ) : (
+        <GoogleLogin
+          onSuccess={(response) => {
+            if (response.credential) onCredential(response.credential);
+          }}
+          onError={onError}
+          text="continue_with"
+          theme="outline"
+          shape="pill"
+          size="large"
+          logo_alignment="center"
+          width={buttonWidth}
+        />
+      )}
+
+      {/* {loading ? (
+        <Loader2Icon className="size-5 animate-spin" />
+      ) : (
+        <Image src="/icons/google.svg" alt="" width={24} height={24} />
+      )}
       <Button
         type="button"
         variant="outline"
         size="cta"
-        tabIndex={-1}
-        aria-hidden
         disabled={loading}
-        className="pointer-events-none w-full"
+        className="w-full"
       >
-        {loading ? (
-          <Loader2Icon className="size-5 animate-spin" />
-        ) : (
-          <Image src="/icons/google.svg" alt="" width={24} height={24} />
-        )}
-        {loading ? "Signing in…" : label}
-      </Button>
-
-      {/* Hidden while loading so a second click/credential can't fire mid-request. */}
-      {!loading && (
-        <div
-          className={cn(
-            "absolute inset-0 overflow-hidden rounded-full opacity-0",
-            "[&_>div]:!h-full [&_>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full"
-          )}
-        >
-          <GoogleLogin
-            onSuccess={(response) => {
-              if (response.credential) onCredential(response.credential);
-            }}
-            onError={onError}
-            text="continue_with"
-            width={buttonWidth}
-          />
-        </div>
-      )}
+        {label}
+      </Button> */}
     </div>
   );
 }
