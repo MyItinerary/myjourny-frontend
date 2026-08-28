@@ -65,6 +65,8 @@ export function useRecommendedExperiences(params: {
   latitude?: number | null;
   longitude?: number | null;
   city?: string;
+  /** Category slug — exact match against Experience.interest_tags on the backend, see /categories/[slug]. */
+  interest?: string;
   offset?: number;
   limit?: number;
   /**
@@ -83,6 +85,7 @@ export function useRecommendedExperiences(params: {
         latitude: params.latitude ?? undefined,
         longitude: params.longitude ?? undefined,
         city: params.city,
+        interest: params.interest,
         offset: params.offset ?? 0,
         limit: params.limit ?? 10,
       };
