@@ -57,7 +57,7 @@ export function GoogleAuthButton({
           theme="outline"
           shape="pill"
           size="large"
-          logo_alignment="left"
+          logo_alignment="center"
           width={buttonWidth}
         />
       )}
