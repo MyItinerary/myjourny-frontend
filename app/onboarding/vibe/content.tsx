@@ -9,6 +9,7 @@ import {
   StarsIcon,
 } from "@/components/icons/vibe-icons";
 import { PillQuestionScreen } from "@/components/onboarding/pill-question-screen";
+import { getPreferences, setPreference } from "@/lib/onboarding/preferences-store";
 
 const options = [
   {
@@ -58,6 +59,8 @@ export function VibeContent() {
       options={options}
       continueHref="/onboarding/curating"
       backHref="/onboarding/budget"
+      onContinue={(selected) => setPreference("tripIntent", selected)}
+      getInitialSelected={() => getPreferences().tripIntent}
     />
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { PasswordContent } from "./content";
 
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function PasswordPage() {
-  return <PasswordContent />;
+  return (
+    <Suspense fallback={null}>
+      <PasswordContent />
+    </Suspense>
+  );
 }
