@@ -26,7 +26,7 @@ export type ExperienceMatch = {
 
 const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
 
-function formatDuration(minutes?: number | null): string {
+export function formatDuration(minutes?: number | null): string {
   if (!minutes) return "";
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
@@ -122,9 +122,9 @@ export function useBrowsingHistory(limit = 10) {
 // DIFFERENT field-naming scheme than ExperienceMatch above (price_from
 // not price, cover_image_url not imageUrl, id not experience_id, etc.).
 // This is a best-effort shape from reading the DTO, not verified against
-// a live response the way ExperienceMatch was — re-verify against a real
-// GET /experiences/{id} call when actually building app/experiences/[id]
-// via figma-design-to-code, per the plan.
+// a live response the way ExperienceMatch was (itin was down when this
+// page was built from screenshots rather than live Figma access) —
+// re-verify against a real GET /experiences/{id} call once itin's back up.
 export type ExperienceDetail = {
   id: string;
   guide_id?: string | null;
@@ -142,9 +142,18 @@ export type ExperienceDetail = {
   price_from?: number | null;
   currency?: string | null;
   interest_tags?: string[] | null;
+  energy_level?: string | null;
   safety_badge_count?: number | null;
   rating?: number | null;
   cover_image_url?: string | null;
+  cancellation_policy?: string | null;
+  requirements?: { fitness?: string; age?: string; accessibility?: string } | null;
+  safety_info?: {
+    riskLevel?: string;
+    notes?: string[];
+    mobilityAccessibility?: string;
+    emergencyGuidance?: string;
+  } | null;
   booking_url?: string | null;
   what_you_will_do?: string[] | null;
   whats_included?: string[] | null;

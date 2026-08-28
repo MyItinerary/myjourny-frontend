@@ -129,18 +129,17 @@ export function ExperienceRailSection({
         ) : null}
       </div>
 
-      {/* Mobile: 3 horizontally-scrollable rows of 360px cards; desktop: the
-          design's static 2-col grid. */}
+      {/* Mobile shows top 3, desktop shows top 6 (2x3 grid) — per Figma. */}
       <div className="mt-6 flex flex-col gap-6 lg:hidden">
         {isLoading
-          ? chunk(Array.from({ length: 6 }), 2).map((row, index) => (
+          ? chunk(Array.from({ length: 3 }), 2).map((row, index) => (
               <div key={index} className="-mr-6 flex gap-3 overflow-hidden pr-6">
                 {row.map((_, itemIndex) => (
                   <ExperienceCardSkeleton key={itemIndex} className="w-[360px] shrink-0 p-0" />
                 ))}
               </div>
             ))
-          : chunk(items, 2).map((row, index) => (
+          : chunk(items.slice(0, 3), 2).map((row, index) => (
               <div key={index} className="-mr-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pr-6">
                 {row.map((item) => (
                   <ExperienceCard key={item.id} {...item} className="w-[360px] shrink-0 snap-start p-0" />
@@ -151,7 +150,7 @@ export function ExperienceRailSection({
       <div className="mt-[31px] hidden grid-cols-2 gap-x-6 gap-y-[31px] lg:grid">
         {isLoading
           ? Array.from({ length: 6 }).map((_, index) => <ExperienceCardSkeleton key={index} />)
-          : items.map((item) => <ExperienceCard key={item.id} {...item} />)}
+          : items.slice(0, 6).map((item) => <ExperienceCard key={item.id} {...item} />)}
       </div>
     </section>
   );

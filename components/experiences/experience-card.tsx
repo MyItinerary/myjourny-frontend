@@ -48,6 +48,7 @@ export function ExperienceCard({
           src={imageSrc}
           alt={imageAlt}
           fill
+          unoptimized
           sizes="113px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />

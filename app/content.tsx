@@ -46,11 +46,11 @@ export function HomeContent() {
     latitude: hasCoords ? geolocation.latitude : undefined,
     longitude: hasCoords ? geolocation.longitude : undefined,
     offset: 0,
-    limit: 10,
+    limit: 6, // matches the Figma-verified mock it replaces (6 desktop / 3 mobile, sliced in ExperienceRailSection)
     enabled: isAccount && geolocation !== "pending",
   });
   const topPicksQuery = useRecommendedExperiences({
-    offset: 10,
+    offset: 6,
     limit: 10,
     enabled: isAccount,
   });

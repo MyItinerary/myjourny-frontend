@@ -41,7 +41,7 @@ export function ExperienceCardVertical({
       {/* Figma keeps the photo a fixed 212px tall in every desktop context
           (345px rail cards and 277.5px category-grid cards alike). */}
       <div className="relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted lg:aspect-auto lg:h-[212px]">
-        <Image src={imageSrc} alt={imageAlt} fill sizes="345px" className="object-cover" />
+        <Image src={imageSrc} alt={imageAlt} fill unoptimized sizes="345px" className="object-cover" />
         <button
           type="button"
           aria-label="Save experience"
