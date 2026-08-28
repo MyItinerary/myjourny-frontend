@@ -104,9 +104,13 @@ export function PillQuestionScreen({
             aria-hidden
             className="h-[79px] w-[86px] rounded-lg border border-[#f5f5f5] bg-white"
           />
-          <div className="flex flex-col items-center gap-[9px]">
-            <p className="font-sans text-[32px] font-extrabold text-foreground">{heading}</p>
-            <p className="text-base text-muted-foreground">{subtitle}</p>
+          <div className="flex flex-col items-center gap-[9px] text-center">
+            <h1 className="font-sans text-[32px] font-extrabold leading-[38.4px] text-[#333134]">
+              {heading}
+            </h1>
+            <p className="font-sans text-[16px] font-normal leading-[24px] text-[#6F6B72]">
+              {subtitle}
+            </p>
           </div>
         </div>
 

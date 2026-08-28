@@ -21,15 +21,10 @@ export function AuthScreenLayout({ heading, subtitle, children }: AuthScreenLayo
           <div className="flex flex-col items-center gap-[26px]">
             <OnboardingLogo />
             <div className="flex flex-col items-center gap-[9px] text-center">
-              <p className="font-sans text-2xl font-extrabold text-foreground lg:hidden">
+              <h1 className="font-sans text-2xl font-extrabold text-[#333134] lg:text-[32px] lg:leading-[38.4px]">
                 {heading}
-              </p>
-              <p className="text-sm text-muted-foreground lg:hidden">{subtitle}</p>
-
-              <p className="hidden font-sans text-[32px] font-extrabold text-foreground lg:block">
-                {heading}
-              </p>
-              <p className="hidden w-[353px] text-base text-muted-foreground lg:block">
+              </h1>
+              <p className="max-w-[353px] font-sans text-sm leading-normal text-[#6F6B72] lg:text-base lg:leading-[24px]">
                 {subtitle}
               </p>
             </div>
