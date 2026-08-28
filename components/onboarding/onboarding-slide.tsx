@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -29,8 +28,6 @@ export function OnboardingSlide({
         className="object-cover"
       />
       <div aria-hidden className="absolute inset-0 bg-black/[0.29]" />
-
-
 
       {/* Figma pins this with a fixed-canvas calc(); ported to edge padding so it holds at any viewport size. */}
       <p className="absolute bottom-9 left-9 w-[calc(100%-2*(--spacing(9)))] max-w-[431px] font-sans text-[44px] leading-[1.2] font-extrabold text-white">
