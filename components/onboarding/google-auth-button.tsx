@@ -17,24 +17,10 @@ interface GoogleAuthButtonProps {
   loading?: boolean;
 }
 
-// @react-oauth/google's <GoogleLogin> only renders Google's own stock
-// button UI (theme/shape/size/text options, no custom children) — it can't
-// reproduce our pixel-verified pill button (custom icon, copy, 48px
-// height). So we render the real, functional GoogleLogin invisibly on top
-// of our styled decorative button and let clicks fall through to it.
-//
-// Root-caused bug (reported: button not clickable): GoogleLogin's `width`
-// isn't a CSS size — it's passed straight to Google's own
-// google.accounts.id.renderButton(), which bakes a button of that EXACT
-// pixel width into the iframe on Google's side. A hardcoded width="360"
-// only lined up with the real container by coincidence; forcing the
-// iframe element to `w-full` via CSS just stretches its outer box, it
-// can't rescale content Google already rendered for 360px — so wherever
-// the actual container isn't exactly 360px (any breakpoint/layout this
-// button appears in), the real clickable area drifts out from under the
-// visible decorative button and clicks land on dead space. Fixed by
-// measuring the real container with a ResizeObserver and always passing
-// its exact current width, so the two can never drift apart.
+// GoogleLogin only renders Google's own stock button UI, so the real one
+// renders invisibly on top of our styled decorative button. Its `width` is
+// a fixed pixel value baked server-side by Google, not CSS — measured live
+// via ResizeObserver so it always matches the real container.
 export function GoogleAuthButton({
   label = "Continue with Google",
   onCredential,
