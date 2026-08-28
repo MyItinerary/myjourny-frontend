@@ -50,6 +50,11 @@ export function useToggleSaved() {
       });
       return { previous };
     },
+    onSuccess: (_data, { isSaved }) => {
+      // `isSaved` is the state *before* this toggle — true means we just
+      // removed it, false means we just added it.
+      toast.success(isSaved ? "Removed from wishlist" : "Added to wishlist");
+    },
     onError: (_error, _variables, context) => {
       if (context?.previous) queryClient.setQueryData(SAVED_IDS_KEY, context.previous);
       toast.error("Couldn't update your wishlist. Please try again.");
