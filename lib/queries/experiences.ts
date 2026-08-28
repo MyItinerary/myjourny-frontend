@@ -3,12 +3,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { apiErrorMessage } from "@/lib/api-error";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
-
-function apiErrorMessage(error: unknown, fallback: string) {
-  const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-  return detail ?? fallback;
-}
 
 // Matches itin's ExperienceMatch DTO (app/core/dto/experience.py) — what
 // GET /experiences/recommendations and GET /experiences/browsing-history
