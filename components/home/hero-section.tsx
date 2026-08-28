@@ -3,11 +3,24 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { motion, type Variants } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import { HomeNav } from "@/components/home/home-nav";
 import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
 import { suggestedDestinations } from "@/lib/mock-data/home";
+
+// Headline -> subtext -> search bar, staggered on mount (above the fold,
+// so this plays immediately rather than on scroll — see components/motion/reveal.tsx
+// for the scroll-triggered version used everywhere else on the homepage).
+const heroContainerVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+const heroItemVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+};
 
 // Figma: "Hero" (2001:9143 guest / 2001:9153 account) — pixel-identical
 // between the two states, so this ships as one shared component.
@@ -16,29 +29,42 @@ export function HeroSection() {
     <section className="relative z-20 bg-gradient-to-b from-muted to-white">
       <HomeNav />
 
-      <div className="mx-auto flex w-full max-w-[1512px] flex-col items-start px-6 pt-[50px] pb-[64px] text-left lg:px-[306px] lg:pt-[77px] lg:pb-[90px]">
+      <motion.div
+        variants={heroContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="mx-auto flex w-full max-w-[1512px] flex-col items-start px-6 pt-[50px] pb-[64px] text-left lg:px-[306px] lg:pt-[77px] lg:pb-[90px]"
+      >
         <div className="flex flex-col items-start gap-4 text-left lg:gap-5">
           {/* Mobile headline is Midnight Earth (#2c0101); desktop is #130404. */}
-          <h1 className="font-heading text-[32px] leading-[1.2] font-extrabold text-[#2c0101] lg:text-[52px] lg:text-[#130404]">
+          <motion.h1
+            variants={heroItemVariants}
+            className="font-heading text-[32px] leading-[1.2] font-extrabold text-[#2c0101] lg:text-[52px] lg:text-[#130404]"
+          >
             Your city is full of things worth doing, Start with one.
-          </h1>
-          <p className="max-w-[508px] text-lg leading-[28px] text-muted-foreground lg:text-2xl lg:leading-normal">
+          </motion.h1>
+          <motion.p
+            variants={heroItemVariants}
+            className="max-w-[508px] text-lg leading-[28px] text-muted-foreground lg:text-2xl lg:leading-normal"
+          >
             Real experiences hosted by real people, booked in under 2 minutes.
-          </p>
+          </motion.p>
         </div>
 
-        {/* Mobile: compact "Where to?" pill (2001:8004); desktop: 3-field bar. */}
-        <button
-          type="button"
-          className="mt-[76px] flex w-full items-center gap-[7px] rounded-full border border-[#c7c1ba] bg-white p-4 text-left lg:hidden"
-        >
-          <span className="min-w-0 flex-1 text-base leading-6 text-muted-foreground">Where to?</span>
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand">
-            <Image src="/icons/search-lg.svg" alt="" width={16} height={16} className="invert" />
-          </span>
-        </button>
-        <SearchBar className="mt-8 hidden w-full max-w-[900px] lg:mt-12 lg:flex" />
-      </div>
+        <motion.div variants={heroItemVariants} className="w-full">
+          {/* Mobile: compact "Where to?" pill (2001:8004); desktop: 3-field bar. */}
+          <button
+            type="button"
+            className="mt-[76px] flex w-full items-center gap-[7px] rounded-full border border-[#c7c1ba] bg-white p-4 text-left lg:hidden"
+          >
+            <span className="min-w-0 flex-1 text-base leading-6 text-muted-foreground">Where to?</span>
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand">
+              <Image src="/icons/search-lg.svg" alt="" width={16} height={16} className="invert" />
+            </span>
+          </button>
+          <SearchBar className="mt-8 hidden w-full max-w-[900px] lg:mt-12 lg:flex" />
+        </motion.div>
+      </motion.div>
     </section>
   );
 }
