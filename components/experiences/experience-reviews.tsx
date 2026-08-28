@@ -42,7 +42,7 @@ export function ExperienceReviews({ rating }: { rating?: number | null }) {
         ))}
       </div>
 
-      <Button variant="outline" className="self-start rounded-full border-brand text-brand hover:bg-brand/5">
+      <Button variant="outline" className="w-full rounded-full border-brand text-brand hover:bg-brand/5">
         Show all reviews
       </Button>
     </div>
