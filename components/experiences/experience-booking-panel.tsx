@@ -6,7 +6,7 @@ import { Calendar, Clock, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
-import { useCreateBooking } from "@/lib/queries/experiences";
+import { ExperiencePrice, useCreateBooking } from "@/lib/queries/experiences";
 
 function formatPrice(amount: number, currency: string) {
   return new Intl.NumberFormat("en-NG", {
@@ -37,7 +37,7 @@ function combineDateAndTime(date: Date, timeLabel: string): string | null {
 interface ExperienceBookingPanelProps {
   experienceId: string;
   guideId?: string | null;
-  priceFrom: number;
+  prices: ExperiencePrice[];
   currency: string;
   durationLabel: string;
   /** Prefills the calendar when the experience has a fixed, real scheduled date. */
@@ -52,7 +52,7 @@ interface ExperienceBookingPanelProps {
 export function ExperienceBookingPanel({
   experienceId,
   guideId,
-  priceFrom,
+  prices,
   currency,
   durationLabel,
   eventStartDate,
@@ -63,6 +63,7 @@ export function ExperienceBookingPanel({
   const [participants, setParticipants] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(eventStartDate ?? null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [selectedPriceId, setSelectedPriceId] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const createBooking = useCreateBooking();
 
@@ -76,18 +77,25 @@ export function ExperienceBookingPanel({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isReady = !!selectedTime && !!selectedDate && participants > 0;
-  const total = priceFrom * Math.max(participants, 1);
+  const cheapest = prices.reduce<ExperiencePrice | null>(
+    (min, p) => (!min || p.amount < min.amount ? p : min),
+    null
+  );
+  const selectedPrice = prices.find((p) => p.id === selectedPriceId) ?? cheapest;
+
+  const isReady = !!selectedTime && !!selectedDate && participants > 0 && !!selectedPrice;
+  const total = (selectedPrice?.amount ?? 0) * Math.max(participants, 1);
   const dateLabel = selectedDate
     ? selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric" })
     : "Select dates";
 
   const handleBookNow = () => {
-    if (!guideId || !selectedDate || !selectedTime) return;
+    if (!guideId || !selectedDate || !selectedTime || !selectedPrice) return;
     const requestedDatetime = combineDateAndTime(selectedDate, selectedTime);
     createBooking.mutate(
       {
         experience_id: experienceId,
+        experience_price_id: selectedPrice.id,
         guide_id: guideId,
         requested_datetime: requestedDatetime ?? undefined,
         party_size: participants,
@@ -121,11 +129,35 @@ export function ExperienceBookingPanel({
         )}
         <p>
           <span className={cn("text-2xl font-semibold text-foreground", isReady && "text-muted-foreground line-through")}>
-            {formatPrice(priceFrom, currency)}
+            {formatPrice(selectedPrice?.amount ?? 0, currency)}
           </span>
           {!isReady && <span className="ml-1 text-sm text-muted-foreground">/ person</span>}
         </p>
       </div>
+
+      {prices.length > 1 && (
+        <div className="flex flex-col gap-2">
+          <span className="text-sm text-muted-foreground">Choose an option</span>
+          <div className="flex flex-col gap-2">
+            {prices.map((price) => (
+              <button
+                key={price.id}
+                type="button"
+                onClick={() => setSelectedPriceId(price.id)}
+                className={cn(
+                  "flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition-colors",
+                  (selectedPrice?.id ?? cheapest?.id) === price.id
+                    ? "border-foreground bg-muted"
+                    : "border-border hover:bg-muted"
+                )}
+              >
+                <span className="font-medium text-foreground">{price.label}</span>
+                <span className="text-muted-foreground">{formatPrice(price.amount, currency)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         <span className="text-sm text-muted-foreground">Select a starting time and your preferred date</span>

@@ -22,6 +22,7 @@ import {
   experienceMatchToCardProps,
   formatDuration,
   useExperienceDetail,
+  useExperiencePrices,
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
 import { useSavedExperienceIds, useToggleSaved } from "@/lib/queries/saved";
@@ -38,6 +39,11 @@ function parseIsoDateLocal(value: string): Date {
 export function ExperienceDetailContent({ id }: { id: string }) {
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
+  const { data: prices } = useExperiencePrices(id);
+  const minPrice = (prices ?? []).reduce(
+    (min, p) => (min === null || p.amount < min ? p.amount : min),
+    null as number | null
+  );
   const similarQuery = useRecommendedExperiences({ offset: 0, limit: 10 });
   const similarItems = (similarQuery.data ?? [])
     .filter((m) => m.experience_id !== id)
@@ -224,7 +230,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
             experienceId={experience.id}
             guideId={experience.guide_id}
-            priceFrom={experience.price_from ?? 0}
+            prices={prices ?? []}
             currency={experience.currency ?? "NGN"}
             durationLabel={durationLabel}
             eventStartDate={eventStartDate}
@@ -250,7 +256,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
       <Footer />
 
       <ExperienceBookingBar
-        priceFrom={experience.price_from ?? 0}
+        priceFrom={minPrice ?? 0}
         currency={experience.currency ?? "NGN"}
         onBookNow={() => setMobileBookingOpen(true)}
       />
@@ -270,7 +276,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               className="rounded-t-2xl rounded-b-none border-b-0"
               experienceId={experience.id}
               guideId={experience.guide_id}
-              priceFrom={experience.price_from ?? 0}
+              prices={prices ?? []}
               currency={experience.currency ?? "NGN"}
               durationLabel={durationLabel}
               eventStartDate={eventStartDate}
