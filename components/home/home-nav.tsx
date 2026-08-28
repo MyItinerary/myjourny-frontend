@@ -2,17 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { HeartIcon, HomeSmileIcon, ImageIcon, MenuIcon, UserIcon } from "@/components/icons/nav-icons";
 import { useSession } from "@/lib/auth/session-store";
+import { useLogout } from "@/lib/queries/auth";
 
 // Figma: "Desktop nav" (2001:7998) / "Mobile nav" (2001:7972 — logo +
 // hamburger button), part of the Hero section. "Get started" swaps for the
 // account icon once signed in; everything else stays the same either way.
 export function HomeNav({ className }: { className?: string }) {
   const { user } = useSession();
+  const router = useRouter();
+  const logout = useLogout();
 
   return (
     <header className={cn("relative z-10 flex items-center justify-between px-6 py-4 lg:px-20 lg:py-6", className)}>
@@ -63,14 +68,28 @@ export function HomeNav({ className }: { className?: string }) {
           Become a guide
         </Link>
         {user ? (
-          // TODO: no account/profile page built yet to link this to.
-          <Link
-            href="#"
-            aria-label="Account"
-            className="flex size-12 items-center justify-center rounded-[12px] bg-[#F4F2EE] text-foreground"
-          >
-            <UserIcon className="size-12" />
-          </Link>
+          <>
+            {/* TODO: no account/profile page built yet to link this to. */}
+            <Link
+              href="#"
+              aria-label="Account"
+              className="flex size-12 items-center justify-center rounded-[12px] bg-[#F4F2EE] text-foreground"
+            >
+              <UserIcon className="size-12" />
+            </Link>
+            {/* TEMP: quick way to test logout while there's no account
+                menu yet — replace with a proper account dropdown. */}
+            <button
+              type="button"
+              aria-label="Log out"
+              onClick={() => {
+                logout.mutate(undefined, { onSuccess: () => router.push("/") });
+              }}
+              className="flex size-12 items-center justify-center rounded-[12px] bg-[#F4F2EE] text-foreground transition-colors hover:bg-muted"
+            >
+              <LogOut className="size-5" />
+            </button>
+          </>
         ) : (
           <Button size="cta" render={<Link href="/onboarding" />}>
             Get started
