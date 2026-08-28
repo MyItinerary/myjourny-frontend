@@ -10,6 +10,7 @@ import { Footer } from "@/components/home/footer";
 import { CategoryHeader } from "@/components/categories/category-header";
 import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
+import { useSession } from "@/lib/auth/session-store";
 import { cities, otherExperiences } from "@/lib/mock-data/home";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 
@@ -26,6 +27,9 @@ export function CategoryContent({
   items: ExperienceItem[];
   isLoading?: boolean;
 }) {
+  const { user } = useSession();
+  const isAccount = user !== null;
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="hidden lg:block">
@@ -53,7 +57,7 @@ export function CategoryContent({
         </div>
       </div>
 
-      <CitiesSection cities={cities} variant="category" />
+      <CitiesSection cities={cities} variant="category" isAccount={isAccount} />
 
       <ExperienceRailSection
         heading="Other experiences you might find interesting"
