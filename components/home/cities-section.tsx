@@ -63,14 +63,21 @@ export function CitiesSection({
           {visible.map((city) => {
             const tile = (
               <>
-                <Image src={city.imageSrc} alt="" fill sizes="(min-width: 1024px) 25vw, 251px" className="object-cover" />
-                <div aria-hidden className="absolute inset-0 bg-black/20" />
+                <Image
+                  src={city.imageSrc}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 25vw, 251px"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div aria-hidden className="absolute inset-0 bg-black/20 transition-colors duration-300 group-hover:bg-black/35" />
                 <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl font-semibold whitespace-nowrap text-white">
                   {city.name}
                 </span>
               </>
             );
-            const tileClassName = "relative h-[170px] w-[251px] overflow-hidden rounded-2xl bg-muted lg:w-auto";
+            const tileClassName =
+              "group relative h-[170px] w-[251px] overflow-hidden rounded-2xl bg-muted transition-transform duration-300 hover:-translate-y-1 lg:w-auto";
 
             return isAccount ? (
               <Link key={city.id} href={`/cities/${city.id}`} className={tileClassName}>

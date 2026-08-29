@@ -40,15 +40,27 @@ export function ExperienceCardVertical({
     // relative + a lower z-index Link covering the card, so the save
     // button (higher z-index) stays independently clickable instead of
     // being nested inside the link (invalid HTML, breaks click handling).
-    <article className={cn("relative flex w-full flex-col gap-3", className)}>
+    <article
+      className={cn(
+        "group relative flex w-full flex-col gap-3 transition-transform duration-300 hover:-translate-y-1",
+        className
+      )}
+    >
       {id && (
         <Link href={`/experiences/${id}`} className="absolute inset-0 z-0" aria-label={title} />
       )}
 
       {/* Figma keeps the photo a fixed 212px tall in every desktop context
           (345px rail cards and 277.5px category-grid cards alike). */}
-      <div className="relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted lg:aspect-auto lg:h-[212px]">
-        <Image src={imageSrc} alt={imageAlt} fill unoptimized sizes="345px" className="object-cover" />
+      <div className="relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-lg lg:aspect-auto lg:h-[212px]">
+        <Image
+          src={imageSrc}
+          alt={imageAlt}
+          fill
+          unoptimized
+          sizes="345px"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+        />
         <button
           type="button"
           aria-label={isSaved ? "Remove from wishlist" : "Save experience"}
