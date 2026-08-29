@@ -27,7 +27,7 @@ export function CheckboxPill({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "flex w-full items-start gap-4 rounded-2xl border bg-card p-4 text-left transition-colors",
+        "flex w-full h-[82px] min-h-[82px] items-start gap-4 p-4 rounded-[16px] bg-white border text-left transition-colors cursor-pointer",
         selected ? "border-brand" : "border-transparent",
         className
       )}
@@ -35,7 +35,7 @@ export function CheckboxPill({
       <span className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-[#f5f3ef]">
         <Icon className="size-6 text-foreground" />
       </span>
-      <span className="flex flex-col gap-1">
+      <span className="flex flex-col gap-0.5 justify-center min-w-0">
         <span className="font-sans text-[16px] font-medium leading-[24px] text-[#333134]">
           {label}
         </span>

@@ -18,11 +18,10 @@ export function HeroSection() {
 
       <div className="mx-auto flex w-full max-w-[1512px] flex-col items-start px-6 pt-[50px] pb-[64px] text-left lg:px-[306px] lg:pt-[77px] lg:pb-[90px]">
         <div className="flex flex-col items-start gap-4 text-left lg:gap-5">
-          {/* Mobile headline is Midnight Earth (#2c0101); desktop is #130404. */}
-          <h1 className="font-heading text-[32px] leading-[1.2] font-extrabold text-[#2c0101] lg:text-[52px] lg:text-[#130404]">
+          <h1 className="font-heading text-[32px] font-extrabold leading-[1.2] text-[#2c0101] lg:text-[52px] lg:leading-[62.4px] lg:text-[#130404]">
             Your city is full of things worth doing, Start with one.
           </h1>
-          <p className="max-w-[508px] text-lg leading-[28px] text-muted-foreground lg:text-2xl lg:leading-normal">
+          <p className="max-w-[508px] font-sans text-lg font-normal leading-[28px] text-[#6F6B72] lg:text-[24px] lg:leading-normal">
             Real experiences hosted by real people, booked in under 2 minutes.
           </p>
         </div>
@@ -49,6 +48,7 @@ function SearchBar({ className }: { className?: string }) {
   const [selectedWhere, setSelectedWhere] = useState<string>("");
   const [selectedWhereId, setSelectedWhereId] = useState<string>("");
   const [selectedWhen, setSelectedWhen] = useState<string>("");
+  const [whoText, setWhoText] = useState<string>("");
   const [guests, setGuests] = useState({
     adults: 0,
     children: 0,
@@ -60,6 +60,9 @@ function SearchBar({ className }: { className?: string }) {
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
   const searchBarRef = useRef<HTMLDivElement>(null);
+  const whereInputRef = useRef<HTMLInputElement>(null);
+  const whenInputRef = useRef<HTMLInputElement>(null);
+  const whoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -73,11 +76,48 @@ function SearchBar({ className }: { className?: string }) {
     };
   }, []);
 
-  const totalGuests = guests.adults + guests.children + guests.infants;
-  const whoSummary =
-    totalGuests > 0
-      ? `${totalGuests} guest${totalGuests > 1 ? "s" : ""}${guests.infants > 0 ? `, ${guests.infants} infant${guests.infants > 1 ? "s" : ""}` : ""}`
-      : "Select guests";
+  function updateGuests(newGuests: typeof guests) {
+    setGuests(newGuests);
+    const total = newGuests.adults + newGuests.children + newGuests.infants;
+    if (total > 0) {
+      setWhoText(
+        `${total} guest${total > 1 ? "s" : ""}${newGuests.infants > 0 ? `, ${newGuests.infants} infant${newGuests.infants > 1 ? "s" : ""}` : ""}`
+      );
+    } else {
+      setWhoText("");
+    }
+  }
+
+  function handleSearch() {
+    const trimmed = selectedWhere.trim().toLowerCase();
+    if (!trimmed) return;
+
+    if (selectedWhereId) {
+      router.push(`/cities/${selectedWhereId}`);
+      return;
+    }
+
+    const matchedDest = suggestedDestinations.find(
+      (d) =>
+        d.city.toLowerCase().includes(trimmed) ||
+        d.id.toLowerCase().includes(trimmed) ||
+        trimmed.includes(d.id.toLowerCase())
+    );
+
+    if (matchedDest) {
+      router.push(`/cities/${matchedDest.id}`);
+    } else {
+      router.push(`/cities/lagos`);
+    }
+  }
+
+  const filteredDestinations = selectedWhere.trim()
+    ? suggestedDestinations.filter(
+        (dest) =>
+          dest.city.toLowerCase().includes(selectedWhere.toLowerCase()) ||
+          dest.description.toLowerCase().includes(selectedWhere.toLowerCase())
+      )
+    : suggestedDestinations;
 
   const guestTypes = [
     {
@@ -107,61 +147,114 @@ function SearchBar({ className }: { className?: string }) {
     >
       <div className="flex flex-1 flex-col divide-y divide-[#e0dfdd] lg:flex-row lg:items-center lg:divide-y-0">
         {/* Where Tab */}
-        <button
-          type="button"
-          onClick={() => setActiveTab(activeTab === "where" ? null : "where")}
+        <div
+          onClick={() => {
+            setActiveTab("where");
+            whereInputRef.current?.focus();
+          }}
           className={cn(
-            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors",
+            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors cursor-pointer",
             activeTab === "where" ? "bg-[#F4F2EE]" : "bg-transparent hover:bg-[#F4F2EE]/50"
           )}
         >
-          <span className="text-xs text-foreground">Where</span>
-          <span className="text-sm text-muted-foreground line-clamp-1">
-            {selectedWhere || "Where are you looking to explore?"}
-          </span>
-        </button>
+          <label htmlFor="search-where" className="text-xs font-medium text-foreground cursor-pointer">
+            Where
+          </label>
+          <input
+            id="search-where"
+            ref={whereInputRef}
+            type="text"
+            value={selectedWhere}
+            placeholder="Where are you looking to explore?"
+            onFocus={() => setActiveTab("where")}
+            onChange={(e) => {
+              setSelectedWhere(e.target.value);
+              setSelectedWhereId("");
+              if (activeTab !== "where") setActiveTab("where");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
+            className="w-full border-0 bg-transparent p-0 font-sans text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-0 leading-tight"
+          />
+        </div>
 
         <div className={cn("hidden h-8 w-px bg-[#e0dfdd] lg:block", (activeTab === "where" || activeTab === "when") && "opacity-0")} />
 
         {/* When Tab */}
-        <button
-          type="button"
-          onClick={() => setActiveTab(activeTab === "when" ? null : "when")}
+        <div
+          onClick={() => {
+            setActiveTab("when");
+            whenInputRef.current?.focus();
+          }}
           className={cn(
-            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors",
+            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors cursor-pointer",
             activeTab === "when" ? "bg-[#F4F2EE]" : "bg-transparent hover:bg-[#F4F2EE]/50"
           )}
         >
-          <span className="text-xs text-foreground">When</span>
-          <span className="text-sm text-muted-foreground line-clamp-1">
-            {selectedWhen || "Select dates"}
-          </span>
-        </button>
+          <label htmlFor="search-when" className="text-xs font-medium text-foreground cursor-pointer">
+            When
+          </label>
+          <input
+            id="search-when"
+            ref={whenInputRef}
+            type="text"
+            value={selectedWhen}
+            placeholder="Select dates"
+            onFocus={() => setActiveTab("when")}
+            onChange={(e) => {
+              setSelectedWhen(e.target.value);
+              if (activeTab !== "when") setActiveTab("when");
+            }}
+            className="w-full border-0 bg-transparent p-0 font-sans text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-0 leading-tight"
+          />
+        </div>
 
         <div className={cn("hidden h-8 w-px bg-[#e0dfdd] lg:block", (activeTab === "when" || activeTab === "who") && "opacity-0")} />
 
         {/* Who Tab */}
-        <button
-          type="button"
-          onClick={() => setActiveTab(activeTab === "who" ? null : "who")}
+        <div
+          onClick={() => {
+            setActiveTab("who");
+            whoInputRef.current?.focus();
+          }}
           className={cn(
-            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors",
+            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors cursor-pointer",
             activeTab === "who" ? "bg-[#F4F2EE]" : "bg-transparent hover:bg-[#F4F2EE]/50"
           )}
         >
-          <span className="text-xs text-foreground">Who</span>
-          <span className="text-sm text-muted-foreground line-clamp-1">
-            {whoSummary}
-          </span>
-        </button>
+          <label htmlFor="search-who" className="text-xs font-medium text-foreground cursor-pointer">
+            Who
+          </label>
+          <input
+            id="search-who"
+            ref={whoInputRef}
+            type="text"
+            value={whoText}
+            placeholder="Select guests"
+            onFocus={() => setActiveTab("who")}
+            onChange={(e) => {
+              const val = e.target.value;
+              setWhoText(val);
+              const num = parseInt(val.replace(/\D/g, ""), 10);
+              if (!isNaN(num)) {
+                setGuests({ adults: num, children: 0, infants: 0 });
+              }
+              if (activeTab !== "who") setActiveTab("who");
+            }}
+            className="w-full border-0 bg-transparent p-0 font-sans text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-0 leading-tight"
+          />
+        </div>
       </div>
 
       <button
         type="button"
         aria-label="Search"
-        disabled={!selectedWhereId}
-        onClick={() => selectedWhereId && router.push(`/cities/${selectedWhereId}`)}
-        className="flex size-11 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto"
+        disabled={!selectedWhere.trim()}
+        onClick={handleSearch}
+        className="flex size-11 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto cursor-pointer"
       >
         <Image src="/icons/search-lg.svg" alt="" width={20} height={20} className="invert" />
       </button>
@@ -172,38 +265,42 @@ function SearchBar({ className }: { className?: string }) {
           <span className="text-[12px] font-medium leading-[18px] text-black">
             Suggested Destinations
           </span>
-          <div className="flex w-full flex-col gap-2">
-            {suggestedDestinations.map((dest) => (
-              <button
-                key={dest.id}
-                type="button"
-                onClick={() => {
-                  setSelectedWhere(dest.city);
-                  setSelectedWhereId(dest.id);
-                  setActiveTab(null);
-                  router.push(`/cities/${dest.id}`);
-                }}
-                className="flex w-full items-center gap-[14.5px] rounded-xl p-1 text-left transition-colors hover:bg-[#F4F2EE]/70"
-              >
-                <div className="flex size-[48px] shrink-0 items-center justify-center rounded-[9.938px] bg-[#F4F2EE] p-[11.594px]">
-                  <Image
-                    src="/icons/pin-destination.svg"
-                    alt=""
-                    width={20}
-                    height={25}
-                    className="h-[24.844px] w-[19.875px]"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-base font-semibold leading-6 text-[#130404]">
-                    {dest.city}
-                  </span>
-                  <span className="text-sm leading-5 text-[#6F6B72]">
-                    {dest.description}
-                  </span>
-                </div>
-              </button>
-            ))}
+          <div className="flex w-full flex-col gap-2 max-h-[320px] overflow-y-auto">
+            {filteredDestinations.length > 0 ? (
+              filteredDestinations.map((dest) => (
+                <button
+                  key={dest.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedWhere(dest.city);
+                    setSelectedWhereId(dest.id);
+                    setActiveTab(null);
+                    router.push(`/cities/${dest.id}`);
+                  }}
+                  className="flex w-full items-center gap-[14.5px] rounded-xl p-1 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
+                >
+                  <div className="flex size-[48px] shrink-0 items-center justify-center rounded-[9.938px] bg-[#F4F2EE] p-[11.594px]">
+                    <Image
+                      src="/icons/pin-destination.svg"
+                      alt=""
+                      width={20}
+                      height={25}
+                      className="h-[24.844px] w-[19.875px]"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-base font-semibold leading-6 text-[#130404]">
+                      {dest.city}
+                    </span>
+                    <span className="text-sm leading-5 text-[#6F6B72]">
+                      {dest.description}
+                    </span>
+                  </div>
+                </button>
+              ))
+            ) : (
+              <p className="py-2 text-sm text-muted-foreground">No destinations found matching &ldquo;{selectedWhere}&rdquo;</p>
+            )}
           </div>
         </div>
       )}
@@ -247,13 +344,13 @@ function SearchBar({ className }: { className?: string }) {
                     type="button"
                     disabled={guests[type.key] <= 0}
                     onClick={() =>
-                      setGuests((prev) => ({
-                        ...prev,
-                        [type.key]: Math.max(0, prev[type.key] - 1),
-                      }))
+                      updateGuests({
+                        ...guests,
+                        [type.key]: Math.max(0, guests[type.key] - 1),
+                      })
                     }
                     aria-label={`Decrease ${type.label}`}
-                    className="flex size-8 items-center justify-center rounded-[22px] bg-[#F4F2EE] transition-colors hover:bg-[#eae7e1] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex size-8 items-center justify-center rounded-[22px] bg-[#F4F2EE] transition-colors hover:bg-[#eae7e1] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="2" viewBox="0 0 14 2" fill="none" className="w-[11.667px]">
                       <path d="M1 1H12.6667" stroke={guests[type.key] > 0 ? "#6F6B72" : "#CDCDCD"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -265,13 +362,13 @@ function SearchBar({ className }: { className?: string }) {
                   <button
                     type="button"
                     onClick={() =>
-                      setGuests((prev) => ({
-                        ...prev,
-                        [type.key]: prev[type.key] + 1,
-                      }))
+                      updateGuests({
+                        ...guests,
+                        [type.key]: guests[type.key] + 1,
+                      })
                     }
                     aria-label={`Increase ${type.label}`}
-                    className="flex size-8 items-center justify-center rounded-[22px] bg-[#F4F2EE] transition-colors hover:bg-[#eae7e1]"
+                    className="flex size-8 items-center justify-center rounded-[22px] bg-[#F4F2EE] transition-colors hover:bg-[#eae7e1] cursor-pointer"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" className="size-[11.667px]">
                       <path d="M6.83333 1V12.6667M1 6.83333H12.6667" stroke="#6F6B72" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

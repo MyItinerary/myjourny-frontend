@@ -86,35 +86,28 @@ export function PillQuestionScreen({
   const canContinue = selected.length > 0;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-muted to-background px-4 py-8 lg:items-center lg:px-6 lg:pt-[86px] lg:pb-16">
+    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-muted to-background lg:h-dvh lg:max-h-dvh lg:items-center lg:overflow-y-auto lg:px-6 lg:pt-6 lg:pb-6 xl:pt-8 xl:pb-8">
       <OnboardingHeader
         heading={heading}
         subtitle={subtitle}
         backHref={backHref}
         className="lg:hidden"
       />
-      <OnboardingLogo className="hidden lg:block lg:w-[211px]" />
+      <OnboardingLogo className="hidden lg:block lg:w-[211px] lg:shrink-0" />
 
-      <div className="flex flex-1 flex-col gap-6 px-4 lg:w-[696px] lg:flex-none">
-        <div
-          className="hidden flex-col items-center gap-[26px] text-center lg:flex"
-          style={{ marginTop: logoGap }}
-        >
+      <div className="flex flex-1 flex-col gap-4 px-4 lg:mt-8 lg:mb-auto lg:w-[696px] lg:flex-none lg:px-0 xl:mt-12">
+        <div className="hidden flex-col items-center gap-3 text-center lg:flex">
           <div
             aria-hidden
-            className="h-[79px] w-[86px] rounded-lg border border-[#f5f5f5] bg-white"
+            className="h-[68px] w-[74px] rounded-lg border border-[#f5f5f5] bg-white shadow-2xs"
           />
-          <div className="flex flex-col items-center gap-[9px] text-center">
-            <h1 className="font-sans text-[32px] font-extrabold leading-[38.4px] text-[#333134]">
-              {heading}
-            </h1>
-            <p className="font-sans text-[16px] font-normal leading-[24px] text-[#6F6B72]">
-              {subtitle}
-            </p>
+          <div className="flex flex-col items-center gap-1">
+            <h1 className="font-sans text-2xl font-extrabold text-[#333134] lg:text-[28px] xl:text-[32px]">{heading}</h1>
+            <p className="font-sans text-sm text-[#6F6B72] lg:text-base">{subtitle}</p>
           </div>
         </div>
 
-        <div className={cn("flex flex-col gap-4 lg:grid lg:grid-cols-2", gridClassName)}>
+        <div className={cn("flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:auto-rows-[82px]", gridClassName)}>
           {options.map((option) => (
             <CheckboxPill
               key={option.id}

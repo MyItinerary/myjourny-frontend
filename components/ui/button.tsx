@@ -8,7 +8,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        default: "bg-[#F5032D] text-white hover:bg-[#d90328]",
+        brand: "bg-[#F5032D] text-white hover:bg-[#d90328]",
+        primary: "bg-[#2c0101] text-white hover:bg-[#2c0101]/90",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
@@ -25,8 +27,8 @@ const buttonVariants = cva(
         xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        // Figma "Large Buttons": 48px pill CTA used across onboarding.
-        cta: "h-12 gap-2 rounded-full px-4 py-3 text-base has-[>svg]:px-4 disabled:bg-[#e0e0e0] disabled:text-[#bdbdbd]",
+        // Figma "Large Buttons": 48px pill CTA (104px radius, 12px 16px padding, 16px 500 TikTok Sans).
+        cta: "h-12 gap-3 rounded-[104px] bg-[#F5032D] hover:bg-[#d90328] px-4 py-3 font-sans text-base font-medium leading-6 text-white text-center cursor-pointer has-[>svg]:px-4 disabled:bg-[#e0e0e0] disabled:text-[#bdbdbd]",
         icon: "size-8",
         "icon-xs":
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",

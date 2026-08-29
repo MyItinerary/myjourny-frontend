@@ -1,18 +1,27 @@
-import { ChevronDownIcon } from "@/components/icons/shared-icons";
-
-// Figma "Chips" component (2001:11993 etc.) — visual-only filter pill, no
-// working dropdown (no backend to filter against yet). Deliberately uses
-// Neue Haas Grotesk Display Pro, not TikTok Sans — see DESIGN-SYSTEM.md's
-// type-scale note; this is the one place in the app that font applies.
+// Figma "Chips" component (2001:11993 etc.) — filter pill with exact specs
 export function FilterChip({ label }: { label: string }) {
   return (
     <button
       type="button"
-      style={{ fontFamily: "'Neue Haas Grotesk Display Pro', var(--font-sans)" }}
-      className="flex shrink-0 items-center gap-2 rounded-full bg-muted px-4 py-1 text-sm text-foreground"
+      className="flex shrink-0 items-center justify-center gap-2 rounded-[104px] bg-[#F4F2EE] px-4 py-1 text-sm font-normal text-foreground transition-colors hover:bg-[#eae7e1] cursor-pointer"
     >
-      {label}
-      <ChevronDownIcon className="size-5" />
+      <span>{label}</span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="12"
+        height="7"
+        viewBox="0 0 12 7"
+        fill="none"
+        className="h-[5px] w-[10px] shrink-0"
+      >
+        <path
+          d="M0.833496 0.833313L5.8335 5.83331L10.8335 0.833313"
+          stroke="#160000"
+          strokeWidth="1.66667"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </button>
   );
 }
