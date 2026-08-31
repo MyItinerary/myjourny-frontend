@@ -7,6 +7,7 @@ import {
   useBrowsingHistory,
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
+import { Reveal } from "@/components/motion/reveal";
 import { HeroSection } from "@/components/home/hero-section";
 import { WhyBookWithUsSection } from "@/components/home/why-book-with-us-section";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
@@ -68,24 +69,30 @@ export function HomeContent() {
 
   const popularSection = isAccount ? (
     !popularIsLoading && realPopularItems.length === 0 ? null : (
-      <ExperienceRailSection
-        key="popular-experiences"
-        heading="Popular experiences near you"
-        subheading="Hand-picked spots people are loving right now."
-        items={realPopularItems}
-        isLoading={popularIsLoading}
-      />
+      <Reveal key="popular-experiences">
+        <ExperienceRailSection
+          heading="Popular experiences near you"
+          subheading="Hand-picked spots people are loving right now."
+          items={realPopularItems}
+          isLoading={popularIsLoading}
+        />
+      </Reveal>
     )
   ) : (
-    <ExperienceRailSection
-      key="popular-experiences"
-      heading="Popular experiences near you"
-      subheading="Hand-picked spots people are loving right now."
-      items={popularExperiences}
-    />
+    <Reveal key="popular-experiences">
+      <ExperienceRailSection
+        heading="Popular experiences near you"
+        subheading="Hand-picked spots people are loving right now."
+        items={popularExperiences}
+      />
+    </Reveal>
   );
 
-  const whyBookWithUsSection = <WhyBookWithUsSection key="why-book-with-us" />;
+  const whyBookWithUsSection = (
+    <Reveal key="why-book-with-us">
+      <WhyBookWithUsSection />
+    </Reveal>
+  );
 
   return (
     <div className="flex flex-1 flex-col">
@@ -104,50 +111,66 @@ export function HomeContent() {
         </>
       )}
 
-      <CategoriesSection categories={isAccount ? accountCategories : guestCategories} />
+      <Reveal>
+        <CategoriesSection categories={isAccount ? accountCategories : guestCategories} />
+      </Reveal>
 
       {isAccount ? (
         !topPicksIsLoading && realTopPicksItems.length === 0 ? null : (
-          <ExperienceRailSection
-            heading="Top picks right now"
-            subheading="What’s happening around you"
-            items={realTopPicksItems}
-            cardVariant="vertical"
-            isLoading={topPicksIsLoading}
-          />
+          <Reveal>
+            <ExperienceRailSection
+              heading="Top picks right now"
+              subheading="What’s happening around you"
+              items={realTopPicksItems}
+              cardVariant="vertical"
+              isLoading={topPicksIsLoading}
+            />
+          </Reveal>
         )
       ) : (
-        <ExperienceRailSection
-          heading="Top picks right now"
-          subheading="What’s happening in Lagos"
-          items={topPicks}
-          cardVariant="vertical"
-        />
+        <Reveal>
+          <ExperienceRailSection
+            heading="Top picks right now"
+            subheading="What’s happening in Lagos"
+            items={topPicks}
+            cardVariant="vertical"
+          />
+        </Reveal>
       )}
 
-      <CitiesSection cities={cities} isAccount={isAccount} />
+      <Reveal>
+        <CitiesSection cities={cities} isAccount={isAccount} />
+      </Reveal>
 
       {isAccount ? (
         !browsingHistoryIsLoading && realBrowsingHistoryItems.length === 0 ? null : (
+          <Reveal>
+            <ExperienceRailSection
+              heading="Based on your browsing history"
+              subheading="A few things we noticed you're drawn to."
+              items={realBrowsingHistoryItems}
+              cardVariant="vertical"
+              isLoading={browsingHistoryIsLoading}
+            />
+          </Reveal>
+        )
+      ) : (
+        <Reveal>
           <ExperienceRailSection
             heading="Based on your browsing history"
             subheading="A few things we noticed you're drawn to."
-            items={realBrowsingHistoryItems}
+            items={browsingHistoryExperiences}
             cardVariant="vertical"
-            isLoading={browsingHistoryIsLoading}
           />
-        )
-      ) : (
-        <ExperienceRailSection
-          heading="Based on your browsing history"
-          subheading="A few things we noticed you're drawn to."
-          items={browsingHistoryExperiences}
-          cardVariant="vertical"
-        />
+        </Reveal>
       )}
 
-      <CtaSection />
-      <Footer />
+      <Reveal>
+        <CtaSection />
+      </Reveal>
+      <Reveal>
+        <Footer />
+      </Reveal>
     </div>
   );
 }

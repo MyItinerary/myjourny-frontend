@@ -44,7 +44,7 @@ export function CategoriesSection({
           <Link
             key={category.id}
             href={`/categories/${category.id}`}
-            className="flex items-center gap-3 rounded-2xl border border-border bg-white p-3 transition-colors hover:border-foreground/20"
+            className="flex items-center gap-3 rounded-2xl border border-border bg-white p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-sm"
           >
             <span aria-hidden className="size-[30px] shrink-0 rounded-full bg-[#F4F2EE]" />
             <span className="text-xl leading-[30px] font-medium whitespace-nowrap text-foreground">
