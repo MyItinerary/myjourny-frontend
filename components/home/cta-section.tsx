@@ -1,10 +1,15 @@
+"use client";
+
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/lib/auth/session-store";
 
 // Figma: "CTA" (2001:9150 guest / 2001:9160 account) — identical content
-// between the two states.
+// between the two states, Get started CTA button hidden for signed in users.
 export function CtaSection() {
+  const { user } = useSession();
+
   return (
     <section className="relative overflow-hidden bg-primary px-6 pt-[61px] pb-[57px] text-center lg:pt-[84px] lg:pb-[107px]">
       <div
@@ -19,14 +24,16 @@ export function CtaSection() {
           Tell us your interests and we&rsquo;ll shape every recommendation around the experiences that fit you, not
           everyone else.
         </p>
-        <Button
-          size="cta"
-          variant="outline"
-          className="mt-2 border-transparent bg-white text-primary hover:bg-white/90 lg:mt-0"
-          render={<Link href="/onboarding" />}
-        >
-          Get started
-        </Button>
+        {!user && (
+          <Button
+            size="cta"
+            variant="outline"
+            className="mt-2 border-transparent bg-white text-primary hover:bg-white/90 lg:mt-0"
+            render={<Link href="/onboarding" />}
+          >
+            Get started
+          </Button>
+        )}
       </div>
     </section>
   );

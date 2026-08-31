@@ -33,8 +33,8 @@ export function CitiesSection({
   return (
     <section
       className={cn(
-        "mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[78px] lg:pb-[27px]",
-        variant === "category" ? "lg:px-[150px]" : "lg:px-[306px]"
+        "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[78px] lg:pb-[27px]",
+        variant === "category" && "max-w-[1213px]"
       )}
     >
       {/* Homepage keeps the heading left-aligned; the category page centers it. */}

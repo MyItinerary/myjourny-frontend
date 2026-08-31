@@ -33,7 +33,7 @@ export function HeroSection() {
         variants={heroContainerVariants}
         initial="hidden"
         animate="visible"
-        className="mx-auto flex w-full max-w-[1512px] flex-col items-start px-6 pt-[50px] pb-[64px] text-left lg:px-[306px] lg:pt-[77px] lg:pb-[90px]"
+        className="mx-auto flex w-full max-w-[900px] flex-col items-start px-6 lg:px-0 pt-[50px] pb-[64px] text-left lg:pt-[77px] lg:pb-[90px]"
       >
         <div className="flex flex-col items-start gap-4 text-left lg:gap-5">
           <motion.h1
@@ -51,12 +51,12 @@ export function HeroSection() {
         </div>
 
         <motion.div variants={heroItemVariants} className="w-full">
-          {/* Mobile: compact "Where to?" pill (2001:8004); desktop: 3-field bar. */}
+          {/* Mobile: compact "Search destinations" pill (2001:8004); desktop: 3-field bar. */}
           <button
             type="button"
             className="mt-[76px] flex w-full items-center gap-[7px] rounded-full border border-[#c7c1ba] bg-white p-4 text-left lg:hidden"
           >
-            <span className="min-w-0 flex-1 text-base leading-6 text-muted-foreground">Where to?</span>
+            <span className="min-w-0 flex-1 text-base leading-6 text-muted-foreground">Search destinations</span>
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand">
               <Image src="/icons/search-lg.svg" alt="" width={16} height={16} className="invert" />
             </span>
@@ -68,11 +68,23 @@ export function HeroSection() {
   );
 }
 
+const popularActivities = [
+  { id: "local-food-drinks", label: "Local food & drinks", subtitle: "Street eats, cafés, and hidden spots" },
+  { id: "culture-history", label: "Culture & history", subtitle: "Museums, heritage, and local stories" },
+  { id: "nature-outdoors", label: "Nature & outdoors", subtitle: "Fresh air, trails, and open spaces" },
+  { id: "art-creativity", label: "Art & creativity", subtitle: "Galleries, murals, and creative spaces" },
+  { id: "wellness-calm", label: "Wellness & calm", subtitle: "Spas, quiet spots, and slow moments" },
+  { id: "street-life", label: "Street life", subtitle: "Markets, corners, and everyday buzz" },
+  { id: "events-live-shows", label: "Events & live shows", subtitle: "Concerts, festivals, and live energy" },
+  { id: "hiking-trails", label: "Hiking & trails", subtitle: "Scenic routes and guided outdoor walks" },
+];
+
 function SearchBar({ className }: { className?: string }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"where" | "when" | "who" | null>(null);
   const [selectedWhere, setSelectedWhere] = useState<string>("");
   const [selectedWhereId, setSelectedWhereId] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<"destination" | "activity" | null>(null);
   const [selectedWhen, setSelectedWhen] = useState<string>("");
   const [whoText, setWhoText] = useState<string>("");
   const [guests, setGuests] = useState({
@@ -80,8 +92,7 @@ function SearchBar({ className }: { className?: string }) {
     children: 0,
     infants: 0,
   });
-  // 1st of the current month active by default per design — text stays
-  // empty ("Select dates") until the user actually picks something.
+  // 1st of the current month active by default per design
   const [selectedDate, setSelectedDate] = useState<Date>(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
@@ -118,11 +129,17 @@ function SearchBar({ className }: { className?: string }) {
     const trimmed = selectedWhere.trim().toLowerCase();
     if (!trimmed) return;
 
-    if (selectedWhereId) {
+    if (selectedType === "activity" && selectedWhereId) {
+      router.push(`/categories/${selectedWhereId}`);
+      return;
+    }
+
+    if (selectedType === "destination" && selectedWhereId) {
       router.push(`/cities/${selectedWhereId}`);
       return;
     }
 
+    // Check destination match
     const matchedDest = suggestedDestinations.find(
       (d) =>
         d.city.toLowerCase().includes(trimmed) ||
@@ -132,18 +149,42 @@ function SearchBar({ className }: { className?: string }) {
 
     if (matchedDest) {
       router.push(`/cities/${matchedDest.id}`);
-    } else {
-      router.push(`/cities/lagos`);
+      return;
     }
+
+    // Check activity match
+    const matchedAct = popularActivities.find(
+      (a) =>
+        a.label.toLowerCase().includes(trimmed) ||
+        a.id.toLowerCase().includes(trimmed) ||
+        trimmed.includes(a.id.toLowerCase())
+    );
+
+    if (matchedAct) {
+      router.push(`/categories/${matchedAct.id}`);
+      return;
+    }
+
+    router.push(`/cities/lagos`);
   }
 
-  const filteredDestinations = selectedWhere.trim()
+  const trimmedQuery = selectedWhere.trim().toLowerCase();
+
+  const filteredDestinations = trimmedQuery
     ? suggestedDestinations.filter(
         (dest) =>
-          dest.city.toLowerCase().includes(selectedWhere.toLowerCase()) ||
-          dest.description.toLowerCase().includes(selectedWhere.toLowerCase())
+          dest.city.toLowerCase().includes(trimmedQuery) ||
+          dest.description.toLowerCase().includes(trimmedQuery)
       )
     : suggestedDestinations;
+
+  const filteredActivities = trimmedQuery
+    ? popularActivities.filter(
+        (act) =>
+          act.label.toLowerCase().includes(trimmedQuery) ||
+          act.subtitle.toLowerCase().includes(trimmedQuery)
+      )
+    : popularActivities;
 
   const guestTypes = [
     {
@@ -167,7 +208,7 @@ function SearchBar({ className }: { className?: string }) {
     <div
       ref={searchBarRef}
       className={cn(
-        "relative flex flex-col gap-2 rounded-[28px] border border-[#c7c1ba] bg-white p-2 lg:flex-row lg:items-center lg:gap-[9px] lg:rounded-[57px]",
+        "relative flex flex-col gap-2 rounded-[28px] border border-[#c7c1ba] bg-white p-2 lg:flex-row lg:items-center lg:gap-[9px] lg:rounded-[57px] shadow-sm",
         className
       )}
     >
@@ -179,11 +220,11 @@ function SearchBar({ className }: { className?: string }) {
             whereInputRef.current?.focus();
           }}
           className={cn(
-            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors cursor-pointer",
+            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-5 py-2.5 text-left transition-colors cursor-pointer",
             activeTab === "where" ? "bg-[#F4F2EE]" : "bg-transparent hover:bg-[#F4F2EE]/50"
           )}
         >
-          <label htmlFor="search-where" className="text-xs font-medium text-foreground cursor-pointer">
+          <label htmlFor="search-where" className="text-xs font-semibold text-foreground cursor-pointer">
             Where
           </label>
           <input
@@ -191,11 +232,12 @@ function SearchBar({ className }: { className?: string }) {
             ref={whereInputRef}
             type="text"
             value={selectedWhere}
-            placeholder="Where are you looking to explore?"
+            placeholder="Search destinations"
             onFocus={() => setActiveTab("where")}
             onChange={(e) => {
               setSelectedWhere(e.target.value);
               setSelectedWhereId("");
+              setSelectedType(null);
               if (activeTab !== "where") setActiveTab("where");
             }}
             onKeyDown={(e) => {
@@ -216,11 +258,11 @@ function SearchBar({ className }: { className?: string }) {
             whenInputRef.current?.focus();
           }}
           className={cn(
-            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors cursor-pointer",
+            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-5 py-2.5 text-left transition-colors cursor-pointer",
             activeTab === "when" ? "bg-[#F4F2EE]" : "bg-transparent hover:bg-[#F4F2EE]/50"
           )}
         >
-          <label htmlFor="search-when" className="text-xs font-medium text-foreground cursor-pointer">
+          <label htmlFor="search-when" className="text-xs font-semibold text-foreground cursor-pointer">
             When
           </label>
           <input
@@ -228,7 +270,7 @@ function SearchBar({ className }: { className?: string }) {
             ref={whenInputRef}
             type="text"
             value={selectedWhen}
-            placeholder="Select dates"
+            placeholder="Add dates"
             onFocus={() => setActiveTab("when")}
             onChange={(e) => {
               setSelectedWhen(e.target.value);
@@ -247,11 +289,11 @@ function SearchBar({ className }: { className?: string }) {
             whoInputRef.current?.focus();
           }}
           className={cn(
-            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-4 py-2 text-left transition-colors cursor-pointer",
+            "flex flex-1 flex-col items-start gap-1 rounded-[57px] px-5 py-2.5 text-left transition-colors cursor-pointer",
             activeTab === "who" ? "bg-[#F4F2EE]" : "bg-transparent hover:bg-[#F4F2EE]/50"
           )}
         >
-          <label htmlFor="search-who" className="text-xs font-medium text-foreground cursor-pointer">
+          <label htmlFor="search-who" className="text-xs font-semibold text-foreground cursor-pointer">
             Who
           </label>
           <input
@@ -259,7 +301,7 @@ function SearchBar({ className }: { className?: string }) {
             ref={whoInputRef}
             type="text"
             value={whoText}
-            placeholder="Select guests"
+            placeholder="Add guests"
             onFocus={() => setActiveTab("who")}
             onChange={(e) => {
               const val = e.target.value;
@@ -280,52 +322,109 @@ function SearchBar({ className }: { className?: string }) {
         aria-label="Search"
         disabled={!selectedWhere.trim()}
         onClick={handleSearch}
-        className="flex size-11 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto cursor-pointer"
+        className="flex size-12 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto cursor-pointer"
       >
         <Image src="/icons/search-lg.svg" alt="" width={20} height={20} className="invert" />
       </button>
 
-      {/* Suggested Destinations Dropdown Modal */}
+      {/* Suggested Destinations & Activities Dropdown Modal */}
       {activeTab === "where" && (
-        <div className="absolute top-[calc(100%+12px)] left-0 z-50 flex w-[430px] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-          <span className="text-[12px] font-medium leading-[18px] text-black">
-            Suggested Destinations
-          </span>
-          <div className="flex w-full flex-col gap-2 max-h-[320px] overflow-y-auto">
-            {filteredDestinations.length > 0 ? (
-              filteredDestinations.map((dest) => (
-                <button
-                  key={dest.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedWhere(dest.city);
-                    setSelectedWhereId(dest.id);
-                    setActiveTab(null);
-                    router.push(`/cities/${dest.id}`);
-                  }}
-                  className="flex w-full items-center gap-[14.5px] rounded-xl p-1 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
-                >
-                  <div className="flex size-[48px] shrink-0 items-center justify-center rounded-[9.938px] bg-[#F4F2EE] p-[11.594px]">
-                    <Image
-                      src="/icons/pin-destination.svg"
-                      alt=""
-                      width={20}
-                      height={25}
-                      className="h-[24.844px] w-[19.875px]"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-base font-semibold leading-6 text-[#130404]">
-                      {dest.city}
-                    </span>
-                    <span className="text-sm leading-5 text-[#6F6B72]">
-                      {dest.description}
-                    </span>
-                  </div>
-                </button>
-              ))
-            ) : (
-              <p className="py-2 text-sm text-muted-foreground">No destinations found matching &ldquo;{selectedWhere}&rdquo;</p>
+        <div className="absolute top-[calc(100%+12px)] left-0 z-50 flex w-[440px] max-w-[calc(100vw-32px)] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+          <div className="flex w-full flex-col gap-4 max-h-[360px] overflow-y-auto pr-1">
+            {/* Destinations */}
+            {filteredDestinations.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#6F6B72]">
+                  Destinations
+                </span>
+                {filteredDestinations.map((dest) => (
+                  <button
+                    key={dest.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedWhere(dest.city);
+                      setSelectedWhereId(dest.id);
+                      setSelectedType("destination");
+                      setActiveTab(null);
+                      router.push(`/cities/${dest.id}`);
+                    }}
+                    className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
+                  >
+                    <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[10px] bg-[#F4F2EE]">
+                      <Image
+                        src="/icons/pin-destination.svg"
+                        alt=""
+                        width={18}
+                        height={22}
+                        className="h-[22px] w-[18px]"
+                      />
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-sm font-semibold leading-5 text-[#130404] truncate">
+                        {dest.city}
+                      </span>
+                      <span className="text-xs leading-4 text-[#6F6B72] truncate">
+                        {dest.description}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Activities & Experiences */}
+            {filteredActivities.length > 0 && (
+              <div className="flex flex-col gap-2 border-t border-[#f0eee9] pt-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#6F6B72]">
+                  Activities &amp; Experiences
+                </span>
+                {filteredActivities.map((act) => (
+                  <button
+                    key={act.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedWhere(act.label);
+                      setSelectedWhereId(act.id);
+                      setSelectedType("activity");
+                      setActiveTab(null);
+                      router.push(`/categories/${act.id}`);
+                    }}
+                    className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
+                  >
+                    <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[10px] bg-[#F4F2EE]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#F5032D"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="size-5"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-sm font-semibold leading-5 text-[#130404] truncate">
+                        {act.label}
+                      </span>
+                      <span className="text-xs leading-4 text-[#6F6B72] truncate">
+                        {act.subtitle}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {filteredDestinations.length === 0 && filteredActivities.length === 0 && (
+              <p className="py-3 text-sm text-muted-foreground">
+                No destinations or activities found matching &ldquo;{selectedWhere}&rdquo;
+              </p>
             )}
           </div>
         </div>

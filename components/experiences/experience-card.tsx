@@ -43,36 +43,36 @@ export function ExperienceCard({
 }: ExperienceCardProps) {
   const content = (
     <>
-      <div className="relative size-[113px] shrink-0 overflow-hidden rounded-[16.7px] bg-muted">
+      <div className="relative size-[143px] shrink-0 overflow-hidden rounded-[16px] bg-muted">
         <Image
           src={imageSrc}
           alt={imageAlt}
           fill
           unoptimized
-          sizes="113px"
+          sizes="143px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <div className="flex min-w-0 flex-1 flex-col justify-between self-stretch">
         <div className="flex flex-col gap-1">
-          <span className="text-[14px] leading-[21px] font-medium text-brand">{category}</span>
-          <h3 className="line-clamp-2 text-[18px] leading-[27px] font-medium text-foreground">{title}</h3>
-          <div className="flex items-center gap-1.5 text-sm leading-[22px] text-muted-foreground">
+          <span className="font-sans text-xs font-semibold uppercase tracking-wider text-[#F5032D]">{category}</span>
+          <h3 className="line-clamp-2 font-sans text-base font-semibold leading-tight text-[#130404]">{title}</h3>
+          <div className="flex items-center gap-1.5 font-sans text-xs text-[#6F6B72]">
             <span>{duration}</span>
-            <span aria-hidden className="size-1 rounded-full bg-muted-foreground/50" />
-            <span className="inline-flex items-center gap-1.5">
-              <StarIcon className="size-[18px] fill-brand text-brand" />
-              <span>
-                {rating.toFixed(1)} ({reviewCount.toLocaleString()})
+            <span aria-hidden className="size-1 rounded-full bg-[#6F6B72]/50" />
+            <span className="inline-flex items-center gap-1">
+              <StarIcon className="size-3.5 fill-[#F5032D] text-[#F5032D]" />
+              <span className="font-medium text-[#130404]">
+                {rating.toFixed(1)} <span className="font-normal text-[#6F6B72]">({reviewCount.toLocaleString()})</span>
               </span>
             </span>
           </div>
         </div>
 
-        <p className="whitespace-nowrap">
-          <span className="text-base leading-6 font-medium text-muted-foreground">from </span>
-          <span className="text-xl leading-[30px] font-semibold text-foreground">
+        <p className="whitespace-nowrap pt-1">
+          <span className="font-sans text-sm font-normal text-[#6F6B72]">from </span>
+          <span className="font-sans text-base font-bold text-[#130404]">
             {formatPrice(priceFrom, currency)}
           </span>
         </p>
@@ -80,7 +80,10 @@ export function ExperienceCard({
     </>
   );
 
-  const articleClassName = cn("group flex items-start gap-3 bg-card px-4 py-3", className);
+  const articleClassName = cn(
+    "group flex h-[167px] w-full max-w-[438px] items-start gap-3 rounded-2xl bg-card p-[12px_16px] transition-all hover:bg-[#FAF9F7]",
+    className
+  );
 
   if (id) {
     return (
