@@ -28,6 +28,8 @@ interface PillQuestionScreenProps {
   backHref: string;
   /** Desktop pill layout — most screens are a 2-col grid, a couple are a single column. */
   gridClassName?: string;
+  /** Exact distance between bottom of logo and the illustration/image container on desktop. */
+  logoGap?: string;
   /** Called with the final selection right before navigating to continueHref. */
   onContinue?: (selected: string[]) => void;
   /**
@@ -51,6 +53,7 @@ export function PillQuestionScreen({
   continueHref,
   backHref,
   gridClassName,
+  logoGap = "144.85px",
   onContinue,
   getInitialSelected,
 }: PillQuestionScreenProps) {
@@ -83,24 +86,31 @@ export function PillQuestionScreen({
   const canContinue = selected.length > 0;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-muted to-background lg:items-center lg:justify-center lg:px-6 lg:py-16">
+    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-muted to-background px-4 py-8 lg:items-center lg:px-6 lg:pt-[86px] lg:pb-16">
       <OnboardingHeader
         heading={heading}
         subtitle={subtitle}
         backHref={backHref}
         className="lg:hidden"
       />
-      <OnboardingLogo className="hidden lg:absolute lg:top-[86px] lg:left-1/2 lg:block lg:w-[211px] lg:-translate-x-1/2" />
+      <OnboardingLogo className="hidden lg:block lg:w-[211px]" />
 
       <div className="flex flex-1 flex-col gap-6 px-4 lg:w-[696px] lg:flex-none">
-        <div className="hidden flex-col items-center gap-[26px] text-center lg:flex">
+        <div
+          className="hidden flex-col items-center gap-[26px] text-center lg:flex"
+          style={{ marginTop: logoGap }}
+        >
           <div
             aria-hidden
             className="h-[79px] w-[86px] rounded-lg border border-[#f5f5f5] bg-white"
           />
-          <div className="flex flex-col items-center gap-[9px]">
-            <p className="font-sans text-[32px] font-extrabold text-foreground">{heading}</p>
-            <p className="text-base text-muted-foreground">{subtitle}</p>
+          <div className="flex flex-col items-center gap-[9px] text-center">
+            <h1 className="font-sans text-[32px] font-extrabold leading-[38.4px] text-[#333134]">
+              {heading}
+            </h1>
+            <p className="font-sans text-[16px] font-normal leading-[24px] text-[#6F6B72]">
+              {subtitle}
+            </p>
           </div>
         </div>
 

@@ -24,6 +24,7 @@ export function OnboardingSlide({
         alt={imageAlt}
         fill
         priority
+        sizes="(max-width: 1024px) 100vw, 50vw"
         className="object-cover"
       />
       <div aria-hidden className="absolute inset-0 bg-black/[0.29]" />

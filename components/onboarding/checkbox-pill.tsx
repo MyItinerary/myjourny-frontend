@@ -36,8 +36,12 @@ export function CheckboxPill({
         <Icon className="size-6 text-foreground" />
       </span>
       <span className="flex flex-col gap-1">
-        <span className="text-base font-medium text-card-foreground">{label}</span>
-        <span className="text-sm text-muted-foreground">{description}</span>
+        <span className="font-sans text-[16px] font-medium leading-[24px] text-[#333134]">
+          {label}
+        </span>
+        <span className="font-sans text-[14px] font-normal leading-[22px] text-[#6F6B72]">
+          {description}
+        </span>
       </span>
     </button>
   );

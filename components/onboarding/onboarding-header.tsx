@@ -31,8 +31,12 @@ export function OnboardingHeader({
         </Link>
       </div>
       <div className="flex flex-col gap-2 px-4 py-6">
-        <p className="text-[28px] leading-[42px] font-semibold text-foreground">{heading}</p>
-        <p className="text-lg leading-7 text-muted-foreground">{subtitle}</p>
+        <h1 className="font-sans text-[28px] font-semibold leading-[42px] text-[#333134]">
+          {heading}
+        </h1>
+        <p className="font-sans text-lg leading-7 text-[#6F6B72]">
+          {subtitle}
+        </p>
       </div>
     </div>
   );

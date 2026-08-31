@@ -45,10 +45,12 @@ export function InterstitialScreen({
           illustration
         )}
         <div className="flex flex-col items-center gap-2.5 text-center">
-          <p className="max-w-[353px] font-sans text-[32px] font-extrabold text-foreground">
+          <h1 className="max-w-[600px] font-sans text-[32px] font-extrabold leading-[38.4px] text-[#333134]">
             {heading}
+          </h1>
+          <p className="max-w-[500px] font-sans text-[16px] font-normal leading-[24px] text-[#6F6B72]">
+            {subtitle}
           </p>
-          <p className="max-w-[353px] text-base text-muted-foreground">{subtitle}</p>
         </div>
       </div>
 
