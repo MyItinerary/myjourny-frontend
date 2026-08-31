@@ -28,7 +28,7 @@ const buttonVariants = cva(
         sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         // Figma "Large Buttons": 48px pill CTA (104px radius, 12px 16px padding, 16px 500 TikTok Sans).
-        cta: "h-12 gap-3 rounded-[104px] bg-[#F5032D] hover:bg-[#d90328] px-4 py-3 font-sans text-base font-medium leading-6 text-white text-center cursor-pointer has-[>svg]:px-4 disabled:bg-[#e0e0e0] disabled:text-[#bdbdbd]",
+        cta: "h-12 gap-3 rounded-[104px] px-4 py-3 font-sans text-base font-medium leading-6 text-center cursor-pointer has-[>svg]:px-4 disabled:bg-[#e0e0e0] disabled:text-[#bdbdbd] disabled:border-transparent",
         icon: "size-8",
         "icon-xs":
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",

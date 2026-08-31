@@ -86,28 +86,32 @@ export function PillQuestionScreen({
   const canContinue = selected.length > 0;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-muted to-background lg:h-dvh lg:max-h-dvh lg:items-center lg:overflow-y-auto lg:px-6 lg:pt-6 lg:pb-6 xl:pt-8 xl:pb-8">
+    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-muted to-background px-4 py-6 lg:h-dvh lg:max-h-dvh lg:overflow-hidden lg:items-center lg:justify-between lg:px-6 lg:py-3 xl:py-6">
       <OnboardingHeader
         heading={heading}
         subtitle={subtitle}
         backHref={backHref}
         className="lg:hidden"
       />
-      <OnboardingLogo className="hidden lg:block lg:w-[211px] lg:shrink-0" />
+      <OnboardingLogo className="hidden lg:block lg:w-[160px] xl:w-[195px] lg:shrink-0" />
 
-      <div className="flex flex-1 flex-col gap-4 px-4 lg:mt-8 lg:mb-auto lg:w-[696px] lg:flex-none lg:px-0 xl:mt-12">
-        <div className="hidden flex-col items-center gap-3 text-center lg:flex">
+      <div className="flex flex-1 flex-col justify-center gap-2.5 lg:gap-3 xl:gap-5 px-4 lg:w-[696px] lg:flex-none lg:px-0 my-auto">
+        <div className="hidden flex-col items-center gap-2 xl:gap-3 text-center lg:flex">
           <div
             aria-hidden
-            className="h-[68px] w-[74px] rounded-lg border border-[#f5f5f5] bg-white shadow-2xs"
+            className="h-[52px] w-[58px] xl:h-[68px] xl:w-[74px] rounded-lg border border-[#f5f5f5] bg-white shrink-0 shadow-2xs"
           />
-          <div className="flex flex-col items-center gap-1">
-            <h1 className="font-sans text-2xl font-extrabold text-[#333134] lg:text-[28px] xl:text-[32px]">{heading}</h1>
-            <p className="font-sans text-sm text-[#6F6B72] lg:text-base">{subtitle}</p>
+          <div className="flex flex-col items-center gap-0.5 xl:gap-1">
+            <h1 className="font-sans text-xl lg:text-2xl xl:text-[30px] font-extrabold leading-[1.2] text-[#333134]">
+              {heading}
+            </h1>
+            <p className="font-sans text-xs lg:text-sm xl:text-base font-normal leading-[1.4] text-[#6F6B72]">
+              {subtitle}
+            </p>
           </div>
         </div>
 
-        <div className={cn("flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:auto-rows-[82px]", gridClassName)}>
+        <div className={cn("flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-2.5 xl:gap-4", gridClassName)}>
           {options.map((option) => (
             <CheckboxPill
               key={option.id}
@@ -124,7 +128,7 @@ export function PillQuestionScreen({
           size="cta"
           disabled={!canContinue}
           onClick={handleContinue}
-          className="hidden w-[238px] self-center lg:flex"
+          className="hidden w-[220px] xl:w-[238px] h-10 xl:h-12 self-center lg:flex shrink-0"
         >
           Continue
         </Button>
