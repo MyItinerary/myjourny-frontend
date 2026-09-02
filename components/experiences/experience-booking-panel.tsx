@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Calendar, Clock, ShieldCheck, X } from "lucide-react";
+import { Calendar, ChevronDown, Clock, ShieldCheck, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -121,18 +121,20 @@ export function ExperienceBookingPanel({
         </button>
       )}
 
-      <div className="flex flex-col gap-1">
-        {isReady && (
-          <span className="w-fit rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700">
-            Only 3 spots left for tomorrow
-          </span>
-        )}
-        <p>
-          <span className={cn("text-2xl font-semibold text-foreground", isReady && "text-muted-foreground line-through")}>
+      <div className="flex flex-col items-start">
+        <p className="flex items-baseline gap-1">
+          <span className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#130404]">
             {formatPrice(selectedPrice?.amount ?? 0, currency)}
           </span>
-          {!isReady && <span className="ml-1 text-sm text-muted-foreground">/ person</span>}
+          <span className="font-sans text-base font-normal text-[#6F6B72]">/ person</span>
         </p>
+        {isReady && (
+          <div className="mt-6 flex w-fit items-center gap-1 rounded-[24px] bg-[#FF5400] p-2">
+            <span className="font-sans text-[14px] font-normal leading-[22px] text-white">
+              Only 3 spots left for tomorrow
+            </span>
+          </div>
+        )}
       </div>
 
       {prices.length > 1 && (
@@ -160,7 +162,9 @@ export function ExperienceBookingPanel({
       )}
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm text-muted-foreground">Select a starting time and your preferred date</span>
+        <span className="font-sans text-sm font-normal text-[#130404]">
+          Select a starting time and your preferred date
+        </span>
         <div className="flex gap-2">
           {TIME_SLOTS.map((slot) => (
             <button
@@ -168,10 +172,10 @@ export function ExperienceBookingPanel({
               type="button"
               onClick={() => setSelectedTime(slot)}
               className={cn(
-                "flex-1 rounded-full border px-3 py-2 text-sm font-medium transition-colors",
+                "flex-1 rounded-[12px] border px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
                 selectedTime === slot
-                  ? "border-transparent bg-foreground text-background"
-                  : "border-border text-foreground hover:bg-muted"
+                  ? "border-transparent bg-[#2C0101] text-white"
+                  : "border-[#E0DFDD] bg-white text-[#130404] hover:bg-[#F4F2EE]"
               )}
             >
               {slot}
@@ -180,24 +184,29 @@ export function ExperienceBookingPanel({
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-full border border-border px-4 py-3">
-        <span className="text-sm text-foreground">Participants</span>
+      <div className="flex items-center justify-between rounded-[24px] bg-[#F4F2EE] px-4 py-3">
+        <span className="flex items-center gap-2 font-sans text-sm font-medium text-[#130404]">
+          <User className="size-4 text-[#130404]" />
+          Participants
+        </span>
         <div className="flex items-center gap-3">
           <button
             type="button"
             aria-label="Decrease participants"
             disabled={participants <= 0}
             onClick={() => setParticipants((p) => Math.max(0, p - 1))}
-            className="flex size-6 items-center justify-center rounded-full bg-muted text-foreground disabled:opacity-40"
+            className="flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer"
           >
             −
           </button>
-          <span className="min-w-[1ch] text-center text-sm font-medium">{participants}</span>
+          <span className="min-w-[1ch] text-center font-sans text-sm font-semibold text-[#130404]">
+            {participants}
+          </span>
           <button
             type="button"
             aria-label="Increase participants"
             onClick={() => setParticipants((p) => p + 1)}
-            className="flex size-6 items-center justify-center rounded-full bg-brand text-white"
+            className="flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 cursor-pointer"
           >
             +
           </button>
@@ -208,13 +217,13 @@ export function ExperienceBookingPanel({
         <button
           type="button"
           onClick={() => setCalendarOpen((open) => !open)}
-          className="flex w-full items-center justify-between rounded-full border border-border px-4 py-3 text-left"
+          className="flex w-full items-center justify-between rounded-[24px] bg-[#F4F2EE] px-4 py-3 text-left cursor-pointer"
         >
-          <span className="flex items-center gap-2 text-sm text-foreground">
-            <Calendar className="size-4" />
+          <span className="flex items-center gap-2 font-sans text-sm text-[#130404]">
+            <Calendar className="size-4 text-[#130404]" />
             {dateLabel}
           </span>
-          <span className="text-muted-foreground">⌄</span>
+          <ChevronDown className="size-4 text-[#130404]" />
         </button>
 
         {calendarOpen && (
@@ -247,12 +256,12 @@ export function ExperienceBookingPanel({
         </Button>
       )}
 
-      {isReady && (
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Total</span>
-          <span className="font-semibold text-foreground">{formatPrice(total, currency)}</span>
-        </div>
-      )}
+      <div className="flex items-center justify-between pt-1">
+        <span className="font-sans text-lg font-bold text-[#130404]">Total</span>
+        <span className="font-sans text-xl font-bold text-[#130404]">
+          {formatPrice(total, currency)}
+        </span>
+      </div>
 
       <div className="flex flex-col gap-3 border-t border-border pt-4">
         <div className="flex items-start gap-2">
