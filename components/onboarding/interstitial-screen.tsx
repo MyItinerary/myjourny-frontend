@@ -55,14 +55,18 @@ export function InterstitialScreen({
       </div>
 
       <div className="flex w-full max-w-[345px] flex-col gap-4">
-        <Button size="cta" className="w-full" render={<Link href={primaryHref} />}>
+        <Button
+          size="cta"
+          className="w-full h-auto py-3 px-4 gap-[10px] rounded-[200px] bg-[#2C0101] text-white hover:bg-[#2C0101]/90"
+          render={<Link href={primaryHref} />}
+        >
           {primaryLabel}
         </Button>
         {secondaryLabel && secondaryHref && (
           <Button
             variant="outline"
             size="cta"
-            className="w-full border-primary text-primary hover:bg-primary/5"
+            className="w-full h-auto py-3 px-4 gap-[10px] rounded-[200px] border border-[#2C0101] bg-transparent text-[#2C0101] hover:bg-[#2C0101]/5"
             render={<Link href={secondaryHref} />}
           >
             {secondaryLabel}

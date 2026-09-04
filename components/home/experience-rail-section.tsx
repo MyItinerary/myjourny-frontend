@@ -68,11 +68,13 @@ export function ExperienceRailSection({
         center && "items-center text-center lg:items-start lg:text-left"
       )}
     >
-      <h2 className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:max-w-[688px] lg:text-[40px]">
+      <h2 className="font-sans text-[32px] font-extrabold leading-[120%] text-[#333134] lg:max-w-[688px] lg:text-[40px] lg:leading-[48px]">
         {heading}
       </h2>
       {subheading ? (
-        <p className="text-lg leading-[28px] text-muted-foreground lg:text-xl lg:leading-[30px]">{subheading}</p>
+        <p className="font-sans text-lg font-normal leading-[28px] text-[#6F6B72] lg:text-[20px] lg:leading-[30px]">
+          {subheading}
+        </p>
       ) : null}
     </div>
   );
@@ -83,8 +85,8 @@ export function ExperienceRailSection({
         className={cn(
           containerClassName ??
             cn(
-              "mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[77px] lg:pb-[79px]",
-              wide ? "lg:px-[150px]" : "lg:px-[306px]"
+              "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[77px] lg:pb-[79px]",
+              wide && "max-w-[1212px]"
             ),
           className
         )}
@@ -102,7 +104,7 @@ export function ExperienceRailSection({
           <div
             className={cn(
               "mt-[34px]",
-              bleedClassName ?? cn("-mr-6", wide ? "lg:-mr-[150px]" : "lg:-mr-[306px]")
+              bleedClassName ?? "-mr-6 lg:-mr-[calc((100vw-900px)/2)]"
             )}
           >
             {isLoading ? (
@@ -130,13 +132,13 @@ export function ExperienceRailSection({
   }
 
   return (
-    <section className={cn("mx-auto w-full max-w-[1512px] px-6 py-[42px] lg:px-[306px] lg:pt-[77px] lg:pb-[140px]", className)}>
+    <section className={cn("mx-auto w-full max-w-[900px] px-6 lg:px-0 py-[42px] lg:pt-[77px] lg:pb-[140px]", className)}>
       <div className="flex items-start justify-between gap-4">
         {headingBlock(true)}
         {seeMoreHref ? (
           <Link
             href={seeMoreHref}
-            className="hidden shrink-0 items-center gap-2 text-base font-medium text-brand lg:flex"
+            className="hidden shrink-0 items-center gap-2 font-sans text-base font-medium leading-6 text-[#F5032D] hover:opacity-85 lg:flex"
           >
             See more
           </Link>

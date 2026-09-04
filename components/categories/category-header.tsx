@@ -6,7 +6,7 @@ const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
 
 // Figma: "Frame 2147226772" (2001:11989 desktop / 2001:12383 mobile) —
 // breadcrumb (desktop only), heading, filter-chip row.
-export function CategoryHeader({ label }: { label: string }) {
+export function CategoryHeader({ label, count }: { label: string; count?: number }) {
   return (
     <div className="flex flex-col gap-4 lg:gap-[18px]">
       <nav aria-label="Breadcrumb" className="hidden items-center gap-1.5 lg:flex">
@@ -20,10 +20,13 @@ export function CategoryHeader({ label }: { label: string }) {
       </nav>
 
       <p className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[40px]">
-        {label} <span className="text-muted-foreground">(50+ results)</span>
+        {label}{" "}
+        <span className="text-muted-foreground">
+          {count === 0 ? "(0 results)" : count !== undefined ? `(${count}+ results)` : "(50+ results)"}
+        </span>
       </p>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((filter) => (
           <FilterChip key={filter} label={filter} />
         ))}

@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ChevronDownIcon } from "@/components/icons/shared-icons";
 
 import type { City } from "@/lib/mock-data/home";
 import { cn } from "@/lib/utils";
@@ -34,8 +33,8 @@ export function CitiesSection({
   return (
     <section
       className={cn(
-        "mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[78px] lg:pb-[27px]",
-        variant === "category" ? "lg:px-[150px]" : "lg:px-[306px]"
+        "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[78px] lg:pb-[27px]",
+        variant === "category" && "max-w-[1213px]"
       )}
     >
       {/* Homepage keeps the heading left-aligned; the category page centers it. */}
@@ -97,10 +96,25 @@ export function CitiesSection({
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="mt-[27px] hidden items-center gap-2 text-base font-medium text-brand lg:flex"
+          className="mt-[27px] hidden items-center gap-2 font-sans text-base font-medium leading-6 text-[#F5032D] transition-opacity hover:opacity-85 lg:flex cursor-pointer"
         >
-          {expanded ? "See less" : "See more"}
-          <ChevronDownIcon className={`size-[22px] transition-transform ${expanded ? "rotate-180" : ""}`} />
+          <span>{expanded ? "See less" : "See more"}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="13"
+            height="8"
+            viewBox="0 0 13 8"
+            fill="none"
+            className={`h-[5.5px] w-[11px] shrink-0 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+          >
+            <path
+              d="M0.916748 0.916748L6.41675 6.41675L11.9167 0.916748"
+              stroke="#F5032D"
+              strokeWidth="1.83333"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
       ) : null}
     </section>

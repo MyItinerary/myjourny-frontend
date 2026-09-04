@@ -15,15 +15,45 @@ const VISIBLE_COUNT = 16;
 // mock list in place — same expand pattern as CategoriesSection/CitiesSection.
 export function CategoryResultsGrid({
   items,
+  categoryLabel,
   isLoading = false,
 }: {
   items: ExperienceItem[];
-  /** City pages (real data) fetch async — show skeleton cards in the same grid instead of a blank gap while waiting. Static/mock category pages never pass this. */
+  categoryLabel?: string;
   isLoading?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? items : items.slice(0, VISIBLE_COUNT);
   const hasMore = !expanded && items.length > VISIBLE_COUNT;
+
+  if (!isLoading && items.length === 0) {
+    return (
+      <div className="flex w-full flex-col items-center justify-center rounded-3xl border border-dashed border-[#e0dfdd] bg-[#FAF9F7] px-6 py-16 text-center">
+        <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-[#F4F2EE] text-[#6F6B72]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </div>
+        <h3 className="font-heading text-xl font-bold text-foreground">
+          No experiences found in {categoryLabel || "this category"}
+        </h3>
+        <p className="mt-2 max-w-[420px] text-sm text-muted-foreground">
+          There are currently no events or experiences listed under this category. Explore other categories or discover exciting activities in popular cities below.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-8 lg:gap-9">
