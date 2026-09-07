@@ -171,7 +171,14 @@ export type ExperienceDetail = {
   whats_not_included?: string[] | null;
   why_you_will_like_this?: string[] | null;
   images?: string[] | null;
-  host?: { id: string; display_name?: string | null } | null;
+  host?: {
+    id: string;
+    display_name?: string | null;
+    headline?: string | null;
+    about?: string | null;
+    is_verified?: boolean | null;
+    rating_avg?: number | null;
+  } | null;
 };
 
 export function useExperienceDetail(id: string) {
