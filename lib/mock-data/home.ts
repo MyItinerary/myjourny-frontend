@@ -102,9 +102,9 @@ export const categoriesBySlug = new Map(allCategories.map((c) => [c.id, c]));
 
 export function getCategoryListing(slug: string): ExperienceItem[] | null {
   const category = categoriesBySlug.get(slug);
-  if (!category) return null;
+  const label = category?.label ?? slug.replace(/-/g, " ").toUpperCase();
   return Array.from({ length: 20 }, (_, i) =>
-    makeExperience(`${slug}-${i + 1}`, category.label.toUpperCase())
+    makeExperience(`${slug}-${i + 1}`, label.toUpperCase())
   );
 }
 
@@ -113,6 +113,7 @@ export type City = { id: string; name: string; imageSrc: string };
 export const cities: City[] = [
   { id: "lagos", name: "Lagos", imageSrc: "/images/home/cities/lagos.jpg" },
   { id: "abuja", name: "Abuja", imageSrc: "/images/home/cities/abuja.jpg" },
+  { id: "port-harcourt", name: "Port Harcourt", imageSrc: "/images/home/cities/ibadan.jpg" },
   { id: "ibadan", name: "Ibadan", imageSrc: "/images/home/cities/ibadan.jpg" },
   { id: "abeokuta", name: "Abeokuta", imageSrc: "/images/home/cities/abeokuta.jpg" },
   { id: "jos", name: "Jos", imageSrc: "/images/home/cities/jos.jpg" },

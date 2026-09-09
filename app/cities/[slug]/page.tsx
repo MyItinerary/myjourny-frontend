@@ -21,7 +21,7 @@ export default async function CityPage({
 }) {
   const { slug } = await params;
   const city = cities.find((c) => c.id === slug);
-  if (!city) notFound();
+  const cityName = city ? city.name : slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  return <CityContent cityName={city.name} />;
+  return <CityContent cityName={cityName} />;
 }
