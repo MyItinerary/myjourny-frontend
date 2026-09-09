@@ -28,7 +28,7 @@ export function CategoriesSection({
   return (
     // Mobile (2001:9314): left-aligned header, pills wrap inside a fixed
     // 480px-wide block that scrolls horizontally past the screen edge.
-    <section className="w-full bg-[#F4F2EE] px-6 py-[43px] lg:px-0 lg:pt-[77px] lg:pb-[61px]">
+    <section className="w-full overflow-x-clip bg-[#F4F2EE] px-6 py-[43px] lg:px-0 lg:pt-[77px] lg:pb-[61px]">
       <div className="mx-auto flex w-full max-w-[900px] flex-col items-start gap-4 text-left lg:items-start lg:gap-[15px]">
         <h2 className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#333134] lg:text-[40px] lg:leading-[48px]">
           {heading}

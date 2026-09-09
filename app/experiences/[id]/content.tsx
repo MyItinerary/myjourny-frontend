@@ -305,6 +305,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             currency={experience.currency ?? "NGN"}
             durationLabel={durationLabel}
             eventStartDate={eventStartDate}
+            availableSpots={experience.group_size_max ?? undefined}
+            minSpots={experience.group_size_min ?? 1}
           />
         </div>
       </div>
@@ -351,6 +353,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               currency={experience.currency ?? "NGN"}
               durationLabel={durationLabel}
               eventStartDate={eventStartDate}
+              availableSpots={experience.group_size_max ?? undefined}
+              minSpots={experience.group_size_min ?? 1}
               onClose={() => setMobileBookingOpen(false)}
             />
           </div>

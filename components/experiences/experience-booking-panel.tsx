@@ -34,6 +34,13 @@ function combineDateAndTime(date: Date, timeLabel: string): string | null {
   return combined.toISOString();
 }
 
+function getSuggestedDate(fixedDate?: Date | null): Date {
+  if (fixedDate) return fixedDate;
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow;
+}
+
 interface ExperienceBookingPanelProps {
   experienceId: string;
   guideId?: string | null;
@@ -45,6 +52,10 @@ interface ExperienceBookingPanelProps {
   className?: string;
   /** Shows a close (X) button — used when this panel is rendered as a mobile bottom sheet (see ExperienceBookingBar). */
   onClose?: () => void;
+  /** Number of remaining available spots. Defaults to 10 or group_size_max. */
+  availableSpots?: number;
+  /** Minimum number of spots / participants. Defaults to 1 or group_size_min. */
+  minSpots?: number;
 }
 
 // Desktop sticky sidebar. Also reused as a mobile bottom sheet, opened by
@@ -58,14 +69,22 @@ export function ExperienceBookingPanel({
   eventStartDate,
   className,
   onClose,
+  availableSpots,
+  minSpots = 1,
 }: ExperienceBookingPanelProps) {
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [participants, setParticipants] = useState(0);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(eventStartDate ?? null);
+  const maxSpots = availableSpots ?? 10;
+  const minParticipants = Math.max(1, minSpots ?? 1);
+  const [selectedTime, setSelectedTime] = useState<string | null>(TIME_SLOTS[0] ?? "06:00AM");
+  const [participants, setParticipants] = useState(() => minParticipants);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => getSuggestedDate(eventStartDate));
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [selectedPriceId, setSelectedPriceId] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const createBooking = useCreateBooking();
+
+  useEffect(() => {
+    setParticipants((p) => Math.min(Math.max(p, minParticipants), maxSpots));
+  }, [minParticipants, maxSpots]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -83,14 +102,27 @@ export function ExperienceBookingPanel({
   );
   const selectedPrice = prices.find((p) => p.id === selectedPriceId) ?? cheapest;
 
-  const isReady = !!selectedTime && !!selectedDate && participants > 0 && !!selectedPrice;
+  const isReady =
+    !!selectedTime &&
+    !!selectedDate &&
+    participants >= minParticipants &&
+    participants <= maxSpots &&
+    !!selectedPrice;
   const total = (selectedPrice?.amount ?? 0) * Math.max(participants, 1);
   const dateLabel = selectedDate
     ? selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric" })
     : "Select dates";
 
   const handleBookNow = () => {
-    if (!guideId || !selectedDate || !selectedTime || !selectedPrice) return;
+    if (
+      !guideId ||
+      !selectedDate ||
+      !selectedTime ||
+      !selectedPrice ||
+      participants > maxSpots ||
+      participants < minParticipants
+    )
+      return;
     const requestedDatetime = combineDateAndTime(selectedDate, selectedTime);
     createBooking.mutate(
       {
@@ -131,7 +163,7 @@ export function ExperienceBookingPanel({
         {isReady && (
           <div className="mt-6 flex w-fit items-center gap-1 rounded-[24px] bg-[#FF5400] p-2">
             <span className="font-sans text-[14px] font-normal leading-[22px] text-white">
-              Only 3 spots left for tomorrow
+              Only {maxSpots} spots left for tomorrow
             </span>
           </div>
         )}
@@ -193,9 +225,9 @@ export function ExperienceBookingPanel({
           <button
             type="button"
             aria-label="Decrease participants"
-            disabled={participants <= 0}
-            onClick={() => setParticipants((p) => Math.max(0, p - 1))}
-            className="flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer"
+            disabled={participants <= minParticipants}
+            onClick={() => setParticipants((p) => Math.max(minParticipants, p - 1))}
+            className="flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer disabled:cursor-not-allowed"
           >
             −
           </button>
@@ -205,8 +237,9 @@ export function ExperienceBookingPanel({
           <button
             type="button"
             aria-label="Increase participants"
-            onClick={() => setParticipants((p) => p + 1)}
-            className="flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 cursor-pointer"
+            disabled={participants >= maxSpots}
+            onClick={() => setParticipants((p) => Math.min(maxSpots, p + 1))}
+            className="flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer disabled:cursor-not-allowed"
           >
             +
           </button>
@@ -246,14 +279,19 @@ export function ExperienceBookingPanel({
           This experience isn&apos;t available for booking yet.
         </p>
       ) : (
-        <Button
-          size="cta"
-          disabled={!isReady || createBooking.isPending}
-          onClick={handleBookNow}
-          className="w-full"
-        >
-          {createBooking.isPending ? "Starting checkout…" : "Book now"}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            size="cta"
+            disabled={!isReady || createBooking.isPending}
+            onClick={handleBookNow}
+            className="w-full bg-[#F5032D] text-white hover:bg-[#d90328] font-sans text-base font-semibold shadow-sm transition-all"
+          >
+            {createBooking.isPending ? "Starting checkout…" : `Book now — ${formatPrice(total, currency)} >`}
+          </Button>
+          <p className="text-center text-xs text-[#6F6B72]">
+            You won&apos;t be charged yet. You&apos;ll confirm on the next step.
+          </p>
+        </div>
       )}
 
       <div className="flex items-center justify-between pt-1">
