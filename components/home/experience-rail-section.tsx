@@ -81,58 +81,60 @@ export function ExperienceRailSection({
 
   if (cardVariant === "vertical") {
     return (
-      <section
-        className={cn(
-          containerClassName ??
-            cn(
-              "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[77px] lg:pb-[79px]",
-              wide && "max-w-[1212px]"
-            ),
-          className
-        )}
-      >
-        <Carousel opts={{ align: "start", dragFree: true }}>
-          <div className="flex flex-col gap-[15px] lg:flex-row lg:items-start lg:justify-between lg:gap-4">
-            {headingBlock(false)}
-            <div className="flex shrink-0 items-center gap-1">
-              <CarouselPrevious className="static size-10 translate-y-0 border-0 bg-[#fafafa] text-foreground hover:bg-muted" />
-              <CarouselNext className="static size-10 translate-y-0 border-0 bg-brand text-white hover:bg-brand/90" />
-            </div>
-          </div>
-          {/* Bleeds past the right page margin like the design (cards clip at
-              the viewport edge, not at the content column). */}
-          <div
-            className={cn(
-              "mt-[34px]",
-              bleedClassName ?? "-mr-6 lg:-mr-[calc((100vw-900px)/2)]"
-            )}
-          >
-            {isLoading ? (
-              // Skeletons don't need to be draggable/scrollable — skip the
-              // Carousel machinery entirely and just render a plain row.
-              <div className="flex gap-6 overflow-hidden lg:gap-[34px]">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <ExperienceCardVerticalSkeleton key={index} className="w-[345px] shrink-0" />
-                ))}
+      <div className="w-full overflow-x-clip">
+        <section
+          className={cn(
+            containerClassName ??
+              cn(
+                "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[77px] lg:pb-[79px]",
+                wide && "max-w-[1212px]"
+              ),
+            className
+          )}
+        >
+          <Carousel opts={{ align: "start", dragFree: true }}>
+            <div className="flex flex-col gap-[15px] lg:flex-row lg:items-start lg:justify-between lg:gap-4">
+              {headingBlock(false)}
+              <div className="flex shrink-0 items-center gap-1">
+                <CarouselPrevious className="static size-10 translate-y-0 border-0 bg-[#fafafa] text-foreground hover:bg-muted" />
+                <CarouselNext className="static size-10 translate-y-0 border-0 bg-brand text-white hover:bg-brand/90" />
               </div>
-            ) : (
-              /* basis includes the pl gap: 345px card + 24px (mobile) / 34px (lg) */
-              <CarouselContent className="-ml-6 lg:-ml-[34px]">
-                {items.map((item) => (
-                  <CarouselItem key={item.id} className="basis-[369px] pl-6 lg:basis-[379px] lg:pl-[34px]">
-                    <ExperienceCardVertical {...item} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            )}
-          </div>
-        </Carousel>
-      </section>
+            </div>
+            {/* Bleeds past the right page margin like the design (cards clip at
+                the viewport edge, not at the content column). */}
+            <div
+              className={cn(
+                "mt-[34px]",
+                bleedClassName ?? (wide ? "-mr-6 lg:-mr-[calc((100vw-1212px)/2)]" : "-mr-6 lg:-mr-[calc((100vw-900px)/2)]")
+              )}
+            >
+              {isLoading ? (
+                // Skeletons don't need to be draggable/scrollable — skip the
+                // Carousel machinery entirely and just render a plain row.
+                <div className="flex gap-6 overflow-hidden lg:gap-[34px]">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <ExperienceCardVerticalSkeleton key={index} className="w-[345px] shrink-0" />
+                  ))}
+                </div>
+              ) : (
+                /* basis includes the pl gap: 345px card + 24px (mobile) / 34px (lg) */
+                <CarouselContent className="-ml-6 lg:-ml-[34px]">
+                  {items.map((item) => (
+                    <CarouselItem key={item.id} className="basis-[369px] pl-6 lg:basis-[379px] lg:pl-[34px]">
+                      <ExperienceCardVertical {...item} />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              )}
+            </div>
+          </Carousel>
+        </section>
+      </div>
     );
   }
 
   return (
-    <section className={cn("mx-auto w-full max-w-[900px] px-6 lg:px-0 py-[42px] lg:pt-[77px] lg:pb-[140px]", className)}>
+    <section className={cn("mx-auto w-full max-w-[900px] px-6 lg:px-0 py-[42px] lg:pt-[77px] lg:pb-[140px] overflow-x-clip", className)}>
       <div className="flex items-start justify-between gap-4">
         {headingBlock(true)}
         {seeMoreHref ? (

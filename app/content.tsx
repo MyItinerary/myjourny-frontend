@@ -95,7 +95,7 @@ export function HomeContent() {
   );
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col w-full max-w-full overflow-x-clip">
       <HeroSection />
 
       {/* Order differs by session state — see the note above the component. */}

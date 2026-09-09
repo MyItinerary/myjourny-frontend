@@ -24,14 +24,23 @@ export function CtaSection() {
           Tell us your interests and we&rsquo;ll shape every recommendation around the experiences that fit you, not
           everyone else.
         </p>
-        {!user && (
+        {!user ? (
           <Button
             size="cta"
             variant="outline"
-            className="mt-2 border-transparent bg-white text-primary hover:bg-white/90 lg:mt-0"
+            className="mt-2 border-transparent bg-white text-primary hover:bg-white/90 lg:mt-0 cursor-pointer"
             render={<Link href="/onboarding" />}
           >
             Get started
+          </Button>
+        ) : (
+          <Button
+            size="cta"
+            variant="outline"
+            className="mt-2 border-transparent bg-white text-primary hover:bg-white/90 lg:mt-0 cursor-pointer"
+            render={<Link href="/onboarding/pace" />}
+          >
+            Update your preferences
           </Button>
         )}
       </div>
