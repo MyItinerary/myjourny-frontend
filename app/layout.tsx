@@ -9,7 +9,7 @@ import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "MyJourny",
-  description: "MyJourny — connecting travellers with local guides for curated experiences",
+  description: "MyJourny | connecting travellers with local guides for curated experiences",
 };
 
 export default function RootLayout({

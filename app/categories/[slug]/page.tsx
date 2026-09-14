@@ -11,7 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const category = categoriesBySlug.get(slug);
-  return { title: category ? `${category.label} — MyJourny` : "MyJourny" };
+  return { title: category ? `${category.label} | MyJourny` : "MyJourny" };
 }
 
 export default async function CategoryPage({

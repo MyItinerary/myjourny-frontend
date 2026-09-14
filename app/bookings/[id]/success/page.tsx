@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { InterstitialScreen } from "@/components/onboarding/interstitial-screen";
 
 export const metadata: Metadata = {
-  title: "Booking confirmed — MyJourny",
+  title: "Booking confirmed | MyJourny",
 };
 
 // Landed on after itin's /bookings/success verifies payment and redirects
@@ -15,7 +15,7 @@ export default function BookingSuccessPage() {
   return (
     <InterstitialScreen
       heading="Booking confirmed 🎉"
-      subtitle="You're all set — we've sent the details to your email. See you there!"
+      subtitle="You're all set - we've sent the details to your email. See you there!"
       primaryLabel="Back to home"
       primaryHref="/"
       illustration={null}

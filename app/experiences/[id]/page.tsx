@@ -5,7 +5,7 @@ import { ExperienceDetailContent } from "./content";
 export async function generateMetadata(): Promise<Metadata> {
   // The real title needs an authenticated API call (client-fetched in
   // content.tsx) — no server-side data source available here.
-  return { title: "Experience — MyJourny" };
+  return { title: "Experience | MyJourny" };
 }
 
 export default async function ExperienceDetailPage({

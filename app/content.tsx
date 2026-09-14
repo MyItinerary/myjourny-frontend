@@ -120,7 +120,7 @@ export function HomeContent() {
           <Reveal>
             <ExperienceRailSection
               heading="Top picks right now"
-              subheading="What’s happening around you"
+              subheading="What's happening around you"
               items={realTopPicksItems}
               cardVariant="vertical"
               isLoading={topPicksIsLoading}
@@ -131,7 +131,7 @@ export function HomeContent() {
         <Reveal>
           <ExperienceRailSection
             heading="Top picks right now"
-            subheading="What’s happening in Lagos"
+            subheading="What's happening in Lagos"
             items={topPicks}
             cardVariant="vertical"
           />

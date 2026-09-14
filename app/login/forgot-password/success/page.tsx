@@ -5,7 +5,7 @@ import { AuthScreenLayout } from "@/components/onboarding/auth-screen-layout";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Password reset — MyJourny",
+  title: "Password reset | MyJourny",
 };
 
 // Figma: "Desktop - 37" (2068:25009) — same split auth shell as every other
