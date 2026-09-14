@@ -47,6 +47,7 @@ export function PaceContent() {
       heading="What kind of pace do you enjoy when exploring?"
       subtitle="This helps us match experiences to your vibe."
       options={options}
+      maxSelected={1}
       continueHref="/onboarding/interests"
       backHref="/onboarding/get-to-know-you"
       onContinue={(selected) => setPreference("energyLevel", selected[0])}
