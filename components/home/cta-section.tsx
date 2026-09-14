@@ -38,7 +38,7 @@ export function CtaSection() {
             size="cta"
             variant="outline"
             className="mt-2 border-transparent bg-white text-primary hover:bg-white/90 lg:mt-0 cursor-pointer"
-            render={<Link href="/onboarding/pace" />}
+            render={<Link href="/profile/preferences" />}
           >
             Update your preferences
           </Button>
