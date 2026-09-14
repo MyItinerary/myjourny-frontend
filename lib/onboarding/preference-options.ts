@@ -164,7 +164,7 @@ export const SOCIAL_OPTIONS: PreferenceOption[] = [
   {
     id: "group",
     icon: UsersSmallGroupIcon,
-    label: "Small group (2–4 people)",
+    label: "Small group (2-4 people)",
     description: "A tight crew, easy and close",
   },
   {

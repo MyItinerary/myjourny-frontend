@@ -36,7 +36,7 @@ export function ExperienceBeforeYouBook({ experience }: { experience: Experience
       icon: Zap,
       label: "Activity level",
       description: experience.energy_level
-        ? `This experience is ${experience.energy_level} energy — pace yourself accordingly`
+        ? `This experience is ${experience.energy_level} energy - pace yourself accordingly`
         : "Ask your host about the activity level before booking",
     },
     {

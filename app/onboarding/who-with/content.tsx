@@ -19,7 +19,7 @@ import { getPreferences, setPreference } from "@/lib/onboarding/preferences-stor
 const SOCIAL_METADATA: Record<string, { icon: typeof UserSoloIcon; label: string; description: string }> = {
   solo: { icon: UserSoloIcon, label: "Solo, at my own pace", description: "Just me, moving how I want" },
   couple: { icon: UsersTwoIcon, label: "With a partner", description: "Sharing the moment, just us two" },
-  group: { icon: UsersSmallGroupIcon, label: "Small group (2–4 people)", description: "A tight crew, easy and close" },
+  group: { icon: UsersSmallGroupIcon, label: "Small group (2-4 people)", description: "A tight crew, easy and close" },
   open: { icon: UsersBigGroupIcon, label: "Big group energy", description: "The more the merrier" },
   low_interaction: {
     icon: UserSoloIcon,

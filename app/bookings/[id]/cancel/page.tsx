@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { InterstitialScreen } from "@/components/onboarding/interstitial-screen";
 
 export const metadata: Metadata = {
-  title: "Booking cancelled — MyJourny",
+  title: "Booking cancelled | MyJourny",
 };
 
 // Landed on after itin's /bookings/cancel marks the booking cancelled and

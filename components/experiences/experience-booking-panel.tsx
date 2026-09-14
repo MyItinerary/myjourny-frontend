@@ -286,7 +286,7 @@ export function ExperienceBookingPanel({
             onClick={handleBookNow}
             className="w-full bg-[#F5032D] text-white hover:bg-[#d90328] font-sans text-base font-semibold shadow-sm transition-all"
           >
-            {createBooking.isPending ? "Starting checkout…" : `Book now — ${formatPrice(total, currency)} >`}
+            {createBooking.isPending ? "Starting checkout…" : `Book now - ${formatPrice(total, currency)} >`}
           </Button>
           <p className="text-center text-xs text-[#6F6B72]">
             You won&apos;t be charged yet. You&apos;ll confirm on the next step.
@@ -312,7 +312,7 @@ export function ExperienceBookingPanel({
         <div className="flex items-start gap-2">
           <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <div>
-            <p className="text-sm text-foreground">Duration — {durationLabel}</p>
+            <p className="text-sm text-foreground">Duration - {durationLabel}</p>
             <p className="text-xs text-muted-foreground">See time slots above</p>
           </div>
         </div>

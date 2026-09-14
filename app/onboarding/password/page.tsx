@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { PasswordContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Create a password — MyJourny",
+  title: "Create a password | MyJourny",
 };
 
 export default function PasswordPage() {

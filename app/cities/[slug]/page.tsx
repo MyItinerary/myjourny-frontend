@@ -11,7 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const city = cities.find((c) => c.id === slug);
-  return { title: city ? `${city.name} — MyJourny` : "MyJourny" };
+  return { title: city ? `${city.name} | MyJourny` : "MyJourny" };
 }
 
 export default async function CityPage({

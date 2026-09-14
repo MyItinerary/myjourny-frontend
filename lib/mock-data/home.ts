@@ -139,27 +139,27 @@ export const suggestedDestinations: Destination[] = [
   {
     id: "lagos",
     city: "Lagos, Nigeria",
-    description: "For it’s relentless energy",
+    description: "For its relentless energy",
   },
   {
     id: "abuja",
     city: "Abuja, Nigeria",
-    description: "For it’s elegance, green, calm.",
+    description: "For its elegance, green, calm.",
   },
   {
     id: "port-harcourt",
     city: "Port Harcourt, Nigeria",
-    description: "For it’s rich culture, endless flavor",
+    description: "For its rich culture, endless flavor",
   },
   {
     id: "ibadan",
     city: "Ibadan, Nigeria",
-    description: "For it’s rich Nigerian history",
+    description: "For its rich Nigerian history",
   },
   {
     id: "calabar",
     city: "Calabar, Nigeria",
-    description: "For it’s tourism",
+    description: "For its tourism",
   },
 ];
 
