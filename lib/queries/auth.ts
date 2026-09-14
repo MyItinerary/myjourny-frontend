@@ -142,6 +142,7 @@ export function useLogout() {
     // is client-side-only (clear local session + the session-route cookie).
     mutationFn: async () => {
       clearAuth();
+      clearPreferences();
       await fetch("/api/auth/session", { method: "DELETE" }).catch(() => {});
     },
   });
