@@ -4,11 +4,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion, type Variants } from "motion/react";
+import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { HomeNav } from "@/components/home/home-nav";
 import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
-import { suggestedDestinations } from "@/lib/mock-data/home";
+import { categoriesBySlug, suggestedDestinations } from "@/lib/mock-data/home";
 
 // Headline -> subtext -> search bar, staggered on mount (above the fold,
 // so this plays immediately rather than on scroll — see components/motion/reveal.tsx
@@ -25,6 +26,8 @@ const heroItemVariants: Variants = {
 // Figma: "Hero" (2001:9143 guest / 2001:9153 account) — pixel-identical
 // between the two states, so this ships as one shared component.
 export function HeroSection() {
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
   return (
     <section className="relative z-20 bg-gradient-to-b from-muted to-white">
       <HomeNav />
@@ -51,12 +54,13 @@ export function HeroSection() {
         </div>
 
         <motion.div variants={heroItemVariants} className="w-full">
-          {/* Mobile: compact "Search destinations" pill (2001:8004); desktop: 3-field bar. */}
+          {/* Mobile: compact "Search destinations or activities" pill; desktop: 3-field bar. */}
           <button
             type="button"
-            className="mt-[76px] flex w-full items-center gap-[7px] rounded-full border border-[#c7c1ba] bg-white p-4 text-left lg:hidden"
+            onClick={() => setMobileSearchOpen(true)}
+            className="mt-[76px] flex w-full items-center gap-[7px] rounded-full border border-[#c7c1ba] bg-white p-4 text-left lg:hidden cursor-pointer"
           >
-            <span className="min-w-0 flex-1 text-base leading-6 text-muted-foreground">Search destinations</span>
+            <span className="min-w-0 flex-1 text-base leading-6 text-muted-foreground">Search destinations or activities</span>
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand">
               <Image src="/icons/search-lg.svg" alt="" width={16} height={16} className="invert" />
             </span>
@@ -64,19 +68,43 @@ export function HeroSection() {
           <SearchBar className="mt-8 hidden w-full max-w-[900px] lg:mt-12 lg:flex" />
         </motion.div>
       </motion.div>
+
+      {/* Mobile search modal */}
+      {mobileSearchOpen && <MobileSearchModal onClose={() => setMobileSearchOpen(false)} />}
     </section>
   );
 }
 
+const allDestinations = [
+  ...suggestedDestinations,
+  { id: "abeokuta", city: "Abeokuta, Nigeria", description: "For its iconic rocks and heritage" },
+  { id: "jos", city: "Jos, Nigeria", description: "For its cool highlands and scenic plateaus" },
+  { id: "bauchi", city: "Bauchi, Nigeria", description: "For wildlife safaris and natural beauty" },
+  { id: "kaduna", city: "Kaduna, Nigeria", description: "For its rich trade crossroads" },
+  { id: "enugu", city: "Enugu, Nigeria", description: "For the coal city hills and culture" },
+  { id: "benin-city", city: "Benin City, Nigeria", description: "For royal arts and ancient history" },
+  { id: "kano", city: "Kano, Nigeria", description: "For historic city walls and dyeing pits" },
+  { id: "owerri", city: "Owerri, Nigeria", description: "For lively nightlife and hospitality" },
+];
+
 const popularActivities = [
-  { id: "local-food-drinks", label: "Local food & drinks", subtitle: "Street eats, cafés, and hidden spots" },
+  { id: "local-food-drinks", label: "Local food & drinks", subtitle: "Street eats, cafés, and culinary tours" },
+  { id: "street-food-markets", label: "Street food & markets", subtitle: "Local delicacies and bustling night markets" },
+  { id: "cafes-coffee-culture", label: "Cafés & coffee culture", subtitle: "Artisan coffee, cozy spots, and pastry shops" },
+  { id: "bars-nightlife-drinks", label: "Bars & nightlife drinks", subtitle: "Cocktail bars, speakeasies, and rooftop lounges" },
+  { id: "nightlife", label: "Nightlife", subtitle: "Clubs, lounges, and late-night spots" },
   { id: "culture-history", label: "Culture & history", subtitle: "Museums, heritage, and local stories" },
+  { id: "museums-heritage-sites", label: "Museums & heritage sites", subtitle: "Historical landmarks, art galleries, and monuments" },
+  { id: "local-traditions-festivals", label: "Local traditions & festivals", subtitle: "Cultural celebrations and traditional ceremonies" },
+  { id: "historic-neighborhoods-landmarks", label: "Historic neighborhoods", subtitle: "Iconic districts, architecture, and heritage walks" },
   { id: "nature-outdoors", label: "Nature & outdoors", subtitle: "Fresh air, trails, and open spaces" },
-  { id: "art-creativity", label: "Art & creativity", subtitle: "Galleries, murals, and creative spaces" },
-  { id: "wellness-calm", label: "Wellness & calm", subtitle: "Spas, quiet spots, and slow moments" },
-  { id: "street-life", label: "Street life", subtitle: "Markets, corners, and everyday buzz" },
-  { id: "events-live-shows", label: "Events & live shows", subtitle: "Concerts, festivals, and live energy" },
   { id: "hiking-trails", label: "Hiking & trails", subtitle: "Scenic routes and guided outdoor walks" },
+  { id: "beaches-waterfronts", label: "Beaches & waterfronts", subtitle: "Boat cruises, beach days, and coastal fun" },
+  { id: "parks-green-spaces", label: "Parks & green spaces", subtitle: "Botanical gardens, picnic spots, and urban parks" },
+  { id: "art-creativity", label: "Art & creativity", subtitle: "Galleries, murals, and creative workshops" },
+  { id: "wellness-calm", label: "Wellness & calm", subtitle: "Spas, quiet spots, and yoga sessions" },
+  { id: "street-life", label: "Street life", subtitle: "Markets, corners, and everyday city buzz" },
+  { id: "events-live-shows", label: "Events & live shows", subtitle: "Concerts, festivals, and live music" },
 ];
 
 function SearchBar({ className }: { className?: string }) {
@@ -125,8 +153,9 @@ function SearchBar({ className }: { className?: string }) {
     }
   }
 
-  function handleSearch() {
-    const trimmed = selectedWhere.trim().toLowerCase();
+  function handleSearch(customQuery?: string) {
+    const rawQuery = customQuery ?? selectedWhere;
+    const trimmed = rawQuery.trim().toLowerCase();
     if (!trimmed) return;
 
     if (selectedType === "activity" && selectedWhereId) {
@@ -140,51 +169,73 @@ function SearchBar({ className }: { className?: string }) {
     }
 
     // Check destination match
-    const matchedDest = suggestedDestinations.find(
+    const matchedDest = allDestinations.find(
       (d) =>
         d.city.toLowerCase().includes(trimmed) ||
         d.id.toLowerCase().includes(trimmed) ||
         trimmed.includes(d.id.toLowerCase())
     );
 
-    if (matchedDest) {
-      router.push(`/cities/${matchedDest.id}`);
-      return;
-    }
-
     // Check activity match
     const matchedAct = popularActivities.find(
       (a) =>
         a.label.toLowerCase().includes(trimmed) ||
         a.id.toLowerCase().includes(trimmed) ||
-        trimmed.includes(a.id.toLowerCase())
+        trimmed.includes(a.id.toLowerCase()) ||
+        a.subtitle?.toLowerCase().includes(trimmed)
     );
 
-    if (matchedAct) {
+    if (matchedDest && !matchedAct) {
+      router.push(`/cities/${matchedDest.id}`);
+      return;
+    }
+
+    if (matchedAct && !matchedDest) {
       router.push(`/categories/${matchedAct.id}`);
       return;
     }
 
-    router.push(`/cities/lagos`);
+    if (matchedDest && matchedAct) {
+      const destExact =
+        matchedDest.city.toLowerCase() === trimmed || matchedDest.id.toLowerCase() === trimmed;
+      const actExact =
+        matchedAct.label.toLowerCase() === trimmed || matchedAct.id.toLowerCase() === trimmed;
+      if (actExact && !destExact) {
+        router.push(`/categories/${matchedAct.id}`);
+      } else {
+        router.push(`/cities/${matchedDest.id}`);
+      }
+      return;
+    }
+
+    if (categoriesBySlug.has(trimmed)) {
+      router.push(`/categories/${trimmed}`);
+      return;
+    }
+
+    const slugified = trimmed.replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    router.push(`/categories/${slugified}`);
   }
 
   const trimmedQuery = selectedWhere.trim().toLowerCase();
 
   const filteredDestinations = trimmedQuery
-    ? suggestedDestinations.filter(
+    ? allDestinations.filter(
         (dest) =>
           dest.city.toLowerCase().includes(trimmedQuery) ||
+          dest.id.toLowerCase().includes(trimmedQuery) ||
           dest.description.toLowerCase().includes(trimmedQuery)
       )
-    : suggestedDestinations;
+    : allDestinations.slice(0, 5);
 
   const filteredActivities = trimmedQuery
     ? popularActivities.filter(
         (act) =>
           act.label.toLowerCase().includes(trimmedQuery) ||
+          act.id.toLowerCase().includes(trimmedQuery) ||
           act.subtitle.toLowerCase().includes(trimmedQuery)
       )
-    : popularActivities;
+    : popularActivities.slice(0, 6);
 
   const guestTypes = [
     {
@@ -232,7 +283,7 @@ function SearchBar({ className }: { className?: string }) {
             ref={whereInputRef}
             type="text"
             value={selectedWhere}
-            placeholder="Search destinations"
+            placeholder="Search destinations or activities"
             onFocus={() => setActiveTab("where")}
             onChange={(e) => {
               setSelectedWhere(e.target.value);
@@ -321,7 +372,7 @@ function SearchBar({ className }: { className?: string }) {
         type="button"
         aria-label="Search"
         disabled={!selectedWhere.trim()}
-        onClick={handleSearch}
+        onClick={() => handleSearch()}
         className="flex size-12 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto cursor-pointer"
       >
         <Image src="/icons/search-lg.svg" alt="" width={20} height={20} className="invert" />
@@ -505,6 +556,179 @@ function SearchBar({ className }: { className?: string }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function MobileSearchModal({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const trimmed = query.trim().toLowerCase();
+
+  const filteredDestinations = trimmed
+    ? allDestinations.filter(
+        (dest) =>
+          dest.city.toLowerCase().includes(trimmed) ||
+          dest.id.toLowerCase().includes(trimmed) ||
+          dest.description.toLowerCase().includes(trimmed)
+      )
+    : allDestinations.slice(0, 4);
+
+  const filteredActivities = trimmed
+    ? popularActivities.filter(
+        (act) =>
+          act.label.toLowerCase().includes(trimmed) ||
+          act.id.toLowerCase().includes(trimmed) ||
+          act.subtitle.toLowerCase().includes(trimmed)
+      )
+    : popularActivities.slice(0, 5);
+
+  function executeSearch(searchQuery: string) {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return;
+
+    const matchedDest = allDestinations.find(
+      (d) =>
+        d.city.toLowerCase().includes(q) ||
+        d.id.toLowerCase().includes(q) ||
+        q.includes(d.id.toLowerCase())
+    );
+
+    const matchedAct = popularActivities.find(
+      (a) =>
+        a.label.toLowerCase().includes(q) ||
+        a.id.toLowerCase().includes(q) ||
+        q.includes(a.id.toLowerCase()) ||
+        a.subtitle?.toLowerCase().includes(q)
+    );
+
+    onClose();
+    if (matchedDest && !matchedAct) {
+      router.push(`/cities/${matchedDest.id}`);
+      return;
+    }
+    if (matchedAct) {
+      router.push(`/categories/${matchedAct.id}`);
+      return;
+    }
+    if (matchedDest) {
+      router.push(`/cities/${matchedDest.id}`);
+      return;
+    }
+    if (categoriesBySlug.has(q)) {
+      router.push(`/categories/${q}`);
+      return;
+    }
+    const slugified = q.replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    router.push(`/categories/${slugified}`);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-white p-6 lg:hidden">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-[#130404]">Search</h2>
+        <button
+          type="button"
+          aria-label="Close search"
+          onClick={onClose}
+          className="flex size-9 items-center justify-center rounded-full bg-[#F4F2EE] text-[#130404]"
+        >
+          <X className="size-5" />
+        </button>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3 shadow-xs">
+        <Image src="/icons/search-lg.svg" alt="" width={18} height={18} />
+        <input
+          autoFocus
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              executeSearch(query);
+            }
+          }}
+          placeholder="Search destinations or activities"
+          className="w-full border-0 bg-transparent font-sans text-base text-[#130404] placeholder:text-muted-foreground outline-none"
+        />
+      </div>
+
+      <div className="mt-6 flex-1 overflow-y-auto pr-1">
+        {filteredDestinations.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#6F6B72]">
+              Destinations
+            </span>
+            {filteredDestinations.map((dest) => (
+              <button
+                key={dest.id}
+                type="button"
+                onClick={() => {
+                  onClose();
+                  router.push(`/cities/${dest.id}`);
+                }}
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-[#F4F2EE]/70"
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-[#F4F2EE]">
+                  <Image src="/icons/pin-destination.svg" alt="" width={16} height={20} className="h-5 w-4" />
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-sm font-semibold text-[#130404] truncate">{dest.city}</span>
+                  <span className="text-xs text-[#6F6B72] truncate">{dest.description}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {filteredActivities.length > 0 && (
+          <div className={cn("flex flex-col gap-2", filteredDestinations.length > 0 && "mt-4 border-t border-[#f0eee9] pt-3")}>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#6F6B72]">
+              Activities &amp; Experiences
+            </span>
+            {filteredActivities.map((act) => (
+              <button
+                key={act.id}
+                type="button"
+                onClick={() => {
+                  onClose();
+                  router.push(`/categories/${act.id}`);
+                }}
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-[#F4F2EE]/70"
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-[#F4F2EE]">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#F5032D"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-4"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                  </svg>
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-sm font-semibold text-[#130404] truncate">{act.label}</span>
+                  <span className="text-xs text-[#6F6B72] truncate">{act.subtitle}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {filteredDestinations.length === 0 && filteredActivities.length === 0 && (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No destinations or activities found matching &ldquo;{query}&rdquo;
+          </p>
+        )}
+      </div>
     </div>
   );
 }

@@ -21,7 +21,7 @@ export default async function CategoryPage({
 }) {
   const { slug } = await params;
   const category = categoriesBySlug.get(slug);
-  if (!category) notFound();
+  const label = category ? category.label : slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  return <CategoryPageContent slug={slug} label={category.label} />;
+  return <CategoryPageContent slug={slug} label={label} />;
 }
