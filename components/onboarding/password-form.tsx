@@ -7,6 +7,7 @@ import { useState } from "react";
 import { InfoCircleIcon } from "@/components/icons/auth-icons";
 import { PasswordInput } from "@/components/onboarding/password-input";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface BottomLink {
   prompt: string;
@@ -21,6 +22,12 @@ interface PasswordFormProps {
   onSubmit?: (values: { password: string }) => Promise<boolean> | boolean;
 }
 
+// Matches the rule stated in the info row below: 8+ characters, at least
+// one letter, at least one number.
+function meetsPasswordRequirements(password: string): boolean {
+  return password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
+}
+
 // Figma "Create a secure Password" shell — two PasswordInputs, an info row,
 // Continue, terms, bottom link. Shared by the sign-up Password step
 // (2068:24915) and the Forgot-password Reset-password screen (2068:24939).
@@ -30,7 +37,14 @@ export function PasswordForm({ continueHref, bottomLink, onSubmit }: PasswordFor
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const canContinue = password.length > 0 && password === confirmPassword;
+  const passwordValid = meetsPasswordRequirements(password);
+  const passwordsMatch = password === confirmPassword;
+  const canContinue = password.length > 0 && passwordValid && passwordsMatch;
+
+  // Only surface an error once there's something to react to, so the field
+  // doesn't start out looking invalid before the user has typed anything.
+  const showRequirementsError = password.length > 0 && !passwordValid;
+  const showMismatchError = confirmPassword.length > 0 && passwordValid && !passwordsMatch;
 
   return (
     <form
@@ -58,11 +72,20 @@ export function PasswordForm({ continueHref, bottomLink, onSubmit }: PasswordFor
       </div>
 
       <div className="flex w-full items-start gap-2">
-        <InfoCircleIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
+        <InfoCircleIcon
+          className={cn(
+            "mt-0.5 size-5 shrink-0 text-muted-foreground",
+            showRequirementsError && "text-destructive"
+          )}
+        />
+        <p className={cn("text-sm text-muted-foreground", showRequirementsError && "text-destructive")}>
           Your password should contain at least 8 characters, a letter and a number
         </p>
       </div>
+
+      {showMismatchError && (
+        <p className="w-full text-sm text-destructive">Passwords do not match</p>
+      )}
 
       <Button type="submit" size="cta" disabled={!canContinue || isSubmitting} className="w-full">
         Continue

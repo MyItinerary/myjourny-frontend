@@ -79,7 +79,7 @@ export function HomeNav({ className }: { className?: string }) {
                 type="button"
                 aria-label="Log out"
                 onClick={() => {
-                  logout.mutate(undefined, { onSuccess: () => router.push("/") });
+                  logout.mutate(undefined, { onSuccess: () => router.push("/login") });
                 }}
                 className="flex size-12 items-center justify-center rounded-[12px] bg-[#F4F2EE] text-foreground transition-colors hover:bg-muted cursor-pointer"
               >
@@ -166,7 +166,7 @@ export function HomeNav({ className }: { className?: string }) {
                   type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    logout.mutate(undefined, { onSuccess: () => router.push("/") });
+                    logout.mutate(undefined, { onSuccess: () => router.push("/login") });
                   }}
                   className="flex w-full items-center gap-3 rounded-xl p-3 font-sans text-[15px] font-medium text-red-600 hover:bg-red-50"
                 >

@@ -583,7 +583,7 @@ export function ProfileView() {
                   logout.mutate(undefined, {
                     onSuccess: () => {
                       toast.success("Logged out successfully");
-                      router.push("/");
+                      router.push("/login");
                     },
                   });
                 }}
