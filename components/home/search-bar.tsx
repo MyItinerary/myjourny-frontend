@@ -115,6 +115,8 @@ export function SearchBar({
     const rawQuery = customQuery ?? selectedWhere;
     const trimmed = rawQuery.trim().toLowerCase();
     if (!trimmed) return;
+    const total = guests.adults + guests.children + guests.infants;
+    if (!selectedWhen.trim() || total <= 0) return;
 
     onClose?.();
 
@@ -166,6 +168,9 @@ export function SearchBar({
     const slugified = trimmed.replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     router.push(`/categories/${slugified}`);
   }
+
+  const totalGuests = guests.adults + guests.children + guests.infants;
+  const allFieldsFilled = !!selectedWhere.trim() && !!selectedWhen.trim() && totalGuests > 0;
 
   const trimmedQuery = selectedWhere.trim().toLowerCase();
 
@@ -310,7 +315,7 @@ export function SearchBar({
         <button
           type="button"
           aria-label="Search"
-          disabled={!selectedWhere.trim()}
+          disabled={!allFieldsFilled}
           onClick={() => handleSearch()}
           className="flex h-12 shrink-0 items-center gap-2 rounded-full bg-brand px-5 text-white transition-all hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-sm"
         >
@@ -321,7 +326,7 @@ export function SearchBar({
         <button
           type="button"
           aria-label="Search"
-          disabled={!selectedWhere.trim()}
+          disabled={!allFieldsFilled}
           onClick={() => handleSearch()}
           className="flex size-12 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto cursor-pointer"
         >
@@ -346,9 +351,7 @@ export function SearchBar({
                       setSelectedWhere(dest.city);
                       setSelectedWhereId(dest.id);
                       setSelectedType("destination");
-                      setActiveTab(null);
-                      onClose?.();
-                      router.push(`/cities/${dest.id}`);
+                      setActiveTab("when");
                     }}
                     className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
                   >
@@ -387,9 +390,7 @@ export function SearchBar({
                       setSelectedWhere(act.label);
                       setSelectedWhereId(act.id);
                       setSelectedType("activity");
-                      setActiveTab(null);
-                      onClose?.();
-                      router.push(`/categories/${act.id}`);
+                      setActiveTab("when");
                     }}
                     className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
                   >

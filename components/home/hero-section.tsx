@@ -23,7 +23,7 @@ export function HeroSection() {
 
   useEffect(() => {
     function handleScroll() {
-      setIsScrolled(window.scrollY > 80);
+      setIsScrolled(window.scrollY > 20);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();

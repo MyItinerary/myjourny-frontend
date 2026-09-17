@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,25 +54,39 @@ export function Footer() {
     : inspirationSubcategories;
 
   return (
-    <footer className="bg-[#fafafa]">
+    <footer className="bg-[#F7F7F7]">
       <div className="mx-auto max-w-[1372px] px-6 pt-12 pb-8 lg:px-6">
-        <h2 className="py-2 font-heading text-[22px] leading-[33px] font-medium text-[#0d0d0d]">
+        <h2 className="py-2 font-heading text-[22px] leading-[33px] font-medium text-[#222222]">
           More ways to experience your city
         </h2>
 
         <Tabs
           value={activeCategory}
           onValueChange={(value) => setActiveCategory(value as string)}
-          className="mt-6"
+          className="mt-4"
         >
-          <TabsList variant="line" className="h-auto w-full justify-start gap-2 overflow-x-auto border-0 bg-transparent p-0">
+          <TabsList
+            variant="line"
+            className="relative flex h-auto w-full justify-start gap-6 overflow-x-auto border-b border-[#EBEBEB] bg-transparent p-0 scrollbar-none"
+          >
             {inspirationCategories.map((category) => (
               <TabsTrigger
                 key={category.id}
                 value={category.id}
-                className="flex items-start justify-center gap-2 rounded-none px-4 pt-0 pb-2 text-sm font-medium text-[#757575] border-t-0 border-x-0 border-b-2 border-transparent transition-all after:hidden hover:text-foreground data-active:border-t-0 data-active:border-x-0 data-active:border-b-[#F5032D] data-active:text-[#0d0d0d] data-active:shadow-none"
+                className={cn(
+                  "relative flex items-center justify-center whitespace-nowrap rounded-none border-0 bg-transparent px-0 pb-3.5 pt-2 text-sm font-medium text-[#717171] transition-colors after:hidden hover:text-[#222222]",
+                  "data-active:border-0 data-active:bg-transparent data-active:font-semibold data-active:text-[#222222] data-active:shadow-none"
+                )}
               >
                 {category.label}
+                {activeCategory === category.id && (
+                  <motion.span
+                    layoutId="footer-tab-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-[2px] bg-[#222222]"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    aria-hidden="true"
+                  />
+                )}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -84,22 +99,22 @@ export function Footer() {
         <div className="mt-8 flex flex-wrap items-center gap-6">
           {activeSubcategories.map((subcategory) => (
             <div key={subcategory.id} className="flex flex-col pr-4">
-              <span className="text-sm font-medium text-[#0d0d0d]">{subcategory.label}</span>
-              <span className="pt-0.5 text-[13px] text-[#4a4540]">Subcategory</span>
+              <span className="text-sm font-medium text-[#222222]">{subcategory.label}</span>
+              <span className="pt-0.5 text-[13px] text-[#717171]">Subcategory</span>
             </div>
           ))}
         </div>
 
         {/* Figma seam: InspirationSection pb-24px + Footer block pt-48px = 72px */}
         {/* Figma fixes this container at 268px tall regardless of content */}
-        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3 lg:mt-[72px] lg:min-h-[268px] lg:gap-8">
+        <div className="mt-12 grid grid-cols-1 gap-4 border-t border-[#EBEBEB] pt-8 sm:grid-cols-3 lg:mt-[72px] lg:min-h-[268px] lg:gap-8 lg:pt-12">
           {linkColumns.map((column) => (
             <div key={column.heading} className="flex flex-col gap-4">
-              <h3 className="text-sm font-semibold tracking-[0.14px] text-[#2a2420]">{column.heading}</h3>
+              <h3 className="text-sm font-semibold tracking-[0.14px] text-[#222222]">{column.heading}</h3>
               <ul className="flex flex-col gap-2.5">
                 {column.links.map((link) => (
                   <li key={link} className="flex h-6 items-center">
-                    <Link href="#" className="text-sm text-[#4a4540] hover:text-foreground">
+                    <Link href="#" className="text-sm text-[#4a4540] hover:text-[#222222] hover:underline">
                       {link}
                     </Link>
                   </li>
@@ -109,15 +124,15 @@ export function Footer() {
           ))}
         </div>
 
-        <div className={cn("mt-6 flex flex-wrap items-center gap-2.5 border-t border-[#e0e0e0] pt-3 text-sm text-[#424242] lg:mt-10 lg:pt-6")}>
+        <div className={cn("mt-6 flex flex-wrap items-center gap-2.5 border-t border-[#EBEBEB] pt-3 text-sm text-[#717171] lg:mt-10 lg:pt-6")}>
           <span>&copy; {new Date().getFullYear()} Myjourny, Inc.</span>
-          <Link href="#" className="hover:text-foreground">
+          <Link href="#" className="hover:text-[#222222] hover:underline">
             Privacy
           </Link>
-          <Link href="#" className="hover:text-foreground">
+          <Link href="#" className="hover:text-[#222222] hover:underline">
             Terms
           </Link>
-          <Link href="#" className="hover:text-foreground">
+          <Link href="#" className="hover:text-[#222222] hover:underline">
             Your privacy choices
           </Link>
         </div>
