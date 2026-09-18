@@ -47,13 +47,13 @@ export function ImageIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function UserIcon(props: SVGProps<SVGSVGElement>) {
+export function HumanNavIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none" {...props}>
       <path
-        d="M16.5 30.6667C18.4465 28.6021 21.0892 27.3333 24 27.3333C26.9108 27.3333 29.5535 28.6021 31.5 30.6667M27.75 20.25C27.75 22.3211 26.0711 24 24 24C21.9289 24 20.25 22.3211 20.25 20.25C20.25 18.1789 21.9289 16.5 24 16.5C26.0711 16.5 27.75 18.1789 27.75 20.25Z"
-        stroke="currentColor"
-        strokeWidth={2}
+        d="M1 15.1667C2.94649 13.1021 5.58918 11.8333 8.5 11.8333C11.4108 11.8333 14.0535 13.1021 16 15.1667M12.25 4.75C12.25 6.82107 10.5711 8.5 8.5 8.5C6.42893 8.5 4.75 6.82107 4.75 4.75C4.75 2.67893 6.42893 1 8.5 1C10.5711 1 12.25 2.67893 12.25 4.75Z"
+        stroke="#333134"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -61,16 +61,52 @@ export function UserIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function MenuIcon(props: SVGProps<SVGSVGElement>) {
+export const UserIcon = HumanNavIcon;
+
+export function HamburgerNavIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" {...props}>
       <path
-        d="M2.5 7.08H17.5M2.5 12.92H17.5"
-        stroke="currentColor"
-        strokeWidth={2}
+        d="M2.5 7.08337H17.5M2.5 12.9167H17.5"
+        stroke="#333134"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+export const MenuIcon = HamburgerNavIcon;
+
+export function CalendarOneIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <rect x="2.5" y="3.5" width="15" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M6 2V5M14 2V5M2.5 7.5H17.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9.5 11.2L10.5 10.3V14.5M9.5 14.5H11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function UsersTwoNavIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path
+        d="M21 19V17C21 15.1362 19.7252 13.5701 18 13.126M14.5 1.29076C15.9659 1.88415 17 3.32131 17 5C17 6.67869 15.9659 8.11585 14.5 8.70924M16 19C16 17.1362 16 16.2044 15.6955 15.4693C15.2895 14.4892 14.5108 13.7105 13.5307 13.3045C12.7956 13 11.8638 13 10 13H7C5.13623 13 4.20435 13 3.46927 13.3045C2.48915 13.7105 1.71046 14.4892 1.30448 15.4693C1 16.2044 1 17.1362 1 19M12.5 5C12.5 7.20914 10.7091 9 8.5 9C6.29086 9 4.5 7.20914 4.5 5C4.5 2.79086 6.29086 1 8.5 1C10.7091 1 12.5 2.79086 12.5 5Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function PlaneNavIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
     </svg>
   );
 }
