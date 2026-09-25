@@ -1,16 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Search, Sliders, User, X } from "lucide-react";
+import {
+  Bell,
+  ChevronRight,
+  Globe,
+  Image as ImageIconLucide,
+  LifeBuoy,
+  Power,
+  Search,
+  Settings,
+  Trash2,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import {
   CalendarOneIcon,
-  HamburgerNavIcon,
   HeartIcon,
   HomeSmileIcon,
   HumanNavIcon,
@@ -26,8 +35,9 @@ export function HomeNav({ className }: { className?: string }) {
   const { user } = useSession();
   const router = useRouter();
   const logout = useLogout();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
 
   // When scrolled, tracking if the search bar is expanded inside the fixed navbar
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -42,15 +52,38 @@ export function HomeNav({ className }: { className?: string }) {
         setIsSearchExpanded(false);
         setActiveSearchTab(null);
       }
+      setProfileMenuOpen(false);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuContainerRef.current && !menuContainerRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setProfileMenuOpen(false);
+      }
+    }
+    if (profileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [profileMenuOpen]);
+
   function handleOpenSearch(tab: "where" | "when" | "who") {
     setActiveSearchTab(tab);
     setIsSearchExpanded(true);
+    setProfileMenuOpen(false);
   }
 
   function handleCloseSearch() {
@@ -227,88 +260,199 @@ export function HomeNav({ className }: { className?: string }) {
               </motion.button>
             )}
 
-            {/* Mobile menu button */}
-            <button
-              type="button"
-              aria-label="Menu"
-              onClick={() => setMobileMenuOpen(true)}
-              className={cn(
-                "flex size-11 flex-col items-center justify-center rounded-[12px] text-[#333134] shadow-xs lg:hidden cursor-pointer shrink-0 transition-colors",
-                isScrolled ? "bg-[#F4F2EE] hover:bg-[#eae8e3]" : "bg-white hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
-              )}
-              style={{
-                borderRadius: "12px",
-                background: isScrolled ? "#F4F2EE" : "#FFF",
-              }}
-            >
-              <HamburgerNavIcon />
-            </button>
-
-            {/* Desktop Right Nav: "Become a guide" + Human icon + Hamburger icon */}
-            <div className="hidden items-center gap-3 lg:flex shrink-0">
+            {/* Right Nav: "Become a guide" + Profile Icon Trigger + Dropdown Menu */}
+            <div ref={menuContainerRef} className="relative flex items-center gap-3 shrink-0">
               <Link
                 href="#"
-                className="mr-1 text-base font-medium text-foreground transition-colors hover:text-brand"
+                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand lg:inline-block mr-1"
               >
                 Become a guide
               </Link>
 
-              {/* Human icon container */}
-              <Link
-                href={user ? "/profile" : "/login"}
-                aria-label={user ? "Profile" : "Log in"}
-                title={user ? "Profile" : "Log in"}
+              {/* Profile icon button trigger (Hamburger menu removed) */}
+              <button
+                type="button"
+                aria-label="Profile menu"
+                title="Profile menu"
+                aria-expanded={profileMenuOpen}
+                onClick={() => setProfileMenuOpen((prev) => !prev)}
                 className={cn(
-                  "flex shrink-0 flex-col items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
+                  "flex shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
+                  "size-11 lg:size-12",
                   isScrolled
                     ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
-                    : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+                    : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]",
+                  profileMenuOpen && "ring-2 ring-brand/20 bg-[#F4F2EE]"
                 )}
                 style={{
-                  display: "flex",
-                  width: "48px",
-                  height: "48px",
-                  padding: "var(--spacing-md, 12px) var(--spacing-lg, 16px)",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "var(--spacing-md, 12px)",
-                  alignSelf: "stretch",
                   borderRadius: "12px",
-                  background: isScrolled ? "#F4F2EE" : "#FFF",
+                  background: profileMenuOpen || isScrolled ? "#F4F2EE" : "#FFF",
                 }}
               >
                 <HumanNavIcon />
-              </Link>
-
-              {/* Hamburger icon container */}
-              <button
-                type="button"
-                aria-label="Menu"
-                title="Menu"
-                onClick={() => setMobileMenuOpen(true)}
-                className={cn(
-                  "flex shrink-0 flex-col items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
-                  isScrolled
-                    ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
-                    : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
-                )}
-                style={{
-                  display: "flex",
-                  width: "48px",
-                  height: "48px",
-                  padding: "var(--spacing-md, 12px) var(--spacing-lg, 16px)",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "var(--spacing-md, 12px)",
-                  alignSelf: "stretch",
-                  borderRadius: "12px",
-                  background: isScrolled ? "#F4F2EE" : "#FFF",
-                }}
-              >
-                <HamburgerNavIcon />
               </button>
+
+              {/* Floating Dropdown Card Menu */}
+              <AnimatePresence>
+                {profileMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="absolute right-0 top-[calc(100%+12px)] z-50 w-[340px] max-w-[calc(100vw-32px)] rounded-[24px] bg-white p-3 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
+                  >
+                    {/* Item 1: My experiences */}
+                    <Link
+                      href={user ? "/profile" : "/login"}
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                          <ImageIconLucide className="size-5" />
+                        </div>
+                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                          My experiences
+                        </span>
+                      </div>
+                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+
+                    {/* Item 2: Notifications */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        if (user) router.push("/profile");
+                        else router.push("/login");
+                      }}
+                      className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                          <Bell className="size-5" />
+                        </div>
+                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                          Notifications
+                        </span>
+                      </div>
+                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </button>
+
+                    {/* Item 3: Language and Currency */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        if (user) router.push("/profile/preferences");
+                        else router.push("/login");
+                      }}
+                      className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                          <Globe className="size-5" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E] leading-snug">
+                            Language and Currency
+                          </span>
+                          <span className="font-sans text-[12px] text-[#8C888F] leading-tight mt-0.5">
+                            English/USD
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </button>
+
+                    {/* Item 4: Account settings */}
+                    <Link
+                      href={user ? "/profile" : "/login"}
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                          <Settings className="size-5" />
+                        </div>
+                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                          Account settings
+                        </span>
+                      </div>
+                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+
+                    {/* Item 5: Help center */}
+                    <Link
+                      href="#"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                          <LifeBuoy className="size-5" />
+                        </div>
+                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                          Help center
+                        </span>
+                      </div>
+                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+
+                    {/* Divider */}
+                    <div className="my-1.5 h-[1px] w-full bg-[#F0EFEB]" />
+
+                    {/* Item 6: Become a guide */}
+                    <Link
+                      href="#"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                          <Trash2 className="size-5" />
+                        </div>
+                        <div className="flex flex-col min-w-0 pr-1">
+                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E] leading-snug">
+                            Become a guide
+                          </span>
+                          <span className="font-sans text-[12px] text-[#8C888F] leading-tight mt-0.5">
+                            Make extra income from what you already love doing
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+
+                    {/* Divider */}
+                    <div className="my-1.5 h-[1px] w-full bg-[#F0EFEB]" />
+
+                    {/* Item 7: Logout */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        if (user) {
+                          logout.mutate(undefined, { onSuccess: () => router.push("/login") });
+                        } else {
+                          router.push("/login");
+                        }
+                      }}
+                      className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                          <Power className="size-5" />
+                        </div>
+                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                          Logout
+                        </span>
+                      </div>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -335,124 +479,6 @@ export function HomeNav({ className }: { className?: string }) {
           </AnimatePresence>
         </header>
       </div>
-
-      {/* Drawer Menu (Desktop & Mobile) */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs"
-          >
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 26, stiffness: 280 }}
-              onClick={(e) => e.stopPropagation()}
-              className="flex h-full w-[300px] flex-col justify-between bg-white p-6 shadow-2xl"
-            >
-              <div>
-                <div className="mb-6 flex items-center justify-between">
-                  <Image src="/logo/myjourny-logo.svg" alt="MyJourny" width={120} height={21} className="h-5 w-auto" />
-                  <button
-                    type="button"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex size-9 items-center justify-center rounded-full bg-[#F4F2EE] text-foreground transition-colors hover:bg-muted cursor-pointer"
-                  >
-                    <X className="size-5" />
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Link
-                    href="/"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 rounded-xl p-3 font-sans text-[16px] font-medium text-foreground transition-colors hover:bg-[#F4F2EE]"
-                  >
-                    <HomeSmileIcon className="size-5 text-brand" />
-                    Home
-                  </Link>
-
-                  <Link
-                    href="#"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 rounded-xl p-3 font-sans text-[16px] font-medium text-foreground transition-colors hover:bg-[#F4F2EE]"
-                  >
-                    <span className="text-base font-medium">Become a guide</span>
-                  </Link>
-
-                  {user ? (
-                    <>
-                      <Link
-                        href="/profile"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-xl p-3 font-sans text-[16px] font-medium text-foreground transition-colors hover:bg-[#F4F2EE]"
-                      >
-                        <User className="size-5 text-brand" />
-                        My Profile
-                      </Link>
-                      <Link
-                        href="/profile/preferences"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-xl p-3 font-sans text-[16px] font-medium text-foreground transition-colors hover:bg-[#F4F2EE]"
-                      >
-                        <Sliders className="size-5 text-brand" />
-                        Your Preferences
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href="/login"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-xl p-3 font-sans text-[16px] font-medium text-foreground transition-colors hover:bg-[#F4F2EE]"
-                      >
-                        Log in
-                      </Link>
-                      <Link
-                        href="/onboarding"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-xl p-3 font-sans text-[16px] font-medium text-brand hover:bg-[#F4F2EE]"
-                      >
-                        Sign up
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {user ? (
-                <div className="border-t border-[#E0DFDD] pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      logout.mutate(undefined, { onSuccess: () => router.push("/login") });
-                    }}
-                    className="flex w-full items-center gap-3 rounded-xl p-3 font-sans text-[15px] font-medium text-red-600 hover:bg-red-50 cursor-pointer"
-                  >
-                    <LogOut className="size-5" />
-                    Log out
-                  </button>
-                </div>
-              ) : (
-                <div className="border-t border-border pt-4">
-                  <Link
-                    href="/onboarding"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex h-11 w-full items-center justify-center rounded-full bg-[#2c0101] font-sans text-sm font-semibold text-white transition-opacity hover:opacity-95"
-                  >
-                    Get started
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }
