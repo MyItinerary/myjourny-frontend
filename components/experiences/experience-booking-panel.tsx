@@ -286,7 +286,7 @@ export function ExperienceBookingPanel({
             onClick={handleBookNow}
             className="w-full bg-[#F5032D] text-white hover:bg-[#d90328] font-sans text-base font-semibold shadow-sm transition-all"
           >
-            {createBooking.isPending ? "Starting checkout…" : `Book now - ${formatPrice(total, currency)} >`}
+            {createBooking.isPending ? "Starting checkout…" : `Book now - ${formatPrice(total, currency)}`}
           </Button>
           <p className="text-center text-xs text-[#6F6B72]">
             You won&apos;t be charged yet. You&apos;ll confirm on the next step.
