@@ -1,6 +1,6 @@
 "use client";
 
-import { PreferencesView } from "@/components/profile/preferences-view";
+import { PreferencesView } from "@/components/account settings/preferences-view";
 
 export function PreferencesContent() {
   return <PreferencesView />;

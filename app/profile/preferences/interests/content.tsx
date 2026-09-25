@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { EditPreferenceLayout } from "@/components/profile/edit-preference-layout";
+import { EditPreferenceLayout } from "@/components/account settings/edit-preference-layout";
 import { INTEREST_OPTIONS } from "@/lib/onboarding/preference-options";
 import { useGetProfile, useUpdateProfile } from "@/lib/queries/profile";
 import { getPreferences, setPreference } from "@/lib/onboarding/preferences-store";
