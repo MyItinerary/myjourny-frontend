@@ -7,6 +7,7 @@ import {
   useBrowsingHistory,
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
+import { useInterestCategories } from "@/lib/queries/categories";
 import { Reveal } from "@/components/motion/reveal";
 import { HeroSection } from "@/components/home/hero-section";
 import { WhyBookWithUsSection } from "@/components/home/why-book-with-us-section";
@@ -56,6 +57,7 @@ export function HomeContent() {
     enabled: isAccount,
   });
   const browsingHistoryQuery = useBrowsingHistory(10);
+  const categoriesQuery = useInterestCategories();
 
   const popularIsLoading = isAccount && (geolocation === "pending" || popularQuery.isFetching);
   const topPicksIsLoading = isAccount && topPicksQuery.isFetching;
@@ -66,6 +68,19 @@ export function HomeContent() {
   const realBrowsingHistoryItems = (browsingHistoryQuery.data ?? []).map(
     experienceMatchToCardProps
   );
+
+  // Compute live categories from backend API when available
+  const liveCategories = categoriesQuery.data && categoriesQuery.data.length > 0
+    ? (() => {
+        const active = categoriesQuery.data.filter((c) => c.is_active);
+        const children = active.filter((c) => c.parent_id !== null);
+        const selected = isAccount && children.length > 0 ? children : active;
+        return selected.map((c) => ({
+          id: c.slug,
+          label: c.text,
+        }));
+      })()
+    : isAccount ? accountCategories : guestCategories;
 
   const popularSection = isAccount ? (
     !popularIsLoading && realPopularItems.length === 0 ? null : (
@@ -112,7 +127,7 @@ export function HomeContent() {
       )}
 
       <Reveal>
-        <CategoriesSection categories={isAccount ? accountCategories : guestCategories} />
+        <CategoriesSection categories={liveCategories} />
       </Reveal>
 
       {isAccount ? (

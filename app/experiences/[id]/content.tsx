@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, Heart, MapPin, Share2 } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
@@ -60,6 +61,7 @@ function ExperienceDescription({ description }: { description: string }) {
 }
 
 export function ExperienceDetailContent({ id }: { id: string }) {
+  const router = useRouter();
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
   const { data: prices } = useExperiencePrices(id);
@@ -117,9 +119,14 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
       {/* Mobile compact header — back / wishlist / share, no full nav. */}
       <div className="flex items-center justify-between px-6 py-4 lg:hidden">
-        <Link href="/" aria-label="Back" className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm">
+        <button
+          type="button"
+          aria-label="Back"
+          onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
+          className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm cursor-pointer"
+        >
           <ChevronLeft className="size-5 text-foreground" />
-        </Link>
+        </button>
         <div className="flex items-center gap-2">
           <button
             type="button"
