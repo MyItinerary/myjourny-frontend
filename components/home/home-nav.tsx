@@ -8,6 +8,7 @@ import {
   Bell,
   ChevronRight,
   Globe,
+  Heart,
   Image as ImageIconLucide,
   LifeBuoy,
   Power,
@@ -29,6 +30,8 @@ import {
 } from "@/components/icons/nav-icons";
 import { useSession } from "@/lib/auth/session-store";
 import { useLogout } from "@/lib/queries/auth";
+import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
+import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { SearchBar } from "@/components/home/search-bar";
 
 export function HomeNav({ className }: { className?: string }) {
@@ -36,8 +39,11 @@ export function HomeNav({ className }: { className?: string }) {
   const router = useRouter();
   const logout = useLogout();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const unreadCount = useUnreadNotificationsCount();
   const [isScrolled, setIsScrolled] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
+  const notifContainerRef = useRef<HTMLDivElement>(null);
 
   // When scrolled, tracking if the search bar is expanded inside the fixed navbar
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -64,13 +70,17 @@ export function HomeNav({ className }: { className?: string }) {
       if (menuContainerRef.current && !menuContainerRef.current.contains(e.target as Node)) {
         setProfileMenuOpen(false);
       }
+      if (notifContainerRef.current && !notifContainerRef.current.contains(e.target as Node)) {
+        setNotificationsOpen(false);
+      }
     }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setProfileMenuOpen(false);
+        setNotificationsOpen(false);
       }
     }
-    if (profileMenuOpen) {
+    if (profileMenuOpen || notificationsOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleKeyDown);
     }
@@ -78,7 +88,7 @@ export function HomeNav({ className }: { className?: string }) {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [profileMenuOpen]);
+  }, [profileMenuOpen, notificationsOpen]);
 
   function handleOpenSearch(tab: "where" | "when" | "who") {
     setActiveSearchTab(tab);
@@ -165,8 +175,8 @@ export function HomeNav({ className }: { className?: string }) {
                       Home
                     </Link>
                     <Link
-                      href="#"
-                      aria-label="Favorites"
+                      href={user ? "/wishlists" : "/login"}
+                      aria-label="Wishlists"
                       className="flex size-[43px] items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
                     >
                       <HeartIcon className="size-[18px]" />
@@ -262,8 +272,8 @@ export function HomeNav({ className }: { className?: string }) {
               </motion.button>
             )}
 
-            {/* Right Nav: "Become a guide" + Profile Icon Trigger + Dropdown Menu */}
-            <div ref={menuContainerRef} className="relative flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Right Nav: Notifications + Profile Icon Trigger + Dropdown Menu */}
+            <div className="relative flex items-center gap-2 sm:gap-3 shrink-0">
               <Link
                 href="#"
                 className="hidden text-base font-medium text-foreground transition-colors hover:text-brand lg:inline-block mr-1"
@@ -271,13 +281,62 @@ export function HomeNav({ className }: { className?: string }) {
                 Become a guide
               </Link>
 
-              {/* Profile icon button trigger (Hamburger menu removed) */}
-              <button
-                type="button"
-                aria-label="Profile menu"
-                title="Profile menu"
-                aria-expanded={profileMenuOpen}
-                onClick={() => setProfileMenuOpen((prev) => !prev)}
+              {user && (
+                <div ref={notifContainerRef} className="relative">
+                  <button
+                    type="button"
+                    aria-label="Notifications"
+                    title="Notifications"
+                    onClick={() => {
+                      setNotificationsOpen((prev) => !prev);
+                      setProfileMenuOpen(false);
+                    }}
+                    className={cn(
+                      "relative flex shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
+                      "size-11 lg:size-12",
+                      isScrolled
+                        ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
+                        : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]",
+                      notificationsOpen && "ring-2 ring-brand/20 bg-[#F4F2EE]"
+                    )}
+                  >
+                    <Bell className="size-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex min-w-5 h-5 items-center justify-center rounded-full bg-[#F5032D] px-1 text-[11px] font-bold text-white shadow-xs">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {notificationsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                        transition={{ duration: 0.16, ease: "easeOut" }}
+                        className="absolute right-0 top-[calc(100%+12px)] z-50"
+                      >
+                        <NotificationsDropdown
+                          onClose={() => setNotificationsOpen(false)}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* Profile icon button trigger */}
+              <div ref={menuContainerRef} className="relative">
+                <button
+                  type="button"
+                  aria-label="Profile menu"
+                  title="Profile menu"
+                  aria-expanded={profileMenuOpen}
+                  onClick={() => {
+                    setProfileMenuOpen((prev) => !prev);
+                    setNotificationsOpen(false);
+                  }}
                 className={cn(
                   "flex shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
                   "size-10 sm:size-11 lg:size-12",
@@ -321,26 +380,46 @@ export function HomeNav({ className }: { className?: string }) {
                       <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
                     </Link>
 
-                    {/* Item 2: Notifications */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        if (user) router.push("/profile");
-                        else router.push("/login");
-                      }}
+                    {/* Item 2: Wishlists */}
+                    <Link
+                      href={user ? "/wishlists" : "/login"}
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                          <Heart className="size-5" />
+                        </div>
+                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                          Wishlists
+                        </span>
+                      </div>
+                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+
+                    {/* Item 3: Notifications */}
+                    <Link
+                      href={user ? "/notifications" : "/login"}
+                      onClick={() => setProfileMenuOpen(false)}
                       className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
                           <Bell className="size-5" />
                         </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Notifications
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                            Notifications
+                          </span>
+                          {unreadCount > 0 && (
+                            <span className="rounded-full bg-[#F5032D]/10 px-2 py-0.2 text-[11px] font-bold text-[#F5032D]">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </button>
+                    </Link>
 
                     {/* Item 3: Language and Currency */}
                     <button
@@ -457,6 +536,7 @@ export function HomeNav({ className }: { className?: string }) {
               </AnimatePresence>
             </div>
           </div>
+        </div>
 
           {/* Expanded Search Bar Container inside the Fixed Navbar */}
           <AnimatePresence>

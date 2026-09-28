@@ -284,9 +284,15 @@ export function ProfileView() {
           />
 
           <MenuItemRow
+            icon={<Heart className="size-4.5 text-[#E84393]" />}
+            label="Saved wishlists"
+            href="/wishlists"
+          />
+
+          <MenuItemRow
             icon={<Bell className="size-4.5" />}
-            label="Notification settings"
-            onClick={() => setNotificationsModalOpen(true)}
+            label="Notifications"
+            href="/notifications"
           />
         </div>
 
