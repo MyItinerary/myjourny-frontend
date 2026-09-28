@@ -317,7 +317,7 @@ export function SearchBar({
           aria-label="Search"
           disabled={!allFieldsFilled}
           onClick={() => handleSearch()}
-          className="flex h-12 shrink-0 items-center gap-2 rounded-full bg-brand px-5 text-white transition-all hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-sm"
+          className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-5 text-white transition-all hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-sm w-full lg:w-auto"
         >
           <Search className="size-4 stroke-[2.5]" />
           <span className="font-sans text-sm font-semibold">Search</span>
