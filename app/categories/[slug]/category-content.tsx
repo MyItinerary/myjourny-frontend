@@ -4,19 +4,37 @@ import { CategoryContent } from "./content";
 import { useSession } from "@/lib/auth/session-store";
 import { getCategoryListing } from "@/lib/mock-data/home";
 import { experienceMatchToCardProps, useRecommendedExperiences } from "@/lib/queries/experiences";
+import { useInterestCategories } from "@/lib/queries/categories";
 
-// Real data for signed-in users (itin's experience endpoints are all
-// auth-only); guests keep the exact static mock listing they've always
-// gotten — CategoriesSection chips already link here for guests today, so
-// removing that would be a regression, not just avoiding a new bug.
+// Live data for signed-in users (itin's experience endpoints are auth-only).
+// Resolves category id and title from GET /categories, then fetches
+// GET /experiences/recommendations?id=<categoryId>.
 export function CategoryPageContent({ slug, label }: { slug: string; label: string }) {
   const { user } = useSession();
   const isAccount = user !== null;
 
-  const query = useRecommendedExperiences({ interest: slug, enabled: isAccount });
+  const categoriesQuery = useInterestCategories();
+  const matchedCategory = categoriesQuery.data?.find(
+    (c) => c.slug === slug || String(c.id) === slug
+  );
+  const categoryId =
+    matchedCategory?.id ?? (Number.isInteger(Number(slug)) ? Number(slug) : undefined);
+  const resolvedLabel = matchedCategory ? matchedCategory.text : label;
+
+  const query = useRecommendedExperiences({
+    id: categoryId,
+    enabled: isAccount && categoryId !== undefined,
+  });
+
   const items = isAccount
     ? (query.data ?? []).map(experienceMatchToCardProps)
     : (getCategoryListing(slug) ?? []);
 
-  return <CategoryContent label={label} items={items} isLoading={isAccount && query.isFetching} />;
+  return (
+    <CategoryContent
+      label={resolvedLabel}
+      items={items}
+      isLoading={isAccount && (categoriesQuery.isLoading || query.isFetching)}
+    />
+  );
 }

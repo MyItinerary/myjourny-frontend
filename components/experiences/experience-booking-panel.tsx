@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Calendar, ChevronDown, Clock, ShieldCheck, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -291,6 +292,12 @@ export function ExperienceBookingPanel({
           <p className="text-center text-xs text-[#6F6B72]">
             You won&apos;t be charged yet. You&apos;ll confirm on the next step.
           </p>
+          <Link
+            href="/checkout-preview"
+            className="text-center font-sans text-xs font-medium text-brand hover:underline"
+          >
+            Preview &apos;Confirm details &amp; pay&apos; page &rarr;
+          </Link>
         </div>
       )}
 

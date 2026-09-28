@@ -135,6 +135,10 @@ export function Footer() {
           <Link href="#" className="hover:text-[#222222] hover:underline">
             Your privacy choices
           </Link>
+          <span className="text-[#c7c1ba]">&bull;</span>
+          {/* <Link href="/checkout-preview" className="text-brand hover:underline font-medium">
+            Checkout Preview
+          </Link> */}
         </div>
       </div>
     </footer>

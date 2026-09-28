@@ -61,6 +61,8 @@ export function useRecommendedExperiences(params: {
   latitude?: number | null;
   longitude?: number | null;
   city?: string;
+  /** Category numeric ID — passed as ?id=<id> to GET /experiences/recommendations */
+  id?: number;
   /** Category slug — exact match against Experience.interest_tags on the backend, see /categories/[slug]. */
   interest?: string;
   offset?: number;
@@ -81,9 +83,10 @@ export function useRecommendedExperiences(params: {
         latitude: params.latitude ?? undefined,
         longitude: params.longitude ?? undefined,
         city: params.city,
+        id: params.id,
         interest: params.interest,
         offset: params.offset ?? 0,
-        limit: params.limit ?? 10,
+        limit: params.limit ?? (params.id !== undefined ? 20 : 10),
       };
       try {
         const { data } = await apiClient.get<ExperienceMatch[]>(
