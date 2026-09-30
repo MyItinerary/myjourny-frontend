@@ -54,7 +54,7 @@ export function Footer() {
     : inspirationSubcategories;
 
   return (
-    <footer className="bg-[#F7F7F7]">
+    <footer className="bg-[#FCFCFC]">
       <div className="mx-auto max-w-[1372px] px-6 pt-12 pb-8 lg:px-6">
         <h2 className="py-2 font-heading text-[22px] leading-[33px] font-medium text-[#222222]">
           More ways to experience your city
