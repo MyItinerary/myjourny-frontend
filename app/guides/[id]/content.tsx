@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Globe, MapPin, Star } from "lucide-react";
 import { HomeNav } from "@/components/home/home-nav";
 import { Footer } from "@/components/home/footer";
-import { useUser } from "@/lib/queries/profile";
+import { useUser } from "@/lib/queries/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function GuideProfileContent({ id }: { id: string }) {
