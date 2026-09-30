@@ -7,14 +7,14 @@ import { useRouter } from "next/navigation";
 import {
   Bell,
   ChevronRight,
+  CircleHelp,
+  Compass,
   Globe,
   Heart,
   Image as ImageIconLucide,
-  LifeBuoy,
   Power,
   Search,
   Settings,
-  Trash2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -472,7 +472,7 @@ export function HomeNav({ className }: { className?: string }) {
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <LifeBuoy className="size-5" />
+                          <CircleHelp className="size-5" />
                         </div>
                         <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
                           Help center
@@ -492,7 +492,7 @@ export function HomeNav({ className }: { className?: string }) {
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Trash2 className="size-5" />
+                          <Compass className="size-5" />
                         </div>
                         <div className="flex flex-col min-w-0 pr-1">
                           <span className="font-sans text-[15px] font-medium text-[#1E1E1E] leading-snug">
