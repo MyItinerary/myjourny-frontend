@@ -66,8 +66,8 @@ export function formatDateGroup(isoString: string): string {
     (now.setHours(0, 0, 0, 0) - date.setHours(0, 0, 0, 0)) / 86_400_000
   );
   if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  if (diffDays <= 7) return "This week";
+  return "Earlier";
 }
 
 export function mapNotificationOut(n: NotificationOut): NotificationItem {

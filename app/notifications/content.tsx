@@ -1,286 +1,266 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  Bell,
-  CheckCheck,
-  Clock,
-  CreditCard,
-  Heart,
-  Receipt,
-  AlertTriangle,
-  Trash2,
-  ArrowLeft,
-} from "lucide-react";
+import Image from "next/image";
 import { HomeNav } from "@/components/home/home-nav";
 import { Footer } from "@/components/home/footer";
 import {
   useNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
-  useDeleteNotification,
-  type NotificationCategory,
-  type NotificationItem,
 } from "@/lib/queries/notifications";
 import { useSession } from "@/lib/auth/session-store";
-import { cn } from "@/lib/utils";
 
-const FILTER_TABS = ["All", "Bookings", "Payments", "Tips"] as const;
-type FilterTab = (typeof FILTER_TABS)[number];
-
-const TAB_TO_CATEGORY: Record<FilterTab, NotificationCategory | null> = {
-  All: null,
-  Bookings: "bookings",
-  Payments: "payments",
-  Tips: "tips",
-};
-
-function getIcon(iconType: NotificationItem["iconType"]) {
-  switch (iconType) {
-    case "booking":
-      return <Receipt className="size-5 text-[#02A078]" />;
-    case "reminder":
-      return <Clock className="size-5 text-[#E86339]" />;
-    case "payment":
-      return <CreditCard className="size-5 text-[#3B82F6]" />;
-    case "saved":
-    case "tip":
-      return <Heart className="size-5 text-[#E84393]" />;
-    case "schedule":
-    default:
-      return <AlertTriangle className="size-5 text-[#F59E0B]" />;
-  }
+interface DisplayNotification {
+  id: string;
+  title: string;
+  body: string;
+  time: string;
+  dateGroup: "Today" | "This week" | "Earlier";
+  unread: boolean;
+  imageUrl?: string | null;
 }
 
-function getIconBg(iconType: NotificationItem["iconType"]) {
-  switch (iconType) {
-    case "booking":
-      return "bg-[#E5FFF8]";
-    case "reminder":
-      return "bg-[#FFF0EB]";
-    case "payment":
-      return "bg-[#EFF6FF]";
-    case "saved":
-    case "tip":
-      return "bg-[#FFF0F6]";
-    case "schedule":
-    default:
-      return "bg-[#FFFBEB]";
-  }
-}
+const FIGMA_SAMPLE_NOTIFICATIONS: DisplayNotification[] = [
+  {
+    id: "sample-1",
+    title: "Booking confirmed",
+    body: "Your booking for Sunrise Kayaking at Tarkwa Bay is confirmed for Sat, Aug 2.",
+    time: "2h ago",
+    dateGroup: "Today",
+    unread: true,
+  },
+  {
+    id: "sample-2",
+    title: "Message from Tobi A.",
+    body: "“Looking forward to Saturday! Bring sunscreen ☀️”",
+    time: "4h ago",
+    dateGroup: "Today",
+    unread: true,
+  },
+  {
+    id: "sample-3",
+    title: "How was the experience?",
+    body: "Leave a review for Balogun Market Deep Dive, it helps other travelers decide.",
+    time: "4h ago",
+    dateGroup: "Today",
+    unread: true,
+  },
+  {
+    id: "sample-4",
+    title: "New in Port Harcourt",
+    body: "5 new experiences just added in the heart GRA Phase 2.",
+    time: "2d ago",
+    dateGroup: "This week",
+    unread: false,
+  },
+  {
+    id: "sample-5",
+    title: "Confirmed experience coming up",
+    body: "Your Jollof Rice Masterclass with Chef Amaka is in 3 days.",
+    time: "2d ago",
+    dateGroup: "This week",
+    unread: false,
+  },
+  {
+    id: "sample-6",
+    title: "Price drop on a saved experience",
+    body: "Pleasure Park exploration dropped to ₦12,000, it's in your wishlist.",
+    time: "2d ago",
+    dateGroup: "This week",
+    unread: false,
+  },
+];
+
+const ORDERED_GROUPS: Array<DisplayNotification["dateGroup"]> = [
+  "Today",
+  "This week",
+  "Earlier",
+];
 
 export function NotificationsContent() {
-  const router = useRouter();
   const { user } = useSession();
-  const [activeTab, setActiveTab] = useState<FilterTab>("All");
+  const { data: serverNotifications = [], isLoading } = useNotifications({ limit: 50 });
+  const { mutate: markServerRead } = useMarkNotificationRead();
+  const { mutate: markServerAllRead } = useMarkAllNotificationsRead();
 
-  const { data: notifications = [], isLoading } = useNotifications({ limit: 100 });
-  const { mutate: markRead } = useMarkNotificationRead();
-  const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead();
-  const { mutate: deleteNotification } = useDeleteNotification();
+  // Local tracking of notifications marked as read
+  const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
+  const [allMarkedRead, setAllMarkedRead] = useState(false);
 
-  const selectedCategory = TAB_TO_CATEGORY[activeTab];
-  const filteredNotifications = selectedCategory
-    ? notifications.filter((item) => item.category === selectedCategory)
-    : notifications;
+  // Use server notifications if available; fallback to Figma reference notifications
+  const allNotifications: DisplayNotification[] = useMemo(() => {
+    if (serverNotifications.length > 0) {
+      return serverNotifications.map((n) => ({
+        id: n.id,
+        title: n.title,
+        body: n.message,
+        time: n.time,
+        dateGroup: (n.dateGroup as DisplayNotification["dateGroup"]) || "Earlier",
+        unread: n.unread,
+        imageUrl: n.raw?.meta_info?.image_url || null,
+      }));
+    }
+    return FIGMA_SAMPLE_NOTIFICATIONS;
+  }, [serverNotifications]);
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  // Compute unread count based on items and local read state
+  const unreadCount = useMemo(() => {
+    if (allMarkedRead) return 0;
+    return allNotifications.filter(
+      (item) => item.unread && !readIds.has(item.id)
+    ).length;
+  }, [allNotifications, readIds, allMarkedRead]);
 
-  if (!user && typeof window !== "undefined") {
-    // Guest or unauthenticated state
-    return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <HomeNav />
-        <main className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md text-center">
-            <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[#F4F2EE] text-foreground mb-4">
-              <Bell className="size-8 text-[#6F6B72]" />
-            </div>
-            <h2 className="font-heading text-2xl font-bold text-foreground">
-              Sign in to view notifications
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Create an account or sign in to get real-time trip reminders, payment updates, and personalized recommendations.
-            </p>
-            <div className="mt-6 flex justify-center gap-3">
-              <Link
-                href="/login"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[#2C0101] px-6 text-sm font-semibold text-white hover:bg-black transition-colors"
-              >
-                Log In
-              </Link>
-              <Link
-                href="/onboarding"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[#E0DFDD] px-6 text-sm font-semibold text-foreground hover:bg-[#F4F2EE] transition-colors"
-              >
-                Sign Up
-              </Link>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+  // Group notifications in ordered buckets
+  const groupedSections = useMemo(() => {
+    const map = new Map<DisplayNotification["dateGroup"], DisplayNotification[]>();
+    for (const group of ORDERED_GROUPS) {
+      map.set(group, []);
+    }
+
+    for (const item of allNotifications) {
+      const groupKey = ORDERED_GROUPS.includes(item.dateGroup)
+        ? item.dateGroup
+        : "Earlier";
+      map.get(groupKey)?.push(item);
+    }
+
+    return ORDERED_GROUPS.map((title) => ({
+      title,
+      items: map.get(title) || [],
+    })).filter((section) => section.items.length > 0);
+  }, [allNotifications]);
+
+  function handleMarkAllRead() {
+    setAllMarkedRead(true);
+    setReadIds(new Set(allNotifications.map((n) => n.id)));
+    if (user && serverNotifications.length > 0) {
+      markServerAllRead();
+    }
+  }
+
+  function handleItemClick(id: string) {
+    setReadIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    if (user && serverNotifications.length > 0) {
+      markServerRead(id);
+    }
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-white">
       <HomeNav />
 
-      <main className="flex-1 mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Back Link */}
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+      <main className="flex-1 mx-auto w-full max-w-[1512px] px-4 sm:px-6 lg:px-20 pt-6 sm:pt-8 pb-16">
+        {/* Breadcrumb */}
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-4 sm:mb-6 flex items-center gap-1.5 text-xs sm:text-sm text-[#737373]"
         >
-          <ArrowLeft className="size-4" />
-          <span>Back</span>
-        </button>
+          <Link href="/" className="font-medium text-brand hover:underline">
+            Home page
+          </Link>
+          <span>/</span>
+          <span className="font-medium text-[#1E1E1E]">Notifications</span>
+          <span>/</span>
+        </nav>
 
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E0DFDD]">
+        <div className="flex items-start justify-between pb-4 sm:pb-6">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">
-                Notifications
-              </h1>
-              {unreadCount > 0 && (
-                <span className="rounded-full bg-[#F5032D]/10 px-2.5 py-0.5 text-xs font-bold text-[#F5032D]">
-                  {unreadCount} unread
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Stay updated on your upcoming bookings, payments, and itinerary changes.
+            <h1 className="font-heading text-[28px] sm:text-[34px] font-extrabold tracking-tight text-[#1E1E1E] leading-tight">
+              Notifications
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-[#737373]">
+              {unreadCount > 0 ? `${unreadCount} unread` : "0 unread"}
             </p>
           </div>
 
-          {unreadCount > 0 && (
-            <button
-              type="button"
-              onClick={() => markAllRead()}
-              disabled={isMarkingAll}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#E0DFDD] bg-white px-4 py-2 text-xs font-semibold text-foreground hover:bg-[#F4F2EE] transition-colors cursor-pointer shadow-xs self-start sm:self-auto"
-            >
-              <CheckCheck className="size-4 text-brand" />
-              <span>Mark all as read</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleMarkAllRead}
+            disabled={unreadCount === 0}
+            className={`pt-1 sm:pt-2 text-xs sm:text-sm font-semibold transition-colors ${
+              unreadCount > 0
+                ? "text-[#7E1515] hover:text-[#5E0F0F] cursor-pointer"
+                : "text-[#A09C96] cursor-default"
+            }`}
+          >
+            Mark all as read
+          </button>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="mt-6 flex flex-wrap gap-2">
-          {FILTER_TABS.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer",
-                activeTab === tab
-                  ? "bg-[#2C0101] text-white shadow-xs"
-                  : "bg-[#F4F2EE] text-foreground hover:bg-[#EAE8E3]"
-              )}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Notifications List */}
-        <div className="mt-6 divide-y divide-[#E0DFDD]/70 rounded-[24px] border border-[#E0DFDD] bg-white shadow-xs overflow-hidden">
-          {isLoading ? (
+        {/* Grouped Notifications List */}
+        <div className="space-y-8 sm:space-y-10">
+          {isLoading && serverNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <div className="size-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-              <p className="mt-3 text-sm">Loading your notifications...</p>
-            </div>
-          ) : filteredNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-              <div className="flex size-14 items-center justify-center rounded-full bg-[#F4F2EE] text-muted-foreground">
-                <Bell className="size-7 text-[#A09C96]" />
-              </div>
-              <p className="mt-4 font-heading text-lg font-bold text-foreground">
-                No notifications found
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-                {activeTab === "All"
-                  ? "When you book experiences, receive trip reminders, or get recommendations, they will appear here."
-                  : `You don't have any ${activeTab.toLowerCase()} notifications right now.`}
-              </p>
+              <p className="mt-3 text-sm">Loading notifications...</p>
             </div>
           ) : (
-            filteredNotifications.map((notification) => (
-              <div
-                key={notification.id}
-                onClick={() => {
-                  if (notification.unread) {
-                    markRead(notification.id);
-                  }
-                }}
-                className={cn(
-                  "group relative flex items-start gap-4 p-4 sm:p-5 transition-colors cursor-pointer",
-                  notification.unread
-                    ? "bg-[#FFF9F7]/70 hover:bg-[#FFF4F0]"
-                    : "hover:bg-[#FAF9F7]"
-                )}
-              >
-                {/* Type Icon */}
-                <div
-                  className={cn(
-                    "flex size-11 shrink-0 items-center justify-center rounded-full mt-0.5",
-                    getIconBg(notification.iconType)
-                  )}
-                >
-                  {getIcon(notification.iconType)}
-                </div>
+            groupedSections.map(({ title, items }) => (
+              <section key={title} className="space-y-3.5 sm:space-y-4">
+                <h2 className="font-heading text-sm sm:text-base font-semibold text-[#1E1E1E]">
+                  {title}
+                </h2>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0 pr-6">
-                  <div className="flex items-center gap-2">
-                    <h3
-                      className={cn(
-                        "text-[15px] leading-tight",
-                        notification.unread
-                          ? "font-bold text-[#1E1E1E]"
-                          : "font-medium text-[#333134]"
-                      )}
-                    >
-                      {notification.title}
-                    </h3>
-                    {notification.unread && (
-                      <span className="size-2 rounded-full bg-[#F5032D] shrink-0" />
-                    )}
-                  </div>
-                  {notification.message && (
-                    <p className="mt-1.5 text-sm text-[#6F6B72] leading-relaxed">
-                      {notification.message}
-                    </p>
-                  )}
-                  <div className="mt-2 flex items-center gap-2 text-xs text-[#A09C96]">
-                    <span>{notification.dateGroup}</span>
-                    <span>•</span>
-                    <span>{notification.time}</span>
-                    <span>•</span>
-                    <span className="capitalize">{notification.category}</span>
-                  </div>
-                </div>
+                <div className="space-y-3 sm:space-y-4">
+                  {items.map((notification) => {
+                    const isUnread =
+                      !allMarkedRead &&
+                      notification.unread &&
+                      !readIds.has(notification.id);
 
-                {/* Actions */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteNotification(notification.id);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-[#EAE8E3] hover:text-destructive transition-all shrink-0 cursor-pointer"
-                  title="Delete notification"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
+                    return (
+                      <div
+                        key={notification.id}
+                        onClick={() => handleItemClick(notification.id)}
+                        className="group flex items-start sm:items-center justify-between gap-4 py-1.5 transition-colors cursor-pointer rounded-xl hover:bg-[#FAF9F7]/80 px-2 -mx-2"
+                      >
+                        <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+                          {/* Soft Rounded Thumbnail */}
+                          <div className="relative size-12 sm:size-14 shrink-0 overflow-hidden rounded-[14px] bg-[#EFEFEF]">
+                            {notification.imageUrl && (
+                              <Image
+                                src={notification.imageUrl}
+                                alt=""
+                                fill
+                                className="object-cover"
+                              />
+                            )}
+                          </div>
+
+                          {/* Content */}
+                          <div className="min-w-0 flex-1">
+                            <h3
+                              className={`font-heading text-sm sm:text-base leading-snug ${
+                                isUnread
+                                  ? "font-bold text-[#1E1E1E]"
+                                  : "font-medium text-[#2E2E2E]"
+                              }`}
+                            >
+                              {notification.title}
+                            </h3>
+                            <p className="mt-0.5 text-xs sm:text-sm text-[#737373] leading-relaxed line-clamp-2">
+                              {notification.body}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Timestamp */}
+                        <span className="shrink-0 text-xs sm:text-sm text-[#737373] self-start sm:self-center font-normal whitespace-nowrap">
+                          {notification.time}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             ))
           )}
         </div>
