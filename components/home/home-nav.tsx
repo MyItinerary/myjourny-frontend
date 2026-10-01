@@ -1,10 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Search, Sliders, User, X } from "lucide-react";
+import {
+  Bell,
+  ChevronRight,
+  CircleHelp,
+  Compass,
+  Globe,
+  Image as ImagesLucideIcon,
+  LogOut,
+  Search,
+  Settings,
+  Sliders,
+  User,
+  X,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
@@ -22,11 +35,21 @@ import { useSession } from "@/lib/auth/session-store";
 import { useLogout } from "@/lib/queries/auth";
 import { SearchBar } from "@/components/home/search-bar";
 
+const ACCOUNT_MENU_ITEMS = [
+  { label: "My experiences", icon: ImagesLucideIcon, href: "#" },
+  { label: "Notifications", icon: Bell, href: "#" },
+  { label: "Language and currency", icon: Globe, href: "/profile?tab=locale", subtitle: "English/USD" },
+  { label: "Account settings", icon: Settings, href: "/profile" },
+  { label: "Help center", icon: CircleHelp, href: "#" },
+];
+
 export function HomeNav({ className }: { className?: string }) {
   const { user } = useSession();
   const router = useRouter();
   const logout = useLogout();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
   // When scrolled, tracking if the search bar is expanded inside the fixed navbar
@@ -47,6 +70,24 @@ export function HomeNav({ className }: { className?: string }) {
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    function handlePointerDown(e: MouseEvent) {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setAccountMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [accountMenuOpen]);
 
   function handleOpenSearch(tab: "where" | "when" | "who") {
     setActiveSearchTab(tab);
@@ -253,33 +294,121 @@ export function HomeNav({ className }: { className?: string }) {
                 Become a guide
               </Link>
 
-              {/* Human icon container */}
-              <Link
-                href={user ? "/profile" : "/login"}
-                aria-label={user ? "Profile" : "Log in"}
-                title={user ? "Profile" : "Log in"}
-                className={cn(
-                  "flex shrink-0 flex-col items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
-                  isScrolled
-                    ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
-                    : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
-                )}
-                style={{
-                  display: "flex",
-                  width: "48px",
-                  height: "48px",
-                  padding: "var(--spacing-md, 12px) var(--spacing-lg, 16px)",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "var(--spacing-md, 12px)",
-                  alignSelf: "stretch",
-                  borderRadius: "12px",
-                  background: isScrolled ? "#F4F2EE" : "#FFF",
-                }}
-              >
-                <HumanNavIcon />
-              </Link>
+              {/* Human icon container + account dropdown */}
+              <div className="relative" ref={accountMenuRef}>
+                <button
+                  type="button"
+                  aria-label={user ? "Account menu" : "Log in"}
+                  title={user ? "Account menu" : "Log in"}
+                  aria-haspopup={user ? "menu" : undefined}
+                  aria-expanded={user ? accountMenuOpen : undefined}
+                  onClick={() => {
+                    if (!user) {
+                      router.push("/login");
+                      return;
+                    }
+                    setAccountMenuOpen((open) => !open);
+                  }}
+                  className={cn(
+                    "flex shrink-0 flex-col items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
+                    isScrolled
+                      ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
+                      : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+                  )}
+                  style={{
+                    display: "flex",
+                    width: "48px",
+                    height: "48px",
+                    padding: "var(--spacing-md, 12px) var(--spacing-lg, 16px)",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "var(--spacing-md, 12px)",
+                    alignSelf: "stretch",
+                    borderRadius: "12px",
+                    background: isScrolled ? "#F4F2EE" : "#FFF",
+                  }}
+                >
+                  <HumanNavIcon />
+                </button>
+
+                <AnimatePresence>
+                  {user && accountMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                      transition={{ duration: 0.16, ease: "easeOut" }}
+                      role="menu"
+                      className="absolute right-0 top-[calc(100%+8px)] z-50 w-[300px] rounded-2xl border border-[#E0DFDD] bg-white p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
+                    >
+                      {ACCOUNT_MENU_ITEMS.map((item) => (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          role="menuitem"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-[#F4F2EE]"
+                        >
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-foreground">
+                            <item.icon className="size-[18px]" />
+                          </span>
+                          <span className="flex flex-1 flex-col">
+                            <span className="font-sans text-[15px] font-medium text-foreground">
+                              {item.label}
+                            </span>
+                            {item.subtitle && (
+                              <span className="font-sans text-[13px] text-muted-foreground">
+                                {item.subtitle}
+                              </span>
+                            )}
+                          </span>
+                          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                        </Link>
+                      ))}
+
+                      <div className="my-2 h-px bg-[#E0DFDD]" />
+
+                      <Link
+                        href="#"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-[#F4F2EE]"
+                      >
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-foreground">
+                          <Compass className="size-[18px]" />
+                        </span>
+                        <span className="flex flex-1 flex-col">
+                          <span className="font-sans text-[15px] font-medium text-foreground">
+                            Become a guide
+                          </span>
+                          <span className="font-sans text-[13px] text-muted-foreground">
+                            Make extra income from what you already love doing
+                          </span>
+                        </span>
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      </Link>
+
+                      <div className="my-2 h-px bg-[#E0DFDD]" />
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setAccountMenuOpen(false);
+                          logout.mutate(undefined, { onSuccess: () => router.push("/login") });
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-red-50 cursor-pointer"
+                      >
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
+                          <LogOut className="size-[18px]" />
+                        </span>
+                        <span className="font-sans text-[15px] font-medium text-red-600">Log out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Hamburger icon container */}
               <button
