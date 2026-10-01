@@ -347,7 +347,7 @@ export function HomeNav({ className }: { className?: string }) {
                       type="button"
                       onClick={() => {
                         setProfileMenuOpen(false);
-                        if (user) router.push("/profile/preferences");
+                        if (user) router.push("/profile?tab=locale");
                         else router.push("/login");
                       }}
                       className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
