@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calendar, ChevronDown, Clock, ShieldCheck, User, X } from "lucide-react";
@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
 import { ExperiencePrice, useCreateBooking } from "@/lib/queries/experiences";
+import {
+  PriceRule,
+  PricingSelection,
+  PricingUnit,
+  TicketType,
+  useBookingQuote,
+  useExperiencePricing,
+} from "@/lib/queries/pricing";
 
 function formatPrice(amount: number, currency: string) {
   return new Intl.NumberFormat("en-NG", {
@@ -43,6 +51,77 @@ function getSuggestedDate(fixedDate?: Date | null): Date {
   return tomorrow;
 }
 
+const UNIT_SUFFIX: Record<PricingUnit, string> = {
+  per_person: "/ person",
+  per_booking: "/ group",
+  per_day: "/ person / day",
+};
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// Short, customer-facing descriptions of the curator's pricing rules.
+function describeRule(rule: PriceRule, currency: string): string | null {
+  if (rule.kind === "group" && rule.min_guests && rule.percent_off) {
+    return `${Number(rule.percent_off)}% off for ${rule.min_guests}+ guests`;
+  }
+  if (rule.kind === "early_bird" && rule.book_before) {
+    const until = new Date(rule.book_before).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    });
+    return rule.unit_amount != null
+      ? `Early-bird price ${formatPrice(Number(rule.unit_amount), currency)} when booked before ${until}`
+      : `${Number(rule.percent_off)}% early-bird discount when booked before ${until}`;
+  }
+  if (rule.kind === "day_of_week" && rule.days_of_week?.length && rule.unit_amount != null) {
+    const days = rule.days_of_week.map((d) => WEEKDAYS[d]).join(", ");
+    return `${rule.label ?? "Special rate"}: ${formatPrice(Number(rule.unit_amount), currency)} on ${days}`;
+  }
+  return null;
+}
+
+function Stepper({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+}) {
+  const buttonClass =
+    "flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer disabled:cursor-not-allowed";
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        aria-label={`Decrease ${label}`}
+        disabled={value <= min}
+        onClick={() => onChange(Math.max(min, value - 1))}
+        className={buttonClass}
+      >
+        −
+      </button>
+      <span className="min-w-[1ch] text-center font-sans text-sm font-semibold text-[#130404]">
+        {value}
+      </span>
+      <button
+        type="button"
+        aria-label={`Increase ${label}`}
+        disabled={value >= max}
+        onClick={() => onChange(Math.min(max, value + 1))}
+        className={buttonClass}
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 interface ExperienceBookingPanelProps {
   experienceId: string;
   guideId?: string | null;
@@ -62,6 +141,10 @@ interface ExperienceBookingPanelProps {
 
 // Desktop sticky sidebar. Also reused as a mobile bottom sheet, opened by
 // ExperienceBookingBar's "Book now" — same form either way, not duplicated.
+//
+// The customer picks ticket quantities, add-ons, days (for per-day tickets)
+// and a promo code; the price shown is always the server's quote
+// (POST /bookings/quote), the same engine that prices the booking itself.
 export function ExperienceBookingPanel({
   experienceId,
   guideId,
@@ -76,24 +159,21 @@ export function ExperienceBookingPanel({
 }: ExperienceBookingPanelProps) {
   const maxSpots = availableSpots ?? 10;
   const minParticipants = Math.max(1, minSpots ?? 1);
+  const { data: pricing } = useExperiencePricing(experienceId);
   const [selectedTime, setSelectedTime] = useState<string | null>(TIME_SLOTS[0] ?? "06:00AM");
-  const [participants, setParticipants] = useState(() => minParticipants);
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => getSuggestedDate(eventStartDate));
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [selectedPriceId, setSelectedPriceId] = useState<string | null>(null);
+  // Quantities the customer has set; tickets they haven't touched fall back
+  // to the defaults below.
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [selectedAddons, setSelectedAddons] = useState<Record<string, boolean>>({});
+  const [days, setDays] = useState(1);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const createBooking = useCreateBooking();
   const router = useRouter();
   const bookingAttemptKey = useRef<string | null>(null);
-
-  // A different selection is a new booking attempt with its own key.
-  useEffect(() => {
-    bookingAttemptKey.current = null;
-  }, [selectedPriceId, selectedDate, selectedTime, participants]);
-
-  useEffect(() => {
-    setParticipants((p) => Math.min(Math.max(p, minParticipants), maxSpots));
-  }, [minParticipants, maxSpots]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -105,46 +185,76 @@ export function ExperienceBookingPanel({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const cheapest = prices.reduce<ExperiencePrice | null>(
-    (min, p) => (!min || p.amount < min.amount ? p : min),
+  const tickets: TicketType[] =
+    pricing?.prices ??
+    prices.map((p) => ({ ...p, pricing_unit: "per_person" as PricingUnit }));
+  const addons = pricing?.addons ?? [];
+  const ruleNotes = (pricing?.rules ?? [])
+    .map((rule) => describeRule(rule, currency))
+    .filter((note): note is string => !!note);
+
+  const cheapest = tickets.reduce<TicketType | null>(
+    (min, t) => (!min || Number(t.amount) < Number(min.amount) ? t : min),
     null
   );
-  const selectedPrice = prices.find((p) => p.id === selectedPriceId) ?? cheapest;
+  // By default the cheapest ticket type gets the minimum group size.
+  const quantityOf = (ticketId: string) =>
+    quantities[ticketId] ?? (ticketId === cheapest?.id ? minParticipants : 0);
+  const guests = tickets.reduce((sum, t) => sum + quantityOf(t.id), 0);
+  const needsDays = tickets.some((t) => t.pricing_unit === "per_day" && quantityOf(t.id) > 0);
+
+  const requestedDatetime =
+    selectedDate && selectedTime ? combineDateAndTime(selectedDate, selectedTime) : null;
+  const selection: PricingSelection | null = useMemo(() => {
+    const items = tickets
+      .map((t) => ({ experience_price_id: t.id, quantity: quantityOf(t.id) }))
+      .filter((i) => i.quantity > 0);
+    if (items.length === 0) return null;
+    return {
+      experience_id: experienceId,
+      items,
+      addons: addons
+        .filter((a) => selectedAddons[a.id])
+        .map((a) => ({ addon_id: a.id, quantity: 1 })),
+      requested_datetime: requestedDatetime ?? undefined,
+      days: needsDays ? days : undefined,
+      promo_code: appliedPromo ?? undefined,
+    };
+    // quantityOf reads `quantities`, `cheapest` and `minParticipants`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [experienceId, tickets, quantities, minParticipants, addons, selectedAddons, requestedDatetime, needsDays, days, appliedPromo]);
+
+  const { data: quote, isFetching: quoting, isError: quoteFailed } = useBookingQuote(selection);
+  const selectionKey = JSON.stringify(selection);
+
+  // A different selection is a new booking attempt with its own key.
+  useEffect(() => {
+    bookingAttemptKey.current = null;
+  }, [selectionKey]);
 
   const isReady =
     !!selectedTime &&
     !!selectedDate &&
-    participants >= minParticipants &&
-    participants <= maxSpots &&
-    !!selectedPrice;
-  const total = (selectedPrice?.amount ?? 0) * Math.max(participants, 1);
+    !!selection &&
+    guests >= minParticipants &&
+    guests <= maxSpots &&
+    !!quote &&
+    !quoteFailed;
+  const total = quote ? Number(quote.total) : 0;
   const dateLabel = selectedDate
     ? selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric" })
     : "Select dates";
 
+  const setQuantity = (ticketId: string, value: number) =>
+    setQuantities((q) => ({ ...q, [ticketId]: value }));
+
   const handleBookNow = () => {
-    if (
-      !guideId ||
-      !selectedDate ||
-      !selectedTime ||
-      !selectedPrice ||
-      participants > maxSpots ||
-      participants < minParticipants
-    )
-      return;
-    const requestedDatetime = combineDateAndTime(selectedDate, selectedTime);
+    if (!guideId || !selection || !isReady) return;
     // One key per booking attempt: re-clicking reuses it, so the server
     // returns the booking it already created instead of a second one.
     bookingAttemptKey.current ??= crypto.randomUUID();
     createBooking.mutate(
-      {
-        idempotencyKey: bookingAttemptKey.current,
-        experience_id: experienceId,
-        experience_price_id: selectedPrice.id,
-        guide_id: guideId,
-        requested_datetime: requestedDatetime ?? undefined,
-        party_size: participants,
-      },
+      { ...selection, idempotencyKey: bookingAttemptKey.current, guide_id: guideId },
       {
         onSuccess: (booking) => {
           if (booking.url) window.location.href = booking.url;
@@ -173,43 +283,26 @@ export function ExperienceBookingPanel({
 
       <div className="flex flex-col items-start">
         <p className="flex items-baseline gap-1">
+          {tickets.length > 1 && (
+            <span className="font-sans text-base font-normal text-[#6F6B72]">from</span>
+          )}
           <span className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#130404]">
-            {formatPrice(selectedPrice?.amount ?? 0, currency)}
+            {formatPrice(Number(cheapest?.amount ?? 0), currency)}
           </span>
-          <span className="font-sans text-base font-normal text-[#6F6B72]">/ person</span>
+          <span className="font-sans text-base font-normal text-[#6F6B72]">
+            {UNIT_SUFFIX[cheapest?.pricing_unit ?? "per_person"]}
+          </span>
         </p>
-        {isReady && (
-          <div className="mt-6 flex w-fit items-center gap-1 rounded-[24px] bg-[#FF5400] p-2">
-            <span className="font-sans text-[14px] font-normal leading-[22px] text-white">
-              Only {maxSpots} spots left for tomorrow
-            </span>
-          </div>
+        {ruleNotes.length > 0 && (
+          <ul className="mt-3 flex flex-col gap-1">
+            {ruleNotes.map((note) => (
+              <li key={note} className="text-xs font-medium text-[#FF5400]">
+                {note}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-
-      {prices.length > 1 && (
-        <div className="flex flex-col gap-2">
-          <span className="text-sm text-muted-foreground">Choose an option</span>
-          <div className="flex flex-col gap-2">
-            {prices.map((price) => (
-              <button
-                key={price.id}
-                type="button"
-                onClick={() => setSelectedPriceId(price.id)}
-                className={cn(
-                  "flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition-colors",
-                  (selectedPrice?.id ?? cheapest?.id) === price.id
-                    ? "border-foreground bg-muted"
-                    : "border-border hover:bg-muted"
-                )}
-              >
-                <span className="font-medium text-foreground">{price.label}</span>
-                <span className="text-muted-foreground">{formatPrice(price.amount, currency)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-col gap-2">
         <span className="font-sans text-sm font-normal text-[#130404]">
@@ -234,35 +327,77 @@ export function ExperienceBookingPanel({
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-[24px] bg-[#F4F2EE] px-4 py-3">
-        <span className="flex items-center gap-2 font-sans text-sm font-medium text-[#130404]">
-          <User className="size-4 text-[#130404]" />
-          Participants
-        </span>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            aria-label="Decrease participants"
-            disabled={participants <= minParticipants}
-            onClick={() => setParticipants((p) => Math.max(minParticipants, p - 1))}
-            className="flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer disabled:cursor-not-allowed"
+      <div className="flex flex-col gap-2">
+        {tickets.length > 1 && (
+          <span className="font-sans text-sm font-normal text-[#130404]">Tickets</span>
+        )}
+        {tickets.map((ticket) => (
+          <div
+            key={ticket.id}
+            className="flex items-center justify-between rounded-[24px] bg-[#F4F2EE] px-4 py-3"
           >
-            −
-          </button>
-          <span className="min-w-[1ch] text-center font-sans text-sm font-semibold text-[#130404]">
-            {participants}
-          </span>
-          <button
-            type="button"
-            aria-label="Increase participants"
-            disabled={participants >= maxSpots}
-            onClick={() => setParticipants((p) => Math.min(maxSpots, p + 1))}
-            className="flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer disabled:cursor-not-allowed"
-          >
-            +
-          </button>
-        </div>
+            <span className="flex flex-col">
+              <span className="flex items-center gap-2 font-sans text-sm font-medium text-[#130404]">
+                <User className="size-4 text-[#130404]" />
+                {tickets.length > 1 ? ticket.label : "Participants"}
+              </span>
+              {tickets.length > 1 && (
+                <span className="pl-6 text-xs text-[#6F6B72]">
+                  {formatPrice(Number(ticket.amount), currency)} {UNIT_SUFFIX[ticket.pricing_unit]}
+                </span>
+              )}
+            </span>
+            <Stepper
+              label={ticket.label}
+              value={quantityOf(ticket.id)}
+              min={0}
+              max={Math.max(0, maxSpots - guests + quantityOf(ticket.id))}
+              onChange={(value) => setQuantity(ticket.id, value)}
+            />
+          </div>
+        ))}
+        {guests < minParticipants && (
+          <p className="text-xs text-[#F5032D]">This experience needs at least {minParticipants} guests.</p>
+        )}
       </div>
+
+      {needsDays && (
+        <div className="flex items-center justify-between rounded-[24px] bg-[#F4F2EE] px-4 py-3">
+          <span className="flex items-center gap-2 font-sans text-sm font-medium text-[#130404]">
+            <Calendar className="size-4 text-[#130404]" />
+            Days
+          </span>
+          <Stepper label="days" value={days} min={1} max={60} onChange={setDays} />
+        </div>
+      )}
+
+      {addons.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="font-sans text-sm font-normal text-[#130404]">Add extras</span>
+          {addons.map((addon) => (
+            <label
+              key={addon.id}
+              className="flex cursor-pointer items-center justify-between rounded-xl border border-border px-4 py-3 text-sm"
+            >
+              <span className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={!!selectedAddons[addon.id]}
+                  onChange={(e) =>
+                    setSelectedAddons((s) => ({ ...s, [addon.id]: e.target.checked }))
+                  }
+                  className="size-4 accent-[#2C0101]"
+                />
+                <span className="font-medium text-foreground">{addon.label}</span>
+              </span>
+              <span className="text-muted-foreground">
+                {formatPrice(Number(addon.amount), currency)}
+                {addon.pricing_unit === "per_person" ? " / person" : ""}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
 
       <div ref={calendarRef} className="relative">
         <button
@@ -292,6 +427,53 @@ export function ExperienceBookingPanel({
         )}
       </div>
 
+      <form
+        className="flex flex-col gap-1"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setAppliedPromo(promoInput.trim() || null);
+        }}
+      >
+        <div className="flex gap-2">
+          <input
+            value={promoInput}
+            onChange={(e) => setPromoInput(e.target.value)}
+            placeholder="Promo code"
+            aria-label="Promo code"
+            className="flex-1 rounded-[24px] border border-[#E0DFDD] bg-white px-4 py-2 text-sm uppercase placeholder:normal-case"
+          />
+          <Button type="submit" variant="outline" className="rounded-[24px]">
+            Apply
+          </Button>
+        </div>
+        {appliedPromo && quote && (
+          <p className={cn("text-xs", quote.promo_applied ? "text-green-700" : "text-[#F5032D]")}>
+            {quote.promo_applied ? `${quote.promo_code} applied` : quote.promo_message}
+          </p>
+        )}
+      </form>
+
+      {quote && (
+        <div className={cn("flex flex-col gap-1 text-sm", quoting && "opacity-60")}>
+          {quote.lines.map((line, index) => (
+            <div key={`${line.kind}-${index}`} className="flex items-center justify-between">
+              <span className="text-[#6F6B72]">
+                {line.label}
+                {line.kind !== "discount" && line.kind !== "fee" && line.quantity > 1
+                  ? ` × ${line.quantity}`
+                  : ""}
+              </span>
+              <span className={cn(line.kind === "discount" ? "text-green-700" : "text-[#130404]")}>
+                {formatPrice(Number(line.amount), currency)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {quoteFailed && (
+        <p className="text-xs text-[#F5032D]">We couldn&apos;t price this selection. Please adjust it and try again.</p>
+      )}
+
       {!guideId ? (
         <p className="text-center text-xs text-muted-foreground">
           This experience isn&apos;t available for booking yet.
@@ -300,7 +482,7 @@ export function ExperienceBookingPanel({
         <div className="flex flex-col gap-2">
           <Button
             size="cta"
-            disabled={!isReady || createBooking.isPending}
+            disabled={!isReady || quoting || createBooking.isPending}
             onClick={handleBookNow}
             className="w-full bg-[#F5032D] text-white hover:bg-[#d90328] font-sans text-base font-semibold shadow-sm transition-all"
           >
