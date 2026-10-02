@@ -1,21 +1,19 @@
 import type { Metadata } from "next";
 
-import { InterstitialScreen } from "@/components/onboarding/interstitial-screen";
+import { BookingPaymentStatus } from "@/components/bookings/booking-payment-status";
 
 export const metadata: Metadata = {
-  title: "Booking cancelled | MyJourny",
+  title: "Your booking — MyJourny",
 };
 
-// Landed on after itin's /bookings/cancel marks the booking cancelled and
-// redirects here (platform=web) instead of returning raw JSON.
-export default function BookingCancelPage() {
-  return (
-    <InterstitialScreen
-      heading="Booking cancelled"
-      subtitle="No charge was made. You can pick a new date and try again whenever you're ready."
-      primaryLabel="Back to home"
-      primaryHref="/"
-      illustration={null}
-    />
-  );
+// Landed on when the customer leaves checkout or the payment fails (itin's
+// /bookings/cancel, or /bookings/success after a failed Paystack payment).
+// Offers to retry the payment for the same booking.
+export default async function BookingCancelPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <BookingPaymentStatus bookingId={id} landedFrom="cancel" />;
 }
