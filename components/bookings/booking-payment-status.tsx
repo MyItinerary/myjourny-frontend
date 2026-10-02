@@ -71,8 +71,22 @@ export function BookingPaymentStatus({ bookingId, landedFrom }: Props) {
         <InterstitialScreen
           heading="Booking confirmed 🎉"
           subtitle="You're all set — we've sent the details to your email. See you there!"
-          primaryLabel="Back to home"
-          primaryHref="/"
+          primaryLabel="View booking"
+          primaryHref={`/bookings/${booking.id}`}
+          secondaryLabel="Back to home"
+          secondaryHref="/"
+          illustration={null}
+        />
+      );
+    case "cancelled":
+      return (
+        <InterstitialScreen
+          heading="Booking cancelled"
+          subtitle="This booking was cancelled. Any refund agreed with our support team is on its way."
+          primaryLabel="View booking"
+          primaryHref={`/bookings/${booking.id}`}
+          secondaryLabel="Back to home"
+          secondaryHref="/"
           illustration={null}
         />
       );
