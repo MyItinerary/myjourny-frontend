@@ -73,7 +73,8 @@ export function HomeContent() {
   const liveCategories = categoriesQuery.data && categoriesQuery.data.length > 0
     ? (() => {
         const active = categoriesQuery.data.filter((c) => c.is_active);
-        const children = active.filter((c) => c.parent_id !== null);
+        const nestedChildren = active.flatMap((c) => c.children ?? []);
+        const children = nestedChildren.length > 0 ? nestedChildren : active.filter((c) => c.parent_id !== null);
         const selected = isAccount && children.length > 0 ? children : active;
         return selected.map((c) => ({
           id: c.slug,
