@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { apiErrorMessage } from "@/lib/api-error";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
+import type { PricingSelection } from "@/lib/queries/pricing";
 
 // Matches itin's ExperienceMatch DTO (app/core/dto/experience.py) — what
 // GET /experiences/recommendations and GET /experiences/browsing-history
@@ -228,15 +229,11 @@ export type BookingOut = {
   url?: string | null;
 };
 
-export type CreateBookingPayload = {
+export type CreateBookingPayload = PricingSelection & {
   // Sent as the Idempotency-Key header: the same key always returns the same
   // booking, so a double click can't create two.
   idempotencyKey: string;
-  experience_id: string;
-  experience_price_id: string;
   guide_id: string;
-  requested_datetime?: string; // ISO datetime
-  party_size?: number;
 };
 
 // POST /bookings/ — creates a Booking row and (unless the experience has
