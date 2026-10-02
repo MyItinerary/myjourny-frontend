@@ -136,11 +136,84 @@ export function useResetPasswordWithToken() {
   });
 }
 
+export function useAppleAuth() {
+  return useMutation({
+    mutationFn: async (payload: {
+      identity_token: string;
+      user_id?: string;
+      full_name?: string;
+      signup_type?: string;
+    }) => {
+      const { data } = await apiClient.post<Tokens>("/auth/apple", {
+        signup_type: "traveller",
+        ...payload,
+      });
+      return data;
+    },
+    onSuccess: (tokens) => completeAuth(tokens, null),
+    onError: (error) =>
+      toast.error(apiErrorMessage(error, "Couldn't sign in with Apple. Please try again.")),
+  });
+}
+
+export type TempAuthResponse = {
+  access_token: string;
+  refresh_token?: string;
+  user_id: string;
+  signup_type?: string;
+};
+
+export function useCreateTempUser() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await apiClient.post<TempAuthResponse>("/auth/temp", {
+        signup_type: "traveller",
+      });
+      return data;
+    },
+    onSuccess: (data) => {
+      setAuth(
+        {
+          access_token: data.access_token,
+          refresh_token: data.refresh_token ?? "",
+        },
+        { id: data.user_id, email: null, fullName: "Guest User", avatarUrl: null }
+      );
+      notifySessionRoute();
+    },
+  });
+}
+
+export type ActivateUserPayload = {
+  user_id: string;
+  email: string;
+  full_name?: string;
+  avatar_url?: string;
+};
+
+export function useActivateUser() {
+  return useMutation({
+    mutationFn: async (payload: ActivateUserPayload) => {
+      const { data } = await apiClient.post<MeResponse>("/auth/activate", payload);
+      return data;
+    },
+    onSuccess: (me) => {
+      setUser(toSessionUser(me));
+      toast.success("Account activated!");
+    },
+    onError: (error) =>
+      toast.error(apiErrorMessage(error, "Couldn't activate your account. Please try again.")),
+  });
+}
+
 export function useLogout() {
   return useMutation({
-    // itin's refresh tokens are stateless with no revocation table — logout
-    // is client-side-only (clear local session + the session-route cookie).
     mutationFn: async () => {
+      try {
+        await apiClient.post("/auth/logout");
+      } catch {
+        // Safe to proceed even if backend logout fails or is offline
+      }
       clearAuth();
       clearPreferences();
       await fetch("/api/auth/session", { method: "DELETE" }).catch(() => {});
@@ -156,3 +229,4 @@ export function useMe() {
     enabled: state === "account",
   });
 }
+

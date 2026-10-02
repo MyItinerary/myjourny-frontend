@@ -40,10 +40,10 @@ export function HomeContent() {
   const geolocation = useGeolocation();
   const hasCoords = typeof geolocation === "object";
 
-  // "Popular near you" waits for geolocation to settle (either resolves
-  // with coordinates, or "unavailable" — never fires against a still-
-  // pending result). Once settled without coordinates, it falls to the
-  // same location-agnostic call "Top picks" always uses.
+  // "Popular near you" and "Top picks right now" both wait for geolocation
+  // to settle (either resolves with coordinates, or "unavailable" — never
+  // fires against a still-pending result). When coordinates are available,
+  // both queries pass them so experiences are filtered around the user's location.
   const popularQuery = useRecommendedExperiences({
     latitude: hasCoords ? geolocation.latitude : undefined,
     longitude: hasCoords ? geolocation.longitude : undefined,
@@ -52,15 +52,17 @@ export function HomeContent() {
     enabled: isAccount && geolocation !== "pending",
   });
   const topPicksQuery = useRecommendedExperiences({
+    latitude: hasCoords ? geolocation.latitude : undefined,
+    longitude: hasCoords ? geolocation.longitude : undefined,
     offset: 6,
     limit: 10,
-    enabled: isAccount,
+    enabled: isAccount && geolocation !== "pending",
   });
   const browsingHistoryQuery = useBrowsingHistory(10);
   const categoriesQuery = useInterestCategories();
 
   const popularIsLoading = isAccount && (geolocation === "pending" || popularQuery.isFetching);
-  const topPicksIsLoading = isAccount && topPicksQuery.isFetching;
+  const topPicksIsLoading = isAccount && (geolocation === "pending" || topPicksQuery.isFetching);
   const browsingHistoryIsLoading = isAccount && browsingHistoryQuery.isFetching;
 
   const realPopularItems = (popularQuery.data ?? []).map(experienceMatchToCardProps);
@@ -73,7 +75,8 @@ export function HomeContent() {
   const liveCategories = categoriesQuery.data && categoriesQuery.data.length > 0
     ? (() => {
         const active = categoriesQuery.data.filter((c) => c.is_active);
-        const children = active.filter((c) => c.parent_id !== null);
+        const nestedChildren = active.flatMap((c) => c.children ?? []);
+        const children = nestedChildren.length > 0 ? nestedChildren : active.filter((c) => c.parent_id !== null);
         const selected = isAccount && children.length > 0 ? children : active;
         return selected.map((c) => ({
           id: c.slug,
@@ -135,7 +138,7 @@ export function HomeContent() {
           <Reveal>
             <ExperienceRailSection
               heading="Top picks right now"
-              subheading="What's happening around you"
+              subheading={hasCoords ? "What's happening around you" : "What's happening right now"}
               items={realTopPicksItems}
               cardVariant="vertical"
               isLoading={topPicksIsLoading}

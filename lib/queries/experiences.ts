@@ -256,3 +256,67 @@ export function useCreateBooking() {
       toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again.")),
   });
 }
+
+// GET /experiences/semantic-search — Natural language / AI query matching
+export type SemanticSearchResult = {
+  experience_id: string;
+  match_score?: number;
+  title: string;
+  headline?: string | null;
+  imageUrl?: string | null;
+  price: number;
+  currency: string;
+  duration?: number | null;
+  rating?: number | null;
+  safetyBadgeCount?: number;
+  city?: string | null;
+  country?: string | null;
+};
+
+export function useSemanticSearch(params: {
+  q: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  radius_km?: number;
+  enabled?: boolean;
+}) {
+  return useQuery({
+    queryKey: ["experiences", "semantic-search", params],
+    queryFn: async () => {
+      const { data } = await apiClient.get<SemanticSearchResult[]>(
+        "/experiences/semantic-search",
+        {
+          params: {
+            q: params.q,
+            ...(params.latitude != null && { latitude: params.latitude }),
+            ...(params.longitude != null && { longitude: params.longitude }),
+            ...(params.radius_km != null && { radius_km: params.radius_km }),
+          },
+        }
+      );
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: (params.enabled ?? true) && !!params.q.trim(),
+    staleTime: 60_000,
+  });
+}
+
+// POST /bookings/{bookingId}/payment-sheet — Stripe Payment Sheet integration
+export type PaymentSheetParams = {
+  paymentIntent: string;
+  ephemeralKey: string;
+  customer: string;
+  publishableKey: string;
+};
+
+export function useBookingPaymentSheet() {
+  return useMutation({
+    mutationFn: async (bookingId: string) => {
+      const { data } = await apiClient.post<PaymentSheetParams>(
+        `/bookings/${bookingId}/payment-sheet`
+      );
+      return data;
+    },
+  });
+}
+

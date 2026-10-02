@@ -6,9 +6,7 @@ import { motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSession } from "@/lib/auth/session-store";
-import { groupChildrenByParentSlug, useInterestCategories } from "@/lib/queries/categories";
-import { inspirationCategories, inspirationSubcategories } from "@/lib/mock-data/home";
+import { type Category, useInterestCategories, useSubcategories } from "@/lib/queries/categories";
 
 // Figma: "Footer" (2001:8924/2001:8949) — identical between guest/account.
 // Bundles two stacked blocks: the "InspirationSection" category tabs
@@ -37,71 +35,80 @@ const linkColumns = [
 ];
 
 export function Footer() {
-  const [activeCategory, setActiveCategory] = useState(inspirationCategories[0].id);
-  const { user } = useSession();
-  const isAccount = user !== null;
-
-  // Tabs stay driven by the static list either way — real parent
-  // slugs/labels already match it 1:1, so there's nothing to gain (and a
-  // loading flash to lose) by fetching parents too. Only the subcategory
-  // row below switches to real data for signed-in users.
   const categoriesQuery = useInterestCategories();
-  const childrenByParent = categoriesQuery.data
-    ? groupChildrenByParentSlug(categoriesQuery.data)
-    : null;
-  const activeSubcategories = isAccount
-    ? (childrenByParent?.get(activeCategory) ?? []).map((c) => ({ id: c.slug, label: c.text }))
-    : inspirationSubcategories;
+  const categories = categoriesQuery.data ?? [];
+
+  // Top-level parent categories from GET /categories?category_type=interest
+  const parentCategories = categories.filter((c) => c.parent_id === null);
+
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+
+  // Active category: either currently selected or default to the first parent
+  const currentCategory =
+    parentCategories.find((c) => c.id === activeCategoryId) ?? parentCategories[0];
+
+  const currentParentId = currentCategory?.id ?? null;
+
+  // Fetch subcategories whenever a category is selected: GET /categories?parent_id=<id>
+  const { data: subcategories = [] } = useSubcategories(currentParentId);
 
   return (
-    <footer className="bg-[#F7F7F7]">
+    <footer className="bg-[#FCFCFC]">
       <div className="mx-auto max-w-[1372px] px-6 pt-12 pb-8 lg:px-6">
         <h2 className="py-2 font-heading text-[22px] leading-[33px] font-medium text-[#222222]">
           More ways to experience your city
         </h2>
 
-        <Tabs
-          value={activeCategory}
-          onValueChange={(value) => setActiveCategory(value as string)}
-          className="mt-4"
-        >
-          <TabsList
-            variant="line"
-            className="relative flex h-auto w-full justify-start gap-6 overflow-x-auto border-b border-[#EBEBEB] bg-transparent p-0 scrollbar-none"
+        {parentCategories.length > 0 && (
+          <Tabs
+            value={String(currentCategory?.id ?? "")}
+            onValueChange={(val) => setActiveCategoryId(Number(val))}
+            className="mt-4"
           >
-            {inspirationCategories.map((category) => (
-              <TabsTrigger
-                key={category.id}
-                value={category.id}
-                className={cn(
-                  "relative flex items-center justify-center whitespace-nowrap rounded-none border-0 bg-transparent px-0 pb-3.5 pt-2 text-sm font-medium text-[#717171] transition-colors after:hidden hover:text-[#222222]",
-                  "data-active:border-0 data-active:bg-transparent data-active:font-semibold data-active:text-[#222222] data-active:shadow-none"
-                )}
-              >
-                {category.label}
-                {activeCategory === category.id && (
-                  <motion.span
-                    layoutId="footer-tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-[2px] bg-[#222222]"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                    aria-hidden="true"
-                  />
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+            <TabsList
+              variant="line"
+              className="relative flex h-auto w-full justify-start gap-6 overflow-x-auto border-b border-[#EBEBEB] bg-transparent p-0 scrollbar-none"
+            >
+              {parentCategories.map((category) => {
+                const isActive = category.id === currentCategory?.id;
+                return (
+                  <TabsTrigger
+                    key={category.id}
+                    value={String(category.id)}
+                    className={cn(
+                      "relative flex items-center justify-center whitespace-nowrap rounded-none border-0 bg-transparent px-0 pb-3.5 pt-2 text-sm font-medium text-[#717171] transition-colors after:hidden hover:text-[#222222]",
+                      "data-active:border-0 data-active:bg-transparent data-active:font-semibold data-active:text-[#222222] data-active:shadow-none"
+                    )}
+                  >
+                    {category.text}
+                    {isActive && (
+                      <motion.span
+                        layoutId="footer-tab-indicator"
+                        className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-[2px] bg-[#222222]"
+                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
+        )}
 
-        {/* Figma only specs subcategory content for the first tab — guests
-            still see that same static placeholder regardless of the active
-            tab (itin's categories endpoint is auth-only); signed-in users
-            get each tab's real children. */}
-        <div className="mt-8 flex flex-wrap items-center gap-6">
-          {activeSubcategories.map((subcategory) => (
-            <div key={subcategory.id} className="flex flex-col pr-4">
-              <span className="text-sm font-medium text-[#222222]">{subcategory.label}</span>
+        {/* Dynamic subcategories from the endpoint: updates when a category is clicked */}
+        <div className="mt-8 flex flex-wrap items-center gap-6 min-h-[48px]">
+          {subcategories.map((subcategory) => (
+            <Link
+              key={subcategory.id}
+              href={`/categories/${subcategory.slug}`}
+              className="flex flex-col pr-4 group transition-opacity hover:opacity-80"
+            >
+              <span className="text-sm font-medium text-[#222222] group-hover:underline">
+                {subcategory.text}
+              </span>
               <span className="pt-0.5 text-[13px] text-[#717171]">Subcategory</span>
-            </div>
+            </Link>
           ))}
         </div>
 

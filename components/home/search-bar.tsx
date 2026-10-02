@@ -165,8 +165,7 @@ export function SearchBar({
       return;
     }
 
-    const slugified = trimmed.replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    router.push(`/categories/${slugified}`);
+    router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
   }
 
   const totalGuests = guests.adults + guests.children + guests.infants;
@@ -581,8 +580,8 @@ export function MobileSearchModal({ onClose }: { onClose: () => void }) {
       router.push(`/categories/${q}`);
       return;
     }
-    const slugified = q.replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    router.push(`/categories/${slugified}`);
+
+    router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
   }
 
   return (
