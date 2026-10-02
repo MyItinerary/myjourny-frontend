@@ -35,12 +35,22 @@ function saveCoords(coords: Coordinates) {
   }
 }
 
+function clearCoords() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Ignore storage error
+  }
+}
+
 /**
  * Robust geolocation hook mirroring mobile-app's Location & lastKnownCoords pattern:
- * - Instantly initializes from cached coordinates (localStorage) so the feed loads locally immediately.
+ * - Instantly initializes from cached coordinates (localStorage) if available.
  * - Continuously watches position via watchPosition so turning on location immediately updates coordinates.
  * - Actively requests position on mount and on window focus (useFocusEffect equivalent).
- * - Listens to browser permission changes.
+ * - Listens to browser permission changes: if location is turned off or denied, immediately
+ *   clears cached coords and sets state to "unavailable".
  */
 export function useGeolocation(): GeolocationResult {
   const [result, setResult] = useState<GeolocationResult>(() => {
@@ -60,7 +70,8 @@ export function useGeolocation(): GeolocationResult {
   }, []);
 
   const handleError = useCallback(() => {
-    setResult((prev) => (typeof prev === "object" ? prev : "unavailable"));
+    clearCoords();
+    setResult("unavailable");
   }, []);
 
   const requestPosition = useCallback(() => {
@@ -71,57 +82,87 @@ export function useGeolocation(): GeolocationResult {
 
     navigator.geolocation.getCurrentPosition(
       handleSuccess,
-      () => {
-        // Fallback to balanced accuracy if high accuracy fails or times out (common on desktop PCs)
+      (err) => {
+        // If location was denied or unavailable (e.g. user turned off location), clear & mark unavailable immediately
+        if (err.code === err.PERMISSION_DENIED || err.code === err.POSITION_UNAVAILABLE) {
+          handleError();
+          return;
+        }
+        // Fallback to balanced accuracy if high accuracy timed out (err.code === 3)
         navigator.geolocation.getCurrentPosition(
           handleSuccess,
           handleError,
-          { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
         );
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
   }, [handleSuccess, handleError]);
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setResult("unavailable");
+      handleError();
       return;
     }
 
-    // 1. Actively request current position
-    requestPosition();
+    // 1. Check permission state immediately if supported
+    if (navigator.permissions?.query) {
+      navigator.permissions
+        .query({ name: "geolocation" as PermissionName })
+        .then((permission) => {
+          if (permission.state === "denied") {
+            handleError();
+            return;
+          }
+          if (permission.state === "granted") {
+            requestPosition();
+          }
+          permission.onchange = () => {
+            if (permission.state === "granted") {
+              requestPosition();
+            } else if (permission.state === "denied") {
+              handleError();
+            }
+          };
+        })
+        .catch(() => {
+          requestPosition();
+        });
+    } else {
+      requestPosition();
+    }
 
-    // 2. Watch position continuously — when location is turned on, this fires immediately
+    // 2. Watch position continuously — when location is turned on/off, this notifies immediately
     try {
       watchIdRef.current = navigator.geolocation.watchPosition(
         handleSuccess,
-        () => {},
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED || err.code === err.POSITION_UNAVAILABLE) {
+            handleError();
+          }
+        },
         { enableHighAccuracy: false, maximumAge: 60000 }
       );
     } catch {
       // Ignore watch failure
     }
 
-    // 3. Listen to Permission state changes (e.g. user toggles location in Chrome address bar)
-    if (typeof navigator !== "undefined" && navigator.permissions?.query) {
-      navigator.permissions
-        .query({ name: "geolocation" as PermissionName })
-        .then((permission) => {
-          permission.onchange = () => {
-            if (permission.state === "granted" || permission.state === "prompt") {
-              requestPosition();
-            } else if (permission.state === "denied") {
-              setResult("unavailable");
-            }
-          };
-        })
-        .catch(() => {});
-    }
-
-    // 4. Focus & visibility change — mirrors mobile app's useFocusEffect checkLocation()
+    // 3. Focus & visibility change — re-evaluates location when user returns to tab
     const onFocus = () => {
-      requestPosition();
+      if (typeof navigator !== "undefined" && navigator.permissions?.query) {
+        navigator.permissions
+          .query({ name: "geolocation" as PermissionName })
+          .then((permission) => {
+            if (permission.state === "denied") {
+              handleError();
+            } else {
+              requestPosition();
+            }
+          })
+          .catch(() => requestPosition());
+      } else {
+        requestPosition();
+      }
     };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
@@ -133,7 +174,7 @@ export function useGeolocation(): GeolocationResult {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
     };
-  }, [requestPosition, handleSuccess]);
+  }, [requestPosition, handleSuccess, handleError]);
 
   return result;
 }
