@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Calendar, ChevronDown, Clock, ShieldCheck, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -82,6 +83,13 @@ export function ExperienceBookingPanel({
   const [selectedPriceId, setSelectedPriceId] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const createBooking = useCreateBooking();
+  const router = useRouter();
+  const bookingAttemptKey = useRef<string | null>(null);
+
+  // A different selection is a new booking attempt with its own key.
+  useEffect(() => {
+    bookingAttemptKey.current = null;
+  }, [selectedPriceId, selectedDate, selectedTime, participants]);
 
   useEffect(() => {
     setParticipants((p) => Math.min(Math.max(p, minParticipants), maxSpots));
@@ -125,8 +133,12 @@ export function ExperienceBookingPanel({
     )
       return;
     const requestedDatetime = combineDateAndTime(selectedDate, selectedTime);
+    // One key per booking attempt: re-clicking reuses it, so the server
+    // returns the booking it already created instead of a second one.
+    bookingAttemptKey.current ??= crypto.randomUUID();
     createBooking.mutate(
       {
+        idempotencyKey: bookingAttemptKey.current,
         experience_id: experienceId,
         experience_price_id: selectedPrice.id,
         guide_id: guideId,
@@ -136,6 +148,11 @@ export function ExperienceBookingPanel({
       {
         onSuccess: (booking) => {
           if (booking.url) window.location.href = booking.url;
+          // Free experiences are confirmed straight away, with no checkout.
+          else if (booking.status === "confirmed") router.push(`/bookings/${booking.id}/success`);
+        },
+        onError: () => {
+          bookingAttemptKey.current = null;
         },
       }
     );

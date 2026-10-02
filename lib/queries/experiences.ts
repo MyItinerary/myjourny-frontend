@@ -229,6 +229,9 @@ export type BookingOut = {
 };
 
 export type CreateBookingPayload = {
+  // Sent as the Idempotency-Key header: the same key always returns the same
+  // booking, so a double click can't create two.
+  idempotencyKey: string;
   experience_id: string;
   experience_price_id: string;
   guide_id: string;
@@ -244,12 +247,12 @@ export type CreateBookingPayload = {
 // redirects).
 export function useCreateBooking() {
   return useMutation({
-    mutationFn: async (payload: CreateBookingPayload) => {
-      const { data } = await apiClient.post<BookingOut>("/bookings/", {
-        ...payload,
-        payment_flow: "checkout",
-        platform: "web",
-      });
+    mutationFn: async ({ idempotencyKey, ...payload }: CreateBookingPayload) => {
+      const { data } = await apiClient.post<BookingOut>(
+        "/bookings/",
+        { ...payload, payment_flow: "checkout", platform: "web" },
+        { headers: { "Idempotency-Key": idempotencyKey } }
+      );
       return data;
     },
     onError: (error) =>
