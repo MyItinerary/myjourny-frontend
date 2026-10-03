@@ -17,6 +17,14 @@ import {
   useBookingQuote,
   useExperiencePricing,
 } from "@/lib/queries/pricing";
+import {
+  dateKey,
+  ExperienceSession,
+  formatSessionTime,
+  middayOf,
+  parseDateKey,
+  useExperienceSessions,
+} from "@/lib/queries/sessions";
 
 function formatPrice(amount: number, currency: string) {
   return new Intl.NumberFormat("en-NG", {
@@ -26,29 +34,10 @@ function formatPrice(amount: number, currency: string) {
   }).format(amount);
 }
 
-// itin's Experience model has a single `start_time` field, not multiple
-// selectable slots — these 3 are placeholder options matching the
-// reference screenshots until a real slots concept exists server-side.
-const TIME_SLOTS = ["06:00AM", "07:00AM", "09:00AM"];
-
-function combineDateAndTime(date: Date, timeLabel: string): string | null {
-  const match = /^(\d{1,2}):(\d{2})(AM|PM)$/i.exec(timeLabel.trim());
-  if (!match) return null;
-  let hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
-  const period = match[3].toUpperCase();
-  if (period === "PM" && hours !== 12) hours += 12;
-  if (period === "AM" && hours === 12) hours = 0;
-  const combined = new Date(date);
-  combined.setHours(hours, minutes, 0, 0);
-  return combined.toISOString();
-}
-
-function getSuggestedDate(fixedDate?: Date | null): Date {
-  if (fixedDate) return fixedDate;
+function tomorrowKey(): string {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow;
+  return dateKey(tomorrow);
 }
 
 const UNIT_SUFFIX: Record<PricingUnit, string> = {
@@ -160,8 +149,11 @@ export function ExperienceBookingPanel({
   const maxSpots = availableSpots ?? 10;
   const minParticipants = Math.max(1, minSpots ?? 1);
   const { data: pricing } = useExperiencePricing(experienceId);
-  const [selectedTime, setSelectedTime] = useState<string | null>(TIME_SLOTS[0] ?? "06:00AM");
-  const [selectedDate, setSelectedDate] = useState<Date | null>(() => getSuggestedDate(eventStartDate));
+  const { data: sessionData } = useExperienceSessions(experienceId);
+  // The day ("YYYY-MM-DD") and session picked; until then the first open
+  // session (or, without a schedule, the event date or tomorrow) is used.
+  const [pickedDay, setPickedDay] = useState<string | null>(null);
+  const [pickedSessionAt, setPickedSessionAt] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   // Quantities the customer has set; tickets they haven't touched fall back
   // to the defaults below.
@@ -203,8 +195,36 @@ export function ExperienceBookingPanel({
   const guests = tickets.reduce((sum, t) => sum + quantityOf(t.id), 0);
   const needsDays = tickets.some((t) => t.pricing_unit === "per_day" && quantityOf(t.id) > 0);
 
-  const requestedDatetime =
-    selectedDate && selectedTime ? combineDateAndTime(selectedDate, selectedTime) : null;
+  // Sessions come from the admin's schedule; the API rejects any other time.
+  const scheduled = sessionData?.scheduled ?? false;
+  const byDate = useMemo(() => {
+    const map = new Map<string, ExperienceSession[]>();
+    for (const s of sessionData?.sessions ?? []) {
+      map.set(s.local_date, [...(map.get(s.local_date) ?? []), s]);
+    }
+    return map;
+  }, [sessionData]);
+  const hasOpenSession = (day: string) => (byDate.get(day) ?? []).some((s) => !s.sold_out);
+  const firstOpenDay = [...byDate.keys()].find(hasOpenSession) ?? null;
+  const eventDay = eventStartDate ? dateKey(eventStartDate) : null;
+  const selectedDay =
+    pickedDay ??
+    (scheduled
+      ? firstOpenDay
+      : eventDay && eventDay > tomorrowKey()
+        ? eventDay
+        : tomorrowKey());
+  const daySessions = scheduled && selectedDay ? (byDate.get(selectedDay) ?? []) : [];
+  const session =
+    daySessions.find((s) => s.starts_at === pickedSessionAt && !s.sold_out) ??
+    daySessions.find((s) => !s.sold_out) ??
+    null;
+  const requestedDatetime = scheduled
+    ? (session?.starts_at ?? null)
+    : selectedDay
+      ? middayOf(selectedDay)
+      : null;
+  const isDateEnabled = scheduled ? (date: Date) => hasOpenSession(dateKey(date)) : undefined;
   const selection: PricingSelection | null = useMemo(() => {
     const items = tickets
       .map((t) => ({ experience_price_id: t.id, quantity: quantityOf(t.id) }))
@@ -233,16 +253,15 @@ export function ExperienceBookingPanel({
   }, [selectionKey]);
 
   const isReady =
-    !!selectedTime &&
-    !!selectedDate &&
+    !!requestedDatetime &&
     !!selection &&
     guests >= minParticipants &&
     guests <= maxSpots &&
     !!quote &&
     !quoteFailed;
   const total = quote ? Number(quote.total) : 0;
-  const dateLabel = selectedDate
-    ? selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric" })
+  const dateLabel = selectedDay
+    ? parseDateKey(selectedDay).toLocaleDateString("en-US", { month: "long", day: "numeric" })
     : "Select dates";
 
   const setQuantity = (ticketId: string, value: number) =>
@@ -305,26 +324,48 @@ export function ExperienceBookingPanel({
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="font-sans text-sm font-normal text-[#130404]">
-          Select a starting time and your preferred date
-        </span>
-        <div className="flex gap-2">
-          {TIME_SLOTS.map((slot) => (
-            <button
-              key={slot}
-              type="button"
-              onClick={() => setSelectedTime(slot)}
-              className={cn(
-                "flex-1 rounded-[12px] border px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
-                selectedTime === slot
-                  ? "border-transparent bg-[#2C0101] text-white"
-                  : "border-[#E0DFDD] bg-white text-[#130404] hover:bg-[#F4F2EE]"
-              )}
-            >
-              {slot}
-            </button>
-          ))}
-        </div>
+        {scheduled && byDate.size === 0 ? (
+          <span className="font-sans text-sm text-[#130404]">
+            No upcoming sessions yet. Check back soon.
+          </span>
+        ) : scheduled ? (
+          <>
+            <span className="font-sans text-sm font-normal text-[#130404]">
+              Select your preferred date and a starting time
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {daySessions.map((s) => {
+                const note = s.sold_out
+                  ? "Sold out"
+                  : s.seats_left !== null && s.seats_left <= 5
+                    ? `${s.seats_left} left`
+                    : null;
+                return (
+                  <button
+                    key={s.starts_at}
+                    type="button"
+                    disabled={s.sold_out}
+                    onClick={() => setPickedSessionAt(s.starts_at)}
+                    className={cn(
+                      "flex-1 rounded-[12px] border px-3 py-2 text-sm font-medium transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40",
+                      session?.starts_at === s.starts_at
+                        ? "border-transparent bg-[#2C0101] text-white"
+                        : "border-[#E0DFDD] bg-white text-[#130404] hover:bg-[#F4F2EE]"
+                    )}
+                  >
+                    {formatSessionTime(s.local_time)}
+                    {note && <span className="block text-[10px] font-normal">{note}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="text-xs text-[#6F6B72]">Times are local to the experience.</span>
+          </>
+        ) : (
+          <span className="font-sans text-sm font-normal text-[#130404]">
+            Select your preferred date. The host will confirm the start time with you.
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -415,11 +456,17 @@ export function ExperienceBookingPanel({
         {calendarOpen && (
           <div className="absolute top-[calc(100%+8px)] left-0 z-50 w-full min-w-[320px] rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
             <DatePickerCalendar
-              selectedDate={selectedDate}
-              minDate={new Date()}
-              presets={computeDatePresets()}
+              selectedDate={selectedDay ? parseDateKey(selectedDay) : null}
+              minDate={scheduled ? new Date() : parseDateKey(tomorrowKey())}
+              isDateEnabled={isDateEnabled}
+              presets={computeDatePresets().filter(
+                (p) =>
+                  (!isDateEnabled || isDateEnabled(p.date)) &&
+                  (scheduled || dateKey(p.date) >= tomorrowKey())
+              )}
               onSelect={(date) => {
-                setSelectedDate(date);
+                setPickedDay(dateKey(date));
+                setPickedSessionAt(null);
                 setCalendarOpen(false);
               }}
             />
