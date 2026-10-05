@@ -17,6 +17,8 @@ export interface DatePickerCalendarProps {
   presets?: DatePickerPreset[];
   /** Days before this are shown greyed-out and unclickable — both call sites want "no past dates". */
   minDate?: Date;
+  /** Only days this returns true for can be picked (e.g. session dates). */
+  isDateEnabled?: (date: Date) => boolean;
   className?: string;
 }
 
@@ -59,6 +61,7 @@ export function DatePickerCalendar({
   onSelect,
   presets,
   minDate,
+  isDateEnabled,
   className,
 }: DatePickerCalendarProps) {
   const [viewDate, setViewDate] = useState<Date>(selectedDate ?? new Date());
@@ -128,7 +131,8 @@ export function DatePickerCalendar({
             const day = i + 1;
             const date = new Date(year, month, day);
             const isSelected = !!selectedDate && isSameDay(date, selectedDate);
-            const isDisabled = !!minDay && date < minDay;
+            const isDisabled =
+              (!!minDay && date < minDay) || (!!isDateEnabled && !isDateEnabled(date));
             return (
               <div key={day} className="flex items-center justify-center">
                 <button
