@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { LanguageCurrencySection } from "@/components/account settings/language-currency";
 import { LoginSecuritySection } from "@/components/account settings/login-security";
 import { NotificationsSection } from "@/components/account settings/notifications";
@@ -14,7 +15,11 @@ import { SettingsHeader } from "@/components/account settings/settings-header";
 const SECTION_LOAD_DELAY = 700;
 
 export function ProfileView() {
-  const [active, setActive] = useState("personal");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab = SETTINGS_NAV_ITEMS.some((item) => item.key === tabParam) ? tabParam! : "personal";
+
+  const [active, setActive] = useState(initialTab);
   const [loading, setLoading] = useState(true);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
