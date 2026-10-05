@@ -1,28 +1,35 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth/session-store";
 
-// Figma: "Why book with us" (2001:9144 guest / 2001:9155 account) —
+// Figma: "Why book with us" (150:2897) —
 // identical content between the two states, Get started button hidden when authenticated.
 const features = [
   {
     title: "Curated, not just listed",
     description: "Every experience is picked for quality, not just popularity. No filler, no guesswork",
+    icon: "/images/home/why-book-with-us/Curated-not-listed.jpg",
   },
   {
     title: "Payment protection",
     description: "Book and pay securely through MyJourny. Your money's safe until the experience happens.",
+    icon: "/images/home/why-book-with-us/Payment-protection.jpg",
   },
   {
     title: "Verified hosts",
     description: "Every host is vetted, reviewed, and held to a standard. Quality is rewarded, not gamed.",
+    icon: "/images/home/why-book-with-us/Verified-hosts.jpg",
+    compactDescriptionOnMobile: true,
   },
   {
     title: "Made for you",
     description: "Recommendations that actually fit your taste, not a generic 'top 10' list everyone sees.",
+    icon: "/images/home/why-book-with-us/Made-for-you.jpg",
+    compactDescriptionOnMobile: true,
   },
 ];
 
@@ -56,12 +63,20 @@ export function WhyBookWithUsSection() {
       <div className="mt-8 grid grid-cols-1 gap-8 lg:mt-14 lg:grid-cols-2 lg:gap-x-[105px] lg:gap-y-[61px]">
         {features.map((feature) => (
           <div key={feature.title} className="flex items-start gap-[18px]">
-            <div className="mt-1 h-[92px] w-[104px] shrink-0 rounded-2xl bg-[#731727] lg:mt-0" aria-hidden />
+            <div className="relative mt-1 size-[95px] shrink-0 overflow-hidden rounded-[13.7px] border border-[#F4F2EE] lg:mt-0">
+              <Image src={feature.icon} alt="" fill className="object-cover" />
+            </div>
             <div className="flex flex-col gap-[7px] lg:gap-1.5">
               <h3 className="font-heading text-lg font-semibold leading-[27px] text-[#130404] lg:text-[22px] lg:leading-[33px]">
                 {feature.title}
               </h3>
-              <p className="font-sans text-base leading-[24px] text-[#6F6B72]">{feature.description}</p>
+              <p
+                className={`font-sans text-base leading-[24px] text-[#6F6B72] ${
+                  feature.compactDescriptionOnMobile ? "max-lg:text-sm max-lg:leading-[22px]" : ""
+                }`}
+              >
+                {feature.description}
+              </p>
             </div>
           </div>
         ))}
