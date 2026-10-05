@@ -8,7 +8,10 @@ interface InterstitialScreenProps {
   heading: string;
   subtitle: string;
   primaryLabel: string;
-  primaryHref: string;
+  /** Either a link target or a click handler for the main button. */
+  primaryHref?: string;
+  primaryOnClick?: () => void;
+  primaryDisabled?: boolean;
   secondaryLabel?: string;
   secondaryHref?: string;
   /**
@@ -27,6 +30,8 @@ export function InterstitialScreen({
   subtitle,
   primaryLabel,
   primaryHref,
+  primaryOnClick,
+  primaryDisabled,
   secondaryLabel,
   secondaryHref,
   illustration,
@@ -58,7 +63,9 @@ export function InterstitialScreen({
         <Button
           size="cta"
           className="w-full h-auto py-3 px-4 gap-[10px] rounded-[200px] bg-[#2C0101] text-white hover:bg-[#2C0101]/90"
-          render={<Link href={primaryHref} />}
+          {...(primaryOnClick
+            ? { onClick: primaryOnClick, disabled: primaryDisabled }
+            : { render: <Link href={primaryHref ?? "/"} /> })}
         >
           {primaryLabel}
         </Button>
