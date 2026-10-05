@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import { useState } from 'react';
+import { LayoutGroup } from 'motion/react';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
@@ -22,8 +23,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          {children}
-          <Toaster richColors position="top-right" />
+          <LayoutGroup id="myjourny-global-layout">
+            {children}
+            <Toaster richColors position="top-right" />
+          </LayoutGroup>
         </TooltipProvider>
       </QueryClientProvider>
     </GoogleOAuthProvider>

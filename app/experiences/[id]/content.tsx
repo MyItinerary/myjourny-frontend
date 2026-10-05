@@ -27,6 +27,8 @@ import {
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
 import { useSavedExperienceIds, useToggleSaved } from "@/lib/queries/saved";
+import { useMyWishlistedIds } from "@/lib/queries/wishlists";
+import { SaveToCollectionModal } from "@/components/wishlists/save-to-collection-modal";
 import { cn } from "@/lib/utils";
 
 // "YYYY-MM-DD" (itin's event_start_date) parsed as a local date, not UTC —
@@ -74,10 +76,10 @@ export function ExperienceDetailContent({ id }: { id: string }) {
     .filter((m) => m.experience_id !== id)
     .map(experienceMatchToCardProps);
 
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
   const { data: savedIds } = useSavedExperienceIds();
-  const toggleSaved = useToggleSaved();
-  const isSaved = savedIds?.has(id) ?? false;
-  const handleToggleSaved = () => toggleSaved.mutate({ experienceId: id, isSaved });
+  const { data: wishlistIds } = useMyWishlistedIds();
+  const isSaved = (savedIds?.has(id) || wishlistIds?.has(id)) ?? false;
 
   if (isLoading) {
     return (
@@ -131,8 +133,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           <button
             type="button"
             aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
-            onClick={handleToggleSaved}
-            className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm"
+            onClick={() => setSaveModalOpen(true)}
+            className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm cursor-pointer"
           >
             <Heart className={cn("size-[18px]", isSaved ? "fill-brand text-brand" : "text-foreground")} />
           </button>
@@ -154,7 +156,11 @@ export function ExperienceDetailContent({ id }: { id: string }) {
         <div className="mt-2 hidden items-start justify-between gap-4 lg:flex">
           <h1 className="font-heading text-[32px] font-extrabold text-foreground">{experience.title}</h1>
           <div className="flex shrink-0 items-center gap-4 pt-2 text-sm font-medium text-foreground">
-            <button type="button" onClick={handleToggleSaved} className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setSaveModalOpen(true)}
+              className="flex items-center gap-1.5 cursor-pointer"
+            >
               <Heart className={cn("size-4", isSaved && "fill-brand text-brand")} />
               {isSaved ? "Saved" : "Add to wishlist"}
             </button>
@@ -208,7 +214,16 @@ export function ExperienceDetailContent({ id }: { id: string }) {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
                     <span className="font-sans text-[16px] font-medium leading-[24px] text-[#333134]">
-                      {experience.host?.display_name ?? "Your host"}
+                      {experience.host?.id ? (
+                        <Link
+                          href={`/guides/${experience.host.id}`}
+                          className="hover:text-brand hover:underline transition-colors"
+                        >
+                          {experience.host?.display_name ?? "Your host"}
+                        </Link>
+                      ) : (
+                        experience.host?.display_name ?? "Your host"
+                      )}
                     </span>
                     {experience.host?.is_verified && (
                       <svg
@@ -367,6 +382,14 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           </div>
         </div>
       )}
+
+      {/* Save to Collection Modal */}
+      <SaveToCollectionModal
+        experienceId={id}
+        experienceTitle={experience.title}
+        isOpen={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+      />
     </div>
   );
 }

@@ -56,7 +56,10 @@ apiClient.interceptors.response.use(
         original.headers.Authorization = `Bearer ${newToken}`;
         return apiClient(original);
       }
-      redirectToLogin();
+      const { accessToken, refreshToken } = getTokens();
+      if (accessToken || refreshToken) {
+        redirectToLogin();
+      }
     }
     return Promise.reject(error);
   }
