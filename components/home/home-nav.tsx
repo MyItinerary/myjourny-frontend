@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   ChevronRight,
@@ -37,6 +37,41 @@ import { SearchBar } from "@/components/home/search-bar";
 export function HomeNav({ className }: { className?: string }) {
   const { user } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+  const currentPathTab = pathname?.startsWith("/wishlists") || pathname === "/wishlist"
+    ? "wishlist"
+    : pathname === "/" || pathname === ""
+      ? "home"
+      : pathname?.startsWith("/explore")
+        ? "explore"
+        : null;
+
+  const [activeTab, setActiveTab] = useState<string | null>(currentPathTab);
+
+  useEffect(() => {
+    setActiveTab(currentPathTab);
+  }, [currentPathTab]);
+
+  const navItems = [
+    {
+      id: "home",
+      label: "Home",
+      href: "/",
+      Icon: HomeSmileIcon,
+    },
+    {
+      id: "wishlist",
+      label: "Wishlist",
+      href: user ? "/wishlists" : "/login",
+      Icon: HeartIcon,
+    },
+    {
+      id: "explore",
+      label: "Explore",
+      href: "#",
+      Icon: ImageIcon,
+    },
+  ];
   const logout = useLogout();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -159,35 +194,74 @@ export function HomeNav({ className }: { className?: string }) {
               <AnimatePresence mode="wait">
                 {!isScrolled ? (
                   <motion.nav
+                    layout
                     key="primary-nav"
                     initial={{ opacity: 0, scale: 0.88, y: -6 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.88, y: -6 }}
                     transition={{ duration: 0.22, ease: "easeOut" }}
                     aria-label="Primary"
-                    className="flex items-center gap-4 rounded-full bg-white p-2 shadow-[0_1px_8px_rgba(0,0,0,0.08)]"
+                    className="flex items-center gap-2 rounded-full bg-white p-2 shadow-[0_1px_8px_rgba(0,0,0,0.08)]"
                   >
-                    <Link
-                      href="/"
-                      className="flex h-[43px] items-center gap-2 rounded-full bg-brand px-4 text-base font-medium text-white"
-                    >
-                      <HomeSmileIcon className="size-[18px]" />
-                      Home
-                    </Link>
-                    <Link
-                      href={user ? "/wishlists" : "/login"}
-                      aria-label="Wishlists"
-                      className="flex size-[43px] items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                    >
-                      <HeartIcon className="size-[18px]" />
-                    </Link>
-                    <Link
-                      href="#"
-                      aria-label="Explore"
-                      className="flex size-[43px] items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                    >
-                      <ImageIcon className="size-[18px]" />
-                    </Link>
+                    {navItems.map((item) => {
+                      const isActive = activeTab === item.id;
+                      return (
+                        <Link
+                          key={item.id}
+                          href={item.href}
+                          onClick={() => setActiveTab(item.id)}
+                          aria-label={item.label}
+                          aria-current={isActive ? "page" : undefined}
+                          className={cn(
+                            "relative flex h-[43px] items-center rounded-full text-base font-medium select-none transition-colors duration-200",
+                            isActive
+                              ? "text-white"
+                              : "text-foreground hover:bg-black/[0.04]"
+                          )}
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="active-nav-indicator"
+                              className="absolute inset-0 rounded-full bg-brand"
+                              transition={{
+                                type: "spring",
+                                stiffness: 380,
+                                damping: 30,
+                              }}
+                            />
+                          )}
+
+                          <motion.div
+                            layout
+                            className={cn(
+                              "relative z-10 flex h-full items-center",
+                              isActive ? "px-4 gap-2" : "w-[43px] justify-center"
+                            )}
+                            transition={{
+                              type: "spring",
+                              stiffness: 380,
+                              damping: 30,
+                            }}
+                          >
+                            <item.Icon className="size-[18px] shrink-0" />
+                            <AnimatePresence initial={false} mode="popLayout">
+                              {isActive && (
+                                <motion.span
+                                  key={item.id}
+                                  initial={{ opacity: 0, scale: 0.85, x: -4 }}
+                                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                                  exit={{ opacity: 0, scale: 0.85, x: -4 }}
+                                  transition={{ duration: 0.16, ease: "easeOut" }}
+                                  className="whitespace-nowrap font-medium"
+                                >
+                                  {item.label}
+                                </motion.span>
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
+                        </Link>
+                      );
+                    })}
                   </motion.nav>
                 ) : !isSearchExpanded ? (
                   /* Compact 3-segment pill matching user specification and screenshot */
