@@ -411,92 +411,92 @@ export function HomeNav({ className }: { className?: string }) {
                     setProfileMenuOpen((prev) => !prev);
                     setNotificationsOpen(false);
                   }}
-                className={cn(
-                  "flex shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
-                  "size-10 sm:size-11 lg:size-12",
-                  isScrolled
-                    ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
-                    : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]",
-                  profileMenuOpen && "ring-2 ring-brand/20 bg-[#F4F2EE]"
-                )}
-                style={{
-                  borderRadius: "12px",
-                  background: profileMenuOpen || isScrolled ? "#F4F2EE" : "#FFF",
-                }}
-              >
-                <HumanNavIcon />
-              </button>
+                  className={cn(
+                    "flex shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
+                    "size-10 sm:size-11 lg:size-12",
+                    isScrolled
+                      ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
+                      : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]",
+                    profileMenuOpen && "ring-2 ring-brand/20 bg-[#F4F2EE]"
+                  )}
+                  style={{
+                    borderRadius: "12px",
+                    background: profileMenuOpen || isScrolled ? "#F4F2EE" : "#FFF",
+                  }}
+                >
+                  <HumanNavIcon />
+                </button>
 
-              {/* Floating Dropdown Card Menu */}
-              <AnimatePresence>
-                {profileMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -6 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -6 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="absolute right-0 top-[calc(100%+12px)] z-50 w-[340px] max-w-[calc(100vw-32px)] rounded-[24px] bg-white p-3 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
-                  >
-                    {/* Item 1: My experiences */}
-                    <Link
-                      href={user ? "/my-experiences" : "/login"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                {/* Floating Dropdown Card Menu */}
+                <AnimatePresence>
+                  {profileMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="absolute right-0 top-[calc(100%+12px)] z-50 w-[340px] max-w-[calc(100vw-32px)] rounded-[24px] bg-white p-3 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
                     >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <ImageIconLucide className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          My experiences
-                        </span>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
-
-                    {/* Item 2: Wishlists */}
-                    <Link
-                      href={user ? "/wishlists" : "/login"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Heart className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Wishlists
-                        </span>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
-
-                    {/* Item 3: Notifications */}
-                    <Link
-                      href={user ? "/notifications" : "/login"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Bell className="size-5" />
-                        </div>
-                        <div className="flex items-center gap-2">
+                      {/* Item 1: My experiences */}
+                      <Link
+                        href={user ? "/my-experiences" : "/login"}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                            <ImageIconLucide className="size-5" />
+                          </div>
                           <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                            Notifications
+                            My experiences
                           </span>
-                          {unreadCount > 0 && (
-                            <span className="rounded-full bg-[#F5032D]/10 px-2 py-0.2 text-[11px] font-bold text-[#F5032D]">
-                              {unreadCount}
-                            </span>
-                          )}
                         </div>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
+                        <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
 
-                    {/* Item 3: Language and Currency */}
-                    <button
+                      {/* Item 2: Wishlists */}
+                      <Link
+                        href={user ? "/wishlists" : "/login"}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                            <Heart className="size-5" />
+                          </div>
+                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                            Wishlists
+                          </span>
+                        </div>
+                        <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
+
+                      {/* Item 3: Notifications */}
+                      <Link
+                        href={user ? "/notifications" : "/login"}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                            <Bell className="size-5" />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                              Notifications
+                            </span>
+                            {unreadCount > 0 && (
+                              <span className="rounded-full bg-[#F5032D]/10 px-2 py-0.2 text-[11px] font-bold text-[#F5032D]">
+                                {unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
+
+                      {/* Item 3: Language and Currency */}
+                      {/* <button
                       type="button"
                       onClick={() => {
                         setProfileMenuOpen(false);
@@ -519,98 +519,98 @@ export function HomeNav({ className }: { className?: string }) {
                         </div>
                       </div>
                       <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </button>
+                    </button> */}
 
-                    {/* Item 4: Account settings */}
-                    <Link
-                      href={user ? "/profile" : "/login"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Settings className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Account settings
-                        </span>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
-
-                    {/* Item 5: Help center */}
-                    <Link
-                      href="#"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <CircleHelp className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Help center
-                        </span>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
-
-                    {/* Divider */}
-                    <div className="my-1.5 h-[1px] w-full bg-[#F0EFEB]" />
-
-                    {/* Item 6: Become a guide */}
-                    <Link
-                      href="#"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Compass className="size-5" />
-                        </div>
-                        <div className="flex flex-col min-w-0 pr-1">
-                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E] leading-snug">
-                            Become a guide
-                          </span>
-                          <span className="font-sans text-[12px] text-[#8C888F] leading-tight mt-0.5">
-                            Make extra income from what you already love doing
+                      {/* Item 4: Account settings */}
+                      <Link
+                        href={user ? "/profile" : "/login"}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                            <Settings className="size-5" />
+                          </div>
+                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                            Account settings
                           </span>
                         </div>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
+                        <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
 
-                    {/* Divider */}
-                    <div className="my-1.5 h-[1px] w-full bg-[#F0EFEB]" />
-
-                    {/* Item 7: Logout */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        if (user) {
-                          logout.mutate(undefined, { onSuccess: () => router.push("/login") });
-                        } else {
-                          router.push("/login");
-                        }
-                      }}
-                      className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Power className="size-5" />
+                      {/* Item 5: Help center */}
+                      <Link
+                        href="#"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                            <CircleHelp className="size-5" />
+                          </div>
+                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                            Help center
+                          </span>
                         </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Logout
-                        </span>
-                      </div>
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
+
+                      {/* Divider */}
+                      <div className="my-1.5 h-[1px] w-full bg-[#F0EFEB]" />
+
+                      {/* Item 6: Become a guide */}
+                      <Link
+                        href="#"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                            <Compass className="size-5" />
+                          </div>
+                          <div className="flex flex-col min-w-0 pr-1">
+                            <span className="font-sans text-[15px] font-medium text-[#1E1E1E] leading-snug">
+                              Become a guide
+                            </span>
+                            <span className="font-sans text-[12px] text-[#8C888F] leading-tight mt-0.5">
+                              Make extra income from what you already love doing
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
+
+                      {/* Divider */}
+                      <div className="my-1.5 h-[1px] w-full bg-[#F0EFEB]" />
+
+                      {/* Item 7: Logout */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          if (user) {
+                            logout.mutate(undefined, { onSuccess: () => router.push("/login") });
+                          } else {
+                            router.push("/login");
+                          }
+                        }}
+                        className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
+                            <Power className="size-5" />
+                          </div>
+                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
+                            Logout
+                          </span>
+                        </div>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
-        </div>
 
           {/* Expanded Search Bar Container inside the Fixed Navbar */}
           <AnimatePresence>
