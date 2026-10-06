@@ -16,12 +16,16 @@ import { Button } from "@/components/ui/button";
 
 const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
 
+// 3-column grid: 15 = 5 full rows per page.
+const PAGE_SIZE = 15;
+
 export function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
 
   const [searchInput, setSearchInput] = useState(initialQuery);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [selectedExpForSave, setSelectedExpForSave] = useState<{
     id: string;
     title: string;
@@ -35,6 +39,7 @@ export function SearchContent() {
     e.preventDefault();
     const trimmed = searchInput.trim();
     if (!trimmed) return;
+    setVisibleCount(PAGE_SIZE);
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   };
 
@@ -118,8 +123,9 @@ export function SearchContent() {
             </p>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-10">
-            {results.map((exp: SemanticSearchResult) => (
+            {results.slice(0, visibleCount).map((exp: SemanticSearchResult) => (
               <div key={exp.experience_id} className="relative group">
                 <ExperienceCardVertical
                   id={exp.experience_id}
@@ -144,6 +150,18 @@ export function SearchContent() {
               </div>
             ))}
           </div>
+          {results.length > visibleCount && (
+            <div className="mt-10 flex justify-center">
+              <Button
+                type="button"
+                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                className="h-12 w-[134px] rounded-full bg-brand text-base font-medium text-white hover:bg-brand/90 cursor-pointer"
+              >
+                Show more
+              </Button>
+            </div>
+          )}
+          </>
         )}
       </main>
 
