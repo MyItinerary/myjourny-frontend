@@ -1,36 +1,49 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 
-// Matches itin's BookingOut DTO (app/core/dto/booking.py).
+// Matches itin's BookingOut DTO (app/core/dto/booking.py) and GET /bookings/me response.
 export type Booking = {
   id: string;
+  user_id?: string;
+  guide_id?: string | null;
   experience_id?: string | null;
+  experience_title?: string | null;
+  experience_cover_image_url?: string | null;
+  experience_price_id?: string | null;
+  trip_id?: string | null;
   status: "pending" | "confirmed" | "cancelled" | "completed" | "expired";
   payment_status: "unpaid" | "paid" | "refunded" | "partial";
+  payout_status?: string | null;
+  paystack_reference?: string | null;
   requested_datetime?: string | null;
+  duration_hours?: string | null;
   party_size?: number | null;
   price_total?: string | null;
-  currency?: string | null;
-  url?: string | null;
-  hold_expires_at?: string | null;
   subtotal_amount?: string | null;
   discount_amount?: string | null;
   checkout_fee_amount?: string | null;
   refunded_amount?: string | null;
+  days?: number | null;
+  currency?: string | null;
   line_items?: {
-    kind: "ticket" | "addon" | "discount" | "fee";
+    kind?: string;
     label: string;
     quantity: number;
+    unit_amount?: string;
     amount: string;
   }[];
+  url?: string | null;
+  hold_expires_at?: string | null;
   // The experience's cancellation policy as shown when this was booked.
   cancellation_policy_snapshot?: string | null;
   cancelled_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 // A cancellation request (itin's RefundRequestOut). Support decides the
@@ -147,3 +160,53 @@ export function useRequestCancellation(bookingId: string) {
       toast.error(apiErrorMessage(error, "Couldn't send your cancellation request. Please try again.")),
   });
 }
+
+// GET /bookings/ — list all bookings for the authenticated user.
+export function useUserBookings(status?: string) {
+  const { user } = useSession();
+  return useQuery({
+    queryKey: ["bookings", "user-list", status],
+    queryFn: async () => {
+      const { data } = await apiClient.get<Booking[]>("/bookings/", {
+        params: status ? { status } : undefined,
+      });
+      return data;
+    },
+    enabled: !!user,
+  });
+}
+
+export type MyExperiencesTab = "upcoming" | "past" | "cancelled";
+
+export type MyBookingsResponse = {
+  items: Booking[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+};
+
+// GET /bookings/me?tab=...&limit=...&offset=...
+// Returns the logged-in traveller's bookings for one tab, one page at a time.
+export function useMyBookings(tab: MyExperiencesTab, limit = 12) {
+  const { user } = useSession();
+  return useInfiniteQuery({
+    queryKey: ["bookings", "me", tab],
+    queryFn: async ({ pageParam = 0 }) => {
+      const { data } = await apiClient.get<MyBookingsResponse>("/bookings/me", {
+        params: {
+          tab,
+          limit,
+          offset: pageParam,
+        },
+      });
+      return data;
+    },
+    initialPageParam: 0,
+    getNextPageParam: (last) =>
+      last.has_more ? last.offset + last.items.length : undefined,
+    enabled: !!user,
+  });
+}
+
+

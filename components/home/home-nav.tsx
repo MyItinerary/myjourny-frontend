@@ -40,10 +40,10 @@ export function HomeNav({ className }: { className?: string }) {
   const pathname = usePathname();
   const currentPathTab = pathname?.startsWith("/wishlists") || pathname === "/wishlist"
     ? "wishlist"
-    : pathname === "/" || pathname === ""
-      ? "home"
-      : pathname?.startsWith("/explore")
-        ? "explore"
+    : pathname?.startsWith("/my-experiences") || pathname?.startsWith("/bookings")
+      ? "experiences"
+      : pathname === "/" || pathname === ""
+        ? "home"
         : null;
 
   const [activeTab, setActiveTab] = useState<string | null>(currentPathTab);
@@ -66,9 +66,9 @@ export function HomeNav({ className }: { className?: string }) {
       Icon: HeartIcon,
     },
     {
-      id: "explore",
-      label: "Explore",
-      href: "#",
+      id: "experiences",
+      label: "My experiences",
+      href: user ? "/my-experiences" : "/login",
       Icon: ImageIcon,
     },
   ];
@@ -439,7 +439,7 @@ export function HomeNav({ className }: { className?: string }) {
                   >
                     {/* Item 1: My experiences */}
                     <Link
-                      href={user ? "/profile" : "/login"}
+                      href={user ? "/my-experiences" : "/login"}
                       onClick={() => setProfileMenuOpen(false)}
                       className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
                     >
