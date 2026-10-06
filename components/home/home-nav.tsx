@@ -8,7 +8,7 @@ import { Bell, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { CalendarOneIcon, PlaneNavIcon, UsersTwoNavIcon } from "@/components/icons/nav-icons";
+import { PlaneNavIcon } from "@/components/icons/nav-icons";
 import { useSession } from "@/lib/auth/session-store";
 import { useLogout } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
@@ -90,6 +90,30 @@ function MenuRow({
     </button>
   );
 }
+
+// Scrolled-state search pill (Figma 2303:1016): the artwork is cropped to a
+// 37×26 window inside a 32.667px box.
+function CompactArt({ src }: { src: string }) {
+  return (
+    <span className="relative block size-[32.667px] shrink-0">
+      <span className="absolute left-[-2.17px] top-[3.33px] block h-[26px] w-[37px] overflow-hidden">
+        <Image
+          src={src}
+          alt=""
+          width={36}
+          height={36}
+          className="absolute left-[calc(50%+0.37px)] top-[-4.88px] size-[35.75px] max-w-none -translate-x-1/2"
+        />
+      </span>
+    </span>
+  );
+}
+
+const COMPACT_SEARCH_TABS = [
+  { id: "where", label: "Where/What", icon: "/icons/nav/search-where.png" },
+  { id: "when", label: "When", icon: "/icons/nav/search-when.png" },
+  { id: "who", label: "Who", icon: "/icons/nav/search-who.png" },
+] as const;
 
 export function HomeNav({ className }: { className?: string }) {
   const { user } = useSession();
@@ -328,52 +352,32 @@ export function HomeNav({ className }: { className?: string }) {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 6 }}
                     transition={{ duration: 0.22, ease: "easeOut" }}
-                    className="flex h-[52px] items-center rounded-full bg-[#F4F2EE] px-2 py-1 shadow-xs transition-all duration-200 hover:shadow-sm"
+                    className="flex items-center gap-[9px] rounded-[57px] bg-[#F4F2EE] px-[10px] py-[5px] transition-shadow duration-200 hover:shadow-sm"
                   >
-                    {/* Where/What */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSearch("where")}
-                      className="flex h-full items-center gap-2.5 rounded-l-full pl-4 pr-3.5 font-sans text-[14px] font-medium text-[#333134] transition-colors hover:bg-black/5 cursor-pointer"
-                    >
-                      <PlaneNavIcon className="size-4 text-[#6F6B72]" />
-                      <span>Where/What</span>
-                    </button>
-
-                    {/* Divider */}
-                    <span className="h-4 w-[1px] bg-[#E0DFDD]" />
-
-                    {/* When */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSearch("when")}
-                      className="flex h-full items-center gap-2.5 px-3.5 font-sans text-[14px] font-medium text-[#333134] transition-colors hover:bg-black/5 cursor-pointer"
-                    >
-                      <CalendarOneIcon className="size-4 text-[#6F6B72]" />
-                      <span>When</span>
-                    </button>
-
-                    {/* Divider */}
-                    <span className="h-4 w-[1px] bg-[#E0DFDD]" />
-
-                    {/* Who */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSearch("who")}
-                      className="flex h-full items-center gap-2.5 px-3.5 font-sans text-[14px] font-medium text-[#333134] transition-colors hover:bg-black/5 cursor-pointer"
-                    >
-                      <UsersTwoNavIcon className="size-4 text-[#6F6B72]" />
-                      <span>Who</span>
-                    </button>
+                    <div className="flex items-center">
+                      {COMPACT_SEARCH_TABS.map((tab, index) => (
+                        <div key={tab.id} className="flex items-center">
+                          {index > 0 && <span aria-hidden className="h-[33px] w-px bg-[#B2B2B2]" />}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenSearch(tab.id)}
+                            className="flex items-center gap-2 rounded-full px-4 py-2 font-sans text-[14px] font-medium leading-[21px] text-[#6F6B72] transition-colors hover:bg-black/5 cursor-pointer"
+                          >
+                            <CompactArt src={tab.icon} />
+                            <span>{tab.label}</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
 
                     {/* Red Search Button */}
                     <button
                       type="button"
                       aria-label="Search"
                       onClick={() => handleOpenSearch("where")}
-                      className="ml-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-xs transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                      className="flex size-11 shrink-0 items-center justify-center rounded-[23px] bg-brand transition-transform hover:scale-105 active:scale-95 cursor-pointer"
                     >
-                      <Search className="size-4 stroke-[2.5]" />
+                      <Image src="/icons/nav/search-lg.svg" alt="" width={20} height={20} unoptimized />
                     </button>
                   </motion.div>
                 ) : null}
