@@ -41,9 +41,7 @@ export function CityContent({ cityName, country }: { cityName: string; country: 
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="hidden lg:block">
-        <HomeNav />
-      </div>
+      <HomeNav />
 
       <div className="flex items-center gap-3 px-6 py-4 lg:hidden">
         <Link
@@ -115,6 +113,7 @@ export function CityContent({ cityName, country }: { cityName: string; country: 
         items={beyondItems}
         isLoading={isAccount && beyondQuery.isFetching}
         cardVariant="vertical"
+        mobileArrowsBelow
         wide
       />
 
