@@ -62,7 +62,7 @@ export function HomeNav({ className }: { className?: string }) {
     {
       id: "wishlist",
       label: "Wishlist",
-      href: user ? "/wishlists" : "/login",
+      href: "/wishlists",
       Icon: HeartIcon,
     },
     {
@@ -456,7 +456,7 @@ export function HomeNav({ className }: { className?: string }) {
 
                     {/* Item 2: Wishlists */}
                     <Link
-                      href={user ? "/wishlists" : "/login"}
+                      href="/wishlists"
                       onClick={() => setProfileMenuOpen(false)}
                       className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
                     >
