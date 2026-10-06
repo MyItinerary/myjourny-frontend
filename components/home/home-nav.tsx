@@ -251,7 +251,7 @@ export function HomeNav({ className }: { className?: string }) {
               <AnimatePresence mode="wait">
                 {!isScrolled ? (
                   <motion.nav
-                    layout
+                    layout="position"
                     key="primary-nav"
                     initial={{ opacity: 0, scale: 0.88, y: -6 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -289,7 +289,7 @@ export function HomeNav({ className }: { className?: string }) {
                           )}
 
                           <motion.div
-                            layout
+                            layout="position"
                             className={cn(
                               "relative z-10 flex h-full items-center",
                               isActive ? "px-4 gap-2" : "w-12 justify-center"
