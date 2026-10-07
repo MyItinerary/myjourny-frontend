@@ -150,8 +150,9 @@ export function SearchContent() {
             <div className="mt-10 flex justify-center">
               <Button
                 type="button"
+                size="cta"
                 onClick={() => setPaging({ query: initialQuery, count: visibleCount + PAGE_SIZE })}
-                className="h-12 w-[134px] rounded-full bg-brand text-base font-medium text-white hover:bg-brand/90 cursor-pointer"
+                className="w-[134px]"
               >
                 Show more
               </Button>
