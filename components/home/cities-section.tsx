@@ -18,12 +18,9 @@ import { cn } from "@/lib/utils";
 export function CitiesSection({
   cities,
   variant = "home",
-  isAccount = false,
 }: {
   cities: City[];
   variant?: "home" | "category";
-  /** Tiles only link to /cities/{id} when true — that page has nothing real to show a guest (same login-gate as the rest of the real homepage data). */
-  isAccount?: boolean;
 }) {
   const visibleCount = variant === "category" ? 10 : 8;
   const [expanded, setExpanded] = useState(false);
@@ -79,14 +76,10 @@ export function CitiesSection({
             const tileClassName =
               "group relative h-[170px] w-[251px] overflow-hidden rounded-2xl bg-muted transition-transform duration-300 hover:-translate-y-1 lg:w-auto";
 
-            return isAccount ? (
-              <Link key={city.id} href={`/cities/${city.id}`} className={tileClassName}>
+            return (
+              <Link key={city.id} href={`/cities/${city.id}`} aria-label={city.name} className={tileClassName}>
                 {tile}
               </Link>
-            ) : (
-              <div key={city.id} className={tileClassName}>
-                {tile}
-              </div>
             );
           })}
         </div>

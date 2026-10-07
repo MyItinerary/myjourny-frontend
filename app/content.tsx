@@ -159,7 +159,7 @@ export function HomeContent() {
       )}
 
       <Reveal>
-        <CitiesSection cities={cities} isAccount={isAccount} />
+        <CitiesSection cities={cities} />
       </Reveal>
 
       {isAccount ? (

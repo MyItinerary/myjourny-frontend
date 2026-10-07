@@ -39,6 +39,8 @@ interface ExperienceRailSectionProps {
   isLoading?: boolean;
   /** Vertical variant only. Overrides the default 1512px-grid outer container — pages that don't live on that grid (e.g. the 1200px experience detail page) pass their own matching container so the section lines up with the rest of their content instead of the homepage's margins. */
   containerClassName?: string;
+  /** Vertical variant only. On mobile, puts the prev/next arrows under the cards (city page, Figma 2364:36066) instead of under the subtitle. */
+  mobileArrowsBelow?: boolean;
   /** Vertical variant only. Must match containerClassName's right padding so the carousel's right-edge bleed lines up (defaults to the homepage's -mr-6/-lg:mr-[...] pairing). */
   bleedClassName?: string;
 }
@@ -64,6 +66,7 @@ export function ExperienceRailSection({
   isLoading = false,
   containerClassName,
   bleedClassName,
+  mobileArrowsBelow = false,
 }: ExperienceRailSectionProps) {
   const headingBlock = (center: boolean) => (
     <div
@@ -99,7 +102,7 @@ export function ExperienceRailSection({
           <Carousel opts={{ align: "start", dragFree: true }}>
             <div className="flex flex-col gap-[15px] lg:flex-row lg:items-start lg:justify-between lg:gap-4">
               {headingBlock(false)}
-              <div className="flex shrink-0 items-center gap-1">
+              <div className={cn("shrink-0 items-center gap-1", mobileArrowsBelow ? "hidden lg:flex" : "flex")}>
                 <CarouselPrevious className="static size-10 translate-y-0 border-0 bg-[#fafafa] text-foreground hover:bg-muted" />
                 <CarouselNext className="static size-10 translate-y-0 border-0 bg-brand text-white hover:bg-brand/90" />
               </div>
@@ -131,6 +134,12 @@ export function ExperienceRailSection({
                 </CarouselContent>
               )}
             </div>
+            {mobileArrowsBelow ? (
+              <div className="mt-6 flex items-center gap-1 lg:hidden">
+                <CarouselPrevious className="static size-10 translate-y-0 border-0 bg-[#fafafa] text-foreground hover:bg-muted" />
+                <CarouselNext className="static size-10 translate-y-0 border-0 bg-brand text-white hover:bg-brand/90" />
+              </div>
+            ) : null}
           </Carousel>
         </section>
       </div>
