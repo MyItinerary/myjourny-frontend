@@ -8,6 +8,7 @@ These rules apply to **everyone who pushes code here, people and AI agents alike
 - [Branches, commits and PRs](#branches-commits-and-prs)
 - [What blocks a merge](#what-blocks-a-merge)
 - [Legacy ratchet](#legacy-ratchet)
+- [Who reviews what](#who-reviews-what)
 - [Changing these rules](#changing-these-rules)
 
 ---
@@ -176,7 +177,7 @@ There are two required checks, plus review:
 | | Build | `next build` fails |
 | | E2E tests | A Playwright spec fails |
 | **`pr-format`** | | The title isn't Conventional Commits, the branch name doesn't match, a template section is empty, a box is unticked, or a `feat`/`fix`/`refactor`/`perf` PR changes no test files |
-| Review | | No code-owner approval (repo admins may bypass review only, never the checks) |
+| Review | | No approval yet from a code-owner team. See [Who reviews what](#who-reviews-what). |
 
 `ci` runs its steps in order and stops at the first failure. Open the failed step in the Actions log to see which gate tripped. `npm run check` runs every `ci` step except build and E2E.
 
@@ -194,6 +195,18 @@ Code written before this standard (`lib/queries/*`, `components/<feature>/*`, lo
 
 ---
 
+## Who reviews what
+
+Review ownership is set in `.github/CODEOWNERS` and assigned to GitHub teams, not individuals. A PR needs approval from a team that owns the files it changes. If several teams are listed for a path, approval from any one of them counts. GitHub requests reviews from the owning teams automatically.
+
+| Team | Owns | Approves |
+|---|---|---|
+| `@MyItinerary/frontend-reviewers` | All app code: `features/`, `app/`, `components/`, `lib/`, tests | Day-to-day PRs |
+| `@MyItinerary/frontend-leads` | The guardrails (listed below) | Changes to the rules themselves |
+| `@MyItinerary/engineering-manager` | Everything (co-owner) | Any PR. This is the escalation path when the other teams are unavailable. |
+
+You can't approve your own PR, so at least one other member of an owning team must review it. To join or leave a team, ask a frontend lead.
+
 ## Changing these rules
 
-The guardrails belong to the CTO via `CODEOWNERS`. These are: `.github/`, `eslint.config.mjs`, `scripts/check-architecture.mjs`, the Vitest and Playwright configs, `package.json`, `AGENTS.md`, `CLAUDE.md` and this file. To change one, open a PR with the reason. Weakening a guardrail to get a PR through (lowering a threshold, adding to an allowlist, disabling a rule) will be rejected.
+The guardrails belong to `frontend-leads` and `engineering-manager`. `frontend-reviewers` alone cannot approve changes to them. They are: `.github/`, `eslint.config.mjs`, `scripts/check-architecture.mjs`, the Vitest and Playwright configs, `package.json`/`package-lock.json`, `tsconfig.json`, `AGENTS.md`, `CLAUDE.md`, `.cursor/` and this file. To change one, open a PR with the reason. Weakening a guardrail to get a PR through (lowering a threshold, adding to an allowlist, disabling a rule) will be rejected.

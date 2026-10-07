@@ -4,7 +4,8 @@ import nextTs from "eslint-config-next/typescript";
 
 // ---------------------------------------------------------------------------
 // MVVM boundary rules — see CONTRIBUTING.md ("Architecture").
-// Changing anything in this section requires CTO (CODEOWNERS) approval.
+// Changing anything in this section requires @MyItinerary/frontend-leads or
+// @MyItinerary/engineering-manager approval (CODEOWNERS).
 //
 // Flat config does not merge `no-restricted-imports` across blocks — a later
 // block replaces the rule entirely — so every layer re-declares the global

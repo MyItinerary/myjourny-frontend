@@ -1,18 +1,28 @@
-# Default owner for everything.
-* @Oladiman
+# Code owners for myjourny-frontend. See CONTRIBUTING.md → "Who reviews what".
+#
+# Owners on one line are OR'd: an approval from ANY listed team satisfies the
+# code-owner review. The LAST matching pattern wins, so the guardrails block
+# below overrides the default for those paths.
+#
+#   @MyItinerary/frontend-reviewers  — app code (features, routes, components, lib, tests)
+#   @MyItinerary/frontend-leads      — guardrails (the rules themselves)
+#   @MyItinerary/engineering-manager — co-owner of everything; escalation reviewer
 
-# Guardrails — the rules themselves. Nobody (human or AI) may weaken these
-# without CTO review. Keep this block LAST so it wins over the default above.
-/.github/                        @Oladiman
-/eslint.config.mjs               @Oladiman
-/scripts/check-architecture.mjs  @Oladiman
-/vitest.config.mts               @Oladiman
-/vitest.setup.ts                 @Oladiman
-/playwright.config.ts            @Oladiman
-/package.json                    @Oladiman
-/package-lock.json               @Oladiman
-/tsconfig.json                   @Oladiman
-/AGENTS.md                       @Oladiman
-/CLAUDE.md                       @Oladiman
-/CONTRIBUTING.md                 @Oladiman
-/.cursor/                        @Oladiman
+# Default: all app code.
+*                                @MyItinerary/frontend-reviewers @MyItinerary/engineering-manager
+
+# Guardrails: nobody (human or AI) may weaken these without a lead or the
+# engineering manager. frontend-reviewers alone cannot approve changes here.
+/.github/                        @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/eslint.config.mjs               @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/scripts/check-architecture.mjs  @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/vitest.config.mts               @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/vitest.setup.ts                 @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/playwright.config.ts            @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/package.json                    @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/package-lock.json               @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/tsconfig.json                   @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/AGENTS.md                       @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/CLAUDE.md                       @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/CONTRIBUTING.md                 @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+/.cursor/                        @MyItinerary/frontend-leads @MyItinerary/engineering-manager
