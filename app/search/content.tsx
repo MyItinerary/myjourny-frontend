@@ -24,7 +24,9 @@ export function SearchContent() {
   const initialQuery = searchParams.get("q") ?? "";
 
   const [searchInput, setSearchInput] = useState(initialQuery);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Keyed by query so any new search (this form or the nav) starts at one page.
+  const [paging, setPaging] = useState({ query: initialQuery, count: PAGE_SIZE });
+  const visibleCount = paging.query === initialQuery ? paging.count : PAGE_SIZE;
 
   const { data: results = [], isLoading } = useSemanticSearch({
     q: initialQuery,
@@ -34,7 +36,6 @@ export function SearchContent() {
     e.preventDefault();
     const trimmed = searchInput.trim();
     if (!trimmed) return;
-    setVisibleCount(PAGE_SIZE);
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   };
 
@@ -149,7 +150,7 @@ export function SearchContent() {
             <div className="mt-10 flex justify-center">
               <Button
                 type="button"
-                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                onClick={() => setPaging({ query: initialQuery, count: visibleCount + PAGE_SIZE })}
                 className="h-12 w-[134px] rounded-full bg-brand text-base font-medium text-white hover:bg-brand/90 cursor-pointer"
               >
                 Show more
