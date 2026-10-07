@@ -11,7 +11,6 @@ import {
   formatDuration,
   type SemanticSearchResult,
 } from "@/lib/queries/experiences";
-import { SaveToCollectionModal } from "@/components/wishlists/save-to-collection-modal";
 import { Button } from "@/components/ui/button";
 
 const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
@@ -26,10 +25,6 @@ export function SearchContent() {
 
   const [searchInput, setSearchInput] = useState(initialQuery);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [selectedExpForSave, setSelectedExpForSave] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
 
   const { data: results = [], isLoading } = useSemanticSearch({
     q: initialQuery,
@@ -164,16 +159,6 @@ export function SearchContent() {
           </>
         )}
       </main>
-
-      {/* Save to Collection Modal */}
-      {selectedExpForSave && (
-        <SaveToCollectionModal
-          experienceId={selectedExpForSave.id}
-          experienceTitle={selectedExpForSave.title}
-          isOpen={true}
-          onClose={() => setSelectedExpForSave(null)}
-        />
-      )}
 
       <Footer />
     </div>
