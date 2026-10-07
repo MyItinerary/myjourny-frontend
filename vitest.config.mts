@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 // Unit + component tests (Vitest + React Testing Library + MSW).
 // Coverage thresholds apply to the MVVM `features/` tree only — legacy code is
 // excluded until migrated (see CONTRIBUTING.md, "Legacy ratchet").
-// Changing thresholds requires frontend-leads or engineering-manager approval (CODEOWNERS).
+// Changing thresholds requires engineering-manager approval (CODEOWNERS).
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {

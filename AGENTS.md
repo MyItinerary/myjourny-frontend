@@ -36,7 +36,7 @@ These rules are enforced by CI and branch protection. A PR that breaks them **ca
 3. Fill in **every** section of `.github/pull_request_template.md`. Under "AI assistance", name the agent and what it wrote. Paste the tail of `npm run check` under "How it was tested".
 4. Tick a checklist box only if it is actually true. If an item doesn't apply, write `N/A — <reason>`.
 
-## Never do these unless a frontend lead or the engineering manager explicitly asks
+## Never do these unless the engineering manager explicitly asks
 
 - Edit `eslint.config.mjs`, `scripts/check-architecture.mjs`, the Vitest/Playwright configs, coverage thresholds, `.github/` (workflows, template, CODEOWNERS) or this file.
 - Add `eslint-disable` for `no-restricted-imports`, or add files to a legacy allowlist.

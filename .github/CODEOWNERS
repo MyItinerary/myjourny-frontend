@@ -5,24 +5,23 @@
 # below overrides the default for those paths.
 #
 #   @MyItinerary/frontend-reviewers  — app code (features, routes, components, lib, tests)
-#   @MyItinerary/frontend-leads      — guardrails (the rules themselves)
-#   @MyItinerary/engineering-manager — co-owner of everything; escalation reviewer
+#   @MyItinerary/engineering-manager — co-owner of app code; sole owner of guardrails
 
 # Default: all app code.
 *                                @MyItinerary/frontend-reviewers @MyItinerary/engineering-manager
 
-# Guardrails: nobody (human or AI) may weaken these without a lead or the
-# engineering manager. frontend-reviewers alone cannot approve changes here.
-/.github/                        @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/eslint.config.mjs               @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/scripts/check-architecture.mjs  @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/vitest.config.mts               @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/vitest.setup.ts                 @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/playwright.config.ts            @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/package.json                    @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/package-lock.json               @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/tsconfig.json                   @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/AGENTS.md                       @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/CLAUDE.md                       @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/CONTRIBUTING.md                 @MyItinerary/frontend-leads @MyItinerary/engineering-manager
-/.cursor/                        @MyItinerary/frontend-leads @MyItinerary/engineering-manager
+# Guardrails: nobody (human or AI) may weaken these without the engineering
+# manager. frontend-reviewers alone cannot approve changes here.
+/.github/                        @MyItinerary/engineering-manager
+/eslint.config.mjs               @MyItinerary/engineering-manager
+/scripts/check-architecture.mjs  @MyItinerary/engineering-manager
+/vitest.config.mts               @MyItinerary/engineering-manager
+/vitest.setup.ts                 @MyItinerary/engineering-manager
+/playwright.config.ts            @MyItinerary/engineering-manager
+/package.json                    @MyItinerary/engineering-manager
+/package-lock.json               @MyItinerary/engineering-manager
+/tsconfig.json                   @MyItinerary/engineering-manager
+/AGENTS.md                       @MyItinerary/engineering-manager
+/CLAUDE.md                       @MyItinerary/engineering-manager
+/CONTRIBUTING.md                 @MyItinerary/engineering-manager
+/.cursor/                        @MyItinerary/engineering-manager

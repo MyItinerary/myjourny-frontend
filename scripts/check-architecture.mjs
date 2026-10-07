@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Architecture guardrails that ESLint can't express. Runs in CI (`architecture`
 // job) and locally via `npm run check:architecture`. See CONTRIBUTING.md.
-// Changing this file requires frontend-leads or engineering-manager approval (CODEOWNERS).
+// Changing this file requires engineering-manager approval (CODEOWNERS).
 //
 //   1. Legacy ratchet  — no NEW non-test files in legacy feature dirs.
 //   2. Test co-location — every features/** model, view-model and view file
@@ -123,7 +123,7 @@ for (const file of walk(ROOT)) {
   if (!isSource(file) || file.startsWith("scripts/")) continue;
   const source = readFileSync(file, "utf8");
   if (DISABLE_BOUNDARY.test(source)) {
-    fail("no-silencing", file, "Do not eslint-disable MVVM boundary rules. Fix the import, or ask frontend-leads to change the rule.");
+    fail("no-silencing", file, "Do not eslint-disable MVVM boundary rules. Fix the import, or ask the engineering manager to change the rule.");
   }
   if (isTestFile(file) && FOCUSED_OR_SKIPPED.test(source)) {
     fail("no-silencing", file, "Remove .only/.skip/.fixme — every test must run in CI.");

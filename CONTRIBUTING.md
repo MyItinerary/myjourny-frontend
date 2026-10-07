@@ -202,11 +202,10 @@ Review ownership is set in `.github/CODEOWNERS` and assigned to GitHub teams, no
 | Team | Owns | Approves |
 |---|---|---|
 | `@MyItinerary/frontend-reviewers` | All app code: `features/`, `app/`, `components/`, `lib/`, tests | Day-to-day PRs |
-| `@MyItinerary/frontend-leads` | The guardrails (listed below) | Changes to the rules themselves |
-| `@MyItinerary/engineering-manager` | Everything (co-owner) | Any PR. This is the escalation path when the other teams are unavailable. |
+| `@MyItinerary/engineering-manager` | Co-owner of all app code, and sole owner of the guardrails (listed below) | Any PR, including changes to the rules themselves. Also the escalation path when reviewers are unavailable. |
 
-You can't approve your own PR, so at least one other member of an owning team must review it. To join or leave a team, ask a frontend lead.
+You can't approve your own PR, so at least one other member of an owning team must review it. To join or leave a team, ask the engineering manager.
 
 ## Changing these rules
 
-The guardrails belong to `frontend-leads` and `engineering-manager`. `frontend-reviewers` alone cannot approve changes to them. They are: `.github/`, `eslint.config.mjs`, `scripts/check-architecture.mjs`, the Vitest and Playwright configs, `package.json`/`package-lock.json`, `tsconfig.json`, `AGENTS.md`, `CLAUDE.md`, `.cursor/` and this file. To change one, open a PR with the reason. Weakening a guardrail to get a PR through (lowering a threshold, adding to an allowlist, disabling a rule) will be rejected.
+The guardrails belong to `engineering-manager`. `frontend-reviewers` alone cannot approve changes to them. They are: `.github/`, `eslint.config.mjs`, `scripts/check-architecture.mjs`, the Vitest and Playwright configs, `package.json`/`package-lock.json`, `tsconfig.json`, `AGENTS.md`, `CLAUDE.md`, `.cursor/` and this file. To change one, open a PR with the reason. Weakening a guardrail to get a PR through (lowering a threshold, adding to an allowlist, disabling a rule) will be rejected.
