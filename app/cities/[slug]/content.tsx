@@ -30,7 +30,7 @@ const PAGE_SIZE = 16;
 // chips, 4-col results grid with "Show more", then "Discover beyond <city>".
 // Signed-in users get live data (itin's experience endpoints are auth-only);
 // guests see the mock lists.
-export function CityContent({ cityName, country }: { cityName: string; country: string }) {
+export function CityContent({ cityName, country }: { cityName: string; country?: string }) {
   const { user } = useSession();
   const isAccount = user !== null;
 
@@ -81,7 +81,7 @@ export function CityContent({ cityName, country }: { cityName: string; country: 
               /
             </span>
             <span className="text-base font-medium text-foreground">
-              {cityName} {country}
+              {country ? `${cityName} ${country}` : cityName}
             </span>
           </nav>
 

@@ -108,25 +108,25 @@ export function getCategoryListing(slug: string): ExperienceItem[] | null {
   );
 }
 
-export type City = { id: string; name: string; imageSrc: string };
+export type City = { id: string; name: string; country: string; imageSrc: string };
 
 export const cities: City[] = [
-  { id: "lagos", name: "Lagos", imageSrc: "/images/home/cities/lagos.jpg" },
-  { id: "abuja", name: "Abuja", imageSrc: "/images/home/cities/abuja.jpg" },
-  { id: "port-harcourt", name: "Port Harcourt", imageSrc: "/images/home/cities/ibadan.jpg" },
-  { id: "ibadan", name: "Ibadan", imageSrc: "/images/home/cities/ibadan.jpg" },
-  { id: "abeokuta", name: "Abeokuta", imageSrc: "/images/home/cities/abeokuta.jpg" },
-  { id: "jos", name: "Jos", imageSrc: "/images/home/cities/jos.jpg" },
-  { id: "bauchi", name: "Bauchi", imageSrc: "/images/home/cities/bauchi.jpg" },
-  { id: "kaduna", name: "Kaduna", imageSrc: "/images/home/cities/kaduna.jpg" },
-  { id: "calabar", name: "Calabar", imageSrc: "/images/home/cities/calabar.jpg" },
+  { id: "lagos", name: "Lagos", country: "Nigeria", imageSrc: "/images/home/cities/lagos.jpg" },
+  { id: "abuja", name: "Abuja", country: "Nigeria", imageSrc: "/images/home/cities/abuja.jpg" },
+  { id: "port-harcourt", name: "Port Harcourt", country: "Nigeria", imageSrc: "/images/home/cities/ibadan.jpg" },
+  { id: "ibadan", name: "Ibadan", country: "Nigeria", imageSrc: "/images/home/cities/ibadan.jpg" },
+  { id: "abeokuta", name: "Abeokuta", country: "Nigeria", imageSrc: "/images/home/cities/abeokuta.jpg" },
+  { id: "jos", name: "Jos", country: "Nigeria", imageSrc: "/images/home/cities/jos.jpg" },
+  { id: "bauchi", name: "Bauchi", country: "Nigeria", imageSrc: "/images/home/cities/bauchi.jpg" },
+  { id: "kaduna", name: "Kaduna", country: "Nigeria", imageSrc: "/images/home/cities/kaduna.jpg" },
+  { id: "calabar", name: "Calabar", country: "Nigeria", imageSrc: "/images/home/cities/calabar.jpg" },
   // Extra cities behind the "See more" expand (both cities sections show the
   // link in Figma, meaning more exist beyond the visible grid). Photos are
   // reused from the first 8 — same lorem-content convention as experiences.
-  { id: "enugu", name: "Enugu", imageSrc: "/images/home/cities/jos.jpg" },
-  { id: "benin-city", name: "Benin City", imageSrc: "/images/home/cities/ibadan.jpg" },
-  { id: "kano", name: "Kano", imageSrc: "/images/home/cities/abuja.jpg" },
-  { id: "owerri", name: "Owerri", imageSrc: "/images/home/cities/calabar.jpg" },
+  { id: "enugu", name: "Enugu", country: "Nigeria", imageSrc: "/images/home/cities/jos.jpg" },
+  { id: "benin-city", name: "Benin City", country: "Nigeria", imageSrc: "/images/home/cities/ibadan.jpg" },
+  { id: "kano", name: "Kano", country: "Nigeria", imageSrc: "/images/home/cities/abuja.jpg" },
+  { id: "owerri", name: "Owerri", country: "Nigeria", imageSrc: "/images/home/cities/calabar.jpg" },
 ];
 
 export type Destination = {
