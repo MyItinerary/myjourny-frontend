@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { Compass, CalendarX2, CalendarCheck, CalendarDays } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
 import { Footer } from "@/components/home/footer";
@@ -19,6 +19,24 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "past", label: "Past experiences" },
   { key: "cancelled", label: "Cancelled experiences" },
 ];
+
+const EMPTY_STATES: Record<
+  TabKey,
+  { title: string; body: string }
+> = {
+  upcoming: {
+    title: "Your experiences live here",
+    body: "Once you book, this is where you'll find your meeting point, your host's number, and everything you need on the day.",
+  },
+  past: {
+    title: "No past experiences",
+    body: "You haven't completed any experiences yet. Once you take a trip, your details will be saved here.",
+  },
+  cancelled: {
+    title: "No cancelled experiences",
+    body: "You haven't cancelled any bookings. All your confirmed bookings remain on your schedule.",
+  },
+};
 
 export function MyExperiencesContent() {
   const { user } = useSession();
@@ -40,6 +58,17 @@ export function MyExperiencesContent() {
   }, [data]);
 
   const displayedBookings = user ? realBookings : [];
+
+  const currentEmptyState = !user
+    ? {
+      title: "Your experiences live here",
+      body: "Once you book, this is where you'll find your meeting point, your host's number, and everything you need on the day.",
+      href: "/login",
+    }
+    : {
+      ...EMPTY_STATES[activeTab],
+      href: "/",
+    };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -154,65 +183,55 @@ export function MyExperiencesContent() {
           /* Empty State */
           <motion.div
             key={user ? `empty-${activeTab}` : "empty-guest"}
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="flex flex-col items-center justify-center py-20 text-center"
+            className="mx-auto flex w-full max-w-7xl flex-col items-center gap-6 px-4 py-12 text-center sm:gap-10 sm:px-0 sm:py-20"
           >
-            <div className="flex size-16 items-center justify-center rounded-full bg-[#F4F2EE] text-[#6F6B72] mb-4">
-              {activeTab === "cancelled" ? (
-                <CalendarX2 className="size-8" />
-              ) : activeTab === "past" ? (
-                <CalendarCheck className="size-8" />
-              ) : (
-                <CalendarDays className="size-8" />
-              )}
+            <div className="relative size-[140px] sm:size-[180px]">
+              <Image
+                src="/images/home/experiences/1.png"
+                alt=""
+                width={180}
+                height={180}
+                className="size-full object-contain"
+                priority
+              />
             </div>
-            <h3 className="font-heading text-xl font-bold text-foreground">
-              {!user
-                ? "No experiences yet"
-                : activeTab === "cancelled"
-                ? "No cancelled experiences"
-                : activeTab === "past"
-                ? "No past experiences"
-                : "No upcoming experiences"}
-            </h3>
-            <p className="mt-1.5 max-w-sm text-sm text-[#6F6B72]">
-              {!user
-                ? "Log in or create an account to view and manage your booked journeys."
-                : activeTab === "cancelled"
-                ? "You haven't cancelled any bookings."
-                : activeTab === "past"
-                ? "You haven't completed any experiences yet."
-                : "When you book an experience, it will appear here."}
-            </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              {!user ? (
-                <>
-                  <Link
-                    href="/login"
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#2C0101] px-6 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-black"
-                  >
-                    Log In
-                  </Link>
-                  <Link
-                    href="/"
-                    className="inline-flex h-11 items-center gap-2 rounded-full border border-[#E0DFDD] px-6 text-sm font-semibold text-foreground transition-colors hover:bg-[#F4F2EE]"
-                  >
-                    <Compass className="size-4" />
-                    Explore experiences
-                  </Link>
-                </>
-              ) : (
-                <Link
-                  href="/"
-                  className="inline-flex h-11 items-center gap-2 rounded-full bg-brand px-6 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-brand/90"
-                >
-                  <Compass className="size-4" />
-                  Explore experiences
-                </Link>
-              )}
+
+            <div className="flex w-full max-w-[696px] flex-col gap-4 sm:gap-5">
+              <h2
+                style={{
+                  color: "#130404",
+                  textAlign: "center",
+                  fontFamily: '"TikTok Sans 18pt", var(--font-heading), sans-serif',
+                  fontWeight: 800,
+                  lineHeight: "120%",
+                }}
+                className="text-center font-extrabold text-[#130404] text-[30px] sm:text-[38px] md:text-[40px]"
+              >
+                {currentEmptyState.title}
+              </h2>
+              <p
+                style={{
+                  color: "#6F6B72",
+                  textAlign: "center",
+                  fontFamily: '"TikTok Sans", var(--font-sans), sans-serif',
+                  fontWeight: 400,
+                  lineHeight: "normal",
+                }}
+                className="text-center font-normal leading-normal text-[#6F6B72] text-base sm:text-xl md:text-[20px]"
+              >
+                {currentEmptyState.body}
+              </p>
             </div>
+
+            <Link
+              href={currentEmptyState.href}
+              className="inline-flex items-center justify-center rounded-full bg-[#F5032D] px-6 py-3 text-base font-medium text-white transition-colors hover:bg-[#d90227]"
+            >
+              Homepage
+            </Link>
           </motion.div>
         )}
       </main>
