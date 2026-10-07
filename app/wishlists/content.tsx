@@ -53,7 +53,7 @@ function EmptyState({
 }
 
 export function WishlistsContent() {
-  const { user } = useSession();
+  const { user, hydrated } = useSession();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
@@ -68,7 +68,7 @@ export function WishlistsContent() {
       <HomeNav />
 
       <main className="flex-1">
-        {!user ? (
+        {hydrated && !user ? (
           <EmptyState
             title="Save what catches you"
             body="Tap the heart on anything you like. We’ll keep it here, and use it to shape what we show you next."
@@ -76,7 +76,7 @@ export function WishlistsContent() {
             href="/login"
             compact
           />
-        ) : isLoading ? (
+        ) : !hydrated || isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
             <div className="size-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
             <p className="mt-3 text-sm">Loading your collections...</p>
