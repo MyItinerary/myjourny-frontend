@@ -1,7 +1,9 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { apiErrorMessage } from "@/lib/api-error";
 import { clearAuth, useSession } from "@/lib/auth/session-store";
 import { clearPreferences, setPreference } from "@/lib/onboarding/preferences-store";
 
@@ -17,7 +19,26 @@ export type ProfileUpdatePayload = {
   preferred_currency?: string;
   preferred_language?: string;
   completed?: boolean;
+  // Account settings. Email and phone change through their own verified
+  // flows below; itin rejects them here.
+  legal_name?: string | null;
+  preferred_name?: string | null;
+  display_name_preference?: DisplayNamePreference;
+  emergency_contact_name?: string | null;
+  /** E.164, e.g. +2348012345678 */
+  emergency_contact_phone?: string | null;
+  city?: string | null;
+  home_country?: string | null;
+  date_of_birth?: string | null;
+  /** IANA name, e.g. Africa/Lagos */
+  timezone?: string | null;
+  profile_visibility?: ProfileVisibility;
+  show_reviews_publicly?: boolean;
+  personalization_enabled?: boolean;
 };
+
+export type DisplayNamePreference = "full" | "first_name_only";
+export type ProfileVisibility = "public" | "hosts_booked";
 
 export type UserProfile = {
   id?: string;
@@ -33,6 +54,19 @@ export type UserProfile = {
   preferred_currency?: string | null;
   preferred_language?: string | null;
   completed?: boolean;
+  legal_name?: string | null;
+  preferred_name?: string | null;
+  display_name_preference?: DisplayNamePreference | null;
+  phone_number?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  city?: string | null;
+  home_country?: string | null;
+  date_of_birth?: string | null;
+  timezone?: string | null;
+  profile_visibility?: ProfileVisibility;
+  show_reviews_publicly?: boolean;
+  personalization_enabled?: boolean;
 };
 
 export function useGetProfile() {
@@ -88,6 +122,18 @@ export function useUpdateProfile() {
   });
 }
 
+// After the account is deleted or deactivated: drop the session here too
+// and start over from the home page.
+export function signOutLocally(queryClient: QueryClient) {
+  clearAuth();
+  clearPreferences();
+  queryClient.clear();
+  if (typeof window !== "undefined") {
+    fetch("/api/auth/session", { method: "DELETE" }).catch(() => {});
+    window.location.href = "/";
+  }
+}
+
 export function useDeleteAccount() {
   const queryClient = useQueryClient();
 
@@ -96,14 +142,62 @@ export function useDeleteAccount() {
       const { data } = await apiClient.delete("/auth/me");
       return data;
     },
+    onSuccess: () => signOutLocally(queryClient),
+    onError: (error) => toast.error(apiErrorMessage(error, "Couldn't delete your account.")),
+  });
+}
+
+// Phone: a 6-digit code goes to the account's current email, then the
+// confirm call sets the new number. Email: a link goes to the new address,
+// opening /profile/email/confirm?token=…
+type Message = { message: string };
+
+export function useRequestPhoneChange() {
+  return useMutation({
+    mutationFn: async (newPhone: string) => {
+      const { data } = await apiClient.post<Message>("/profile/phone/request-change", {
+        new_phone: newPhone,
+      });
+      return data;
+    },
+    onError: (error) => toast.error(apiErrorMessage(error, "Couldn't send the code.")),
+  });
+}
+
+export function useConfirmPhoneChange() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (otp: string) => {
+      const { data } = await apiClient.post<Message>("/profile/phone/confirm", { otp });
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profile"] }),
+    onError: (error) => toast.error(apiErrorMessage(error, "That code didn't work.")),
+  });
+}
+
+export function useRequestEmailChange() {
+  return useMutation({
+    mutationFn: async (newEmail: string) => {
+      const { data } = await apiClient.post<Message>("/profile/email/request-change", {
+        new_email: newEmail,
+      });
+      return data;
+    },
+    onError: (error) => toast.error(apiErrorMessage(error, "Couldn't send the confirmation email.")),
+  });
+}
+
+export function useConfirmEmailChange() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (token: string) => {
+      const { data } = await apiClient.get<Message>("/profile/email/confirm", { params: { token } });
+      return data;
+    },
     onSuccess: () => {
-      clearAuth();
-      clearPreferences();
-      queryClient.clear();
-      if (typeof window !== "undefined") {
-        fetch("/api/auth/session", { method: "DELETE" }).catch(() => {});
-        window.location.href = "/";
-      }
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
   });
 }
