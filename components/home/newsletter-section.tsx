@@ -54,11 +54,14 @@ export function NewsletterSection() {
             <div className="flex flex-col gap-2 lg:flex-row">
               <input
                 type="email"
+                name="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@gmail.com"
                 aria-label="Email address"
                 aria-invalid={!!error}
+                aria-describedby={error ? "newsletter-email-error" : undefined}
                 className={cn(
                   "h-12 w-full rounded-full border bg-white px-4 text-base font-medium text-[#212121] placeholder:text-[#BDBDBD] focus:outline-none focus:ring-2 focus:ring-[#F5032D]/30 lg:flex-1",
                   error ? "border-[#F5032D]" : "border-[#E0E0E0]"
@@ -71,7 +74,11 @@ export function NewsletterSection() {
                 Subscribe
               </button>
             </div>
-            {error && <p className="px-4 text-sm text-[#F5032D]">{error}</p>}
+            {error && (
+              <p id="newsletter-email-error" className="px-4 text-sm text-[#F5032D]">
+                {error}
+              </p>
+            )}
           </form>
         </div>
       </div>
