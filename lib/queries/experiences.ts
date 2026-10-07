@@ -132,6 +132,17 @@ export function useRecommendedExperiences(
 // Server-paginated recommendations for listing pages: each fetchNextPage()
 // asks itin for the next `pageSize` via offset. The endpoint returns a bare
 // list with no total, so a short page is the only "no more" signal.
+// Scores can shift between page fetches, so the same experience can land
+// on two pages — keep the first.
+export function uniqueMatches(pages: ExperienceMatch[][] | undefined): ExperienceMatch[] {
+  const seen = new Set<string>();
+  return (pages ?? []).flat().filter((m) => {
+    if (seen.has(m.experience_id)) return false;
+    seen.add(m.experience_id);
+    return true;
+  });
+}
+
 export function useInfiniteRecommendedExperiences(
   params: RecommendationParams & { pageSize: number; enabled?: boolean }
 ) {

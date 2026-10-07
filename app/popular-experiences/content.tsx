@@ -4,7 +4,11 @@ import { CategoryContent } from "@/app/categories/[slug]/content";
 import { useGeolocation } from "@/lib/hooks/use-geolocation";
 import { useSession } from "@/lib/auth/session-store";
 import { popularExperiences } from "@/lib/mock-data/home";
-import { experienceMatchToCardProps, useInfiniteRecommendedExperiences } from "@/lib/queries/experiences";
+import {
+  experienceMatchToCardProps,
+  uniqueMatches,
+  useInfiniteRecommendedExperiences,
+} from "@/lib/queries/experiences";
 
 // One grid page: 4 rows of the 4-col layout.
 const PAGE_SIZE = 16;
@@ -28,11 +32,7 @@ export function PopularExperiencesContent() {
     enabled: isAccount && geolocation !== "pending",
   });
 
-  // Scores can shift between page fetches, so drop any repeat that lands
-  // in a later page.
-  const matches = (query.data?.pages ?? []).flat();
-  const unique = matches.filter((m, i) => matches.findIndex((o) => o.experience_id === m.experience_id) === i);
-  const items = isAccount ? unique.map(experienceMatchToCardProps) : popularExperiences;
+  const items = isAccount ? uniqueMatches(query.data?.pages).map(experienceMatchToCardProps) : popularExperiences;
 
   return (
     <CategoryContent

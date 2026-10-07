@@ -13,10 +13,17 @@ import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
 import { useSession } from "@/lib/auth/session-store";
 import { otherExperiences, popularExperiences } from "@/lib/mock-data/home";
 import { useInterestCategories } from "@/lib/queries/categories";
-import { experienceMatchToCardProps, useRecommendedExperiences } from "@/lib/queries/experiences";
+import {
+  experienceMatchToCardProps,
+  useInfiniteRecommendedExperiences,
+  uniqueMatches,
+  useRecommendedExperiences,
+} from "@/lib/queries/experiences";
 
 const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
 const FALLBACK_CATEGORY_CHIPS = ["Street food & markets", "Cafés & coffee culture", "Bars & nightlife drinks"];
+// One grid page: 4 rows of the 4-col layout.
+const PAGE_SIZE = 16;
 
 // Figma: "Home" (2364:35709) — city listing opened from a "Discover by
 // cities" tile: breadcrumb, "Experiences in <city>" heading, filter + category
@@ -27,11 +34,11 @@ export function CityContent({ cityName, country }: { cityName: string; country: 
   const { user } = useSession();
   const isAccount = user !== null;
 
-  const cityQuery = useRecommendedExperiences({ city: cityName, limit: 50, enabled: isAccount });
+  const cityQuery = useInfiniteRecommendedExperiences({ city: cityName, pageSize: PAGE_SIZE, enabled: isAccount });
   const beyondQuery = useRecommendedExperiences({ offset: 0, limit: 10, enabled: isAccount });
   const categoriesQuery = useInterestCategories();
 
-  const items = isAccount ? (cityQuery.data ?? []).map(experienceMatchToCardProps) : popularExperiences;
+  const items = isAccount ? uniqueMatches(cityQuery.data?.pages).map(experienceMatchToCardProps) : popularExperiences;
   const beyondItems = isAccount ? (beyondQuery.data ?? []).map(experienceMatchToCardProps) : otherExperiences;
 
   const liveChips = (categoriesQuery.data ?? []).filter((c) => c.parent_id === null).map((c) => c.text);
@@ -102,7 +109,18 @@ export function CityContent({ cityName, country }: { cityName: string; country: 
           <CategoryResultsGrid
             items={items}
             categoryLabel={cityName}
-            isLoading={isAccount && cityQuery.isFetching}
+            isLoading={isAccount && cityQuery.isPending}
+            moreLabel="Show more"
+            // Guests get the mock list, which the grid pages through locally.
+            loadMore={
+              isAccount
+                ? {
+                    hasMore: cityQuery.hasNextPage,
+                    isLoading: cityQuery.isFetchingNextPage,
+                    onLoadMore: () => cityQuery.fetchNextPage(),
+                  }
+                : undefined
+            }
           />
         </div>
       </div>
