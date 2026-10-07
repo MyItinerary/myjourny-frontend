@@ -223,10 +223,11 @@ pixel-diffed against Figma the way the sections above were).
 
 ## Still placeholder
 
-- **Icons**: `star-01`, `heart`/`heart-rounded`, `chevron-down`,
-  `home-smile`, `image-05` are now real Figma exports
-  ([components/icons/shared-icons.tsx](components/icons/shared-icons.tsx),
-  [nav-icons.tsx](components/icons/nav-icons.tsx)). Still lucide
+- **Icons**: `star-01`, `heart`/`heart-rounded`, `chevron-down` are now
+  real Figma exports
+  ([components/icons/shared-icons.tsx](components/icons/shared-icons.tsx)),
+  and `HomeNav`'s pill/menu icons are illustrated PNGs in
+  `public/icons/nav/`. Still lucide
   placeholders: `chevron-right` (rail arrows), `search-lg` on mobile
   category header (reuses the existing `public/icons/search-lg.svg` art
   but not yet confirmed pixel-exact for that specific compact usage).
@@ -255,7 +256,7 @@ pixel-diffed against Figma the way the sections above were).
 `components/icons/` — icon sets inlined from real Figma SVG exports
 (`onboarding-icons`, `interests-icons`, `who-with-icons`,
 `budget-icons`, `vibe-icons`, `auth-icons`, `shared-icons` — chevron/
-heart/star reused across features, `nav-icons` — `HomeNav`'s 3 icons).
+heart/star reused across features, `nav-icons` — the plane icon on `HomeNav`'s mobile search pill).
 
 `components/home/`: `home-nav`, `hero-section`,
 `why-book-with-us-section`, `experience-rail-section` (shared by
