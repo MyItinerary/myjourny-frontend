@@ -1,53 +1,41 @@
 "use client";
 
-import { useState } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  LOCKED_NOTIFICATION_TYPES,
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+  type NotificationType,
+} from "@/lib/queries/notification-preferences";
+import { SectionSkeleton } from "@/components/account-settings/section-ui";
 
 interface NotifRow {
-  key: string;
+  key: NotificationType;
   label: string;
-  locked?: boolean;
   note?: string;
 }
 
+// itin's notification types, in the order the screen lists them. The
+// in-app channel isn't shown; it stays on.
 const ROWS: NotifRow[] = [
+  { key: "booking_confirmations", label: "Booking confirmations", note: "Sent the moment a host confirms." },
+  { key: "pre_trip_reminder", label: "Booking reminders", note: "A day before, and two hours before." },
   {
-    key: "confirm",
-    label: "Booking confirmations",
-    locked: true,
-    note: "Sent the moment a host confirms.",
-  },
-  { key: "remind", label: "Booking reminders", note: "A day before, and two hours before." },
-  {
-    key: "dayof",
+    key: "itinerary_update",
     label: "Day of messages",
-    note: "Meeting point, host name, what to bring.",
+    note: "Meeting point, host name, what to bring, and any change to the plan.",
   },
-  { key: "msg", label: "Messages from hosts" },
+  { key: "safety_alert", label: "Safety alerts", note: "Weather, closures and anything that affects your day." },
   {
-    key: "cancel",
+    key: "cancellations_refunds",
     label: "Cancellations and refunds",
-    locked: true,
     note: "Including what we send back and when.",
   },
-  { key: "review", label: "Review requests" },
-  { key: "drop", label: "The weekly drop", note: "New experiences in Lagos, once a week." },
-  { key: "news", label: "Product news" },
+  { key: "payment_status", label: "Payment updates", note: "Receipts and any problem with a payment." },
 ];
 
-type Channel = "em" | "push";
-
-const INITIAL_NOTIF: Record<string, Record<Channel, boolean>> = {
-  confirm: { em: true, push: true },
-  remind: { em: true, push: true },
-  dayof: { em: false, push: true },
-  msg: { em: true, push: true },
-  cancel: { em: true, push: true },
-  review: { em: true, push: true },
-  drop: { em: true, push: false },
-  news: { em: true, push: false },
-};
+type Channel = "email" | "push";
 
 const GRID_COLS = "grid-cols-[1fr_44px_44px] sm:grid-cols-[1fr_96px_96px]";
 
@@ -88,13 +76,13 @@ function NotifCheckbox({
 }
 
 export function NotificationsSection() {
-  const [notif, setNotif] = useState(INITIAL_NOTIF);
+  const { data: notif, isLoading } = useNotificationPreferences();
+  const update = useUpdateNotificationPreferences();
 
-  function toggle(rowKey: string, channel: Channel) {
-    setNotif((prev) => ({
-      ...prev,
-      [rowKey]: { ...prev[rowKey], [channel]: !prev[rowKey][channel] },
-    }));
+  if (isLoading || !notif) return <SectionSkeleton />;
+
+  function toggle(rowKey: NotificationType, channel: Channel) {
+    update.mutate({ [rowKey]: { [channel]: !notif![rowKey][channel] } });
   }
 
   return (
@@ -120,8 +108,9 @@ export function NotificationsSection() {
       </div>
 
       {ROWS.map((row) => {
-        const emOn = row.locked ? true : notif[row.key].em;
-        const pushOn = row.locked ? true : notif[row.key].push;
+        const locked = LOCKED_NOTIFICATION_TYPES.has(row.key);
+        const emOn = locked || notif[row.key].email;
+        const pushOn = locked || notif[row.key].push;
         return (
           <div
             key={row.key}
@@ -130,7 +119,7 @@ export function NotificationsSection() {
             <div className="pr-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[15px] font-medium text-foreground">{row.label}</span>
-                {row.locked && (
+                {locked && (
                   <span className="shrink-0 rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[11px] font-medium whitespace-nowrap text-[#757575]">
                     Always on
                   </span>
@@ -143,15 +132,15 @@ export function NotificationsSection() {
             <div className="flex justify-center">
               <NotifCheckbox
                 on={emOn}
-                locked={row.locked}
-                onToggle={() => toggle(row.key, "em")}
+                locked={locked}
+                onToggle={() => toggle(row.key, "email")}
                 label={`Email notifications for ${row.label}`}
               />
             </div>
             <div className="flex justify-center">
               <NotifCheckbox
                 on={pushOn}
-                locked={row.locked}
+                locked={locked}
                 onToggle={() => toggle(row.key, "push")}
                 label={`Push notifications for ${row.label}`}
               />
