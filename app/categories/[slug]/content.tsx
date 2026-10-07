@@ -24,12 +24,15 @@ export function CategoryContent({
   isLoading = false,
   moreLabel,
   loadMore,
+  total,
 }: {
   label: string;
   items: ExperienceItem[];
   isLoading?: boolean;
   moreLabel?: string;
   loadMore?: ComponentProps<typeof CategoryResultsGrid>["loadMore"];
+  /** Exact result count, when the source knows it. */
+  total?: number;
 }) {
   return (
     <div className="flex flex-1 flex-col">
@@ -52,7 +55,7 @@ export function CategoryContent({
       </div>
 
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-9">
-        <CategoryHeader label={label} count={items.length} />
+        <CategoryHeader label={label} count={items.length} total={total} />
         <div className="mt-6 lg:mt-9">
           <CategoryResultsGrid items={items} categoryLabel={label} isLoading={isLoading} moreLabel={moreLabel} loadMore={loadMore} />
         </div>
