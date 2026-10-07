@@ -36,7 +36,9 @@ export function WishlistDetailContent({ id }: { id: string }) {
   const { mutate: renameCollection, isPending: isRenaming } = useRenameWishlist();
 
   const collectionName = currentCollection?.name ?? "Collection";
-  const count = currentCollection?.item_count ?? experiences.length;
+  // Count what we can show: the list skips experiences from deactivated
+  // guides, which item_count still includes.
+  const count = isLoading ? (currentCollection?.item_count ?? 0) : experiences.length;
   const visible = showAll ? experiences : experiences.slice(0, PAGE_SIZE);
 
   return (
