@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { LanguageCurrencySection } from "@/components/account settings/language-currency";
-import { LoginSecuritySection } from "@/components/account settings/login-security";
-import { NotificationsSection } from "@/components/account settings/notifications";
-import { PersonalInfoSection } from "@/components/account settings/personal-info";
-import { PreferencesSection } from "@/components/account settings/preferences";
-import { PrivacySection } from "@/components/account settings/privacy";
-import { SectionSkeleton } from "@/components/account settings/section-ui";
-import { SETTINGS_NAV_ITEMS, SettingsNav } from "@/components/account settings/settings-nav";
-import { SettingsHeader } from "@/components/account settings/settings-header";
+import { LanguageCurrencySection } from "@/components/account-settings/language-currency";
+import { LoginSecuritySection } from "@/components/account-settings/login-security";
+import { NotificationsSection } from "@/components/account-settings/notifications";
+import { PersonalInfoSection } from "@/components/account-settings/personal-info";
+import { PreferencesSection } from "@/components/account-settings/preferences";
+import { PrivacySection } from "@/components/account-settings/privacy";
+import { SectionSkeleton } from "@/components/account-settings/section-ui";
+import { SETTINGS_NAV_ITEMS, SettingsNav } from "@/components/account-settings/settings-nav";
+import { SettingsHeader } from "@/components/account-settings/settings-header";
 
 const SECTION_LOAD_DELAY = 700;
 

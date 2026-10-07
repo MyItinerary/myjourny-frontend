@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ModalShell, Row, SavedBanner, ToggleRow } from "@/components/account settings/section-ui";
+import { ModalShell, Row, SavedBanner, ToggleRow } from "@/components/account-settings/section-ui";
 
 interface BlockedAccount {
   name: string;

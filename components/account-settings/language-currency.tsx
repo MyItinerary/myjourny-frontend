@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ModalFooter, ModalShell, Row, SavedBanner } from "@/components/account settings/section-ui";
+import { ModalFooter, ModalShell, Row, SavedBanner } from "@/components/account-settings/section-ui";
 
 const LANGUAGE_OPTIONS: [string, string][] = [
   ["English (Nigeria)", ""],
