@@ -188,8 +188,8 @@ flex gap, mobile "Where to?" compact pill), `WhyBookWithUsSection`
 (desktop "Popular experiences" is a static 2×3 grid with no carousel per
 Figma, not a carousel like the other two rails; "Top picks"/"Based on
 browsing history" carousels get their arrows in the header row, not below;
-added `wide` prop for the Categories page's 1212px column), `CtaSection`
-(mobile left-aligned/40px vs. desktop centered/48px heading), `Footer`
+added `wide` prop for the Categories page's 1212px column), `NewsletterSection`
+(image stacked above the form on mobile, side by side on desktop), `Footer`
 (72px seam between the inspiration-tabs block and the link columns, not
 48px; 22px heading not 20px; mobile stacked-column gaps).
 
@@ -261,7 +261,7 @@ heart/star reused across features, `nav-icons` — `HomeNav`'s 3 icons).
 `why-book-with-us-section`, `experience-rail-section` (shared by
 "Popular experiences near you" / "Top picks right now" / "Based on your
 browsing history"), `categories-section`, `cities-section`,
-`cta-section`, `footer`, `mock-session-toggle` (dev-only guest/account
+`newsletter-section`, `footer`, `mock-session-toggle` (dev-only guest/account
 preview switch — see `lib/mock-session.ts`).
 
 `components/categories/`: `category-header`, `filter-chip`,

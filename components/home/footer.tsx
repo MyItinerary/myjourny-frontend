@@ -34,7 +34,9 @@ const linkColumns = [
   },
 ];
 
-export function Footer() {
+// `tone="white"` is the home-page variant (Figma 2001:9151); every other
+// page keeps the default light-grey background.
+export function Footer({ tone = "default" }: { tone?: "default" | "white" }) {
   const categoriesQuery = useInterestCategories();
   const categories = categoriesQuery.data ?? [];
 
@@ -53,7 +55,7 @@ export function Footer() {
   const { data: subcategories = [] } = useSubcategories(currentParentId);
 
   return (
-    <footer className="bg-[#FCFCFC]">
+    <footer className={tone === "white" ? "bg-white" : "bg-[#FCFCFC]"}>
       <div className="mx-auto max-w-[1372px] px-6 pt-12 pb-8 lg:px-6">
         <h2 className="py-2 font-heading text-[22px] leading-[33px] font-medium text-[#222222]">
           More ways to experience your city
