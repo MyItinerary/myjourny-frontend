@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGoogleAuth, useLogin } from "@/lib/queries/auth";
 
+// Where to go after login: ?next=<path> (e.g. back to an experience a
+// guest tried to book). Same-site paths only, so it can't bounce people
+// to another site.
+function nextPath() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+}
+
 // Figma "Welcome back!" login shell (2068:24743 / 2068:25586).
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -37,7 +45,7 @@ export function LoginForm() {
         login.mutate(
           { email, password },
           {
-            onSuccess: () => router.push("/"),
+            onSuccess: () => router.push(nextPath()),
             onError: () => setIsLoggingIn(false),
           }
         );
@@ -50,7 +58,7 @@ export function LoginForm() {
           googleAuth.mutate(
             { token: credential },
             {
-              onSuccess: () => router.push("/"),
+              onSuccess: () => router.push(nextPath()),
               onError: () => setIsGoogleAuthenticating(false),
             }
           );
