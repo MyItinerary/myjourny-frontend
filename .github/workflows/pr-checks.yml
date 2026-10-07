@@ -1,0 +1,97 @@
+# Enforces the PR format from .github/pull_request_template.md and
+# CONTRIBUTING.md. Both jobs are required status checks on main.
+name: PR checks
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  pr-title:
+    name: pr-title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const TYPES = "feat|fix|refactor|perf|test|docs|chore";
+            const { title, head } = context.payload.pull_request;
+            const problems = [];
+
+            if (!new RegExp(`^(${TYPES})(\\([a-z0-9-]+\\))?!?: \\S.{2,}$`).test(title)) {
+              problems.push(
+                `Title "${title}" must follow Conventional Commits: "<type>(<scope>): <summary>", ` +
+                `type one of ${TYPES.replaceAll("|", ", ")}. Example: "feat(experiences): add date filter".`
+              );
+            }
+            const branch = head.ref;
+            if (!new RegExp(`^((${TYPES})/[a-z0-9._-]+|dependabot/.+)$`).test(branch)) {
+              problems.push(`Branch "${branch}" must be named "<type>/<kebab-case>", e.g. "feat/search-date-filter".`);
+            }
+
+            if (problems.length) core.setFailed(problems.join("\n"));
+            else core.info(`✔ Title and branch OK: ${title} (${branch})`);
+
+  pr-checklist:
+    name: pr-checklist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = (pr.body || "").replace(/<!--[\s\S]*?-->/g, "");
+            const problems = [];
+
+            // --- 1. Required sections must exist and be non-empty -------------
+            const REQUIRED = [
+              "Summary", "Linked issue", "Type", "What changed (by MVVM layer)",
+              "How it was tested", "Screenshots / recording", "Risk & rollback",
+              "AI assistance", "Checklist",
+            ];
+            const sections = {};
+            for (const chunk of body.split(/^## +/m).slice(1)) {
+              const [heading, ...rest] = chunk.split("\n");
+              sections[heading.trim()] = rest.join("\n").trim();
+            }
+            for (const name of REQUIRED) {
+              if (!(name in sections)) problems.push(`Missing section "## ${name}" — use the PR template.`);
+              else if (!sections[name]) problems.push(`Section "## ${name}" is empty.`);
+            }
+
+            // --- 2. Every checklist box must be ticked ------------------------
+            const checklist = sections["Checklist"] || "";
+            const unticked = checklist.match(/^\s*[-*] \[ \].*$/gm) || [];
+            const ticked = checklist.match(/^\s*[-*] \[[xX]\].*$/gm) || [];
+            const MIN_ITEMS = 7;
+            for (const line of unticked) problems.push(`Unticked checklist item: ${line.trim()}`);
+            if (ticked.length + unticked.length < MIN_ITEMS) {
+              problems.push(`Checklist has ${ticked.length + unticked.length} items; the template has ${MIN_ITEMS}. Don't delete items — tick them with "N/A — <reason>" instead.`);
+            }
+
+            // --- 3. Behaviour-changing PRs must touch tests -------------------
+            const type = (pr.title.match(/^(\w+)/) || [])[1];
+            const NEEDS_TESTS = ["feat", "fix", "refactor", "perf"];
+            if (NEEDS_TESTS.includes(type)) {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number, per_page: 100,
+              });
+              const testFiles = files.filter(
+                (f) => f.status !== "removed" && (/\.test\.tsx?$/.test(f.filename) || /^e2e\/.+\.spec\.ts$/.test(f.filename))
+              );
+              if (testFiles.length === 0) {
+                problems.push(`"${type}" PRs must add or update tests (*.test.ts(x) or e2e/*.spec.ts). None found in this PR's changes.`);
+              } else {
+                core.info(`✔ Test files in PR: ${testFiles.map((f) => f.filename).join(", ")}`);
+              }
+            }
+
+            if (problems.length) {
+              core.setFailed(`PR description does not meet CONTRIBUTING.md requirements:\n- ${problems.join("\n- ")}`);
+            } else {
+              core.info("✔ PR description and checklist complete.");
+            }

@@ -115,7 +115,6 @@ export function useSession(): { user: SessionUser | null; state: SessionState } 
     }
     // Only needs to run once, on mount — `stored`/`persist` are module-level,
     // not React values, so there's nothing to add to this array.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { user: current?.user ?? null, state: current ? "account" : "guest" };

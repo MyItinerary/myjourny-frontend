@@ -1,0 +1,18 @@
+# Default owner for everything.
+* @Oladiman
+
+# Guardrails — the rules themselves. Nobody (human or AI) may weaken these
+# without CTO review. Keep this block LAST so it wins over the default above.
+/.github/                        @Oladiman
+/eslint.config.mjs               @Oladiman
+/scripts/check-architecture.mjs  @Oladiman
+/vitest.config.mts               @Oladiman
+/vitest.setup.ts                 @Oladiman
+/playwright.config.ts            @Oladiman
+/package.json                    @Oladiman
+/package-lock.json               @Oladiman
+/tsconfig.json                   @Oladiman
+/AGENTS.md                       @Oladiman
+/CLAUDE.md                       @Oladiman
+/CONTRIBUTING.md                 @Oladiman
+/.cursor/                        @Oladiman
