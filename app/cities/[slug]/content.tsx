@@ -35,11 +35,18 @@ export function CityContent({ cityName, country }: { cityName: string; country: 
   const isAccount = user !== null;
 
   const cityQuery = useInfiniteRecommendedExperiences({ city: cityName, pageSize: PAGE_SIZE, enabled: isAccount });
-  const beyondQuery = useRecommendedExperiences({ offset: 0, limit: 10, enabled: isAccount });
+  // Recommendations aren't city-filtered here, so over-fetch and drop this
+  // city's own experiences to still fill the rail.
+  const beyondQuery = useRecommendedExperiences({ offset: 0, limit: 20, enabled: isAccount });
   const categoriesQuery = useInterestCategories();
 
   const items = isAccount ? uniqueMatches(cityQuery.data?.pages).map(experienceMatchToCardProps) : popularExperiences;
-  const beyondItems = isAccount ? (beyondQuery.data ?? []).map(experienceMatchToCardProps) : otherExperiences;
+  const beyondItems = isAccount
+    ? (beyondQuery.data ?? [])
+        .filter((m) => m.city?.toLowerCase() !== cityName.toLowerCase())
+        .slice(0, 10)
+        .map(experienceMatchToCardProps)
+    : otherExperiences;
 
   const liveChips = (categoriesQuery.data ?? []).filter((c) => c.parent_id === null).map((c) => c.text);
   const categoryChips = liveChips.length > 0 ? liveChips : FALLBACK_CATEGORY_CHIPS;
@@ -129,7 +136,7 @@ export function CityContent({ cityName, country }: { cityName: string; country: 
         heading={`Discover beyond ${cityName}`}
         subheading="There's always something to do anywhere else"
         items={beyondItems}
-        isLoading={isAccount && beyondQuery.isFetching}
+        isLoading={isAccount && beyondQuery.isPending}
         cardVariant="vertical"
         mobileArrowsBelow
         wide
