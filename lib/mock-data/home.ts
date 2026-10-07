@@ -1,57 +1,7 @@
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 
-// The Figma homepage reuses one lorem experience ("Kayaking in Victoria
-// island...") everywhere — no backend/API exists yet, so this mirrors that
-// with local fixtures instead of inventing distinct content.
+// Card shape shared by every experience listing.
 export type ExperienceItem = ExperienceCardProps & { id: string };
-
-const KAYAKING_IMAGE = "/images/home/experiences/kayaking.jpg";
-
-function makeExperience(id: string, category: string): ExperienceItem {
-  return {
-    id,
-    imageSrc: KAYAKING_IMAGE,
-    imageAlt: "Kayaking in Victoria Island",
-    category,
-    title: "Kayaking in Victoria island, Paint and Sip & Two meals",
-    duration: "1 hour",
-    rating: 4.0,
-    reviewCount: 1806,
-    priceFrom: 10000,
-  };
-}
-
-export const popularExperiences: ExperienceItem[] = [
-  makeExperience("popular-1", "WATER ACTIVITY"),
-  makeExperience("popular-2", "WATER ACTIVITY"),
-  makeExperience("popular-3", "WATER ACTIVITY"),
-  makeExperience("popular-4", "WATER ACTIVITY"),
-  makeExperience("popular-5", "WATER ACTIVITY"),
-  makeExperience("popular-6", "WATER ACTIVITY"),
-];
-
-export const browsingHistoryExperiences: ExperienceItem[] = [
-  makeExperience("history-1", "WATER ACTIVITY"),
-  makeExperience("history-2", "WATER ACTIVITY"),
-  makeExperience("history-3", "WATER ACTIVITY"),
-  makeExperience("history-4", "WATER ACTIVITY"),
-];
-
-export const topPicks: ExperienceItem[] = [
-  makeExperience("top-pick-1", "BEACH"),
-  makeExperience("top-pick-2", "BEACH"),
-  makeExperience("top-pick-3", "BEACH"),
-  makeExperience("top-pick-4", "BEACH"),
-];
-
-// Figma "Other experiences you might find interesting" — the category
-// page's bottom rail (2001:12299 desktop / 2001:12478 mobile).
-export const otherExperiences: ExperienceItem[] = [
-  makeExperience("other-1", "BEACH"),
-  makeExperience("other-2", "BEACH"),
-  makeExperience("other-3", "BEACH"),
-  makeExperience("other-4", "BEACH"),
-];
 
 export type Category = { id: string; label: string };
 
@@ -99,14 +49,6 @@ export const inspirationSubcategories = [
 // category from either list (guest top-level or account subcategories).
 const allCategories = [...guestCategories, ...accountCategories];
 export const categoriesBySlug = new Map(allCategories.map((c) => [c.id, c]));
-
-export function getCategoryListing(slug: string): ExperienceItem[] | null {
-  const category = categoriesBySlug.get(slug);
-  const label = category?.label ?? slug.replace(/-/g, " ").toUpperCase();
-  return Array.from({ length: 20 }, (_, i) =>
-    makeExperience(`${slug}-${i + 1}`, label.toUpperCase())
-  );
-}
 
 export type City = { id: string; name: string; country: string; imageSrc: string };
 

@@ -11,7 +11,8 @@ import { Footer } from "@/components/home/footer";
 import { CategoryHeader } from "@/components/categories/category-header";
 import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
-import { cities, otherExperiences } from "@/lib/mock-data/home";
+import { cities } from "@/lib/mock-data/home";
+import { experienceListItemToCardProps, useFilteredExperiences } from "@/lib/queries/experiences";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 
 // Figma: "Home" (2001:11985 desktop / "Home page" 2001:12375 mobile) — a
@@ -63,15 +64,32 @@ export function CategoryContent({
 
       <CitiesSection cities={cities} variant="category" />
 
-      <ExperienceRailSection
-        heading="Other experiences you might find interesting"
-        subheading="There's always something to do around you"
-        items={otherExperiences}
-        cardVariant="vertical"
-        wide
-      />
+      <OtherExperiencesRail exclude={items} />
 
       <Footer />
     </div>
+  );
+}
+
+// Best-rated experiences from the public listing (works for guests too),
+// minus anything already in the grid above.
+function OtherExperiencesRail({ exclude }: { exclude: ExperienceItem[] }) {
+  const { data, isPending } = useFilteredExperiences({ sort: "rating_desc", limit: 20 });
+  const shown = new Set(exclude.map((item) => item.id));
+  const items = (data?.items ?? [])
+    .map(experienceListItemToCardProps)
+    .filter((item) => !shown.has(item.id))
+    .slice(0, 10);
+
+  if (!isPending && items.length === 0) return null;
+  return (
+    <ExperienceRailSection
+      heading="Other experiences you might find interesting"
+      subheading="There's always something to do around you"
+      items={items}
+      isLoading={isPending}
+      cardVariant="vertical"
+      wide
+    />
   );
 }
