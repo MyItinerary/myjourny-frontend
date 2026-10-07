@@ -3,8 +3,10 @@
 import { useSession } from "@/lib/auth/session-store";
 import { useGeolocation } from "@/lib/hooks/use-geolocation";
 import {
+  experienceListItemToCardProps,
   experienceMatchToCardProps,
   useBrowsingHistory,
+  useFilteredExperiences,
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
 import { useInterestCategories } from "@/lib/queries/categories";
@@ -16,26 +18,20 @@ import { CategoriesSection } from "@/components/home/categories-section";
 import { CitiesSection } from "@/components/home/cities-section";
 import { NewsletterSection } from "@/components/home/newsletter-section";
 import { Footer } from "@/components/home/footer";
-import {
-  accountCategories,
-  browsingHistoryExperiences,
-  cities,
-  guestCategories,
-  popularExperiences,
-  topPicks,
-} from "@/lib/mock-data/home";
+import { accountCategories, cities, guestCategories } from "@/lib/mock-data/home";
 
 // Figma "Home" (2001:9142 guest / 2001:9152 account, mobile 2001:9168 /
 // 2001:9462) — both states share the same 9 sections. Guests see
-// Why-book-with-us before the personalized rails (nothing personalized to
-// show yet, and guests stay on mock data — see DESIGN-SYSTEM.md/the
-// homepage-integration plan for why: itin has no unauthenticated
-// recommendations/categories endpoints). Signed-in accounts see
-// Popular-experiences promoted right after Hero instead, backed by real
-// itin data. See DESIGN-SYSTEM.md for the full node id map.
+// Why-book-with-us before the rails, which come from the public
+// /experiences/filter listing (recommendations need a profile, so there's
+// no "near you" or browsing history for them). Signed-in accounts see
+// personalised Popular-experiences right after Hero instead. See
+// DESIGN-SYSTEM.md for the full node id map.
 export function HomeContent() {
-  const { user } = useSession();
+  const { user, hydrated } = useSession();
   const isAccount = user !== null;
+  // Wait for the stored session so signed-in users don't fire guest queries.
+  const isGuest = hydrated && !isAccount;
 
   const geolocation = useGeolocation();
   const hasCoords = typeof geolocation === "object";
@@ -59,6 +55,12 @@ export function HomeContent() {
     enabled: isAccount && geolocation !== "pending",
   });
   const browsingHistoryQuery = useBrowsingHistory(10);
+  // Guests have no profile to personalise against, so their rails come from
+  // the plain listing: best rated, and newest.
+  const guestPopularQuery = useFilteredExperiences({ sort: "rating_desc", limit: 6, enabled: isGuest });
+  const guestTopPicksQuery = useFilteredExperiences({ sort: "created_at_desc", limit: 10, enabled: isGuest });
+  const guestPopularItems = (guestPopularQuery.data?.items ?? []).map(experienceListItemToCardProps);
+  const guestTopPicksItems = (guestTopPicksQuery.data?.items ?? []).map(experienceListItemToCardProps);
   const categoriesQuery = useInterestCategories();
 
   const popularIsLoading = isAccount && (geolocation === "pending" || popularQuery.isFetching);
@@ -97,12 +99,13 @@ export function HomeContent() {
         />
       </Reveal>
     )
-  ) : (
+  ) : !guestPopularQuery.isPending && guestPopularItems.length === 0 ? null : (
     <Reveal key="popular-experiences">
       <ExperienceRailSection
-        heading="Popular experiences near you"
+        heading="Popular experiences"
         subheading="Hand-picked spots people are loving right now."
-        items={popularExperiences}
+        items={guestPopularItems}
+        isLoading={guestPopularQuery.isPending}
         seeMoreHref="/popular-experiences"
       />
     </Reveal>
@@ -147,13 +150,14 @@ export function HomeContent() {
             />
           </Reveal>
         )
-      ) : (
+      ) : !guestTopPicksQuery.isPending && guestTopPicksItems.length === 0 ? null : (
         <Reveal>
           <ExperienceRailSection
             heading="Top picks right now"
-            subheading="What's happening in Lagos"
-            items={topPicks}
+            subheading="New on MyJourny"
+            items={guestTopPicksItems}
             cardVariant="vertical"
+            isLoading={guestTopPicksQuery.isPending}
           />
         </Reveal>
       )}
@@ -174,16 +178,7 @@ export function HomeContent() {
             />
           </Reveal>
         )
-      ) : (
-        <Reveal>
-          <ExperienceRailSection
-            heading="Based on your browsing history"
-            subheading="A few things we noticed you're drawn to."
-            items={browsingHistoryExperiences}
-            cardVariant="vertical"
-          />
-        </Reveal>
-      )}
+      ) : null}
 
       <Reveal>
         <NewsletterSection />

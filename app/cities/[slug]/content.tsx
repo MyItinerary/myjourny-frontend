@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SlidersHorizontal } from "lucide-react";
@@ -11,47 +12,55 @@ import { CategoryResultsGrid } from "@/components/categories/category-results-gr
 import { FilterChip } from "@/components/categories/filter-chip";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
 import { useSession } from "@/lib/auth/session-store";
-import { otherExperiences, popularExperiences } from "@/lib/mock-data/home";
 import { useInterestCategories } from "@/lib/queries/categories";
 import {
+  experienceListItemToCardProps,
   experienceMatchToCardProps,
-  useInfiniteRecommendedExperiences,
-  uniqueMatches,
+  useFilteredExperiences,
+  useInfiniteFilteredExperiences,
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
+import { cn } from "@/lib/utils";
 
 const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
-const FALLBACK_CATEGORY_CHIPS = ["Street food & markets", "Cafés & coffee culture", "Bars & nightlife drinks"];
 // One grid page: 4 rows of the 4-col layout.
 const PAGE_SIZE = 16;
 
 // Figma: "Home" (2364:35709) — city listing opened from a "Discover by
 // cities" tile: breadcrumb, "Experiences in <city>" heading, filter + category
 // chips, 4-col results grid with "Show more", then "Discover beyond <city>".
-// Signed-in users get live data (itin's experience endpoints are auth-only);
-// guests see the mock lists.
+// The grid is the public per-city listing (/experiences/filter?city=), the
+// same for guests and accounts, and the category chips narrow it. "Discover
+// beyond" is personalised for accounts and best-rated for guests.
 export function CityContent({ cityName, country }: { cityName: string; country?: string }) {
-  const { user } = useSession();
+  const { user, hydrated } = useSession();
   const isAccount = user !== null;
+  const isGuest = hydrated && !isAccount;
+  const [interest, setInterest] = useState<string | null>(null);
 
-  const cityQuery = useInfiniteRecommendedExperiences({ city: cityName, pageSize: PAGE_SIZE, enabled: isAccount });
-  // Recommendations aren't city-filtered here, so over-fetch and drop this
-  // city's own experiences to still fill the rail.
-  const beyondQuery = useRecommendedExperiences({ offset: 0, limit: 20, enabled: isAccount });
+  const cityQuery = useInfiniteFilteredExperiences({
+    city: cityName,
+    interest: interest ?? undefined,
+    pageSize: PAGE_SIZE,
+  });
+  // Neither source can exclude a city, so over-fetch and drop this city's
+  // own experiences to still fill the rail.
+  const accountBeyondQuery = useRecommendedExperiences({ offset: 0, limit: 20, enabled: isAccount });
+  const guestBeyondQuery = useFilteredExperiences({ sort: "rating_desc", limit: 20, enabled: isGuest });
   const categoriesQuery = useInterestCategories();
 
-  const items = isAccount ? uniqueMatches(cityQuery.data?.pages).map(experienceMatchToCardProps) : popularExperiences;
+  const items = (cityQuery.data?.pages ?? []).flatMap((p) => p.items).map(experienceListItemToCardProps);
+  const total = cityQuery.data?.pages[0]?.total;
+  const isThisCity = (city?: string | null) => city?.toLowerCase() === cityName.toLowerCase();
   const beyondItems = isAccount
-    ? (beyondQuery.data ?? [])
-        .filter((m) => m.city?.toLowerCase() !== cityName.toLowerCase())
-        .slice(0, 10)
-        .map(experienceMatchToCardProps)
-    : otherExperiences;
+    ? (accountBeyondQuery.data ?? []).filter((m) => !isThisCity(m.city)).slice(0, 10).map(experienceMatchToCardProps)
+    : (guestBeyondQuery.data?.items ?? []).filter((m) => !isThisCity(m.city)).slice(0, 10).map(experienceListItemToCardProps);
+  const beyondIsLoading = isAccount ? accountBeyondQuery.isPending : !hydrated || guestBeyondQuery.isPending;
 
-  const liveChips = (categoriesQuery.data ?? []).filter((c) => c.parent_id === null).map((c) => c.text);
-  const categoryChips = liveChips.length > 0 ? liveChips : FALLBACK_CATEGORY_CHIPS;
+  const categoryChips = (categoriesQuery.data ?? []).filter((c) => c.parent_id === null);
 
-  const countLabel = items.length === 0 ? "(0 results)" : `(${items.length}+ results)`;
+  const countLabel =
+    total === undefined ? "" : `(${total} ${total === 1 ? "result" : "results"})`;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -100,15 +109,25 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
             {FILTERS.map((filter) => (
               <FilterChip key={filter} label={filter} />
             ))}
-            {categoryChips.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                className="shrink-0 cursor-pointer whitespace-nowrap rounded-[104px] bg-[#F4F2EE] px-4 py-1 text-sm text-foreground transition-colors hover:bg-[#eae7e1]"
-              >
-                {chip}
-              </button>
-            ))}
+            {categoryChips.map((chip) => {
+              const selected = interest === chip.slug;
+              return (
+                <button
+                  key={chip.slug}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setInterest(selected ? null : chip.slug)}
+                  className={cn(
+                    "shrink-0 cursor-pointer whitespace-nowrap rounded-[104px] px-4 py-1 text-sm transition-colors",
+                    selected
+                      ? "bg-foreground text-white"
+                      : "bg-[#F4F2EE] text-foreground hover:bg-[#eae7e1]"
+                  )}
+                >
+                  {chip.text}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -116,18 +135,13 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
           <CategoryResultsGrid
             items={items}
             categoryLabel={cityName}
-            isLoading={isAccount && cityQuery.isPending}
+            isLoading={cityQuery.isPending}
             moreLabel="Show more"
-            // Guests get the mock list, which the grid pages through locally.
-            loadMore={
-              isAccount
-                ? {
-                    hasMore: cityQuery.hasNextPage,
-                    isLoading: cityQuery.isFetchingNextPage,
-                    onLoadMore: () => cityQuery.fetchNextPage(),
-                  }
-                : undefined
-            }
+            loadMore={{
+              hasMore: cityQuery.hasNextPage,
+              isLoading: cityQuery.isFetchingNextPage,
+              onLoadMore: () => cityQuery.fetchNextPage(),
+            }}
           />
         </div>
       </div>
@@ -136,7 +150,7 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
         heading={`Discover beyond ${cityName}`}
         subheading="There's always something to do anywhere else"
         items={beyondItems}
-        isLoading={isAccount && beyondQuery.isPending}
+        isLoading={beyondIsLoading}
         cardVariant="vertical"
         mobileArrowsBelow
         wide

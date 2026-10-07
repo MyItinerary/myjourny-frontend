@@ -18,6 +18,8 @@ import { ExperienceReviews } from "@/components/experiences/experience-reviews";
 import {
   ExperienceBookingBar,
   ExperienceBookingPanel,
+  GuestBookingCard,
+  guestLoginHref,
 } from "@/components/experiences/experience-booking-panel";
 import {
   experienceMatchToCardProps,
@@ -27,6 +29,7 @@ import {
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
 import { useMyWishlistedIds } from "@/lib/queries/wishlists";
+import { useSession } from "@/lib/auth/session-store";
 import { SaveToCollectionModal } from "@/components/wishlists/save-to-collection-modal";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +66,10 @@ function ExperienceDescription({ description }: { description: string }) {
 
 export function ExperienceDetailContent({ id }: { id: string }) {
   const router = useRouter();
+  const { user, hydrated } = useSession();
+  // Guests can read the page; the host, meeting point and booking need an account.
+  const isAccount = user !== null;
+  const isGuest = hydrated && !isAccount;
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
   const { data: prices } = useExperiencePrices(id);
@@ -70,7 +77,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
     (min, p) => (min === null || p.amount < min ? p.amount : min),
     null as number | null
   );
-  const similarQuery = useRecommendedExperiences({ offset: 0, limit: 10 });
+  const similarQuery = useRecommendedExperiences({ offset: 0, limit: 10, enabled: isAccount });
   const similarItems = (similarQuery.data ?? [])
     .filter((m) => m.experience_id !== id)
     .map(experienceMatchToCardProps);
@@ -212,7 +219,14 @@ export function ExperienceDetailContent({ id }: { id: string }) {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
                     <span className="font-sans text-[16px] font-medium leading-[24px] text-[#333134]">
-                      {experience.host?.id ? (
+                      {isGuest ? (
+                        <Link
+                          href={guestLoginHref(experience.id)}
+                          className="hover:text-brand hover:underline transition-colors"
+                        >
+                          Log in to see your host
+                        </Link>
+                      ) : experience.host?.id ? (
                         <Link
                           href={`/guides/${experience.host.id}`}
                           className="hover:text-brand hover:underline transition-colors"
@@ -317,17 +331,26 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             </section>
           </div>
 
-          <ExperienceBookingPanel
-            className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
-            experienceId={experience.id}
-            guideId={experience.guide_id}
-            prices={prices ?? []}
-            currency={experience.currency ?? "NGN"}
-            durationLabel={durationLabel}
-            eventStartDate={eventStartDate}
-            availableSpots={experience.group_size_max ?? undefined}
-            minSpots={experience.group_size_min ?? 1}
-          />
+          {isGuest ? (
+            <GuestBookingCard
+              className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
+              priceFrom={minPrice}
+              currency={experience.currency ?? "NGN"}
+              experienceId={experience.id}
+            />
+          ) : isAccount ? (
+            <ExperienceBookingPanel
+              className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
+              experienceId={experience.id}
+              guideId={experience.guide_id}
+              prices={prices ?? []}
+              currency={experience.currency ?? "NGN"}
+              durationLabel={durationLabel}
+              eventStartDate={eventStartDate}
+              availableSpots={experience.group_size_max ?? undefined}
+              minSpots={experience.group_size_min ?? 1}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -351,7 +374,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
       <ExperienceBookingBar
         priceFrom={minPrice ?? 0}
         currency={experience.currency ?? "NGN"}
-        onBookNow={() => setMobileBookingOpen(true)}
+        onBookNow={() => (isGuest ? router.push(guestLoginHref(experience.id)) : setMobileBookingOpen(true))}
       />
 
       {/* Mobile bottom sheet — reuses the same ExperienceBookingPanel form

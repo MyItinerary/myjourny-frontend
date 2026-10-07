@@ -362,3 +362,88 @@ export function useBookingPaymentSheet() {
   });
 }
 
+
+// GET /experiences/filter — plain filtered listing (no personal scoring), so
+// it's the one listing guests can use too. itin drops the exact location,
+// guide and booking link for guests. Paginated by page number with a total.
+export type ExperienceListItem = {
+  id: string;
+  title: string;
+  headline?: string | null;
+  city?: string | null;
+  country?: string | null;
+  duration_minutes?: number | null;
+  rating?: number | null;
+  currency?: string | null;
+  cover_image_url?: string | null;
+  price_from?: number | null;
+  price_unit?: string | null;
+};
+
+type ExperienceListPage = {
+  items: ExperienceListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+};
+
+export type ExperienceFilters = {
+  city?: string;
+  country?: string;
+  /** Energy/budget/comfort/social-style category slug(s), with subcategories. */
+  category?: string[];
+  /** Interest category slug — exact match against the experience's interest tags. */
+  interest?: string;
+  sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
+};
+
+export function experienceListItemToCardProps(
+  item: ExperienceListItem
+): ExperienceCardProps & { id: string } {
+  return {
+    id: item.id,
+    imageSrc: item.cover_image_url || FALLBACK_IMAGE,
+    imageAlt: item.title,
+    category: item.city || "",
+    title: item.title,
+    duration: formatDuration(item.duration_minutes),
+    rating: item.rating ?? 0,
+    reviewCount: 0,
+    priceFrom: item.price_from ?? 0,
+    currency: item.currency ?? "NGN",
+  };
+}
+
+async function fetchExperiencePage(filters: ExperienceFilters, page: number, limit: number) {
+  const { data } = await apiClient.get<ExperienceListPage>("/experiences/filter", {
+    params: { ...filters, page, limit },
+    // category=a&category=b, the way FastAPI reads list params.
+    paramsSerializer: { indexes: null },
+  });
+  return data;
+}
+
+export function useFilteredExperiences(
+  filters: ExperienceFilters & { limit: number; enabled?: boolean }
+) {
+  const { limit, enabled = true, ...rest } = filters;
+  return useQuery({
+    queryKey: ["experiences", "filter", rest, limit],
+    queryFn: () => fetchExperiencePage(rest, 1, limit),
+    enabled,
+  });
+}
+
+export function useInfiniteFilteredExperiences(
+  filters: ExperienceFilters & { pageSize: number; enabled?: boolean }
+) {
+  const { pageSize, enabled = true, ...rest } = filters;
+  return useInfiniteQuery({
+    queryKey: ["experiences", "filter", "infinite", rest, pageSize],
+    queryFn: ({ pageParam }) => fetchExperiencePage(rest, pageParam, pageSize),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page < last.total_pages ? last.page + 1 : undefined),
+    enabled,
+  });
+}
