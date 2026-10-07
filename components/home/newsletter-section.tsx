@@ -4,6 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 
+import { apiErrorMessage } from "@/lib/api-error";
+import { useSubscribeNewsletter } from "@/lib/queries/newsletter";
 import { cn } from "@/lib/utils";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -13,6 +15,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function NewsletterSection() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { mutate: subscribe, isPending } = useSubscribeNewsletter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,9 +24,16 @@ export function NewsletterSection() {
       return;
     }
     setError(null);
-    // TODO: no newsletter endpoint exists yet — wire this to the subscribe API.
-    // Until then, don't tell people they're subscribed when nothing is saved.
-    toast.info("Newsletter sign-up is coming soon.");
+    subscribe(
+      { email: email.trim(), source: "web_home" },
+      {
+        onSuccess: () => {
+          toast.success("You're subscribed. Check your inbox!");
+          setEmail("");
+        },
+        onError: (err) => toast.error(apiErrorMessage(err, "Couldn't subscribe. Please try again.")),
+      }
+    );
   };
 
   return (
@@ -69,9 +79,10 @@ export function NewsletterSection() {
               />
               <button
                 type="submit"
-                className="h-12 w-full cursor-pointer rounded-full bg-[#F5032D] px-4 text-base font-medium text-white transition-colors hover:bg-[#d90227] lg:w-[141px] lg:shrink-0"
+                disabled={isPending}
+                className="h-12 w-full cursor-pointer rounded-full bg-[#F5032D] px-4 text-base font-medium text-white transition-colors hover:bg-[#d90227] disabled:cursor-wait disabled:opacity-70 lg:w-[141px] lg:shrink-0"
               >
-                Subscribe
+                {isPending ? "Subscribing..." : "Subscribe"}
               </button>
             </div>
             {error && (
