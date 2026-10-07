@@ -2,30 +2,31 @@
 
 import { useState } from "react";
 import { MapPin, Search } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ModalFooter, ModalShell, OtpBoxes, Row, SavedBanner, TextField } from "@/components/account-settings/section-ui";
+import { apiErrorMessage } from "@/lib/api-error";
+import { useMe } from "@/lib/queries/auth";
+import {
+  useConfirmPhoneChange,
+  useGetProfile,
+  useRequestEmailChange,
+  useRequestPhoneChange,
+  useUpdateProfile,
+  type ProfileUpdatePayload,
+} from "@/lib/queries/profile";
+import {
+  ModalFooter,
+  ModalShell,
+  OtpBoxes,
+  Row,
+  SavedBanner,
+  SectionSkeleton,
+  TextField,
+} from "@/components/account-settings/section-ui";
 
-interface PersonalValues {
-  legalName: string;
-  preferredName: string;
-  displayName: string;
-  phone: string;
-  email: string;
-  dob: string;
-  emergency: string;
-  city: string;
-}
-
-const INITIAL_VALUES: PersonalValues = {
-  legalName: "Tunde Bakare",
-  preferredName: "Not provided",
-  displayName: "Show my first name only",
-  phone: "803 456 2204",
-  email: "t***e@gmail.com",
-  dob: "14 March 1991",
-  emergency: "Not provided",
-  city: "Lagos",
-};
+const NOT_PROVIDED = "Not provided";
+const SHOW_FULL = "Show my full name";
+const SHOW_FIRST = "Show my first name only";
 
 const CITIES: [string, string][] = [
   ["Lagos", "Lagos State · Most experiences on MyJourny today"],
@@ -57,8 +58,46 @@ function firstNameOf(fullName: string) {
   return fullName.trim().split(/\s+/)[0] || fullName;
 }
 
+// t***e@gmail.com
+function maskEmail(email: string | null | undefined) {
+  if (!email) return NOT_PROVIDED;
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  const masked = local.length <= 2 ? `${local[0] ?? ""}***` : `${local[0]}***${local[local.length - 1]}`;
+  return `${masked}@${domain}`;
+}
+
+// +2348034562204 -> +234 *** *** 2204 (country code = everything before the
+// last 10 digits).
+function maskPhone(phone: string | null | undefined) {
+  if (!phone) return NOT_PROVIDED;
+  const last4 = phone.slice(-4);
+  const country = phone.length > 10 ? phone.slice(0, phone.length - 10) : "";
+  return `${country ? `${country} ` : ""}*** *** ${last4}`;
+}
+
+// The +234 field takes a local number; itin wants E.164.
+function nigerianE164(local: string) {
+  const digits = local.replace(/\D/g, "").replace(/^0/, "");
+  return `+234${digits}`;
+}
+
+// 1991-03-14 -> 14 March 1991
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return NOT_PROVIDED;
+  const date = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
 export function PersonalInfoSection() {
-  const [values, setValues] = useState<PersonalValues>(INITIAL_VALUES);
+  const { data: profile, isLoading } = useGetProfile();
+  const { data: me } = useMe();
+  const updateProfile = useUpdateProfile();
+  const requestPhoneChange = useRequestPhoneChange();
+  const confirmPhoneChange = useConfirmPhoneChange();
+  const requestEmailChange = useRequestEmailChange();
+
   const [modal, setModal] = useState<ModalKey | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
@@ -74,26 +113,55 @@ export function PersonalInfoSection() {
   const [citySearch, setCitySearch] = useState("");
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
 
+  if (isLoading) return <SectionSkeleton />;
+
+  const legalName = profile?.legal_name || profile?.full_name || "";
+  const preferredName = profile?.preferred_name || "";
+  const showFirstOnly = profile?.display_name_preference === "first_name_only";
+  const emergency = profile?.emergency_contact_name
+    ? `${profile.emergency_contact_name} · ${profile.emergency_contact_phone ?? ""}`
+    : NOT_PROVIDED;
+  const email = me?.email ?? null;
+  const values = {
+    legalName: legalName || NOT_PROVIDED,
+    preferredName: preferredName || NOT_PROVIDED,
+    displayName: showFirstOnly ? SHOW_FIRST : SHOW_FULL,
+    phone: maskPhone(profile?.phone_number),
+    email: maskEmail(email),
+    dob: formatDate(profile?.date_of_birth),
+    emergency,
+    city: profile?.city || NOT_PROVIDED,
+  };
+
   function closeModal() {
     setModal(null);
   }
 
+  // Saves profile fields, then shows the confirmation banner.
+  function save(payload: ProfileUpdatePayload, message: string) {
+    updateProfile.mutate(payload, {
+      onSuccess: () => {
+        setSavedMessage(message);
+        closeModal();
+      },
+      onError: (error) => toast.error(apiErrorMessage(error, "Couldn't save that change.")),
+    });
+  }
+
   function openModal(key: ModalKey) {
     setSavedMessage(null);
-    if (key === "legalName") setLegalNameDraft(values.legalName);
-    if (key === "preferredName") {
-      setPreferredNameDraft(values.preferredName === "Not provided" ? "" : values.preferredName);
-    }
+    if (key === "legalName") setLegalNameDraft(legalName);
+    if (key === "preferredName") setPreferredNameDraft(preferredName);
     if (key === "displayName") setDisplayNameDraft(values.displayName);
     if (key === "phone1") setPhoneDraft("");
     if (key === "email") setEmailDraft("");
-    if (key === "dob") setDobDraft(values.dob);
+    if (key === "dob") setDobDraft(profile?.date_of_birth ?? "");
     if (key === "emergency") {
-      setEmergencyName("");
-      setEmergencyPhone("");
+      setEmergencyName(profile?.emergency_contact_name ?? "");
+      setEmergencyPhone(profile?.emergency_contact_phone ?? "");
     }
     if (key === "city") {
-      setCityDraft(values.city);
+      setCityDraft(profile?.city ?? "");
       setCitySearch("");
     }
     setModal(key);
@@ -105,8 +173,8 @@ export function PersonalInfoSection() {
     return label.toLowerCase().includes(q) || meta.toLowerCase().includes(q);
   });
 
-  const preferredNameAction = values.preferredName === "Not provided" ? "Add" : "Edit";
-  const emergencyAction = values.emergency === "Not provided" ? "Add" : "Edit";
+  const preferredNameAction = values.preferredName === NOT_PROVIDED ? "Add" : "Edit";
+  const emergencyAction = values.emergency === NOT_PROVIDED ? "Add" : "Edit";
 
   return (
     <div className="max-w-[720px] flex-1">
@@ -142,7 +210,7 @@ export function PersonalInfoSection() {
         />
         <Row
           label="Phone number"
-          value={`+234 *** *** ${values.phone.slice(-4)}`}
+          value={values.phone}
           note="Shared with your host for the day of the experience. Booking updates reach you by push and email, not by text."
           actionLabel="Edit"
           onAction={() => openModal("phone1")}
@@ -186,11 +254,10 @@ export function PersonalInfoSection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
+            saveDisabled={!legalNameDraft.trim() || updateProfile.isPending}
             onSave={() => {
-              const name = legalNameDraft.trim() || values.legalName;
-              setValues((v) => ({ ...v, legalName: name }));
-              setSavedMessage(`Saved. Your legal name now reads ${name}.`);
-              closeModal();
+              const name = legalNameDraft.trim();
+              save({ legal_name: name }, `Saved. Your legal name now reads ${name}.`);
             }}
           />
         </ModalShell>
@@ -210,15 +277,15 @@ export function PersonalInfoSection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
+            saveDisabled={updateProfile.isPending}
             onSave={() => {
               const trimmed = preferredNameDraft.trim();
-              setValues((v) => ({ ...v, preferredName: trimmed || "Not provided" }));
-              setSavedMessage(
+              save(
+                { preferred_name: trimmed || null },
                 trimmed
                   ? `Saved. Hosts and other guests now see ${trimmed}.`
                   : "Saved. Your preferred name has been removed.",
               );
-              closeModal();
             }}
           />
         </ModalShell>
@@ -227,7 +294,7 @@ export function PersonalInfoSection() {
       {modal === "displayName" && (
         <ModalShell title="Display name for hosts and curators" onClose={closeModal}>
           <div className="flex flex-col gap-2.5">
-            {(["Show my full name", "Show my first name only"] as const).map((label) => {
+            {([SHOW_FULL, SHOW_FIRST] as const).map((label) => {
               const selected = displayNameDraft === label;
               return (
                 <button
@@ -242,7 +309,7 @@ export function PersonalInfoSection() {
                   <div>
                     <div className="text-[15px] font-medium text-foreground">{label}</div>
                     <div className="text-[13px] text-muted-foreground">
-                      {label === "Show my full name" ? values.legalName : firstNameOf(values.legalName)}
+                      {label === SHOW_FULL ? legalName : firstNameOf(legalName)}
                     </div>
                   </div>
                   <div
@@ -259,14 +326,14 @@ export function PersonalInfoSection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
+            saveDisabled={updateProfile.isPending}
             onSave={() => {
-              setValues((v) => ({ ...v, displayName: displayNameDraft }));
-              const shown =
-                displayNameDraft === "Show my full name"
-                  ? values.legalName
-                  : firstNameOf(values.legalName);
-              setSavedMessage(`Saved. Hosts and curators now see ${shown}.`);
-              closeModal();
+              const full = displayNameDraft === SHOW_FULL;
+              const shown = full ? legalName : firstNameOf(legalName);
+              save(
+                { display_name_preference: full ? "full" : "first_name_only" },
+                `Saved. Hosts and curators now see ${shown}.`,
+              );
             }}
           />
         </ModalShell>
@@ -294,12 +361,16 @@ export function PersonalInfoSection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
-            saveLabel="Send code"
-            saveDisabled={phoneDraft.replace(/\s/g, "").length < 7}
-            onSave={() => {
-              setOtp(["", "", "", "", "", ""]);
-              setModal("phone2");
-            }}
+            saveLabel={requestPhoneChange.isPending ? "Sending…" : "Send code"}
+            saveDisabled={phoneDraft.replace(/\s/g, "").length < 7 || requestPhoneChange.isPending}
+            onSave={() =>
+              requestPhoneChange.mutate(nigerianE164(phoneDraft), {
+                onSuccess: () => {
+                  setOtp(["", "", "", "", "", ""]);
+                  setModal("phone2");
+                },
+              })
+            }
           />
         </ModalShell>
       )}
@@ -315,7 +386,18 @@ export function PersonalInfoSection() {
           </div>
           <div className="mt-3.5 flex items-center gap-1.5 text-sm text-muted-foreground">
             <span>Did not get it?</span>
-            <span>Resend in 0:42</span>
+            <button
+              type="button"
+              disabled={requestPhoneChange.isPending}
+              onClick={() =>
+                requestPhoneChange.mutate(nigerianE164(phoneDraft), {
+                  onSuccess: () => toast.success("We sent a new code."),
+                })
+              }
+              className="cursor-pointer font-medium text-brand underline disabled:cursor-wait disabled:opacity-60"
+            >
+              Resend code
+            </button>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
@@ -335,17 +417,20 @@ export function PersonalInfoSection() {
               </button>
               <button
                 type="button"
-                disabled={otp.some((d) => !d)}
-                onClick={() => {
-                  setValues((v) => ({ ...v, phone: phoneDraft.replace(/\s/g, "") }));
-                  setSavedMessage(
-                    `Saved. Your host will reach you on +234 *** *** ${phoneDraft.replace(/\s/g, "").slice(-4)} on the day.`,
-                  );
-                  closeModal();
-                }}
+                disabled={otp.some((d) => !d) || confirmPhoneChange.isPending}
+                onClick={() =>
+                  confirmPhoneChange.mutate(otp.join(""), {
+                    onSuccess: () => {
+                      setSavedMessage(
+                        `Saved. Your host will reach you on ${maskPhone(nigerianE164(phoneDraft))} on the day.`,
+                      );
+                      closeModal();
+                    },
+                  })
+                }
                 className={cn(
                   "cursor-pointer rounded-full px-5.5 py-3 text-[15px] font-medium",
-                  otp.some((d) => !d)
+                  otp.some((d) => !d) || confirmPhoneChange.isPending
                     ? "cursor-not-allowed bg-[#E0E0E0] text-[#BDBDBD]"
                     : "bg-brand text-white hover:bg-[#FF4540]",
                 )}
@@ -372,13 +457,16 @@ export function PersonalInfoSection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
+            saveLabel={requestEmailChange.isPending ? "Sending…" : "Send link"}
+            saveDisabled={!emailDraft.trim() || requestEmailChange.isPending}
             onSave={() => {
-              const next = emailDraft.trim() || values.email;
-              setValues((v) => ({ ...v, email: next }));
-              setSavedMessage(
-                `Check ${emailDraft.trim() || "your inbox"} and open the confirmation link to finish the change.`,
-              );
-              closeModal();
+              const next = emailDraft.trim();
+              requestEmailChange.mutate(next, {
+                onSuccess: () => {
+                  setSavedMessage(`Check ${next} and open the confirmation link to finish the change.`);
+                  closeModal();
+                },
+              });
             }}
           />
         </ModalShell>
@@ -388,7 +476,8 @@ export function PersonalInfoSection() {
         <ModalShell title="Edit date of birth" onClose={closeModal}>
           <TextField
             label="Date of birth"
-            placeholder="DD Month YYYY"
+            type="date"
+            max={new Date().toISOString().slice(0, 10)}
             value={dobDraft}
             onChange={(e) => setDobDraft(e.target.value)}
           />
@@ -398,12 +487,10 @@ export function PersonalInfoSection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
-            onSave={() => {
-              const next = dobDraft.trim() || values.dob;
-              setValues((v) => ({ ...v, dob: next }));
-              setSavedMessage(`Saved. Your date of birth is now ${next}.`);
-              closeModal();
-            }}
+            saveDisabled={!dobDraft || updateProfile.isPending}
+            onSave={() =>
+              save({ date_of_birth: dobDraft }, `Saved. Your date of birth is now ${formatDate(dobDraft)}.`)
+            }
           />
         </ModalShell>
       )}
@@ -419,9 +506,10 @@ export function PersonalInfoSection() {
             />
             <TextField
               label="Phone number"
-              placeholder="+234 803 000 0000"
+              placeholder="+2348030000000"
+              type="tel"
               value={emergencyPhone}
-              onChange={(e) => setEmergencyPhone(e.target.value)}
+              onChange={(e) => setEmergencyPhone(e.target.value.replace(/[^\d+]/g, ""))}
             />
           </div>
           <div className="mt-2.5 text-sm text-muted-foreground">
@@ -430,16 +518,23 @@ export function PersonalInfoSection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
+            // Both or neither: itin needs the number in international format.
+            saveDisabled={
+              updateProfile.isPending ||
+              (!!emergencyName.trim() !== !!emergencyPhone.trim()) ||
+              (!!emergencyPhone.trim() && !/^\+[1-9]\d{6,14}$/.test(emergencyPhone.trim()))
+            }
             onSave={() => {
               const name = emergencyName.trim();
-              const next = name ? `${name} · ${emergencyPhone.trim()}` : "Not provided";
-              setValues((v) => ({ ...v, emergency: next }));
-              setSavedMessage(
+              save(
+                {
+                  emergency_contact_name: name || null,
+                  emergency_contact_phone: name ? emergencyPhone.trim() : null,
+                },
                 name
                   ? `Saved. We will contact ${name} if something goes wrong.`
                   : "Saved. You have no emergency contact on file.",
               );
-              closeModal();
             }}
           />
         </ModalShell>
@@ -491,11 +586,10 @@ export function PersonalInfoSection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
-            onSave={() => {
-              setValues((v) => ({ ...v, city: cityDraft }));
-              setSavedMessage(`Saved. Your feed now opens on experiences in ${cityDraft}.`);
-              closeModal();
-            }}
+            saveDisabled={!cityDraft || updateProfile.isPending}
+            onSave={() =>
+              save({ city: cityDraft }, `Saved. Your feed now opens on experiences in ${cityDraft}.`)
+            }
           />
         </ModalShell>
       )}
