@@ -28,7 +28,7 @@ export function NewsletterSection() {
 
   return (
     <section className="relative bg-gradient-to-b from-[rgba(244,242,238,0.87)] to-white">
-      <div className="mx-auto flex w-full max-w-[1056px] flex-col items-center justify-center gap-16 px-6 py-8 lg:min-h-[426px] lg:gap-[83px] lg:flex-row lg:px-0">
+      <div className="mx-auto flex w-full max-w-[1056px] flex-col items-center justify-center gap-16 px-6 py-8 lg:min-h-[426px] lg:flex-row lg:gap-12 xl:gap-[83px] xl:px-0">
         <div className="relative aspect-[1448/1086] w-full shrink-0 overflow-hidden rounded-xl border border-[#dedede] bg-[#FDFCF8] lg:w-[433.8px]">
           <Image
             src="/images/home/newsletter/newsletter-envelope.jpg"
@@ -39,7 +39,7 @@ export function NewsletterSection() {
           />
         </div>
 
-        <div className="flex w-full flex-col gap-5 lg:w-[540px] lg:shrink-0">
+        <div className="flex w-full min-w-0 flex-col gap-5 lg:max-w-[540px] lg:flex-1">
           <h2 className="font-heading text-[32px] font-extrabold leading-[1.2] text-[#333134] lg:text-[40px]">
             One email.
             <br />
