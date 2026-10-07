@@ -4,7 +4,10 @@ import { CategoryContent } from "@/app/categories/[slug]/content";
 import { useGeolocation } from "@/lib/hooks/use-geolocation";
 import { useSession } from "@/lib/auth/session-store";
 import { popularExperiences } from "@/lib/mock-data/home";
-import { experienceMatchToCardProps, useRecommendedExperiences } from "@/lib/queries/experiences";
+import { experienceMatchToCardProps, useInfiniteRecommendedExperiences } from "@/lib/queries/experiences";
+
+// One grid page: 4 rows of the 4-col layout.
+const PAGE_SIZE = 16;
 
 // "See more" target of the home page's "Popular experiences near you"
 // section (Figma 2353:15947 desktop / 2353:16337 mobile). Same listing
@@ -18,22 +21,35 @@ export function PopularExperiencesContent() {
   const geolocation = useGeolocation();
   const hasCoords = typeof geolocation === "object";
 
-  const query = useRecommendedExperiences({
+  const query = useInfiniteRecommendedExperiences({
     latitude: hasCoords ? geolocation.latitude : undefined,
     longitude: hasCoords ? geolocation.longitude : undefined,
-    offset: 0,
-    limit: 50,
+    pageSize: PAGE_SIZE,
     enabled: isAccount && geolocation !== "pending",
   });
 
-  const items = isAccount ? (query.data ?? []).map(experienceMatchToCardProps) : popularExperiences;
+  // Scores can shift between page fetches, so drop any repeat that lands
+  // in a later page.
+  const matches = (query.data?.pages ?? []).flat();
+  const unique = matches.filter((m, i) => matches.findIndex((o) => o.experience_id === m.experience_id) === i);
+  const items = isAccount ? unique.map(experienceMatchToCardProps) : popularExperiences;
 
   return (
     <CategoryContent
       label="Popular experiences near you"
       items={items}
-      isLoading={isAccount && (geolocation === "pending" || query.isFetching)}
+      isLoading={isAccount && (geolocation === "pending" || query.isPending)}
       moreLabel="Show more"
+      // Guests get the mock list, which the grid pages through locally.
+      loadMore={
+        isAccount
+          ? {
+              hasMore: query.hasNextPage,
+              isLoading: query.isFetchingNextPage,
+              onLoadMore: () => query.fetchNextPage(),
+            }
+          : undefined
+      }
     />
   );
 }

@@ -11,22 +11,25 @@ const PAGE_SIZE = 16;
 
 // Figma: "Frame 2147226756" (2001:11998 desktop, 4-col grid / 2001:12391
 // mobile, single column) + the "Buttons" pagination CTA below it. Shows 16
-// cards (4 rows) at a time; the button reveals the next 16 in place — the
-// list is already fully loaded, so this is client-side pagination.
+// cards (4 rows) at a time. By default the button reveals the next 16 of an
+// already-loaded list; pass `loadMore` when the caller pages from the server
+// instead, and the grid shows every item it's given.
 export function CategoryResultsGrid({
   items,
   categoryLabel,
   isLoading = false,
   moreLabel = "See more",
+  loadMore,
 }: {
   items: ExperienceItem[];
   categoryLabel?: string;
   isLoading?: boolean;
   moreLabel?: string;
+  loadMore?: { hasMore: boolean; isLoading: boolean; onLoadMore: () => void };
 }) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const visible = items.slice(0, visibleCount);
-  const hasMore = items.length > visibleCount;
+  const visible = loadMore ? items : items.slice(0, visibleCount);
+  const hasMore = loadMore ? loadMore.hasMore : items.length > visibleCount;
 
   if (!isLoading && items.length === 0) {
     return (
@@ -68,8 +71,13 @@ export function CategoryResultsGrid({
       </div>
 
       {hasMore ? (
-        <Button size="cta" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)} className="w-[134px]">
-          {moreLabel}
+        <Button
+          size="cta"
+          disabled={loadMore?.isLoading}
+          onClick={() => (loadMore ? loadMore.onLoadMore() : setVisibleCount((n) => n + PAGE_SIZE))}
+          className="w-[134px]"
+        >
+          {loadMore?.isLoading ? "Loading..." : moreLabel}
         </Button>
       ) : null}
     </div>

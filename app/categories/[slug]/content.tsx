@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -23,11 +24,13 @@ export function CategoryContent({
   items,
   isLoading = false,
   moreLabel,
+  loadMore,
 }: {
   label: string;
   items: ExperienceItem[];
   isLoading?: boolean;
   moreLabel?: string;
+  loadMore?: ComponentProps<typeof CategoryResultsGrid>["loadMore"];
 }) {
   const { user } = useSession();
   const isAccount = user !== null;
@@ -55,7 +58,7 @@ export function CategoryContent({
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-9">
         <CategoryHeader label={label} count={items.length} />
         <div className="mt-6 lg:mt-9">
-          <CategoryResultsGrid items={items} categoryLabel={label} isLoading={isLoading} moreLabel={moreLabel} />
+          <CategoryResultsGrid items={items} categoryLabel={label} isLoading={isLoading} moreLabel={moreLabel} loadMore={loadMore} />
         </div>
       </div>
 
