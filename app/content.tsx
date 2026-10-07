@@ -93,6 +93,7 @@ export function HomeContent() {
           subheading="Hand-picked spots people are loving right now."
           items={realPopularItems}
           isLoading={popularIsLoading}
+          seeMoreHref="/popular-experiences"
         />
       </Reveal>
     )
@@ -102,6 +103,7 @@ export function HomeContent() {
         heading="Popular experiences near you"
         subheading="Hand-picked spots people are loving right now."
         items={popularExperiences}
+        seeMoreHref="/popular-experiences"
       />
     </Reveal>
   );
