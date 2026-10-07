@@ -56,7 +56,7 @@ Redirect-to-hosted-checkout, not an embedded payment element: booking creation r
 
 - **Unit and component tests:** Vitest + React Testing Library + MSW (`npm run test`, `npm run test:coverage`). Tests sit next to their source. Coverage on `features/**` is gated at 80%.
 - **E2E:** Playwright against a production build, with the itin API stubbed (`npm run test:e2e`). Auth, booking/checkout and payment pages require E2E.
-- **CI:** `.github/workflows/ci.yml` runs lint, typecheck, unit-tests, architecture, build and e2e. `.github/workflows/pr-checks.yml` checks the PR title, branch name and description checklist. All of these are required to merge into `main`.
+- **CI:** there are two required checks for merging into `main`. `ci` (`.github/workflows/ci.yml`) is one job that runs lint, typecheck, the architecture check, unit tests with coverage, the build, and E2E against that build. `pr-format` (`.github/workflows/pr-format.yml`) checks the PR title, branch name and description checklist.
 
 ## Related
 

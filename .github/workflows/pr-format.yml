@@ -1,6 +1,7 @@
-# Enforces the PR format from .github/pull_request_template.md and
-# CONTRIBUTING.md. Both jobs are required status checks on main.
-name: PR checks
+# Required status check `pr-format`: enforces the PR title, branch name and
+# description/checklist from .github/pull_request_template.md and CONTRIBUTING.md.
+# Kept separate from `ci` so editing the description doesn't re-run the test suite.
+name: PR format
 
 on:
   pull_request:
@@ -11,16 +12,18 @@ permissions:
   pull-requests: read
 
 jobs:
-  pr-title:
-    name: pr-title
+  pr-format:
+    name: pr-format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v8
         with:
           script: |
+            const problems = [];
+
+            // --- 0. Title and branch name ---------------------------------
             const TYPES = "feat|fix|refactor|perf|test|docs|chore";
             const { title, head } = context.payload.pull_request;
-            const problems = [];
 
             if (!new RegExp(`^(${TYPES})(\\([a-z0-9-]+\\))?!?: \\S.{2,}$`).test(title)) {
               problems.push(
@@ -33,19 +36,8 @@ jobs:
               problems.push(`Branch "${branch}" must be named "<type>/<kebab-case>", e.g. "feat/search-date-filter".`);
             }
 
-            if (problems.length) core.setFailed(problems.join("\n"));
-            else core.info(`✔ Title and branch OK: ${title} (${branch})`);
-
-  pr-checklist:
-    name: pr-checklist
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/github-script@v8
-        with:
-          script: |
             const pr = context.payload.pull_request;
             const body = (pr.body || "").replace(/<!--[\s\S]*?-->/g, "");
-            const problems = [];
 
             // --- 1. Required sections must exist and be non-empty -------------
             const REQUIRED = [
@@ -91,7 +83,7 @@ jobs:
             }
 
             if (problems.length) {
-              core.setFailed(`PR description does not meet CONTRIBUTING.md requirements:\n- ${problems.join("\n- ")}`);
+              core.setFailed(`PR does not meet the format in CONTRIBUTING.md:\n- ${problems.join("\n- ")}`);
             } else {
-              core.info("✔ PR description and checklist complete.");
+              core.info("✔ PR title, branch, description and checklist OK.");
             }

@@ -5,6 +5,8 @@ import { defineConfig, devices } from "@playwright/test";
 // e2e/fixtures.ts, so E2E never depends on a live itin backend.
 export const E2E_API_URL = "http://127.0.0.1:8999";
 const PORT = 3100;
+// CI builds once in an earlier step (with the same env) and sets E2E_SKIP_BUILD.
+const BUILD = process.env.E2E_SKIP_BUILD ? "" : "npm run build && ";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -18,7 +20,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: `npm run build && npm run start -- -p ${PORT}`,
+    command: `${BUILD}npm run start -- -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,

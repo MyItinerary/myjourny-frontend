@@ -165,17 +165,20 @@ The scope is the feature, e.g. `experiences`, `auth`, `booking`, `profile`. PRs 
 
 `main` is protected. Nobody can push to it directly, admins included. A PR can merge only when **all** of these hold:
 
-| Check | Fails when |
-|---|---|
-| `lint` | ESLint errors, including MVVM import-boundary violations |
-| `typecheck` | `tsc --noEmit` errors |
-| `unit-tests` | A Vitest test fails, or `features/**` coverage drops below 80% |
-| `architecture` | New files in legacy dirs, a missing co-located test, a feature without `index.ts`, `eslint-disable` of boundary rules, or `.only`/`.skip` |
-| `build` | `next build` fails |
-| `e2e` | A Playwright spec fails |
-| `pr-title` | The title isn't Conventional Commits, or the branch name doesn't match |
-| `pr-checklist` | A template section is empty, a box is unticked, or a `feat`/`fix`/`refactor`/`perf` PR changes no test files |
-| Review | No code-owner approval (repo admins may bypass review only, never the checks) |
+There are two required checks, plus review:
+
+| Check | Step | Fails when |
+|---|---|---|
+| **`ci`** | Lint | ESLint errors, including MVVM import-boundary violations |
+| | Typecheck | `tsc --noEmit` errors |
+| | Architecture check | New files in legacy dirs, a missing co-located test, a feature without `index.ts`, `eslint-disable` of boundary rules, or `.only`/`.skip` |
+| | Unit tests + coverage | A Vitest test fails, or `features/**` coverage drops below 80% |
+| | Build | `next build` fails |
+| | E2E tests | A Playwright spec fails |
+| **`pr-format`** | | The title isn't Conventional Commits, the branch name doesn't match, a template section is empty, a box is unticked, or a `feat`/`fix`/`refactor`/`perf` PR changes no test files |
+| Review | | No code-owner approval (repo admins may bypass review only, never the checks) |
+
+`ci` runs its steps in order and stops at the first failure. Open the failed step in the Actions log to see which gate tripped. `npm run check` runs every `ci` step except build and E2E.
 
 The branch must also be up to date with `main`, and all review threads must be resolved.
 

@@ -5,7 +5,7 @@ PR title MUST follow Conventional Commits:  <type>(<scope>): <summary>
 Branch MUST be named <type>/<kebab-case>, e.g. feat/search-date-filter.
 
 Every section below is required. Replace each placeholder comment with real
-content. A CI check (`pr-checklist`) blocks merge if a section is empty or a
+content. A CI check (`pr-format`) blocks merge if a section is empty or a
 checklist box is unticked. If an item truly doesn't apply, tick it and append
 "N/A — <reason>".
 -->
