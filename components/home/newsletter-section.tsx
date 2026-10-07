@@ -22,8 +22,8 @@ export function NewsletterSection() {
     }
     setError(null);
     // TODO: no newsletter endpoint exists yet — wire this to the subscribe API.
-    toast.success("Thanks for subscribing!");
-    setEmail("");
+    // Until then, don't tell people they're subscribed when nothing is saved.
+    toast.info("Newsletter sign-up is coming soon.");
   };
 
   return (
