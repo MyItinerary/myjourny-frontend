@@ -6,7 +6,6 @@ import { apiClient } from "@/lib/api-client";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 
-// Matches itin's BookingOut DTO (app/core/dto/booking.py) and GET /bookings/me response.
 export type Booking = {
   id: string;
   user_id?: string;

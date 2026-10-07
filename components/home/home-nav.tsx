@@ -560,6 +560,7 @@ export function HomeNav({ className }: { className?: string }) {
                   )}
                 </AnimatePresence>
               </div>
+            </div>
           </div>
 
           {/* Expanded Search Bar Container inside the Fixed Navbar */}

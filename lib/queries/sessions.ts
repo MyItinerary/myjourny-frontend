@@ -22,24 +22,8 @@ export type ExperienceSessions = {
   sessions: ExperienceSession[];
 };
 
-/** "YYYY-MM-DD" for a calendar day in the browser's time zone. */
-export function dateKey(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-export function parseDateKey(key: string): Date {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-/** "09:00:00" → "9:00 AM". */
-export function formatSessionTime(localTime: string): string {
-  const [h, m] = localTime.split(":").map(Number);
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
-}
+import { dateKey, parseDateKey, formatSessionTime } from "@/lib/dates";
+export { dateKey, parseDateKey, formatSessionTime };
 
 /** Experiences without a schedule are booked by date and the host confirms
  * the time; midday stands in for it so the booking keeps its day. */

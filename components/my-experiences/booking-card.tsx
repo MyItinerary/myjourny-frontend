@@ -7,62 +7,12 @@ import { Compass } from "lucide-react";
 import { useExperienceDetail } from "@/lib/queries/experiences";
 import type { Booking } from "@/lib/queries/bookings";
 
+import { formatBookingDates, parseUtcDate } from "@/lib/dates";
+
+export { formatBookingDates, parseUtcDate };
+
 const FALLBACK_TITLE = "Untitled experience";
 const FALLBACK_DATE = "Date to be confirmed";
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-export function parseUtcDate(datetimeStr?: string | null): Date | null {
-  if (!datetimeStr) return null;
-  // Datetimes from /bookings/me are UTC without a timezone suffix (e.g. "2026-09-26T10:00:00").
-  // Parse them strictly as UTC by appending "Z" if no timezone suffix is present.
-  const hasTimezone = /[Zz]|[+-]\d{2}(:\d{2})?$/.test(datetimeStr);
-  const iso = hasTimezone ? datetimeStr : `${datetimeStr}Z`;
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-export function formatBookingDates(datetimeStr?: string | null): string {
-  if (!datetimeStr) return FALLBACK_DATE;
-  try {
-    const d = parseUtcDate(datetimeStr);
-    if (!d) return FALLBACK_DATE;
-
-    const month = MONTH_NAMES[d.getUTCMonth()];
-    const day = d.getUTCDate();
-    const year = d.getUTCFullYear();
-
-    const nth = (n: number) => {
-      if (n > 3 && n < 21) return "th";
-      switch (n % 10) {
-        case 1:
-          return "st";
-        case 2:
-          return "nd";
-        case 3:
-          return "rd";
-        default:
-          return "th";
-      }
-    };
-    return `${month} ${day}${nth(day)}, ${year}`;
-  } catch {
-    return FALLBACK_DATE;
-  }
-}
 
 export interface BookingCardItem {
   id: string;
