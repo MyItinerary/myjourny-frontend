@@ -391,8 +391,10 @@ type ExperienceListPage = {
 export type ExperienceFilters = {
   city?: string;
   country?: string;
-  /** Category slug(s); itin includes each category's subcategories. */
+  /** Energy/budget/comfort/social-style category slug(s), with subcategories. */
   category?: string[];
+  /** Interest category slug — exact match against the experience's interest tags. */
+  interest?: string;
   sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
 };
 
