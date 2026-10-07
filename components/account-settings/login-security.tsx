@@ -2,105 +2,120 @@
 
 import { useState } from "react";
 import { Copy, Download, Laptop, Smartphone } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils";
-import { ModalFooter, ModalShell, OtpBoxes, Row, SavedBanner, TextField } from "@/components/account-settings/section-ui";
+import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
+import { useMe } from "@/lib/queries/auth";
+import { useDeleteAccount } from "@/lib/queries/profile";
+import {
+  useAuthSessions,
+  useChangePassword,
+  useConnectGoogle,
+  useConnections,
+  useDeactivateAccount,
+  useDeletionPreview,
+  useDisableTwoFactor,
+  useDisconnectGoogle,
+  useRevokeSession,
+  useSetupTwoFactor,
+  useTwoFactorStatus,
+  useVerifyTwoFactor,
+  type AuthSession,
+} from "@/lib/queries/security";
+import {
+  ModalFooter,
+  ModalShell,
+  OtpBoxes,
+  Row,
+  SavedBanner,
+  SectionSkeleton,
+  TextField,
+} from "@/components/account-settings/section-ui";
 
-interface Session {
-  id: string;
-  icon: "laptop" | "phone";
-  device: string;
-  meta: string;
-  isThisDevice: boolean;
-}
-
-const INITIAL_SESSIONS: Session[] = [
-  {
-    id: "macbook",
-    icon: "laptop",
-    device: "MacBook Pro, Chrome",
-    meta: "Lagos, Nigeria · Active now",
-    isThisDevice: true,
-  },
-  {
-    id: "iphone",
-    icon: "phone",
-    device: "iPhone 14, MyJourny app",
-    meta: "Lagos, Nigeria · 2 hours ago",
-    isThisDevice: false,
-  },
-  {
-    id: "windows",
-    icon: "laptop",
-    device: "Windows PC, Edge",
-    meta: "Abuja, Nigeria · 4 days ago",
-    isThisDevice: false,
-  },
-];
-
-const RECOVERY_CODES = [
-  "4K7P-QX92",
-  "8MTR-5VLD",
-  "B3WY-7NQZ",
-  "HD62-J8KM",
-  "PZ49-TR3B",
-  "X7LQ-M2VN",
-  "C5KD-98YT",
-  "RW31-KQ7F",
-];
-
-const DEACTIVATE_FACTS = [
-  {
-    title: "You have 2 bookings in the next 30 days",
-    body: "They stay live. The hosts keep your name and phone number so they can reach you on the day.",
-  },
-  {
-    title: "Your 12 saved experiences and your preference answers go away",
-    body: "Saved lists cannot be recovered after 30 days. Bookings you already made are not affected.",
-  },
-  {
-    title: "Your 18 reviews stop being visible",
-    body: "The review text stays on the experience. Your name and photo come off it.",
-  },
-  {
-    title: "Receipts stay available for 7 years",
-    body: "We keep payment records because Nigerian law asks us to. You can still download them.",
-  },
-];
-
-const DELETE_FACTS = [
-  {
-    title: "Your profile and messages go now",
-    body: "Hosts you have talked to keep their side of the thread without your name on it.",
-  },
-  {
-    title: "2 bookings in the next 30 days are cancelled",
-    body: "We refund you in full and tell the hosts today. There is no way to undo that.",
-  },
-  {
-    title: "Your 18 reviews and your preference answers are deleted",
-    body: "Review text stays on the experience with no name attached. Your preference answers cannot be rebuilt.",
-  },
-  {
-    title: "Payment receipts stay for 7 years",
-    body: "Nigerian law asks us to keep them. Nobody can browse them, and we delete them after 7 years.",
-  },
-];
+const MIN_PASSWORD = 10;
 
 type ModalKey =
   | "password"
   | "twofa1"
   | "twofa2"
   | "twofa3"
+  | "twofaOff"
+  | "connect"
   | "disconnect"
   | "deactivate"
   | "delete1"
   | "delete2";
 
+function formatDay(iso: string | null | undefined) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+// "Chrome on macOS" from the session's user agent (itin stores the raw string).
+function describeDevice(userAgent: string | null) {
+  if (!userAgent) return "Unknown device";
+  if (/MyJourny/i.test(userAgent)) return "MyJourny app";
+  const browser = /Edg\//.test(userAgent)
+    ? "Edge"
+    : /OPR\/|Opera/.test(userAgent)
+      ? "Opera"
+      : /Chrome\//.test(userAgent)
+        ? "Chrome"
+        : /Firefox\//.test(userAgent)
+          ? "Firefox"
+          : /Safari\//.test(userAgent)
+            ? "Safari"
+            : null;
+  const os = /iPhone|iPad/.test(userAgent)
+    ? "iPhone"
+    : /Android/.test(userAgent)
+      ? "Android"
+      : /Mac OS X|Macintosh/.test(userAgent)
+        ? "macOS"
+        : /Windows/.test(userAgent)
+          ? "Windows"
+          : /Linux/.test(userAgent)
+            ? "Linux"
+            : null;
+  if (browser && os) return `${browser} on ${os}`;
+  return browser ?? os ?? "Unknown device";
+}
+
+function isPhone(userAgent: string | null) {
+  return !!userAgent && /iPhone|Android|Mobile|MyJourny/i.test(userAgent);
+}
+
+function lastActive(iso: string) {
+  const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (minutes < 5) return "Active now";
+  if (minutes < 60) return `${minutes} minutes ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
+  const days = Math.floor(hours / 24);
+  return days === 1 ? "Yesterday" : `${days} days ago`;
+}
+
+// "ABCD EFGH IJKL ..." so the key is easier to type into an app.
+function groupKey(secret: string) {
+  return secret.replace(/(.{4})/g, "$1 ").trim();
+}
+
 export function LoginSecuritySection() {
-  const [password, setPassword] = useState("Last changed 12 June 2026");
-  const [connected, setConnected] = useState("Google, t***e@gmail.com");
-  const [twofaOn, setTwofaOn] = useState(false);
-  const [sessions, setSessions] = useState(INITIAL_SESSIONS);
+  const { data: me } = useMe();
+  const { data: twofa, isLoading: twofaLoading } = useTwoFactorStatus();
+  const { data: connections = [], isLoading: connectionsLoading } = useConnections();
+  const { data: sessions = [], isLoading: sessionsLoading } = useAuthSessions();
+
+  const changePassword = useChangePassword();
+  const setupTwoFactor = useSetupTwoFactor();
+  const verifyTwoFactor = useVerifyTwoFactor();
+  const disableTwoFactor = useDisableTwoFactor();
+  const connectGoogle = useConnectGoogle();
+  const disconnectGoogle = useDisconnectGoogle();
+  const revokeSession = useRevokeSession();
+  const deactivate = useDeactivateAccount();
+  const deleteAccount = useDeleteAccount();
+
   const [modal, setModal] = useState<ModalKey | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
@@ -108,9 +123,22 @@ export function LoginSecuritySection() {
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [twofaCode, setTwofaCode] = useState<string[]>(["", "", "", "", "", ""]);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
-
+  const [offPassword, setOffPassword] = useState("");
+  const [offCode, setOffCode] = useState("");
   const [deleteDraft, setDeleteDraft] = useState("");
+
+  // Only fetched once someone opens deactivate/delete.
+  const preview = useDeletionPreview(modal === "deactivate" || modal === "delete1" || modal === "delete2");
+  const upcoming = preview.data?.upcoming_booking_count ?? 0;
+
+  if (twofaLoading || connectionsLoading || sessionsLoading) return <SectionSkeleton />;
+
+  const twofaOn = !!twofa?.enabled;
+  const google = connections.find((c) => c.provider === "google");
+  const email = me?.email ?? "your email";
+  const secret = setupTwoFactor.data?.secret ?? "";
 
   function closeModal() {
     setModal(null);
@@ -126,13 +154,20 @@ export function LoginSecuritySection() {
 
   function openTwofa() {
     setSavedMessage(null);
+    if (twofaOn) {
+      setOffPassword("");
+      setOffCode("");
+      setModal("twofaOff");
+      return;
+    }
     setTwofaCode(["", "", "", "", "", ""]);
-    setModal("twofa1");
+    // A fresh secret each time; the last one is discarded if never verified.
+    setupTwoFactor.mutate(undefined, { onSuccess: () => setModal("twofa1") });
   }
 
-  function openDisconnect() {
+  function openGoogle() {
     setSavedMessage(null);
-    setModal("disconnect");
+    setModal(google ? "disconnect" : "connect");
   }
 
   function openDeactivate() {
@@ -146,9 +181,6 @@ export function LoginSecuritySection() {
     setModal("delete1");
   }
 
-  const disconnectAction = connected === "None" ? "Connect" : "Disconnect";
-  const twofaAction = twofaOn ? "Edit" : "Set up";
-
   return (
     <div className="max-w-[720px] flex-1">
       <div className="font-sans text-[32px] leading-[1.2] font-extrabold text-foreground">
@@ -160,7 +192,7 @@ export function LoginSecuritySection() {
       )}
 
       <div className="mt-2">
-        <Row label="Password" value={password} actionLabel="Edit" onAction={openPassword} />
+        <Row label="Password" value="••••••••••" actionLabel="Edit" onAction={openPassword} />
 
         <div className="flex items-start justify-between gap-8 border-b border-border py-7">
           <div className="flex flex-1 flex-col gap-1.5">
@@ -178,7 +210,7 @@ export function LoginSecuritySection() {
               </span>
               <span className="text-[15px] text-muted-foreground">
                 {twofaOn
-                  ? "Authenticator app, added today"
+                  ? `Authenticator app${twofa?.added_at ? `, added ${formatDay(twofa.added_at)}` : ""}`
                   : "Anyone with your password can sign in"}
               </span>
             </div>
@@ -190,25 +222,30 @@ export function LoginSecuritySection() {
           <button
             type="button"
             onClick={openTwofa}
-            className="shrink-0 pt-0.5 text-[15px] font-medium text-brand underline hover:text-primary cursor-pointer"
+            disabled={setupTwoFactor.isPending}
+            className="shrink-0 pt-0.5 text-[15px] font-medium text-brand underline hover:text-primary cursor-pointer disabled:cursor-wait"
           >
-            {twofaAction}
+            {twofaOn ? "Turn off" : setupTwoFactor.isPending ? "Starting…" : "Set up"}
           </button>
         </div>
 
         <Row
           label="Connected accounts"
-          value={connected}
-          note="Disconnecting means you sign in with your email and password only."
-          actionLabel={disconnectAction}
-          onAction={openDisconnect}
+          value={google ? `Google${google.email ? `, ${google.email}` : ""}` : "None"}
+          note={
+            google
+              ? "Disconnecting means you sign in with your email and password only."
+              : "Connect Google to sign in with it as well as your password."
+          }
+          actionLabel={google ? "Disconnect" : "Connect"}
+          onAction={openGoogle}
         />
 
         <div className="border-b border-border py-7">
           <div className="text-base font-medium text-foreground">Active sessions</div>
           <div className="mt-4 flex flex-col gap-3.5">
-            {sessions.map((s) => {
-              const Icon = s.icon === "laptop" ? Laptop : Smartphone;
+            {sessions.map((s: AuthSession) => {
+              const Icon = isPhone(s.device) ? Smartphone : Laptop;
               return (
                 <div
                   key={s.id}
@@ -217,21 +254,28 @@ export function LoginSecuritySection() {
                   <div className="flex items-center gap-3.5">
                     <Icon size={20} className="shrink-0 text-foreground" />
                     <div>
-                      <div className="text-[15px] font-medium text-foreground">{s.device}</div>
-                      <div className="text-[13px] text-muted-foreground">{s.meta}</div>
+                      <div className="text-[15px] font-medium text-foreground">
+                        {describeDevice(s.device)}
+                      </div>
+                      <div className="text-[13px] text-muted-foreground">
+                        {lastActive(s.last_active)}
+                      </div>
                     </div>
                   </div>
-                  {s.isThisDevice ? (
+                  {s.is_current_device ? (
                     <span className="text-sm font-medium text-muted-foreground">
                       This device
                     </span>
                   ) : (
                     <button
                       type="button"
+                      disabled={revokeSession.isPending}
                       onClick={() =>
-                        setSessions((prev) => prev.filter((session) => session.id !== s.id))
+                        revokeSession.mutate(s.id, {
+                          onSuccess: () => setSavedMessage(`${describeDevice(s.device)} is signed out.`),
+                        })
                       }
-                      className="cursor-pointer text-sm font-medium text-brand underline"
+                      className="cursor-pointer text-sm font-medium text-brand underline disabled:cursor-wait"
                     >
                       Log out
                     </button>
@@ -239,12 +283,15 @@ export function LoginSecuritySection() {
                 </div>
               );
             })}
+            {sessions.length === 0 && (
+              <div className="text-sm text-muted-foreground">No other active sessions.</div>
+            )}
           </div>
         </div>
 
         <Row
           label="Deactivate account"
-          note="Your profile, saved experiences, and reviews stop being visible. Bookings in the next 30 days stay live and you keep getting messages about them."
+          note="Your profile is hidden and you're signed out everywhere. Bookings you've made stay as they are. Sign in again within 30 days to bring the account back."
           actionLabel="Deactivate"
           onAction={openDeactivate}
           muted
@@ -256,9 +303,8 @@ export function LoginSecuritySection() {
               Delete account permanently
             </div>
             <div className="mt-0.5 text-sm text-muted-foreground">
-              Your profile, messages, reviews, saved experiences, and preference answers are
-              deleted and cannot be brought back. Deactivating instead keeps everything and
-              hides it.
+              Your account and everything in it are deleted and cannot be brought back.
+              Deactivating instead keeps everything and hides it.
             </div>
           </div>
           <button
@@ -277,19 +323,22 @@ export function LoginSecuritySection() {
             <TextField
               label="Current password"
               type="password"
+              autoComplete="current-password"
               value={currentPw}
               onChange={(e) => setCurrentPw(e.target.value)}
             />
             <TextField
               label="New password"
               type="password"
-              placeholder="At least 10 characters"
+              autoComplete="new-password"
+              placeholder={`At least ${MIN_PASSWORD} characters`}
               value={newPw}
               onChange={(e) => setNewPw(e.target.value)}
             />
             <TextField
               label="Confirm new password"
               type="password"
+              autoComplete="new-password"
               value={confirmPw}
               onChange={(e) => setConfirmPw(e.target.value)}
             />
@@ -299,12 +348,21 @@ export function LoginSecuritySection() {
           </div>
           <ModalFooter
             onCancel={closeModal}
-            saveDisabled={!currentPw || newPw.length < 10 || newPw !== confirmPw}
-            onSave={() => {
-              setPassword("Last changed today");
-              setSavedMessage("Password changed. Your other devices have been signed out.");
-              closeModal();
-            }}
+            saveLabel={changePassword.isPending ? "Saving…" : "Save"}
+            saveDisabled={
+              !currentPw || newPw.length < MIN_PASSWORD || newPw !== confirmPw || changePassword.isPending
+            }
+            onSave={() =>
+              changePassword.mutate(
+                { current_password: currentPw, new_password: newPw },
+                {
+                  onSuccess: () => {
+                    setSavedMessage("Password changed. Your other devices have been signed out.");
+                    closeModal();
+                  },
+                },
+              )
+            }
           />
         </ModalShell>
       )}
@@ -316,10 +374,11 @@ export function LoginSecuritySection() {
             Open your authenticator app and scan this code
           </div>
           <div className="mt-4.5 flex flex-col items-start gap-4 sm:flex-row sm:gap-6">
-            <div
-              className="flex size-[170px] shrink-0 items-center justify-center rounded-xl border border-border bg-[repeating-conic-gradient(#333134_0%_25%,#fff_0%_50%)] bg-[length:12px_12px]"
-              aria-hidden
-            />
+            <div className="flex size-[170px] shrink-0 items-center justify-center rounded-xl border border-border bg-white p-2.5">
+              {setupTwoFactor.data && (
+                <QRCodeSVG value={setupTwoFactor.data.otpauth_url} size={148} aria-label="Two-factor setup code" />
+              )}
+            </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm text-muted-foreground">
                 If you do not have an app yet, install Google Authenticator or Authy first. Both
@@ -329,8 +388,8 @@ export function LoginSecuritySection() {
               <div className="mt-1.5 text-sm text-muted-foreground">
                 Type this key into the app by hand.
               </div>
-              <div className="mt-2 rounded-xl bg-muted px-3.5 py-3 font-sans text-[15px] font-medium tracking-[0.08em] text-foreground">
-                K4JQ 7ZTA 9PLM 2XRB
+              <div className="mt-2 rounded-xl bg-muted px-3.5 py-3 font-sans text-[15px] font-medium tracking-[0.08em] break-all text-foreground">
+                {groupKey(secret)}
               </div>
             </div>
           </div>
@@ -365,33 +424,40 @@ export function LoginSecuritySection() {
             </button>
             <button
               type="button"
-              disabled={twofaCode.some((d) => !d)}
-              onClick={() => setModal("twofa3")}
+              disabled={twofaCode.some((d) => !d) || verifyTwoFactor.isPending}
+              onClick={() =>
+                verifyTwoFactor.mutate(twofaCode.join(""), {
+                  onSuccess: (data) => {
+                    setRecoveryCodes(data.recovery_codes);
+                    setModal("twofa3");
+                  },
+                })
+              }
               className={cn(
                 "cursor-pointer rounded-full px-5.5 py-3 text-[15px] font-medium",
-                twofaCode.some((d) => !d)
+                twofaCode.some((d) => !d) || verifyTwoFactor.isPending
                   ? "cursor-not-allowed bg-[#E0E0E0] text-[#BDBDBD]"
                   : "bg-brand text-white hover:bg-[#FF4540]",
               )}
             >
-              Verify
+              {verifyTwoFactor.isPending ? "Checking…" : "Verify"}
             </button>
           </div>
         </ModalShell>
       )}
 
       {modal === "twofa3" && (
-        <ModalShell title="Set up two factor authentication" onClose={closeModal}>
+        <ModalShell title="Set up two factor authentication" onClose={() => undefined}>
           <div className="text-[13px] font-medium text-brand">Step 3 of 3</div>
           <div className="mt-3.5 text-base text-foreground">
             Save your recovery codes before you close this
           </div>
           <div className="mt-2 text-sm text-muted-foreground">
             Each code works once, and only if you lose the phone with the app on it. We cannot
-            show them to you again.
+            show them to you again. Your other devices have been signed out.
           </div>
           <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5 rounded-xl bg-muted p-4.5">
-            {RECOVERY_CODES.map((code) => (
+            {recoveryCodes.map((code) => (
               <div
                 key={code}
                 className="font-sans text-[15px] font-medium tracking-[0.06em] text-foreground"
@@ -404,7 +470,7 @@ export function LoginSecuritySection() {
             <button
               type="button"
               onClick={() => {
-                const blob = new Blob([RECOVERY_CODES.join("\n") + "\n"], {
+                const blob = new Blob([recoveryCodes.join("\n") + "\n"], {
                   type: "text/plain",
                 });
                 const url = URL.createObjectURL(blob);
@@ -422,7 +488,7 @@ export function LoginSecuritySection() {
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard?.writeText(RECOVERY_CODES.join("\n")).then(() => {
+                navigator.clipboard?.writeText(recoveryCodes.join("\n")).then(() => {
                   setCopied(true);
                   setTimeout(() => setCopied(false), 1500);
                 });
@@ -437,9 +503,9 @@ export function LoginSecuritySection() {
             <button
               type="button"
               onClick={() => {
-                setTwofaOn(true);
+                setRecoveryCodes([]);
                 setSavedMessage(
-                  "Two factor authentication is on. From now on you enter a code from your authenticator app when you sign in on a new device.",
+                  "Two factor authentication is on. From now on you enter a code from your authenticator app when you sign in.",
                 );
                 closeModal();
               }}
@@ -451,33 +517,93 @@ export function LoginSecuritySection() {
         </ModalShell>
       )}
 
-      {modal === "disconnect" && (
-        <ModalShell title={disconnectAction === "Connect" ? "Connect Google" : "Disconnect Google"} onClose={closeModal}>
+      {modal === "twofaOff" && (
+        <ModalShell title="Turn off two factor authentication" onClose={closeModal}>
           <div className="text-base text-foreground">
-            {disconnectAction === "Connect"
-              ? "You will be able to sign in with Google in addition to your email and password."
-              : "You will sign in with your email address and password only."}
+            Confirm it&apos;s you with your password, or a code from your app or a recovery code.
+          </div>
+          <div className="mt-4 flex flex-col gap-4">
+            <TextField
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              value={offPassword}
+              onChange={(e) => setOffPassword(e.target.value)}
+            />
+            <TextField
+              label="Or a code"
+              autoComplete="one-time-code"
+              value={offCode}
+              onChange={(e) => setOffCode(e.target.value)}
+            />
           </div>
           <div className="mt-2.5 text-sm text-muted-foreground">
-            {disconnectAction === "Connect"
-              ? "We never post anything without asking you first."
-              : "If you have never set a password, we email you a link to create one before the change takes effect."}
+            Your recovery codes stop working too. Anyone with your password will be able to sign in.
           </div>
           <ModalFooter
             onCancel={closeModal}
-            saveLabel={disconnectAction}
-            onSave={() => {
-              if (disconnectAction === "Connect") {
-                setConnected("Google, t***e@gmail.com");
-                setSavedMessage("Google is connected. You can now sign in with it.");
-              } else {
-                setConnected("None");
-                setSavedMessage(
-                  "Google is disconnected. Sign in with t***e@gmail.com and your password from now on.",
-                );
+            saveLabel={disableTwoFactor.isPending ? "Turning off…" : "Turn off"}
+            saveDisabled={(!offPassword && !offCode.trim()) || disableTwoFactor.isPending}
+            onSave={() =>
+              disableTwoFactor.mutate(
+                { password: offPassword || undefined, code: offCode.trim() || undefined },
+                {
+                  onSuccess: () => {
+                    setSavedMessage("Two factor authentication is off.");
+                    closeModal();
+                  },
+                },
+              )
+            }
+          />
+        </ModalShell>
+      )}
+
+      {modal === "connect" && (
+        <ModalShell title="Connect Google" onClose={closeModal}>
+          <div className="text-base text-foreground">
+            You will be able to sign in with Google in addition to your email and password.
+          </div>
+          <div className="mt-2.5 text-sm text-muted-foreground">
+            We never post anything without asking you first.
+          </div>
+          <div className="mt-6">
+            <GoogleAuthButton
+              loading={connectGoogle.isPending}
+              onCredential={(credential) =>
+                connectGoogle.mutate(credential, {
+                  onSuccess: () => {
+                    setSavedMessage("Google is connected. You can now sign in with it.");
+                    closeModal();
+                  },
+                })
               }
-              closeModal();
-            }}
+            />
+          </div>
+        </ModalShell>
+      )}
+
+      {modal === "disconnect" && (
+        <ModalShell title="Disconnect Google" onClose={closeModal}>
+          <div className="text-base text-foreground">
+            You will sign in with your email address and password only.
+          </div>
+          <div className="mt-2.5 text-sm text-muted-foreground">
+            If you have never set a password, set one up first (Forgot password on the login page
+            sends you a link), otherwise you would have no way to sign in.
+          </div>
+          <ModalFooter
+            onCancel={closeModal}
+            saveLabel={disconnectGoogle.isPending ? "Disconnecting…" : "Disconnect"}
+            saveDisabled={disconnectGoogle.isPending}
+            onSave={() =>
+              disconnectGoogle.mutate(undefined, {
+                onSuccess: () => {
+                  setSavedMessage(`Google is disconnected. Sign in with ${email} and your password from now on.`);
+                  closeModal();
+                },
+              })
+            }
           />
         </ModalShell>
       )}
@@ -488,16 +614,35 @@ export function LoginSecuritySection() {
             Here is exactly what happens when you deactivate.
           </div>
           <div className="mt-4.5 flex flex-col gap-3.5">
-            {DEACTIVATE_FACTS.map((f) => (
-              <div key={f.title} className="rounded-xl border border-border p-4">
-                <div className="text-[15px] font-medium text-foreground">{f.title}</div>
-                <div className="mt-0.5 text-sm text-muted-foreground">{f.body}</div>
+            <div className="rounded-xl border border-border p-4">
+              <div className="text-[15px] font-medium text-foreground">
+                {preview.isLoading
+                  ? "Your bookings stay as they are"
+                  : upcoming > 0
+                    ? `Your ${upcoming === 1 ? "upcoming booking stays" : `${upcoming} upcoming bookings stay`} as ${upcoming === 1 ? "it is" : "they are"}`
+                    : "Bookings you've made stay as they are"}
               </div>
-            ))}
+              <div className="mt-0.5 text-sm text-muted-foreground">
+                Deactivating doesn&apos;t cancel anything. Cancel a booking from the booking itself
+                if you need to.
+              </div>
+            </div>
+            <div className="rounded-xl border border-border p-4">
+              <div className="text-[15px] font-medium text-foreground">You&apos;re signed out everywhere</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">
+                Every device, including this one.
+              </div>
+            </div>
+            <div className="rounded-xl border border-border p-4">
+              <div className="text-[15px] font-medium text-foreground">Nothing is deleted</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">
+                Your profile, saved experiences and wishlists are kept, just hidden.
+              </div>
+            </div>
           </div>
           <div className="mt-5 text-sm text-muted-foreground">
-            Signing in again within 30 days brings the account back as it was. After 30 days we
-            delete your profile and saved experiences.
+            Signing in again within 30 days brings the account back as it was. After that, contact
+            support to restore it.
           </div>
           <div className="mt-6 flex justify-end gap-3">
             <button
@@ -509,15 +654,11 @@ export function LoginSecuritySection() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setSavedMessage(
-                  "Your account is deactivated. Sign in again within 30 days to bring it back.",
-                );
-                closeModal();
-              }}
-              className="cursor-pointer rounded-full border border-foreground px-5.5 py-3 text-[15px] font-medium text-foreground hover:bg-[#F5F5F5]"
+              disabled={deactivate.isPending}
+              onClick={() => deactivate.mutate()}
+              className="cursor-pointer rounded-full border border-foreground px-5.5 py-3 text-[15px] font-medium text-foreground hover:bg-[#F5F5F5] disabled:cursor-wait disabled:opacity-60"
             >
-              Deactivate anyway
+              {deactivate.isPending ? "Deactivating…" : "Deactivate anyway"}
             </button>
           </div>
         </ModalShell>
@@ -526,20 +667,51 @@ export function LoginSecuritySection() {
       {modal === "delete1" && (
         <ModalShell title="Delete your account" onClose={closeModal}>
           <div className="text-[13px] font-medium text-brand">Step 1 of 2</div>
-          <div className="mt-3.5 text-base text-foreground">
-            Deleting is permanent. Here is what goes.
-          </div>
-          <div className="mt-4.5 flex flex-col gap-3.5">
-            {DELETE_FACTS.map((f) => (
-              <div key={f.title} className="rounded-xl border border-border p-4">
-                <div className="text-[15px] font-medium text-foreground">{f.title}</div>
-                <div className="mt-0.5 text-sm text-muted-foreground">{f.body}</div>
+          {preview.isLoading ? (
+            <div className="mt-3.5 text-base text-muted-foreground">Checking your bookings…</div>
+          ) : upcoming > 0 ? (
+            // Deleting would erase these bookings with no refund and no word to
+            // the host, so it's blocked until they're cancelled.
+            <div className="mt-3.5 rounded-xl bg-muted p-4.5">
+              <div className="text-[15px] font-medium text-foreground">
+                You have {upcoming === 1 ? "an upcoming booking" : `${upcoming} upcoming bookings`}
               </div>
-            ))}
-          </div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                Cancel {upcoming === 1 ? "it" : "them"} first, so the host knows and any refund can
+                follow the cancellation policy. Then you can delete your account.
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mt-3.5 text-base text-foreground">
+                Deleting is permanent. Here is what goes.
+              </div>
+              <div className="mt-4.5 flex flex-col gap-3.5">
+                <div className="rounded-xl border border-border p-4">
+                  <div className="text-[15px] font-medium text-foreground">Your profile and preferences</div>
+                  <div className="mt-0.5 text-sm text-muted-foreground">
+                    Including your preference answers, which cannot be rebuilt.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border p-4">
+                  <div className="text-[15px] font-medium text-foreground">
+                    Your booking history and payment records
+                  </div>
+                  <div className="mt-0.5 text-sm text-muted-foreground">
+                    Download your data from Privacy first if you want to keep receipts.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border p-4">
+                  <div className="text-[15px] font-medium text-foreground">
+                    Saved experiences, wishlists and messages
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           <div className="mt-5 rounded-xl bg-muted p-4.5">
             <div className="text-[15px] font-medium text-foreground">
-              Deactivating does most of this and is reversible
+              Deactivating hides your account and is reversible
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
               Your profile stops being visible, and signing in brings it back.
@@ -562,8 +734,9 @@ export function LoginSecuritySection() {
             </button>
             <button
               type="button"
+              disabled={preview.isLoading || upcoming > 0}
               onClick={() => setModal("delete2")}
-              className="cursor-pointer rounded-full border border-foreground px-5.5 py-3 text-[15px] font-medium text-foreground hover:bg-[#F5F5F5]"
+              className="cursor-pointer rounded-full border border-foreground px-5.5 py-3 text-[15px] font-medium text-foreground hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Continue to delete
             </button>
@@ -575,8 +748,7 @@ export function LoginSecuritySection() {
         <ModalShell title="Delete your account" onClose={closeModal}>
           <div className="text-[13px] font-medium text-brand">Step 2 of 2</div>
           <div className="mt-3.5 text-base text-foreground">
-            You have 2 bookings in the next 30 days. We cancel them and refund you in full, and
-            the hosts are told today.
+            This deletes {email} and everything in it, straight away.
           </div>
           <TextField
             label="Type DELETE to confirm"
@@ -584,10 +756,6 @@ export function LoginSecuritySection() {
             onChange={(e) => setDeleteDraft(e.target.value)}
             className="tracking-[0.08em]"
           />
-          <div className="mt-2.5 text-sm text-muted-foreground">
-            We send one email to t***e@gmail.com confirming the deletion. Payment receipts stay
-            with us for 7 years because Nigerian law asks us to keep them.
-          </div>
           <div className="mt-6 flex items-center justify-between gap-3">
             <button
               type="button"
@@ -598,21 +766,16 @@ export function LoginSecuritySection() {
             </button>
             <button
               type="button"
-              disabled={deleteDraft.trim().toUpperCase() !== "DELETE"}
-              onClick={() => {
-                setSavedMessage(
-                  "Deletion started. Your 2 upcoming bookings are cancelled and refunded, and your profile is already gone. Everything else is removed within 30 days.",
-                );
-                closeModal();
-              }}
+              disabled={deleteDraft.trim().toUpperCase() !== "DELETE" || deleteAccount.isPending}
+              onClick={() => deleteAccount.mutate()}
               className={cn(
                 "cursor-pointer rounded-full px-5.5 py-3 text-[15px] font-medium",
-                deleteDraft.trim().toUpperCase() !== "DELETE"
+                deleteDraft.trim().toUpperCase() !== "DELETE" || deleteAccount.isPending
                   ? "cursor-not-allowed bg-[#E0E0E0] text-[#BDBDBD]"
                   : "bg-brand text-white hover:bg-[#FF4540]",
               )}
             >
-              Delete my account
+              {deleteAccount.isPending ? "Deleting…" : "Delete my account"}
             </button>
           </div>
         </ModalShell>
