@@ -26,7 +26,6 @@ import {
   useExperiencePrices,
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
-import { useSavedExperienceIds, useToggleSaved } from "@/lib/queries/saved";
 import { useMyWishlistedIds } from "@/lib/queries/wishlists";
 import { SaveToCollectionModal } from "@/components/wishlists/save-to-collection-modal";
 import { cn } from "@/lib/utils";
@@ -77,9 +76,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
     .map(experienceMatchToCardProps);
 
   const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const { data: savedIds } = useSavedExperienceIds();
   const { data: wishlistIds } = useMyWishlistedIds();
-  const isSaved = (savedIds?.has(id) || wishlistIds?.has(id)) ?? false;
+  const isSaved = wishlistIds?.has(id) ?? false;
 
   if (isLoading) {
     return (

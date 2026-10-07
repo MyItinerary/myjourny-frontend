@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { apiErrorMessage } from "@/lib/api-error";
@@ -58,7 +58,7 @@ export function experienceMatchToCardProps(
   };
 }
 
-export function useRecommendedExperiences(params: {
+type RecommendationParams = {
   latitude?: number | null;
   longitude?: number | null;
   city?: string;
@@ -66,52 +66,94 @@ export function useRecommendedExperiences(params: {
   id?: number;
   /** Category slug — exact match against Experience.interest_tags on the backend, see /categories/[slug]. */
   interest?: string;
-  offset?: number;
-  limit?: number;
-  /**
-   * Defaults to true — no city/coordinates is a legitimate call on its own
-   * (location-agnostic, profile-scored recommendations), not something to
-   * infer disabled from. Callers that need to defer (e.g. "Popular near
-   * you" while geolocation is still resolving) pass `enabled: false`
-   * explicitly instead.
-   */
-  enabled?: boolean;
-}) {
+};
+
+async function fetchRecommendations(
+  params: RecommendationParams & { offset: number; limit: number }
+): Promise<ExperienceMatch[]> {
+  const baseParams = {
+    latitude: params.latitude ?? undefined,
+    longitude: params.longitude ?? undefined,
+    city: params.city,
+    id: params.id,
+    interest: params.interest,
+    offset: params.offset,
+    limit: params.limit,
+  };
+  try {
+    const { data } = await apiClient.get<ExperienceMatch[]>(
+      "/experiences/recommendations",
+      { params: baseParams }
+    );
+    return data;
+  } catch (error) {
+    // A backend that hasn't picked up the optional-lat/long change yet
+    // (e.g. not redeployed) still 422s on missing latitude/longitude —
+    // retry once with 0/0 dummy coordinates rather than surfacing that
+    // for what should be a perfectly valid "no location" request.
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    if (status === 422 && (baseParams.latitude === undefined || baseParams.longitude === undefined)) {
+      const { data } = await apiClient.get<ExperienceMatch[]>(
+        "/experiences/recommendations",
+        { params: { ...baseParams, latitude: baseParams.latitude ?? 0, longitude: baseParams.longitude ?? 0 } }
+      );
+      return data;
+    }
+    throw error;
+  }
+}
+
+export function useRecommendedExperiences(
+  params: RecommendationParams & {
+    offset?: number;
+    limit?: number;
+    /**
+     * Defaults to true — no city/coordinates is a legitimate call on its own
+     * (location-agnostic, profile-scored recommendations), not something to
+     * infer disabled from. Callers that need to defer (e.g. "Popular near
+     * you" while geolocation is still resolving) pass `enabled: false`
+     * explicitly instead.
+     */
+    enabled?: boolean;
+  }
+) {
   return useQuery({
     queryKey: ["experiences", "recommendations", params],
-    queryFn: async () => {
-      const baseParams = {
-        latitude: params.latitude ?? undefined,
-        longitude: params.longitude ?? undefined,
-        city: params.city,
-        id: params.id,
-        interest: params.interest,
+    queryFn: () =>
+      fetchRecommendations({
+        ...params,
         offset: params.offset ?? 0,
         limit: params.limit ?? (params.id !== undefined ? 20 : 10),
-      };
-      try {
-        const { data } = await apiClient.get<ExperienceMatch[]>(
-          "/experiences/recommendations",
-          { params: baseParams }
-        );
-        return data;
-      } catch (error) {
-        // A backend that hasn't picked up the optional-lat/long change yet
-        // (e.g. not redeployed) still 422s on missing latitude/longitude —
-        // retry once with 0/0 dummy coordinates rather than surfacing that
-        // for what should be a perfectly valid "no location" request.
-        const status = (error as { response?: { status?: number } })?.response?.status;
-        if (status === 422 && (baseParams.latitude === undefined || baseParams.longitude === undefined)) {
-          const { data } = await apiClient.get<ExperienceMatch[]>(
-            "/experiences/recommendations",
-            { params: { ...baseParams, latitude: baseParams.latitude ?? 0, longitude: baseParams.longitude ?? 0 } }
-          );
-          return data;
-        }
-        throw error;
-      }
-    },
+      }),
     enabled: params.enabled ?? true,
+  });
+}
+
+// Server-paginated recommendations for listing pages: each fetchNextPage()
+// asks itin for the next `pageSize` via offset. The endpoint returns a bare
+// list with no total, so a short page is the only "no more" signal.
+// Scores can shift between page fetches, so the same experience can land
+// on two pages — keep the first.
+export function uniqueMatches(pages: ExperienceMatch[][] | undefined): ExperienceMatch[] {
+  const seen = new Set<string>();
+  return (pages ?? []).flat().filter((m) => {
+    if (seen.has(m.experience_id)) return false;
+    seen.add(m.experience_id);
+    return true;
+  });
+}
+
+export function useInfiniteRecommendedExperiences(
+  params: RecommendationParams & { pageSize: number; enabled?: boolean }
+) {
+  const { pageSize, enabled = true, ...filters } = params;
+  return useInfiniteQuery({
+    queryKey: ["experiences", "recommendations", "infinite", filters, pageSize],
+    queryFn: ({ pageParam }) => fetchRecommendations({ ...filters, offset: pageParam, limit: pageSize }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < pageSize ? undefined : allPages.length * pageSize,
+    enabled,
   });
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -10,7 +11,6 @@ import { Footer } from "@/components/home/footer";
 import { CategoryHeader } from "@/components/categories/category-header";
 import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
-import { useSession } from "@/lib/auth/session-store";
 import { cities, otherExperiences } from "@/lib/mock-data/home";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 
@@ -22,14 +22,15 @@ export function CategoryContent({
   label,
   items,
   isLoading = false,
+  moreLabel,
+  loadMore,
 }: {
   label: string;
   items: ExperienceItem[];
   isLoading?: boolean;
+  moreLabel?: string;
+  loadMore?: ComponentProps<typeof CategoryResultsGrid>["loadMore"];
 }) {
-  const { user } = useSession();
-  const isAccount = user !== null;
-
   return (
     <div className="flex flex-1 flex-col">
       <div className="hidden lg:block">
@@ -53,11 +54,11 @@ export function CategoryContent({
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-9">
         <CategoryHeader label={label} count={items.length} />
         <div className="mt-6 lg:mt-9">
-          <CategoryResultsGrid items={items} categoryLabel={label} isLoading={isLoading} />
+          <CategoryResultsGrid items={items} categoryLabel={label} isLoading={isLoading} moreLabel={moreLabel} loadMore={loadMore} />
         </div>
       </div>
 
-      <CitiesSection cities={cities} variant="category" isAccount={isAccount} />
+      <CitiesSection cities={cities} variant="category" />
 
       <ExperienceRailSection
         heading="Other experiences you might find interesting"
