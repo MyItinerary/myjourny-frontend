@@ -6,7 +6,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 import { HeartRoundedIcon, StarIcon } from "@/components/icons/shared-icons";
-import { useSavedExperienceIds } from "@/lib/queries/saved";
 import { useMyWishlistedIds } from "@/lib/queries/wishlists";
 import { useWishlistSave } from "@/components/wishlists/wishlist-save-provider";
 
@@ -34,10 +33,9 @@ export function ExperienceCardVertical({
   className,
   id,
 }: ExperienceCardProps) {
-  const { data: savedIds } = useSavedExperienceIds();
   const { data: wishlistIds } = useMyWishlistedIds();
   const { openSave } = useWishlistSave();
-  const isSaved = !!id && !!(savedIds?.has(id) || wishlistIds?.has(id));
+  const isSaved = !!id && !!wishlistIds?.has(id);
 
   return (
     // relative + a lower z-index Link covering the card, so the save
