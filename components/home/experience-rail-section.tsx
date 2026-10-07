@@ -142,7 +142,7 @@ export function ExperienceRailSection({
       <div className="flex items-start justify-between gap-4">
         {headingBlock(true)}
         {seeMoreHref ? (
-          <Link href={seeMoreHref} className={seeMoreClassName + " hidden lg:inline-flex"}>
+          <Link href={seeMoreHref} className={cn(seeMoreClassName, "hidden lg:inline-flex")}>
             See more
           </Link>
         ) : null}
@@ -166,7 +166,7 @@ export function ExperienceRailSection({
               </div>
             ))}
         {seeMoreHref ? (
-          <Link href={seeMoreHref} className={seeMoreClassName + " self-center"}>
+          <Link href={seeMoreHref} className={cn(seeMoreClassName, "self-center")}>
             See more
           </Link>
         ) : null}
