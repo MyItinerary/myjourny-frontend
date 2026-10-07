@@ -34,7 +34,7 @@ export function SaveToCollectionModal({ experienceId, isOpen, onClose }: SaveToC
   const { data: checkData } = useCheckWishlisted(experienceId);
   const { mutate: addToCollection, isPending: isAdding } = useAddToWishlist();
   const { mutate: removeFromCollection, isPending: isRemoving } = useRemoveFromWishlist();
-  const { mutate: createCollection, isPending: isCreating } = useCreateWishlist();
+  const { mutate: createCollection, isPending: isCreating } = useCreateWishlist({ silent: true });
 
   if (!isOpen) return null;
 
