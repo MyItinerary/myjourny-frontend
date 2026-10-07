@@ -98,7 +98,9 @@ export function useCheckWishlisted(experienceId: string) {
   });
 }
 
-export function useCreateWishlist() {
+// `silent` skips the success toast, for flows that toast on a follow-up
+// step (e.g. create-then-save from the heart dialog).
+export function useCreateWishlist({ silent = false }: { silent?: boolean } = {}) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -108,7 +110,7 @@ export function useCreateWishlist() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: WISHLISTS_KEY });
-      toast.success("Collection created");
+      if (!silent) toast.success("Collection created");
     },
     onError: (err) => {
       toast.error(apiErrorMessage(err, "Couldn't create wishlist collection."));

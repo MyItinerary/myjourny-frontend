@@ -14,7 +14,7 @@ import { WhyBookWithUsSection } from "@/components/home/why-book-with-us-section
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { CategoriesSection } from "@/components/home/categories-section";
 import { CitiesSection } from "@/components/home/cities-section";
-import { CtaSection } from "@/components/home/cta-section";
+import { NewsletterSection } from "@/components/home/newsletter-section";
 import { Footer } from "@/components/home/footer";
 import {
   accountCategories,
@@ -93,6 +93,7 @@ export function HomeContent() {
           subheading="Hand-picked spots people are loving right now."
           items={realPopularItems}
           isLoading={popularIsLoading}
+          seeMoreHref="/popular-experiences"
         />
       </Reveal>
     )
@@ -102,6 +103,7 @@ export function HomeContent() {
         heading="Popular experiences near you"
         subheading="Hand-picked spots people are loving right now."
         items={popularExperiences}
+        seeMoreHref="/popular-experiences"
       />
     </Reveal>
   );
@@ -184,10 +186,10 @@ export function HomeContent() {
       )}
 
       <Reveal>
-        <CtaSection />
+        <NewsletterSection />
       </Reveal>
       <Reveal>
-        <Footer />
+        <Footer tone="white" />
       </Reveal>
     </div>
   );

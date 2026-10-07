@@ -4,35 +4,116 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  Bell,
-  ChevronRight,
-  CircleHelp,
-  Compass,
-  Globe,
-  Heart,
-  Image as ImageIconLucide,
-  Power,
-  Search,
-  Settings,
-} from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import {
-  CalendarOneIcon,
-  HeartIcon,
-  HomeSmileIcon,
-  HumanNavIcon,
-  ImageIcon,
-  PlaneNavIcon,
-  UsersTwoNavIcon,
-} from "@/components/icons/nav-icons";
+import { PlaneNavIcon } from "@/components/icons/nav-icons";
 import { useSession } from "@/lib/auth/session-store";
 import { useLogout } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { SearchBar } from "@/components/home/search-bar";
+
+// Illustrated nav/menu icons (Figma "image 16"): the 44px artwork is cropped
+// to a 32px window, so it's shifted by -6px inside an overflow-clip box.
+function NavArt({ src, className }: { src: string; className?: string }) {
+  return (
+    <span className={cn("relative block size-8 shrink-0 overflow-hidden", className)}>
+      <Image src={src} alt="" width={44} height={44} className="absolute -left-1.5 -top-1.5 size-11 max-w-none" />
+    </span>
+  );
+}
+
+function MenuRow({
+  href,
+  onClick,
+  icon,
+  label,
+  sublabel,
+  badge,
+  chevron = true,
+  accent = false,
+}: {
+  href?: string;
+  onClick: () => void;
+  icon: string;
+  label: string;
+  sublabel?: string;
+  badge?: number;
+  chevron?: boolean;
+  accent?: boolean;
+}) {
+  const content = (
+    <>
+      <span
+        className={cn(
+          "relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[14px]",
+          accent ? "border-[0.5px] border-[#FBD4D8] bg-[#FDE9EC]" : "bg-[#F5F3EF]"
+        )}
+      >
+        {accent && (
+          <Image
+            src="/icons/nav/guide-bg.svg"
+            alt=""
+            width={56}
+            height={110}
+            unoptimized
+            className="absolute left-1/2 top-1/2 h-[110px] w-14 max-w-none -translate-x-1/2 -translate-y-1/2"
+          />
+        )}
+        <NavArt src={icon} className="relative" />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="flex items-center gap-2">
+          <span className={cn("text-base leading-6", accent ? "text-[#F5032D]" : "text-[#212121]")}>{label}</span>
+          {badge ? (
+            <span className="rounded-full bg-[#F5032D]/10 px-2 text-[11px] font-bold text-[#F5032D]">{badge}</span>
+          ) : null}
+        </span>
+        {sublabel && (
+          <span className={cn("text-xs leading-[18px]", accent ? "text-[#130404]" : "text-[#9E9E9E]")}>{sublabel}</span>
+        )}
+      </span>
+      {chevron && <Image src="/icons/nav/chevron-right.svg" alt="" width={18} height={18} unoptimized className="shrink-0" />}
+    </>
+  );
+  const className =
+    "flex w-full cursor-pointer items-center gap-[13px] rounded-[14px] py-2 text-left transition-colors hover:bg-[#F8F7F5]";
+  return href ? (
+    <Link href={href} onClick={onClick} className={className}>
+      {content}
+    </Link>
+  ) : (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
+    </button>
+  );
+}
+
+// Scrolled-state search pill (Figma 2303:1016): the artwork is cropped to a
+// 37×26 window inside a 32.667px box.
+function CompactArt({ src }: { src: string }) {
+  return (
+    <span className="relative block size-[32.667px] shrink-0">
+      <span className="absolute left-[-2.17px] top-[3.33px] block h-[26px] w-[37px] overflow-hidden">
+        <Image
+          src={src}
+          alt=""
+          width={36}
+          height={36}
+          className="absolute left-[calc(50%+0.37px)] top-[-4.88px] size-[35.75px] max-w-none -translate-x-1/2"
+        />
+      </span>
+    </span>
+  );
+}
+
+const COMPACT_SEARCH_TABS = [
+  { id: "where", label: "Where/What", icon: "/icons/nav/search-where.png" },
+  { id: "when", label: "When", icon: "/icons/nav/search-when.png" },
+  { id: "who", label: "Who", icon: "/icons/nav/search-who.png" },
+] as const;
 
 export function HomeNav({ className }: { className?: string }) {
   const { user } = useSession();
@@ -57,19 +138,19 @@ export function HomeNav({ className }: { className?: string }) {
       id: "home",
       label: "Home",
       href: "/",
-      Icon: HomeSmileIcon,
+      icon: "/icons/nav/home.png",
     },
     {
       id: "wishlist",
-      label: "Wishlist",
-      href: user ? "/wishlists" : "/login",
-      Icon: HeartIcon,
+      label: "Wishlists",
+      href: "/wishlists",
+      icon: "/icons/nav/wishlist.png",
     },
     {
       id: "explore",
-      label: "Explore",
+      label: "My experiences",
       href: "#",
-      Icon: ImageIcon,
+      icon: "/icons/nav/experiences.png",
     },
   ];
   const logout = useLogout();
@@ -194,14 +275,14 @@ export function HomeNav({ className }: { className?: string }) {
               <AnimatePresence mode="wait">
                 {!isScrolled ? (
                   <motion.nav
-                    layout
+                    layout="position"
                     key="primary-nav"
                     initial={{ opacity: 0, scale: 0.88, y: -6 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.88, y: -6 }}
                     transition={{ duration: 0.22, ease: "easeOut" }}
                     aria-label="Primary"
-                    className="flex items-center gap-2 rounded-full bg-white p-2 shadow-[0_1px_8px_rgba(0,0,0,0.08)]"
+                    className="flex items-center gap-4 rounded-full bg-white p-2 shadow-[0_1px_8px_rgba(0,0,0,0.08)]"
                   >
                     {navItems.map((item) => {
                       const isActive = activeTab === item.id;
@@ -213,16 +294,16 @@ export function HomeNav({ className }: { className?: string }) {
                           aria-label={item.label}
                           aria-current={isActive ? "page" : undefined}
                           className={cn(
-                            "relative flex h-[43px] items-center rounded-full text-base font-medium select-none transition-colors duration-200",
+                            "relative flex items-center rounded-full text-base font-medium select-none transition-colors duration-200",
                             isActive
-                              ? "text-white"
-                              : "text-foreground hover:bg-black/[0.04]"
+                              ? "h-[43px] text-[#1F1F1F]"
+                              : "h-12 text-foreground hover:bg-black/[0.04]"
                           )}
                         >
                           {isActive && (
                             <motion.div
                               layoutId="active-nav-indicator"
-                              className="absolute inset-0 rounded-full bg-brand"
+                              className="absolute inset-0 rounded-full bg-[#F4F2EE]"
                               transition={{
                                 type: "spring",
                                 stiffness: 380,
@@ -232,10 +313,10 @@ export function HomeNav({ className }: { className?: string }) {
                           )}
 
                           <motion.div
-                            layout
+                            layout="position"
                             className={cn(
                               "relative z-10 flex h-full items-center",
-                              isActive ? "px-4 gap-2" : "w-[43px] justify-center"
+                              isActive ? "px-4 gap-2" : "w-12 justify-center"
                             )}
                             transition={{
                               type: "spring",
@@ -243,7 +324,7 @@ export function HomeNav({ className }: { className?: string }) {
                               damping: 30,
                             }}
                           >
-                            <item.Icon className="size-[18px] shrink-0" />
+                            <NavArt src={item.icon} />
                             <AnimatePresence initial={false} mode="popLayout">
                               {isActive && (
                                 <motion.span
@@ -271,52 +352,32 @@ export function HomeNav({ className }: { className?: string }) {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 6 }}
                     transition={{ duration: 0.22, ease: "easeOut" }}
-                    className="flex h-[52px] items-center rounded-full bg-[#F4F2EE] px-2 py-1 shadow-xs transition-all duration-200 hover:shadow-sm"
+                    className="flex items-center gap-[9px] rounded-[57px] bg-[#F4F2EE] px-[10px] py-[5px] transition-shadow duration-200 hover:shadow-sm"
                   >
-                    {/* Where/What */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSearch("where")}
-                      className="flex h-full items-center gap-2.5 rounded-l-full pl-4 pr-3.5 font-sans text-[14px] font-medium text-[#333134] transition-colors hover:bg-black/5 cursor-pointer"
-                    >
-                      <PlaneNavIcon className="size-4 text-[#6F6B72]" />
-                      <span>Where/What</span>
-                    </button>
-
-                    {/* Divider */}
-                    <span className="h-4 w-[1px] bg-[#E0DFDD]" />
-
-                    {/* When */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSearch("when")}
-                      className="flex h-full items-center gap-2.5 px-3.5 font-sans text-[14px] font-medium text-[#333134] transition-colors hover:bg-black/5 cursor-pointer"
-                    >
-                      <CalendarOneIcon className="size-4 text-[#6F6B72]" />
-                      <span>When</span>
-                    </button>
-
-                    {/* Divider */}
-                    <span className="h-4 w-[1px] bg-[#E0DFDD]" />
-
-                    {/* Who */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSearch("who")}
-                      className="flex h-full items-center gap-2.5 px-3.5 font-sans text-[14px] font-medium text-[#333134] transition-colors hover:bg-black/5 cursor-pointer"
-                    >
-                      <UsersTwoNavIcon className="size-4 text-[#6F6B72]" />
-                      <span>Who</span>
-                    </button>
+                    <div className="flex items-center">
+                      {COMPACT_SEARCH_TABS.map((tab, index) => (
+                        <div key={tab.id} className="flex items-center">
+                          {index > 0 && <span aria-hidden className="h-[33px] w-px bg-[#B2B2B2]" />}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenSearch(tab.id)}
+                            className="flex items-center gap-2 rounded-full px-4 py-2 font-sans text-[14px] font-medium leading-[21px] text-[#6F6B72] transition-colors hover:bg-black/5 cursor-pointer"
+                          >
+                            <CompactArt src={tab.icon} />
+                            <span>{tab.label}</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
 
                     {/* Red Search Button */}
                     <button
                       type="button"
                       aria-label="Search"
                       onClick={() => handleOpenSearch("where")}
-                      className="ml-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-xs transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                      className="flex size-11 shrink-0 items-center justify-center rounded-[23px] bg-brand transition-transform hover:scale-105 active:scale-95 cursor-pointer"
                     >
-                      <Search className="size-4 stroke-[2.5]" />
+                      <Image src="/icons/nav/search-lg.svg" alt="" width={20} height={20} unoptimized />
                     </button>
                   </motion.div>
                 ) : null}
@@ -424,7 +485,13 @@ export function HomeNav({ className }: { className?: string }) {
                   background: profileMenuOpen || isScrolled ? "#F4F2EE" : "#FFF",
                 }}
               >
-                <HumanNavIcon />
+                <Image
+                  src="/icons/nav/profile-button.png"
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="size-full rounded-[12px] object-cover"
+                />
               </button>
 
               {/* Floating Dropdown Card Menu */}
@@ -435,157 +502,58 @@ export function HomeNav({ className }: { className?: string }) {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -6 }}
                     transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="absolute right-0 top-[calc(100%+12px)] z-50 w-[340px] max-w-[calc(100vw-32px)] rounded-[24px] bg-white p-3 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
+                    className="absolute right-0 top-[calc(100%+12px)] z-50 w-[401px] max-w-[calc(100vw-32px)] rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
                   >
-                    {/* Item 1: My experiences */}
-                    <Link
+                    <MenuRow
                       href={user ? "/profile" : "/login"}
                       onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <ImageIconLucide className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          My experiences
-                        </span>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
-
-                    {/* Item 2: Wishlists */}
-                    <Link
-                      href={user ? "/wishlists" : "/login"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Heart className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Wishlists
-                        </span>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
-
-                    {/* Item 3: Notifications */}
-                    <Link
+                      icon="/icons/nav/experiences.png"
+                      label="My experiences"
+                    />
+                    <MenuRow
                       href={user ? "/notifications" : "/login"}
                       onClick={() => setProfileMenuOpen(false)}
-                      className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Bell className="size-5" />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                            Notifications
-                          </span>
-                          {unreadCount > 0 && (
-                            <span className="rounded-full bg-[#F5032D]/10 px-2 py-0.2 text-[11px] font-bold text-[#F5032D]">
-                              {unreadCount}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
-
-                    {/* Item 3: Language and Currency */}
-                    <button
-                      type="button"
+                      icon="/icons/nav/notifications.png"
+                      label="Notifications"
+                      badge={unreadCount > 0 ? unreadCount : undefined}
+                    />
+                    <MenuRow
                       onClick={() => {
                         setProfileMenuOpen(false);
                         if (user) router.push("/profile?tab=locale");
                         else router.push("/login");
                       }}
-                      className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Globe className="size-5" />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E] leading-snug">
-                            Language and Currency
-                          </span>
-                          <span className="font-sans text-[12px] text-[#8C888F] leading-tight mt-0.5">
-                            English/USD
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </button>
-
-                    {/* Item 4: Account settings */}
-                    <Link
+                      icon="/icons/nav/language.png"
+                      label="Language and Currency"
+                      sublabel="English/USD"
+                    />
+                    <MenuRow
                       href={user ? "/profile" : "/login"}
                       onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Settings className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Account settings
-                        </span>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
-
-                    {/* Item 5: Help center */}
-                    <Link
+                      icon="/icons/nav/account-settings.png"
+                      label="Account settings"
+                    />
+                    <MenuRow
                       href="#"
                       onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <CircleHelp className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Help center
-                        </span>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
+                      icon="/icons/nav/help.png"
+                      label="Help center"
+                    />
 
-                    {/* Divider */}
-                    <div className="my-1.5 h-[1px] w-full bg-[#F0EFEB]" />
+                    <div className="my-3 h-px w-full bg-[#EEEEEE]" />
 
-                    {/* Item 6: Become a guide */}
-                    <Link
+                    <MenuRow
                       href="#"
                       onClick={() => setProfileMenuOpen(false)}
-                      className="group flex items-center justify-between rounded-[16px] p-2.5 transition-colors hover:bg-[#F8F7F5]"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Compass className="size-5" />
-                        </div>
-                        <div className="flex flex-col min-w-0 pr-1">
-                          <span className="font-sans text-[15px] font-medium text-[#1E1E1E] leading-snug">
-                            Become a guide
-                          </span>
-                          <span className="font-sans text-[12px] text-[#8C888F] leading-tight mt-0.5">
-                            Make extra income from what you already love doing
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight className="size-4 text-[#8C888F] group-hover:text-[#333134] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
+                      icon="/icons/nav/become-guide.png"
+                      label="Become a guide"
+                      sublabel="Make extra income from what you already love doing"
+                      accent
+                    />
 
-                    {/* Divider */}
-                    <div className="my-1.5 h-[1px] w-full bg-[#F0EFEB]" />
+                    <div className="my-3 h-px w-full bg-[#EEEEEE]" />
 
-                    {/* Item 7: Logout */}
-                    <button
-                      type="button"
+                    <MenuRow
                       onClick={() => {
                         setProfileMenuOpen(false);
                         if (user) {
@@ -594,17 +562,10 @@ export function HomeNav({ className }: { className?: string }) {
                           router.push("/login");
                         }
                       }}
-                      className="group flex w-full items-center justify-between rounded-[16px] p-2.5 text-left transition-colors hover:bg-[#F8F7F5] cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134] group-hover:bg-[#EAE8E3] transition-colors">
-                          <Power className="size-5" />
-                        </div>
-                        <span className="font-sans text-[15px] font-medium text-[#1E1E1E]">
-                          Logout
-                        </span>
-                      </div>
-                    </button>
+                      icon={user ? "/icons/nav/logout.png" : "/icons/nav/login.png"}
+                      label={user ? "Logout" : "Login or create account"}
+                      chevron={false}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -45,6 +45,10 @@ interface ExperienceRailSectionProps {
   bleedClassName?: string;
 }
 
+// Figma "Buttons" (2353:10315;321:18427): red 134×48 pill.
+const seeMoreClassName =
+  "h-12 w-[134px] shrink-0 items-center justify-center rounded-full bg-brand font-sans text-base font-medium text-white transition-colors hover:bg-brand/90 inline-flex";
+
 function chunk<T>(list: T[], size: number): T[][] {
   const rows: T[][] = [];
   for (let i = 0; i < list.length; i += size) rows.push(list.slice(i, i + size));
@@ -147,10 +151,7 @@ export function ExperienceRailSection({
       <div className="flex items-start justify-between gap-4">
         {headingBlock(true)}
         {seeMoreHref ? (
-          <Link
-            href={seeMoreHref}
-            className="hidden shrink-0 items-center gap-2 font-sans text-base font-medium leading-6 text-[#F5032D] hover:opacity-85 lg:flex"
-          >
+          <Link href={seeMoreHref} className={cn(seeMoreClassName, "hidden lg:inline-flex")}>
             See more
           </Link>
         ) : null}
@@ -173,6 +174,11 @@ export function ExperienceRailSection({
                 ))}
               </div>
             ))}
+        {seeMoreHref ? (
+          <Link href={seeMoreHref} className={cn(seeMoreClassName, "self-center")}>
+            See more
+          </Link>
+        ) : null}
       </div>
       <div className="mt-[31px] hidden grid-cols-2 gap-x-6 gap-y-[31px] lg:grid">
         {isLoading
