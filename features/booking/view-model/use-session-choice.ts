@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type { ExperienceSession, ExperienceSessions } from "../model/booking.types";
-import { dateKey, formatSessionTime, middayOf, parseDateKey } from "../model/sessions";
+import { addDaysToKey, dateKey, formatSessionTime, middayOf, parseDateKey, todayIn, zoneCity } from "../model/sessions";
 
 export type SessionOption = {
   startsAt: string;
@@ -14,8 +14,12 @@ export type SessionOption = {
 
 export type SessionChoice = {
   scheduled: boolean;
+  /** "Times are Lagos time.": session times are in the experience's zone. */
+  timezoneNote: string;
   /** Scheduled, but nothing is coming up. */
   noSessions: boolean;
+  /** Sessions are coming up, but every one is full. */
+  allSoldOut: boolean;
   options: SessionOption[];
   session: ExperienceSession | null;
   /** What to send as requested_datetime; null until a time can be booked. */
@@ -29,14 +33,10 @@ export type SessionChoice = {
   onPickSession: (startsAt: string) => void;
 };
 
-function tomorrowKey(): string {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return dateKey(tomorrow);
-}
-
 /** Which day and session the customer is booking. Until they pick, the first
- * open session (or, without a schedule, the event date or tomorrow) is used. */
+ * open session (or, without a schedule, the event date or tomorrow) is used.
+ * "Today" is the experience's today, not the browser's: a customer abroad
+ * sees the same bookable days as one in the experience's city. */
 export function useSessionChoice(
   sessionData: ExperienceSessions | undefined,
   eventStartDate?: Date | null,
@@ -56,7 +56,9 @@ export function useSessionChoice(
   const hasOpenSession = (day: string) => (byDate.get(day) ?? []).some((s) => !s.sold_out);
   const firstOpenDay = [...byDate.keys()].find(hasOpenSession) ?? null;
   const eventDay = eventStartDate ? dateKey(eventStartDate) : null;
-  const tomorrow = tomorrowKey();
+  const timeZone = sessionData?.timezone;
+  const today = timeZone ? todayIn(timeZone) : dateKey(new Date());
+  const tomorrow = addDaysToKey(today, 1);
   const selectedDay =
     pickedDay ?? (scheduled ? firstOpenDay : eventDay && eventDay > tomorrow ? eventDay : tomorrow);
   const daySessions = scheduled && selectedDay ? (byDate.get(selectedDay) ?? []) : [];
@@ -67,7 +69,9 @@ export function useSessionChoice(
 
   return {
     scheduled,
+    timezoneNote: timeZone ? `Times are ${zoneCity(timeZone)} time.` : "Times are local to the experience.",
     noSessions: scheduled && byDate.size === 0,
+    allSoldOut: scheduled && byDate.size > 0 && firstOpenDay === null,
     options: daySessions.map((s) => ({
       startsAt: s.starts_at,
       label: formatSessionTime(s.local_time),
@@ -85,7 +89,7 @@ export function useSessionChoice(
     dateLabel: selectedDay
       ? parseDateKey(selectedDay).toLocaleDateString("en-US", { month: "long", day: "numeric" })
       : "Select dates",
-    minDate: scheduled ? new Date() : parseDateKey(tomorrow),
+    minDate: parseDateKey(scheduled ? today : tomorrow),
     isDateSelectable: (date) =>
       scheduled ? hasOpenSession(dateKey(date)) : dateKey(date) >= tomorrow,
     onSelectDate: (date) => {

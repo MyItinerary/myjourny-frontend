@@ -6,7 +6,16 @@ import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
-import { dateKey, formatSessionTime, middayOf, parseDateKey, useExperienceSessions } from "./sessions";
+import {
+  addDaysToKey,
+  dateKey,
+  formatSessionTime,
+  middayOf,
+  parseDateKey,
+  todayIn,
+  useExperienceSessions,
+  zoneCity,
+} from "./sessions";
 
 describe("date helpers", () => {
   it("round-trips a calendar day", () => {
@@ -20,6 +29,19 @@ describe("date helpers", () => {
     expect(formatSessionTime("00:30:00")).toBe("12:30 AM");
     expect(formatSessionTime("12:00:00")).toBe("12:00 PM");
     expect(formatSessionTime("18:45:00")).toBe("6:45 PM");
+  });
+
+  it("finds today in another time zone", () => {
+    // 23:30 UTC on 1 June is already 2 June in Lagos, still 1 June in Los Angeles.
+    const now = new Date("2030-06-01T23:30:00Z");
+    expect(todayIn("Africa/Lagos", now)).toBe("2030-06-02");
+    expect(todayIn("America/Los_Angeles", now)).toBe("2030-06-01");
+  });
+
+  it("moves dates and names zones", () => {
+    expect(addDaysToKey("2030-06-30", 1)).toBe("2030-07-01");
+    expect(zoneCity("America/Los_Angeles")).toBe("Los Angeles");
+    expect(zoneCity("UTC")).toBe("UTC");
   });
 
   it("puts a date-only booking at local midday", () => {

@@ -1,7 +1,6 @@
 "use client";
 
 import { Calendar, Clock, ShieldCheck, User, X } from "lucide-react";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -69,6 +68,7 @@ export function BookingPanelView(props: Props) {
           </div>
         ))}
         {minGuestsWarning && <p className="text-xs text-[#F5032D]">{minGuestsWarning}</p>}
+        {props.seatsWarning && <p className="text-xs text-[#F5032D]">{props.seatsWarning}</p>}
       </div>
 
       {days.show && (
@@ -181,9 +181,6 @@ function CheckoutSummary({ promo, quote, quoteError, booking, total }: BookingPa
             {booking.label}
           </Button>
           <p className="text-center text-xs text-[#6F6B72]">You won&apos;t be charged yet. You&apos;ll confirm on the next step.</p>
-          <Link href="/checkout-preview" className="text-center font-sans text-xs font-medium text-brand hover:underline">
-            Preview &apos;Confirm details &amp; pay&apos; page &rarr;
-          </Link>
         </div>
       )}
 

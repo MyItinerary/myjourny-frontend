@@ -10,7 +10,9 @@ import { BookingPanelView } from "./booking-panel-view";
 function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
   return {
     scheduled: true,
+    timezoneNote: "Times are Lagos time.",
     noSessions: false,
+    allSoldOut: false,
     options: [
       { startsAt: "a", label: "9:00 AM", note: "2 left", disabled: false, selected: true },
       { startsAt: "b", label: "3:00 PM", note: "Sold out", disabled: true, selected: false },
@@ -49,6 +51,7 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
       ],
     },
     quoteError: null,
+    seatsWarning: null,
     total: "₦9,000.00",
     booking: { available: true, disabled: false, pending: false, label: "Book now - ₦9,000.00", onBook: vi.fn() },
     ...overrides,
@@ -68,6 +71,8 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("-₦1,000.00")).toHaveClass("text-green-700");
     expect(screen.getAllByText("₦9,000.00").length).toBeGreaterThan(0);
     expect(screen.getByText("Duration - 3 hours")).toBeInTheDocument();
+    // The checkout preview was a design mock-up, not a real step.
+    expect(screen.queryByRole("link", { name: /Preview/ })).not.toBeInTheDocument();
   });
 
   it("passes changes and the booking click to the view-model", async () => {
@@ -94,6 +99,7 @@ describe("BookingPanelView", () => {
       <BookingPanelView
         {...panelViewModel({
           minGuestsWarning: "This experience needs at least 2 guests.",
+          seatsWarning: "Only 1 spot left for this session.",
           promo: { input: "OLD", onInputChange: vi.fn(), onApply: vi.fn(), message: { text: "OLD has expired", ok: false } },
           quoteError: "We couldn't price this selection.",
           booking: { available: true, disabled: true, pending: true, label: "Starting checkout…", onBook: vi.fn() },
@@ -102,6 +108,7 @@ describe("BookingPanelView", () => {
     );
 
     expect(screen.getByText("This experience needs at least 2 guests.")).toBeInTheDocument();
+    expect(screen.getByText("Only 1 spot left for this session.")).toBeInTheDocument();
     expect(screen.getByText("OLD has expired")).toHaveClass("text-[#F5032D]");
     expect(screen.getByText("We couldn't price this selection.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Starting checkout…" })).toBeDisabled();

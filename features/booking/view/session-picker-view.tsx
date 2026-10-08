@@ -9,9 +9,19 @@ import { cn } from "@/lib/utils";
 import type { SessionChoice } from "../view-model/use-session-choice";
 
 /** The session times for the chosen day. */
-export function SessionTimesView({ scheduled, noSessions, options, onPickSession }: SessionChoice) {
+export function SessionTimesView({
+  scheduled,
+  noSessions,
+  allSoldOut,
+  options,
+  onPickSession,
+  timezoneNote,
+}: SessionChoice) {
   if (noSessions) {
     return <span className="font-sans text-sm text-[#130404]">No upcoming sessions yet. Check back soon.</span>;
+  }
+  if (allSoldOut && options.length === 0) {
+    return <span className="font-sans text-sm text-[#130404]">All upcoming sessions are sold out.</span>;
   }
   if (!scheduled) {
     return (
@@ -45,7 +55,7 @@ export function SessionTimesView({ scheduled, noSessions, options, onPickSession
           </button>
         ))}
       </div>
-      <span className="text-xs text-[#6F6B72]">Times are local to the experience.</span>
+      <span className="text-xs text-[#6F6B72]">{timezoneNote}</span>
     </>
   );
 }

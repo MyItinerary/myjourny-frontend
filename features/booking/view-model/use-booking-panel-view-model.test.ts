@@ -37,8 +37,9 @@ const quote = (overrides = {}) => ({
   ...overrides,
 });
 
-function stubApi({ quoteBody = quote(), quoteStatus = 200 } = {}) {
+function stubApi({ quoteBody = quote(), quoteStatus = 200, seatsLeft = 8 } = {}) {
   const quotes: Record<string, unknown>[] = [];
+  let sessionLoads = 0;
   server.use(
     http.get(apiUrl("/experiences/exp-1/pricing"), () =>
       HttpResponse.json({
@@ -48,19 +49,22 @@ function stubApi({ quoteBody = quote(), quoteStatus = 200 } = {}) {
         rules: [],
       }),
     ),
-    http.get(apiUrl("/experiences/exp-1/sessions"), () =>
-      HttpResponse.json({
+    http.get(apiUrl("/experiences/exp-1/sessions"), () => {
+      sessionLoads += 1;
+      return HttpResponse.json({
         timezone: "Africa/Lagos",
         scheduled: true,
-        sessions: [{ starts_at: startsAt, local_date: soon, local_time: "09:00:00", seats_left: 8, sold_out: false }],
-      }),
-    ),
+        sessions: [
+          { starts_at: startsAt, local_date: soon, local_time: "09:00:00", seats_left: seatsLeft, sold_out: false },
+        ],
+      });
+    }),
     http.post(apiUrl("/bookings/quote"), async ({ request }) => {
       quotes.push((await request.json()) as Record<string, unknown>);
       return HttpResponse.json(quoteBody, { status: quoteStatus });
     }),
   );
-  return quotes;
+  return Object.assign(quotes, { sessionLoads: () => sessionLoads });
 }
 
 const props = {
@@ -109,10 +113,20 @@ describe("useBookingPanelViewModel", () => {
     expect(result.current.promo.message).toEqual({ text: "OLD has expired", ok: false });
   });
 
-  it("shows when the selection can't be priced", async () => {
-    stubApi({ quoteBody: { detail: "Bad" } as never, quoteStatus: 400 });
+  it("shows the server's reason when the selection can't be priced", async () => {
+    stubApi({ quoteBody: { detail: "Choose how many days you want to book" } as never, quoteStatus: 400 });
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
-    await waitFor(() => expect(result.current.quoteError).not.toBeNull());
+    await waitFor(() => expect(result.current.quoteError).toBe("Choose how many days you want to book"));
+    expect(result.current.booking.disabled).toBe(true);
+  });
+
+  it("caps guests at the session's seats left", async () => {
+    stubApi({ seatsLeft: 1, quoteBody: quote({ guests: 2 }) });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+
+    expect(result.current.seatsWarning).toBe("Only 1 spot left for this session.");
+    expect(result.current.tickets[0].max).toBe(1);
     expect(result.current.booking.disabled).toBe(true);
   });
 
@@ -167,15 +181,49 @@ describe("useBookingPanelViewModel", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/bookings/b-2/success"));
   });
 
-  it("shows the server's reason when booking fails", async () => {
+  it("opens the booking's page when it awaits payment without a link", async () => {
     stubApi();
-    server.use(http.post(apiUrl("/bookings/"), () => HttpResponse.json({ detail: "Sold out" }, { status: 409 })));
+    server.use(
+      http.post(apiUrl("/bookings/"), () =>
+        HttpResponse.json({ id: "b-3", status: "pending", payment_status: "unpaid", url: null }),
+      ),
+    );
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
     await waitFor(() => expect(result.current.booking.disabled).toBe(false));
 
     act(() => result.current.booking.onBook());
 
-    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Sold out"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/bookings/b-3"));
+  });
+
+  it("shows the server's reason and fresh seats when the session filled up", async () => {
+    const api = stubApi();
+    server.use(
+      http.post(apiUrl("/bookings/"), () =>
+        HttpResponse.json({ detail: "Only 1 spot left for this date" }, { status: 409 }),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.booking.disabled).toBe(false));
+    const loadsBefore = api.sessionLoads();
+
+    act(() => result.current.booking.onBook());
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Only 1 spot left for this date"));
+    await waitFor(() => expect(api.sessionLoads()).toBe(loadsBefore + 1));
+  });
+
+  it("doesn't reload sessions for other errors", async () => {
+    const api = stubApi();
+    server.use(http.post(apiUrl("/bookings/"), () => HttpResponse.json({ detail: "Nope" }, { status: 400 })));
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.booking.disabled).toBe(false));
+    const loadsBefore = api.sessionLoads();
+
+    act(() => result.current.booking.onBook());
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Nope"));
+    expect(api.sessionLoads()).toBe(loadsBefore);
   });
 
   it("can't be booked without a guide", async () => {

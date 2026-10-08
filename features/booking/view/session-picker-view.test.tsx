@@ -9,7 +9,9 @@ import { SessionDateView, SessionTimesView } from "./session-picker-view";
 function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
   return {
     scheduled: true,
+    timezoneNote: "Times are Lagos time.",
     noSessions: false,
+    allSoldOut: false,
     options: [
       { startsAt: "a", label: "9:00 AM", note: "2 left", disabled: false, selected: true },
       { startsAt: "b", label: "3:00 PM", note: "Sold out", disabled: true, selected: false },
@@ -34,6 +36,7 @@ describe("SessionTimesView", () => {
     expect(screen.getByRole("button", { name: /9:00 AM/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /3:00 PM/ })).toBeDisabled();
     expect(screen.getByText("Sold out")).toBeInTheDocument();
+    expect(screen.getByText("Times are Lagos time.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /9:00 AM/ }));
 
     expect(choice.onPickSession).toHaveBeenCalledWith("a");
@@ -42,6 +45,11 @@ describe("SessionTimesView", () => {
   it("says when nothing is scheduled yet", () => {
     renderWithProviders(<SessionTimesView {...sessionChoice({ noSessions: true })} />);
     expect(screen.getByText(/No upcoming sessions yet/)).toBeInTheDocument();
+  });
+
+  it("says when every session is full", () => {
+    renderWithProviders(<SessionTimesView {...sessionChoice({ allSoldOut: true, options: [] })} />);
+    expect(screen.getByText("All upcoming sessions are sold out.")).toBeInTheDocument();
   });
 
   it("asks only for a date when there's no schedule", () => {

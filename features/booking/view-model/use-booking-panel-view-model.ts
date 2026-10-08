@@ -38,6 +38,8 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
   };
   quote: { lines: { key: string; label: string; amount: string; isDiscount: boolean }[]; updating: boolean } | null;
   quoteError: string | null;
+  /** The chosen session has fewer seats left than the guests picked. */
+  seatsWarning: string | null;
   total: string;
   booking: { available: boolean; disabled: boolean; pending: boolean; label: string; onBook: () => void };
 };
@@ -52,12 +54,14 @@ export function useBookingPanelViewModel({
   availableSpots,
   minSpots = 1,
 }: BookingPanelProps): BookingPanelViewModel {
-  const maxGuests = availableSpots ?? 10;
   const minGuests = Math.max(1, minSpots ?? 1);
   const router = useRouter();
   const { data: pricing } = useExperiencePricing(experienceId);
-  const { data: sessionData } = useExperienceSessions(experienceId);
-  const sessions = useSessionChoice(sessionData, eventStartDate);
+  const sessionsQuery = useExperienceSessions(experienceId);
+  const sessions = useSessionChoice(sessionsQuery.data, eventStartDate);
+  // No more guests than the chosen session has seats for.
+  const seatsLeft = sessions.session?.seats_left ?? null;
+  const maxGuests = Math.min(availableSpots ?? 10, seatsLeft ?? Infinity);
   const { guests, picked, ...ticketSelection } = useTicketSelection({
     pricing,
     fallbackPrices: prices,
@@ -86,7 +90,7 @@ export function useBookingPanelViewModel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [experienceId, pickedKey, requestedDatetime, appliedPromo],
   );
-  const { data: quote, isFetching: quoting, isError: quoteFailed } = useBookingQuote(selection);
+  const { data: quote, isFetching: quoting, isError: quoteFailed, error: quoteErrorCause } = useBookingQuote(selection);
   const selectionKey = JSON.stringify(selection);
 
   // A different selection is a new booking attempt with its own key.
@@ -94,8 +98,15 @@ export function useBookingPanelViewModel({
     bookingAttemptKey.current = null;
   }, [selectionKey]);
 
+  // The server counts guests (tickets per booking count once); trust it.
+  const quotedGuests = quote?.guests ?? guests;
   const isReady =
-    !!requestedDatetime && !!selection && guests >= minGuests && guests <= maxGuests && !!quote && !quoteFailed;
+    !!requestedDatetime &&
+    !!selection &&
+    quotedGuests >= minGuests &&
+    quotedGuests <= maxGuests &&
+    !!quote &&
+    !quoteFailed;
   const total = formatPrice(quote ? Number(quote.total) : 0, currency);
 
   const onBook = () => {
@@ -110,9 +121,15 @@ export function useBookingPanelViewModel({
           if (booking.url) window.location.href = booking.url;
           // Free experiences are confirmed straight away, with no checkout.
           else if (booking.status === "confirmed") router.push(`/bookings/${booking.id}/success`);
+          // Anything else (e.g. awaiting payment with no link yet) has its page.
+          else router.push(`/bookings/${booking.id}`);
         },
         onError: (error) => {
           bookingAttemptKey.current = null;
+          // 409: the session filled up or stopped running. Show fresh seats.
+          if ((error as { response?: { status?: number } })?.response?.status === 409) {
+            void sessionsQuery.refetch();
+          }
           toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again."));
         },
       },
@@ -147,7 +164,13 @@ export function useBookingPanelViewModel({
           })),
         }
       : null,
-    quoteError: quoteFailed ? "We couldn't price this selection. Please adjust it and try again." : null,
+    quoteError: quoteFailed
+      ? apiErrorMessage(quoteErrorCause, "We couldn't price this selection. Please adjust it and try again.")
+      : null,
+    seatsWarning:
+      seatsLeft !== null && guests > seatsLeft
+        ? `Only ${seatsLeft} spot${seatsLeft === 1 ? "" : "s"} left for this session.`
+        : null,
     total,
     booking: {
       available: !!guideId,

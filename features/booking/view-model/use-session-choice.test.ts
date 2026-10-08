@@ -1,5 +1,5 @@
 import { act } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderHookWithProviders } from "@/test/utils/render";
 
@@ -58,6 +58,13 @@ describe("useSessionChoice", () => {
     expect(result.current.dateLabel).not.toBe("Select dates");
   });
 
+  it("says when every session is sold out", () => {
+    const data = scheduled([session(day(3), "08:00", { sold_out: true, seats_left: 0 })]);
+    const { result } = renderHookWithProviders(() => useSessionChoice(data));
+    expect(result.current.allSoldOut).toBe(true);
+    expect(result.current.noSessions).toBe(false);
+  });
+
   it("shows sold-out sessions as disabled", () => {
     const data = scheduled([session(day(3), "08:00"), session(day(3), "13:00", { sold_out: true, seats_left: 0 })]);
     const { result } = renderHookWithProviders(() => useSessionChoice(data));
@@ -82,4 +89,26 @@ describe("useSessionChoice", () => {
     expect(plain.isDateSelectable(parseDateKey(day(0)))).toBe(false);
     expect(event.selectedDate).toEqual(parseDateKey(day(9)));
   });
+
+  it("counts days from the experience's today, not the browser's", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    // 23:30 UTC on 1 June: already 2 June in Lagos.
+    vi.setSystemTime(new Date("2030-06-01T23:30:00Z"));
+    const unscheduled = { timezone: "Africa/Lagos", scheduled: false, sessions: [] };
+    const { result } = renderHookWithProviders(() => useSessionChoice(unscheduled));
+
+    expect(result.current.selectedDate).toEqual(parseDateKey("2030-06-03"));
+    expect(result.current.isDateSelectable(parseDateKey("2030-06-02"))).toBe(false);
+    expect(result.current.timezoneNote).toBe("Times are Lagos time.");
+  });
+
+  it("falls back to the browser's day before sessions load", () => {
+    const { result } = renderHookWithProviders(() => useSessionChoice(undefined));
+    expect(result.current.timezoneNote).toBe("Times are local to the experience.");
+    expect(result.current.selectedDate).toEqual(parseDateKey(day(1)));
+  });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });

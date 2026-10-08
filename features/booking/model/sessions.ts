@@ -16,6 +16,24 @@ export function parseDateKey(key: string): Date {
   return new Date(year, month - 1, day);
 }
 
+/** Today's date ("YYYY-MM-DD") in an IANA time zone, e.g. the experience's. */
+export function todayIn(timeZone: string, now: Date = new Date()): string {
+  // en-CA formats dates as YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(now);
+}
+
+/** A date key moved by whole days. */
+export function addDaysToKey(key: string, days: number): string {
+  const date = parseDateKey(key);
+  date.setDate(date.getDate() + days);
+  return dateKey(date);
+}
+
+/** "Africa/Lagos" → "Lagos", for "Times are Lagos time". */
+export function zoneCity(timeZone: string): string {
+  return (timeZone.split("/").pop() ?? timeZone).replace(/_/g, " ");
+}
+
 /** "09:00:00" → "9:00 AM". */
 export function formatSessionTime(localTime: string): string {
   const [h, m] = localTime.split(":").map(Number);
