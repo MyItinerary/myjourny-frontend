@@ -33,7 +33,11 @@ These rules are enforced by CI and branch protection. A PR that breaks them **ca
 
 1. Run `npm run check`, plus `npm run test:e2e` for critical flows. Both must pass. If something fails, fix the code, not the test or the rule.
 2. Name the branch `<type>/<kebab-case>`. Title the PR `<type>(<scope>): <summary>`, where type is one of feat, fix, refactor, perf, test, docs or chore.
-3. Fill in **every** section of `.github/pull_request_template.md`. Under "AI assistance", name the agent and what it wrote. Paste the tail of `npm run check` under "How it was tested".
+3. Fill in every required section of `.github/pull_request_template.md`. Write for a reviewer or PM who hasn't read the code:
+   - Lead with what changes for users. Under "Product behaviour", say who is affected and give a `Before:` and an `After:` line, or write `No user-facing change — <reason>` (not allowed for feat, fix or perf).
+   - Under "How to verify", list steps someone can follow on the preview.
+   - Keep "Technical notes" to a few bullets. Under "Tests", describe the behaviour each test covers, not CI output.
+   - Under "AI assistance", name the agent and what it wrote.
 4. Tick a checklist box only if it is actually true. If an item doesn't apply, write `N/A — <reason>`.
 
 ## Never do these unless the engineering manager explicitly asks

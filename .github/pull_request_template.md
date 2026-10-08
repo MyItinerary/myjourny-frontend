@@ -4,14 +4,17 @@ PR title MUST follow Conventional Commits:  <type>(<scope>): <summary>
   e.g.   feat(experiences): add date filter to search
 Branch MUST be named <type>/<kebab-case>, e.g. feat/search-date-filter.
 
-Every section below is required. Replace each placeholder comment with real
-content. A CI check (`pr-format`) blocks merge if a section is empty or a
-checklist box is unticked. If an item truly doesn't apply, tick it and append
-"N/A — <reason>".
+Write for a reviewer or PM who hasn't read the code: lead with what changes
+for the people using MyJourny, then the engineering detail.
+
+Sections are required unless marked optional. A CI check (`pr-format`) blocks
+merge if a required section is empty, "Product behaviour" has no Before/After,
+or a checklist box is unticked. If an item truly doesn't apply, tick it and
+append "N/A — <reason>".
 -->
 
 ## Summary
-<!-- What does this PR do and why? 1–3 sentences. -->
+<!-- 1–3 plain-language sentences: what changes for users, and why. No file or function names. -->
 
 ## Linked issue
 <!-- Ticket / issue link, or "None — <reason>". -->
@@ -19,35 +22,56 @@ checklist box is unticked. If an item truly doesn't apply, tick it and append
 ## Type
 <!-- One of: feat | fix | refactor | perf | test | docs | chore -->
 
-## What changed (by MVVM layer)
+## Product behaviour
 <!--
-- model:      …
-- view-model: …
-- view:       …
-- routes (app/): …
-- other (config, docs, tooling): …
-Write "none" for layers you didn't touch.
+Who's affected: traveller | guide | admin | internal only
+Before: what people saw or could do before this PR.
+After:  what they see or can do now.
+
+Example:
+Who's affected: traveller
+Before: Multi-day sessions showed only the start date, so travellers thought they were booking one day.
+After: The session shows its full range ("Sat, June 1 – Mon, June 3") and the price says "Each booking covers all 3 days."
+
+For refactor / test / docs / chore PRs only, write instead:
+No user-facing change — <reason>
 -->
 
-## How it was tested
+## How to verify
 <!--
-List the test files added/changed and what they cover, plus any manual testing.
-Paste the tail of `npm run check` (and `npm run test:e2e` if relevant).
+Numbered steps a reviewer or QA person can follow on the Vercel preview, with what they should see.
+1. Open …
+2. Click …
+3. You should see …
 -->
 
 ## Screenshots / recording
-<!-- Optional. Add before/after (desktop + mobile) when it helps review a UI change. -->
+<!-- Optional, but expected for any visible change: before/after, desktop + mobile. -->
+
+## Technical notes
+<!--
+Optional. A few bullets, only what a reviewer needs to know: new API fields or
+endpoints, legacy files migrated, trade-offs, anything non-obvious.
+Don't list every file or layer; the diff shows that.
+-->
+
+## Tests
+<!--
+One line per test file or e2e spec, describing the behaviour it covers, e.g.
+- e2e/booking-sessions.spec.ts: a 3-day session shows its range and no days stepper.
+No need to paste `npm run check` output; the `ci` check shows it.
+-->
 
 ## Risk & rollback
-<!-- What could break? How do we roll back? -->
+<!-- What could users see break if this is wrong? How do we undo it? -->
 
 ## AI assistance
 <!-- "None", or which agent/tool was used and which parts it wrote. -->
 
 ## Checklist
-- [ ] Follows the MVVM structure in CONTRIBUTING.md — no data access (`apiClient`, `axios`, TanStack Query) in views or `app/` routes
+- [ ] "Product behaviour" and "How to verify" describe what this PR actually does (or say "No user-facing change")
+- [ ] I followed "How to verify" myself, locally or on the preview
 - [ ] New/changed logic is covered by tests, and `npm run check` passes locally
 - [ ] E2E (`e2e/`) added/updated if this touches auth, booking/checkout or payment pages, and `npm run test:e2e` passes
-- [ ] No new files in legacy dirs (`lib/queries/`, `components/<feature>/`); any legacy file substantially changed here has been migrated to `features/`
-- [ ] UI matches Figma / DESIGN-SYSTEM.md
-- [ ] No secrets, env values, `console.log` or debug code; docs updated if behaviour changed
+- [ ] Follows the MVVM structure in CONTRIBUTING.md, with no new files in legacy dirs (`lib/queries/`, `components/<feature>/`)
+- [ ] UI matches Figma / DESIGN-SYSTEM.md and works on mobile; no secrets, `console.log` or debug code

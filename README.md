@@ -27,7 +27,13 @@ This site is MyJourny's public front door and a full product surface. Travellers
 
 ## Conventions
 
-New code follows **MVVM in feature folders** (`features/<feature>/{model,view-model,view}`), every feature ships with tests, and PRs follow a required format. CI and branch protection enforce all of this. **Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.** AI agents also follow [AGENTS.md](AGENTS.md).
+New code follows **MVVM in feature folders** (`features/<feature>/{model,view-model,view}`), and every feature ships with tests. CI and branch protection enforce this. **Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.** AI agents also follow [AGENTS.md](AGENTS.md).
+
+## Pull requests
+
+- **Describe the product change first.** The PR template asks who is affected, what they saw before and what they see after, and how a reviewer can check it on the Vercel preview. Technical notes come second and are optional. `pr-format` enforces this.
+- **Ask for the AI review** by commenting `@myjourny` on the PR once it's ready. The bot posts inline comments and answers replies to them. The required `ai-review` check turns green when no 🔴 blockers are left unresolved. Every push resets it to pending. See [.github/helios/README.md](.github/helios/README.md).
+- **To merge**, a PR needs `ci`, `pr-format` and `ai-review` green, plus approval from a code-owner team.
 
 Other conventions: no `src/` dir, the `@/*` import alias, npm as the package manager (Node 22, see `.nvmrc`), and `components/providers.tsx` for app-wide providers.
 

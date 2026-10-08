@@ -27,8 +27,8 @@ permissions:
   contents: read
 
 env:
-  # claude-sonnet-5-5 is the cheaper option.
-  HELIOS_MODEL: claude-opus-5-5
+  # Sonnet: faster and lighter on the subscription. claude-opus-5-5 for deeper reviews.
+  HELIOS_MODEL: claude-sonnet-5-5
   HELIOS_REPLY_MODEL: claude-sonnet-5-5
 
 jobs:
