@@ -17,7 +17,8 @@ interface NotifRow {
 }
 
 // itin's notification types, in the order the screen lists them. The
-// in-app channel isn't shown; it stays on.
+// in-app channel isn't shown; it stays on. Rows only show for types the
+// backend returns.
 const ROWS: NotifRow[] = [
   { key: "booking_confirmations", label: "Booking confirmations", note: "Sent the moment a host confirms." },
   { key: "pre_trip_reminder", label: "Booking reminders", note: "A day before, and two hours before." },
@@ -26,6 +27,7 @@ const ROWS: NotifRow[] = [
     label: "Day of messages",
     note: "Meeting point, host name, what to bring, and any change to the plan.",
   },
+  { key: "host_messages", label: "Messages from hosts" },
   { key: "safety_alert", label: "Safety alerts", note: "Weather, closures and anything that affects your day." },
   {
     key: "cancellations_refunds",
@@ -33,6 +35,9 @@ const ROWS: NotifRow[] = [
     note: "Including what we send back and when.",
   },
   { key: "payment_status", label: "Payment updates", note: "Receipts and any problem with a payment." },
+  { key: "review_requests", label: "Review requests" },
+  { key: "weekly_drop", label: "The weekly drop", note: "New experiences in Lagos, once a week." },
+  { key: "product_news", label: "Product news" },
 ];
 
 type Channel = "email" | "push";
@@ -82,7 +87,7 @@ export function NotificationsSection() {
   if (isLoading || !notif) return <SectionSkeleton />;
 
   function toggle(rowKey: NotificationType, channel: Channel) {
-    update.mutate({ [rowKey]: { [channel]: !notif![rowKey][channel] } });
+    update.mutate({ [rowKey]: { [channel]: !notif![rowKey]?.[channel] } });
   }
 
   return (
@@ -107,10 +112,10 @@ export function NotificationsSection() {
         <div className="text-center text-sm font-medium text-foreground">Push</div>
       </div>
 
-      {ROWS.map((row) => {
+      {ROWS.filter((row) => notif[row.key]).map((row) => {
         const locked = LOCKED_NOTIFICATION_TYPES.has(row.key);
-        const emOn = locked || notif[row.key].email;
-        const pushOn = locked || notif[row.key].push;
+        const emOn = locked || !!notif[row.key]?.email;
+        const pushOn = locked || !!notif[row.key]?.push;
         return (
           <div
             key={row.key}
