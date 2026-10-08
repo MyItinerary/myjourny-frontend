@@ -18,7 +18,9 @@ export type ExperienceMatch = {
   title: string;
   headline?: string | null;
   imageUrl?: string | null;
-  price: number;
+  price?: number;
+  price_from?: number | null;
+  price_unit?: string | null;
   currency: string;
   duration?: number | null; // minutes
   rating?: number | null;
@@ -53,7 +55,7 @@ export function experienceMatchToCardProps(
     duration: formatDuration(match.duration),
     rating: match.rating ?? 0,
     reviewCount: 0,
-    priceFrom: match.price,
+    priceFrom: Number(match.price_from ?? match.price ?? 0),
     currency: match.currency,
   };
 }
@@ -306,7 +308,9 @@ export type SemanticSearchResult = {
   title: string;
   headline?: string | null;
   imageUrl?: string | null;
-  price: number;
+  price?: number;
+  price_from?: number | null;
+  price_unit?: string | null;
   currency: string;
   duration?: number | null;
   rating?: number | null;
