@@ -1,0 +1,36 @@
+# Sets the required `ai-review` status to pending on every push to a PR, so
+# merging waits until someone comments "@myjourny" and the review passes
+# (helios.yml). The review never starts on its own.
+#
+# pull_request_target runs this file from the default branch with secrets,
+# so a PR can't change it to mark itself green. It never checks out PR code.
+name: AI review gate
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  pending:
+    name: ai-review-pending
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.HELIOS_APP_ID }}
+          private-key: ${{ secrets.HELIOS_PRIVATE_KEY }}
+      - uses: actions/github-script@v8
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            await github.rest.repos.createCommitStatus({
+              ...context.repo,
+              sha: context.payload.pull_request.head.sha,
+              state: "pending",
+              context: "ai-review",
+              description: "Comment @myjourny to run the AI review.",
+            });

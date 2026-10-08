@@ -1,7 +1,7 @@
 // MyJourny Review (internally "helios"): turns Claude's structured findings into one PR review plus a
 // summary comment. Loaded by .github/workflows/helios.yml from a trusted copy
 // of the default branch, never from the PR checkout.
-"use strict";
+import { dedupe, openBlockers, setStatus } from "./threads.mjs";
 
 const SEVERITY = {
   blocker: { icon: "🔴", label: "Blocker" },
@@ -67,7 +67,17 @@ function partition(findings, files) {
   return { comments, offDiff };
 }
 
-function summary({ ok, sha, seconds, posted, offDiff = [], runUrl }) {
+function summary({
+  ok,
+  sha,
+  seconds,
+  posted,
+  offDiff = [],
+  runUrl,
+  skipped = 0,
+  blockers = 0,
+  statusError,
+}) {
   const rows = [
     "| Field | Value |",
     "|---|---|",
@@ -75,6 +85,7 @@ function summary({ ok, sha, seconds, posted, offDiff = [], runUrl }) {
     `| Duration | ${seconds.toFixed(1)}s |`,
     `| Status | ${ok ? "Success" : "Failed"} |`,
   ];
+  if (ok) rows.push(`| Open blockers | ${blockers} |`);
   const out = [
     `## MyJourny Review ${ok ? "Complete" : "Failed"}`,
     "",
@@ -86,7 +97,24 @@ function summary({ ok, sha, seconds, posted, offDiff = [], runUrl }) {
   } else if (posted > 0) {
     out.push("Review comments have been posted inline on the changed files.");
   } else if (offDiff.length === 0) {
-    out.push("No issues found.");
+    out.push(skipped > 0 ? "No new issues found." : "No issues found.");
+  }
+  if (ok && skipped > 0) {
+    out.push(
+      "",
+      `Skipped ${skipped} issue(s) already raised in an earlier review.`,
+    );
+  }
+  if (ok) {
+    out.push(
+      "",
+      blockers > 0
+        ? `❌ \`ai-review\` check failing: ${blockers} open blocker(s). Fix them, resolve the threads, then comment \`@myjourny\` to re-check.`
+        : "✅ `ai-review` check passed.",
+    );
+  }
+  if (statusError) {
+    out.push("", `⚠️ Could not update the \`ai-review\` check: ${statusError}`);
   }
   if (offDiff.length > 0) {
     out.push("", "**Other notes** (outside the diff):", "");
@@ -126,15 +154,20 @@ async function finish({
   start,
   ok,
   findings,
+  threads = [],
   sha,
   runUrl,
 }) {
   const { owner, repo } = context.repo;
   const pull_number = Number(start.prNumber);
-  let posted = 0;
+  const postedFindings = [];
   let offDiff = [];
+  let skipped = 0;
 
   if (ok) {
+    const fresh = dedupe(findings, threads);
+    skipped = fresh.skipped.length;
+    findings = fresh.kept;
     const files = await github.paginate(github.rest.pulls.listFiles, {
       owner,
       repo,
@@ -154,7 +187,7 @@ async function finish({
           event: "COMMENT",
           comments,
         });
-        posted = split.comments.length;
+        postedFindings.push(...split.comments.map((c) => c.finding));
       } catch (err) {
         // One bad anchor rejects the whole review, so retry comment by comment.
         core.warning(
@@ -169,12 +202,46 @@ async function finish({
               commit_id: sha,
               ...comment,
             });
-            posted++;
+            postedFindings.push(finding);
           } catch {
             offDiff.push(finding);
           }
         }
       }
+    }
+  }
+
+  const posted = postedFindings.length;
+  const blockers =
+    openBlockers(threads).length +
+    postedFindings.filter((f) => f.severity === "blocker").length;
+
+  // The required `ai-review` check: green only with no open blocker threads.
+  let statusError;
+  if (sha) {
+    try {
+      await setStatus({
+        github,
+        owner,
+        repo,
+        sha,
+        url:
+          runUrl || `${context.serverUrl}/${owner}/${repo}/pull/${pull_number}`,
+        ...(!ok
+          ? {
+              state: "error",
+              description: "Review failed. Comment @myjourny to retry.",
+            }
+          : blockers > 0
+            ? {
+                state: "failure",
+                description: `${blockers} open blocker(s). Fix, resolve, then comment @myjourny.`,
+              }
+            : { state: "success", description: "No open blockers." }),
+      });
+    } catch (err) {
+      statusError = err.message;
+      core.warning(`Could not set the ai-review status: ${err.message}`);
     }
   }
 
@@ -187,11 +254,21 @@ async function finish({
     owner,
     repo,
     issue_number: pull_number,
-    body: summary({ ok, sha, seconds, posted, offDiff, runUrl }),
+    body: summary({
+      ok,
+      sha,
+      seconds,
+      posted,
+      offDiff,
+      runUrl,
+      skipped,
+      blockers,
+      statusError,
+    }),
   });
   core.info(
-    `Helios: ${posted} inline comment(s), ${offDiff.length} other note(s).`,
+    `Helios: ${posted} inline comment(s), ${offDiff.length} other note(s), ${skipped} skipped, ${blockers} open blocker(s).`,
   );
 }
 
-module.exports = { commentableLines, formatBody, partition, summary, finish };
+export { commentableLines, formatBody, partition, summary, finish };
