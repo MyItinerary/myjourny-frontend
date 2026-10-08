@@ -10,7 +10,7 @@ Finding an authentic, local-led travel experience is harder than it should be. G
 
 MyJourny connects travellers with vetted local guides for bookable, curated experiences — verified guides, integrated payments and payouts, and semantic discovery, replacing generic listings with real local expertise.
 
-This site is MyJourny's public front door — where a first-time visitor learns what the product is, why it's different from a generic listings site, and is pointed toward downloading the app or signing up, rather than being asked to trust an unfamiliar brand cold. It's marketing-only: beyond fetching marketing content, it doesn't call the [`itin`](https://github.com/MyItinerary/itin) API the way the mobile app and guide/admin portal do.
+This site is MyJourny's public front door and a full product surface. Travellers discover experiences, sign up or log in, manage their profile and preferences, save wishlists, and book and pay, all against the [`itin`](https://github.com/MyItinerary/itin) API. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it fits together.
 
 ## Stack
 
@@ -19,16 +19,22 @@ This site is MyJourny's public front door — where a first-time visitor learns 
 - [shadcn/ui](https://ui.shadcn.com) (`base-nova` style, matching `admin`'s config)
 - [TanStack Query](https://tanstack.com/query) for data fetching
 
-This project mirrors the conventions used in the [`admin`](https://github.com/MyItinerary/admin) app: no `src/` dir, `@/*` import alias, npm as the package manager, and the same `components/providers.tsx` pattern (`QueryClientProvider` + `TooltipProvider` + `Toaster`).
+- [Vitest](https://vitest.dev) + [React Testing Library](https://testing-library.com/react) + [MSW](https://mswjs.io) for unit and component tests, and [Playwright](https://playwright.dev) for E2E
+
+## Conventions
+
+New code follows **MVVM in feature folders** (`features/<feature>/{model,view-model,view}`), every feature ships with tests, and PRs follow a required format. CI and branch protection enforce all of this. **Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.** AI agents also follow [AGENTS.md](AGENTS.md).
+
+Other conventions: no `src/` dir, the `@/*` import alias, npm as the package manager (Node 22, see `.nvmrc`), and `components/providers.tsx` for app-wide providers.
 
 ## Getting Started
 
 ```bash
-npm install
-npm run dev
+npm ci
+npm run dev        # http://localhost:3000
+npm run check      # lint + typecheck + tests + architecture check (run before every push)
+npm run test:e2e   # Playwright (run `npx playwright install chromium` once first)
 ```
-
-Open [http://localhost:3000](http://localhost:3000) to see the result. Edit `app/page.tsx` — the page auto-updates as you edit.
 
 ## Learn More
 

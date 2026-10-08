@@ -1,12 +1,12 @@
 # Architecture — myjourny-frontend
 
-The public-facing MyJourny website. **Note:** this repo's own top-level README currently describes the app as "marketing-only" — that's out of date. In practice it's a fully authenticated product surface with real auth, bookings, profile management, and payment handoff, calling `itin` extensively. Worth fixing that README so it doesn't mislead the next person who opens the repo.
+The public-facing MyJourny website. It's a fully authenticated product surface (real auth, bookings, profile management and payment handoff) that calls `itin` extensively.
 
 For the platform-wide picture (how this app fits alongside `itin`, `helm`, and `mobile-app`), see the [`myjourny-docs`](https://github.com/MyItinerary/myjourny-docs) repo — this file covers `myjourny-frontend` specifically.
 
 ## Stack
 
-Next.js 16 (App Router, no `src/` directory) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui (`base-nova` style) · TanStack Query v5 · Axios · `@react-oauth/google` · `motion` (animation) · `next-themes`.
+Next.js 16 (App Router, no `src/` directory) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui (`base-nova` style) · TanStack Query v5 · Axios · `@react-oauth/google` · `motion` (animation) · `next-themes`. Tests: Vitest · React Testing Library · MSW · Playwright.
 
 ## Local development
 
@@ -26,7 +26,13 @@ app/
 ├── bookings/[id]/{success,cancel}/  # post-checkout redirect landing pages
 ├── profile/, profile/preferences/{budget,energy,interests,social,vibe}/
 └── api/auth/session/route.ts       # sets/clears a non-sensitive session-presence cookie
+features/<feature>/                # MVVM: model/ (API + types), view-model/ (behaviour), view/ (UI), index.ts
+lib/                               # shared infra: api-client, api-error, utils (+ legacy lib/queries)
+components/ui|shared|icons|motion/ # shared presentational primitives (+ legacy components/<feature>/)
+test/, e2e/                        # Vitest helpers + MSW; Playwright specs
 ```
+
+New code follows **MVVM in feature folders**. Routes stay thin: `page.tsx` handles metadata and params, and `content.tsx` calls one view-model and renders one view. ESLint enforces the import direction (view → view-model → model), and `scripts/check-architecture.mjs` enforces co-located tests and the legacy ratchet. Code in `lib/queries/` and `components/<feature>/` predates the standard and is migrated as it is touched. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Auth
 
@@ -48,7 +54,9 @@ Redirect-to-hosted-checkout, not an embedded payment element: booking creation r
 
 ## Testing
 
-No test framework is configured, and no CI/CD pipeline exists in this repo.
+- **Unit and component tests:** Vitest + React Testing Library + MSW (`npm run test`, `npm run test:coverage`). Tests sit next to their source. Coverage on `features/**` is gated at 80%.
+- **E2E:** Playwright against a production build, with the itin API stubbed (`npm run test:e2e`). Auth, booking/checkout and payment pages require E2E.
+- **CI:** there are two required checks for merging into `main`. `ci` (`.github/workflows/ci.yml`) is one job that runs lint, typecheck, the architecture check, unit tests with coverage, the build, and E2E against that build. `pr-format` (`.github/workflows/pr-format.yml`) checks the PR title, branch name and description checklist.
 
 ## Related
 
