@@ -73,7 +73,7 @@ test("summary matches the agreed format", () => {
   assert.equal(
     summary({ ok: true, sha: "565ec4d6abcdef", seconds: 86.94, posted: 3 }),
     [
-      "## Helios Review Complete",
+      "## MyJourny Review Complete",
       "",
       "| Field | Value |",
       "|---|---|",
@@ -94,7 +94,7 @@ test("summary matches the agreed format", () => {
     posted: 0,
     runUrl: "https://x/run",
   });
-  assert.match(failed, /^## Helios Review Failed/);
+  assert.match(failed, /^## MyJourny Review Failed/);
   assert.match(failed, /\| Review ID \| `n\/a` \|/);
   assert.match(failed, /\[See the workflow run\]\(https:\/\/x\/run\)/);
   const notes = summary({
@@ -211,5 +211,27 @@ test("finish on failure adds 😕 on a review comment and posts the failed summa
     ["createForPullRequestReviewComment", "createComment"],
   );
   assert.equal(github.calls[0][1].content, "confused");
-  assert.match(github.calls[1][1].body, /Helios Review Failed/);
+  assert.match(github.calls[1][1].body, /MyJourny Review Failed/);
+});
+
+test("finish still posts the summary when the trigger comment was deleted", async () => {
+  const github = fakeGithub();
+  github.rest.reactions.createForIssueComment = async () => {
+    throw new Error("Not Found");
+  };
+  const warnings = [];
+  await finish({
+    github,
+    context,
+    core: { info() {}, warning: (m) => warnings.push(m) },
+    start,
+    ok: true,
+    findings: [finding()],
+    sha: "s",
+  });
+  assert.deepEqual(
+    github.calls.map((c) => c[0]),
+    ["createReview", "createComment"],
+  );
+  assert.match(warnings[0], /Could not react rocket/);
 });
