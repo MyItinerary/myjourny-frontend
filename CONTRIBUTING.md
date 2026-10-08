@@ -171,7 +171,7 @@ Write the description for a reviewer or PM who hasn't read the code:
 
 ## What blocks a merge
 
-`main` is protected. Nobody can push to it directly, admins included. A PR can merge only when **all** of these hold:
+`main` is protected by the `main-quality-gates` ruleset. Nobody can push to it directly or force-push. A PR can merge only when **all** of these hold. Org admins can bypass the ruleset in an emergency, and GitHub records when they do.
 
 There are three required checks, plus review:
 
@@ -202,7 +202,7 @@ The bot (`myjourny-review[bot]`) reacts 👀, reviews the diff against these rul
 
 The bot's code and prompts are in [`.github/helios/`](.github/helios/README.md). It was first called Helios.
 
-The branch must also be up to date with `main`, and all review threads must be resolved.
+**All review conversations must be resolved before the merge button is active.** That includes the AI review's 🟡 and 🔵 threads, not just blockers: fix the issue, or reply and resolve it. The branch doesn't have to be up to date with `main`, because each update would reset `ai-review` to pending.
 
 ---
 
