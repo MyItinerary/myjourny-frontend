@@ -5,9 +5,9 @@ Comment `@helios` on any pull request (in the conversation or on a line of the d
 1. React 👀 to your comment.
 2. Review the PR with Claude, using [review-prompt.md](review-prompt.md) and the rules in `AGENTS.md` / `CONTRIBUTING.md`.
 3. Post its findings as one review with inline comments (🔴 blocker, 🟡 should fix, 🔵 nit).
-4. Swap 👀 for 🚀 and post a summary with the reviewed commit, duration and status. Findings that can't be anchored to a diff line go in the summary under "Other notes".
+4. React 🚀 (keeping 👀, so your comment shows both) and post a summary with the reviewed commit, duration and status. Findings that can't be anchored to a diff line go in the summary under "Other notes".
 
-If something breaks, it reacts 😕 and posts a "Helios Review Failed" summary with a link to the run. Mention it again to re-review the latest push.
+If something breaks, it adds 😕 and posts a "Helios Review Failed" summary with a link to the run. Mention it again to re-review the latest push.
 
 Only repo owners, members and collaborators can trigger it. Bots can't.
 

@@ -1,6 +1,6 @@
 # Helios PR review bot. Comment "@helios" on a PR: it reacts 👀, reviews the
-# diff with Claude, posts inline comments as one review, swaps 👀 for 🚀 and
-# posts a summary. Setup notes: .github/helios/README.md.
+# diff with Claude, posts inline comments as one review, adds 🚀 next to 👀
+# and posts a summary. Setup notes: .github/helios/README.md.
 #
 # Security: comment events run with secrets, so only repo collaborators can
 # trigger it, the PR code is read but never executed, and the posting script
@@ -50,15 +50,14 @@ jobs:
             const { owner, repo } = context.repo;
             const review = context.eventName === "pull_request_review_comment";
             const comment_id = context.payload.comment.id;
-            const { data: eyes } = review
-              ? await github.rest.reactions.createForPullRequestReviewComment({ owner, repo, comment_id, content: "eyes" })
-              : await github.rest.reactions.createForIssueComment({ owner, repo, comment_id, content: "eyes" });
+            await (review
+              ? github.rest.reactions.createForPullRequestReviewComment({ owner, repo, comment_id, content: "eyes" })
+              : github.rest.reactions.createForIssueComment({ owner, repo, comment_id, content: "eyes" }));
             const prNumber = review ? context.payload.pull_request.number : context.payload.issue.number;
             const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
             core.setOutput("startedAt", Date.now());
             core.setOutput("commentKind", review ? "review" : "issue");
             core.setOutput("commentId", comment_id);
-            core.setOutput("eyesId", eyes.id);
             core.setOutput("prNumber", prNumber);
             core.setOutput("baseRef", pr.base.ref);
             core.setOutput("title", pr.title);

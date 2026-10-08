@@ -100,35 +100,15 @@ function summary({ ok, sha, seconds, posted, offDiff = [], runUrl }) {
   return out.join("\n");
 }
 
-async function swapReaction({ github, context, start }, to) {
+// Adds the finishing reaction next to 👀, so the comment ends up with both.
+async function addReaction({ github, context, start }, content) {
   const { owner, repo } = context.repo;
-  const api =
-    start.commentKind === "review"
-      ? {
-          list: "listForPullRequestReviewComment",
-          create: "createForPullRequestReviewComment",
-          del: "deleteForPullRequestComment",
-        }
-      : {
-          list: "listForIssueComment",
-          create: "createForIssueComment",
-          del: "deleteForIssueComment",
-        };
   const comment_id = Number(start.commentId);
-  if (start.eyesId) {
-    await github.rest.reactions[api.del]({
-      owner,
-      repo,
-      comment_id,
-      reaction_id: Number(start.eyesId),
-    }).catch(() => {});
-  }
-  await github.rest.reactions[api.create]({
-    owner,
-    repo,
-    comment_id,
-    content: to,
-  });
+  const create =
+    start.commentKind === "review"
+      ? "createForPullRequestReviewComment"
+      : "createForIssueComment";
+  await github.rest.reactions[create]({ owner, repo, comment_id, content });
 }
 
 async function finish({
@@ -191,7 +171,7 @@ async function finish({
   }
 
   const seconds = (Date.now() - Number(start.startedAt)) / 1000;
-  await swapReaction({ github, context, start }, ok ? "rocket" : "confused");
+  await addReaction({ github, context, start }, ok ? "rocket" : "confused");
   await github.rest.issues.createComment({
     owner,
     repo,

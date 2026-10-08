@@ -130,9 +130,7 @@ function fakeGithub({ failBatch = false, failSingle = () => false } = {}) {
         }),
       },
       reactions: {
-        deleteForIssueComment: rec("deleteForIssueComment"),
         createForIssueComment: rec("createForIssueComment"),
-        deleteForPullRequestComment: rec("deleteForPullRequestComment"),
         createForPullRequestReviewComment: rec(
           "createForPullRequestReviewComment",
         ),
@@ -146,12 +144,11 @@ const core = { info() {}, warning() {} };
 const start = {
   commentKind: "issue",
   commentId: "5",
-  eyesId: "9",
   prNumber: "7",
   startedAt: String(Date.now()),
 };
 
-test("finish posts one review, swaps 👀 for 🚀, then comments the summary", async () => {
+test("finish posts one review, keeps 👀 and adds 🚀, then comments the summary", async () => {
   const github = fakeGithub();
   await finish({
     github,
@@ -164,18 +161,13 @@ test("finish posts one review, swaps 👀 for 🚀, then comments the summary", 
   });
   assert.deepEqual(
     github.calls.map((c) => c[0]),
-    [
-      "createReview",
-      "deleteForIssueComment",
-      "createForIssueComment",
-      "createComment",
-    ],
+    ["createReview", "createForIssueComment", "createComment"],
   );
   assert.equal(github.calls[0][1].comments.length, 1);
   assert.equal(github.calls[0][1].commit_id, "deadbeefcafe");
-  assert.equal(github.calls[2][1].content, "rocket");
+  assert.equal(github.calls[1][1].content, "rocket");
   assert.match(
-    github.calls[3][1].body,
+    github.calls[2][1].body,
     /Review comments have been posted inline[\s\S]*Other notes/,
   );
 });
@@ -204,7 +196,7 @@ test("finish falls back to single comments and notes the rejected ones", async (
   );
 });
 
-test("finish on failure reacts 😕 on a review comment and posts the failed summary", async () => {
+test("finish on failure adds 😕 on a review comment and posts the failed summary", async () => {
   const github = fakeGithub();
   await finish({
     github,
@@ -216,12 +208,8 @@ test("finish on failure reacts 😕 on a review comment and posts the failed sum
   });
   assert.deepEqual(
     github.calls.map((c) => c[0]),
-    [
-      "deleteForPullRequestComment",
-      "createForPullRequestReviewComment",
-      "createComment",
-    ],
+    ["createForPullRequestReviewComment", "createComment"],
   );
-  assert.equal(github.calls[1][1].content, "confused");
-  assert.match(github.calls[2][1].body, /Helios Review Failed/);
+  assert.equal(github.calls[0][1].content, "confused");
+  assert.match(github.calls[1][1].body, /Helios Review Failed/);
 });
