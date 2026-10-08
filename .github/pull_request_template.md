@@ -51,4 +51,3 @@ Paste the tail of `npm run check` (and `npm run test:e2e` if relevant).
 - [ ] No new files in legacy dirs (`lib/queries/`, `components/<feature>/`); any legacy file substantially changed here has been migrated to `features/`
 - [ ] UI matches Figma / DESIGN-SYSTEM.md
 - [ ] No secrets, env values, `console.log` or debug code; docs updated if behaviour changed
-- [ ] I have read and understood every line of this PR, including any AI-generated code

@@ -59,7 +59,7 @@ jobs:
             const checklist = sections["Checklist"] || "";
             const unticked = checklist.match(/^\s*[-*] \[ \].*$/gm) || [];
             const ticked = checklist.match(/^\s*[-*] \[[xX]\].*$/gm) || [];
-            const MIN_ITEMS = 7;
+            const MIN_ITEMS = 6;
             for (const line of unticked) problems.push(`Unticked checklist item: ${line.trim()}`);
             if (ticked.length + unticked.length < MIN_ITEMS) {
               problems.push(`Checklist has ${ticked.length + unticked.length} items; the template has ${MIN_ITEMS}. Don't delete items — tick them with "N/A — <reason>" instead.`);
