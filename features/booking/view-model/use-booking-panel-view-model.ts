@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { apiErrorMessage } from "@/lib/api-error";
 
-import type { PricingSelection } from "../model/booking.types";
+import type { PricingSelection, Quote } from "../model/booking.types";
 import { useCreateBooking } from "../model/bookings";
 import { formatPrice, formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
@@ -43,7 +43,9 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
     message: { text: string; ok: boolean } | null;
   };
   quote: {
-    lines: { key: string; label: string; amount: string; isDiscount: boolean }[];
+    lines: SummaryLine[];
+    /** "You save ₦1,200.00" when any discount applies. */
+    savings: string | null;
     updating: boolean;
     /** When the quoted session runs, in its own zone (a range if multi-day). */
     when: string | null;
@@ -51,9 +53,57 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
   quoteError: string | null;
   /** The chosen session has fewer seats left than the guests picked. */
   seatsWarning: string | null;
-  total: string;
+  /** Null until the selection can be booked and is priced. */
+  total: string | null;
   booking: { available: boolean; disabled: boolean; pending: boolean; label: string; onBook: () => void };
 };
+
+export type SummaryLine = {
+  key: string;
+  label: string;
+  amount: string;
+  /** The price before early-bird, shown struck through. */
+  listAmount?: string | null;
+  kind: "item" | "subtotal" | "discount" | "fee";
+};
+
+/** The quote as summary rows: tickets and add-ons (with their pre-early-bird
+ * price), then the subtotal and each discount when there are any, then the fee. */
+function summaryLines(quote: Quote, currency: string): SummaryLine[] {
+  const money = (amount: number | string) => formatPrice(Number(amount), currency);
+  const items: SummaryLine[] = quote.lines
+    .filter((line) => line.kind === "ticket" || line.kind === "addon")
+    .map((line, index) => ({
+      key: `${line.kind}-${index}`,
+      label: line.label + (line.quantity > 1 ? ` × ${line.quantity}` : ""),
+      amount: money(line.amount),
+      listAmount: line.list_amount != null ? money(line.list_amount) : null,
+      kind: "item",
+    }));
+  const fees: SummaryLine[] = quote.lines
+    .filter((line) => line.kind === "fee")
+    .map((line, index) => ({ key: `fee-${index}`, label: line.label, amount: money(line.amount), kind: "fee" }));
+  // Older servers don't list savings; their discount lines say enough.
+  const savings = quote.savings;
+  const discounts: SummaryLine[] = savings
+    ? savings.map((saving, index) => ({
+        key: `saving-${index}`,
+        label: saving.label,
+        amount: `−${money(saving.amount)}`,
+        kind: "discount",
+      }))
+    : quote.lines
+        .filter((line) => line.kind === "discount")
+        .map((line, index) => ({ key: `discount-${index}`, label: line.label, amount: money(line.amount), kind: "discount" }));
+  if (discounts.length === 0) return [...items, ...fees];
+  const subtotal: SummaryLine = {
+    key: "subtotal",
+    label: "Subtotal",
+    amount: money(quote.subtotal_before_discounts ?? quote.subtotal),
+    kind: "subtotal",
+  };
+  return [...items, subtotal, ...discounts, ...fees];
+}
 
 export function useBookingPanelViewModel({
   experienceId,
@@ -88,11 +138,13 @@ export function useBookingPanelViewModel({
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
 
+  // Outside the group size nothing can be booked, so nothing is priced.
+  const withinGroupSize = guests >= minGuests && guests <= maxGuests;
   const requestKey = JSON.stringify(sessions.request);
   const pickedKey = JSON.stringify(picked);
   const selection: PricingSelection | null = useMemo(
     () =>
-      picked.items.length === 0
+      picked.items.length === 0 || !withinGroupSize
         ? null
         : {
             experience_id: experienceId,
@@ -103,9 +155,12 @@ export function useBookingPanelViewModel({
     // `picked` and `request` are rebuilt every render; their JSON is the
     // stable dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [experienceId, pickedKey, requestKey, appliedPromo],
+    [experienceId, pickedKey, requestKey, appliedPromo, withinGroupSize],
   );
-  const { data: quote, isFetching: quoting, isError: quoteFailed, error: quoteErrorCause } = useBookingQuote(selection);
+  const { data: lastQuote, isFetching: quoting, isError: quoteFailed, error: quoteErrorCause } = useBookingQuote(selection);
+  // The query keeps the previous quote while a new one loads; drop it once
+  // there's nothing to price, so no stale total is shown.
+  const quote = selection ? lastQuote : undefined;
   const selectionKey = JSON.stringify(selection);
 
   // A different selection is a new booking attempt with its own key.
@@ -122,7 +177,14 @@ export function useBookingPanelViewModel({
     quotedGuests <= maxGuests &&
     !!quote &&
     !quoteFailed;
-  const total = formatPrice(quote ? Number(quote.total) : 0, currency);
+  const total = quote ? formatPrice(Number(quote.total), currency) : null;
+  const savedAmount = (quote?.savings ?? []).reduce((sum, saving) => sum + Number(saving.amount), 0);
+  const bookLabel = () => {
+    if (createBooking.isPending) return "Starting checkout…";
+    if (guests < minGuests) return `Select at least ${minGuests} guests`;
+    if (guests > maxGuests) return `Select up to ${maxGuests} guest${maxGuests === 1 ? "" : "s"}`;
+    return total ? `Book now - ${total}` : "Book now";
+  };
 
   const onBook = () => {
     if (!guideId || !selection || !isReady) return;
@@ -177,14 +239,8 @@ export function useBookingPanelViewModel({
           when: quote.session_starts_at
             ? formatSessionWhen(quote.session_starts_at, quote.session_ends_at, quote.timezone ?? undefined)
             : null,
-          lines: quote.lines.map((line, index) => ({
-            key: `${line.kind}-${index}`,
-            label:
-              line.label +
-              (line.kind !== "discount" && line.kind !== "fee" && line.quantity > 1 ? ` × ${line.quantity}` : ""),
-            amount: formatPrice(Number(line.amount), currency),
-            isDiscount: line.kind === "discount",
-          })),
+          lines: summaryLines(quote, currency),
+          savings: savedAmount > 0 ? `You save ${formatPrice(savedAmount, currency)}` : null,
         }
       : null,
     quoteError: quoteFailed
@@ -199,7 +255,7 @@ export function useBookingPanelViewModel({
       available: !!guideId,
       disabled: !isReady || quoting || createBooking.isPending,
       pending: createBooking.isPending,
-      label: createBooking.isPending ? "Starting checkout…" : `Book now - ${total}`,
+      label: bookLabel(),
       onBook,
     },
   };

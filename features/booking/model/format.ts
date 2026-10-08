@@ -16,16 +16,33 @@ export const UNIT_SUFFIX: Record<PricingUnit, string> = {
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-/** A short, customer-facing description of a curator's pricing rule. */
-export function describeRule(rule: PriceRule, currency: string): string | null {
+// itin sends naive UTC timestamps (no "Z"); mark them UTC before parsing.
+const parseUtc = (value: string) => new Date(/(Z|[+-]\d\d:?\d\d)$/i.test(value) ? value : `${value}Z`);
+
+type RuleContext = {
+  /** Guests picked so far; the group note says how many more qualify. */
+  guests?: number;
+  /** Early-bird rules that ended before this aren't shown. */
+  now?: Date;
+};
+
+/** A short, customer-facing description of a curator's pricing rule, or null
+ * when there's nothing to show (incomplete rule, early-bird already over). */
+export function describeRule(rule: PriceRule, currency: string, { guests, now }: RuleContext = {}): string | null {
   if (rule.kind === "group" && rule.min_guests && rule.percent_off) {
-    return `${Number(rule.percent_off)}% off for ${rule.min_guests}+ guests`;
+    const percent = Number(rule.percent_off);
+    if (guests !== undefined && guests >= rule.min_guests) {
+      return `${percent}% group discount applied (${rule.min_guests}+ guests)`;
+    }
+    const rest = guests !== undefined ? rule.min_guests - guests : 0;
+    return (
+      `${percent}% off for ${rule.min_guests}+ guests, any mix of tickets` +
+      (rest > 0 && guests ? `. Add ${rest} more to qualify.` : "")
+    );
   }
   if (rule.kind === "early_bird" && rule.book_before) {
-    const until = new Date(rule.book_before).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-    });
+    if (now && now >= parseUtc(rule.book_before)) return null;
+    const until = new Date(rule.book_before).toLocaleDateString("en-US", { month: "long", day: "numeric" });
     return rule.unit_amount != null
       ? `Early-bird price ${formatPrice(Number(rule.unit_amount), currency)} when booked before ${until}`
       : `${Number(rule.percent_off)}% early-bird discount when booked before ${until}`;
@@ -37,13 +54,24 @@ export function describeRule(rule: PriceRule, currency: string): string | null {
   return null;
 }
 
+/** The notes shown under the price: one per rule that still applies, plus a
+ * line saying early-bird and group discounts add up when both are on offer. */
+export function describeRules(rules: PriceRule[], currency: string, context: RuleContext = {}): string[] {
+  const shown = rules
+    .map((rule) => ({ rule, note: describeRule(rule, currency, context) }))
+    .filter((r): r is { rule: PriceRule; note: string } => !!r.note);
+  const notes = shown.map((r) => r.note);
+  const kinds = new Set(shown.map((r) => r.rule.kind));
+  if (kinds.has("group") && kinds.has("early_bird")) {
+    notes.push("Early-bird and group discounts combine.");
+  }
+  return notes;
+}
+
 /** Log in, then come back to this experience. */
 export function guestLoginHref(experienceId: string): string {
   return `/login?next=${encodeURIComponent(`/experiences/${experienceId}`)}`;
 }
-
-// itin sends naive UTC timestamps (no "Z"); mark them UTC before parsing.
-const parseUtc = (value: string) => new Date(/(Z|[+-]\d\d:?\d\d)$/i.test(value) ? value : `${value}Z`);
 
 /**
  * When a session runs, in the zone it runs in: "Saturday, June 13 at 9:00 AM",
