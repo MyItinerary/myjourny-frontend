@@ -7,7 +7,8 @@ The PR is checked out at the repo root. The base branch is at `origin/<base>` (g
 1. Run `git log --oneline origin/<base>..HEAD` and `git diff origin/<base>...HEAD --stat`, then read the full diff.
 2. Read `AGENTS.md`, `CONTRIBUTING.md` and, for UI changes, `DESIGN-SYSTEM.md`. They are the binding project rules.
 3. For each changed file, open the surrounding code (callers, types, sibling tests) before judging. Only flag what you have verified.
-4. Return your findings in the structured output. Return an empty list if nothing is worth raising. Silence beats noise.
+4. If the prompt ends with an "Already raised on this PR" list, never repeat those issues. Only report problems that are genuinely new, for example ones introduced by later commits.
+5. Return your findings in the structured output. Return an empty list if nothing is worth raising. Silence beats noise.
 
 ## What to look for
 
