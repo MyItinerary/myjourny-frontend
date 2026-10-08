@@ -6,7 +6,7 @@ import { apiErrorMessage } from "@/lib/api-error";
 
 import type { PricingSelection } from "../model/booking.types";
 import { useCreateBooking } from "../model/bookings";
-import { formatPrice } from "../model/format";
+import { formatPrice, formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
 import { useExperienceSessions } from "../model/sessions";
 import { type SessionChoice, useSessionChoice } from "./use-session-choice";
@@ -25,10 +25,16 @@ export type BookingPanelProps = {
   availableSpots?: number;
   /** Fewest guests per booking. Defaults to 1. */
   minSpots?: number;
+  /** The experience's schedule, for a label like "Every Saturday · 3 days". */
+  schedule?: ScheduleSummary;
 };
 
 export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> & {
   durationLabel: string;
+  /** "Every Saturday · 3 days"; null without a schedule. */
+  scheduleLabel: string | null;
+  /** "Each booking covers all 3 days." when the schedule fixes the length. */
+  lengthNote: string | null;
   sessions: SessionChoice;
   promo: {
     input: string;
@@ -36,7 +42,12 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
     onApply: () => void;
     message: { text: string; ok: boolean } | null;
   };
-  quote: { lines: { key: string; label: string; amount: string; isDiscount: boolean }[]; updating: boolean } | null;
+  quote: {
+    lines: { key: string; label: string; amount: string; isDiscount: boolean }[];
+    updating: boolean;
+    /** When the quoted session runs, in its own zone (a range if multi-day). */
+    when: string | null;
+  } | null;
   quoteError: string | null;
   /** The chosen session has fewer seats left than the guests picked. */
   seatsWarning: string | null;
@@ -53,6 +64,7 @@ export function useBookingPanelViewModel({
   eventStartDate,
   availableSpots,
   minSpots = 1,
+  schedule,
 }: BookingPanelProps): BookingPanelViewModel {
   const minGuests = Math.max(1, minSpots ?? 1);
   const router = useRouter();
@@ -68,13 +80,15 @@ export function useBookingPanelViewModel({
     currency,
     minGuests,
     maxGuests,
+    // A scheduled session's length is set by the schedule.
+    daysFixed: sessions.scheduled,
   });
   const createBooking = useCreateBooking();
   const bookingAttemptKey = useRef<string | null>(null);
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
 
-  const { requestedDatetime } = sessions;
+  const requestKey = JSON.stringify(sessions.request);
   const pickedKey = JSON.stringify(picked);
   const selection: PricingSelection | null = useMemo(
     () =>
@@ -83,12 +97,13 @@ export function useBookingPanelViewModel({
         : {
             experience_id: experienceId,
             ...picked,
-            requested_datetime: requestedDatetime ?? undefined,
+            ...sessions.request,
             promo_code: appliedPromo ?? undefined,
           },
-    // `picked` is rebuilt every render; its JSON is the stable dependency.
+    // `picked` and `request` are rebuilt every render; their JSON is the
+    // stable dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [experienceId, pickedKey, requestedDatetime, appliedPromo],
+    [experienceId, pickedKey, requestKey, appliedPromo],
   );
   const { data: quote, isFetching: quoting, isError: quoteFailed, error: quoteErrorCause } = useBookingQuote(selection);
   const selectionKey = JSON.stringify(selection);
@@ -101,7 +116,7 @@ export function useBookingPanelViewModel({
   // The server counts guests (tickets per booking count once); trust it.
   const quotedGuests = quote?.guests ?? guests;
   const isReady =
-    !!requestedDatetime &&
+    !!sessions.request &&
     !!selection &&
     quotedGuests >= minGuests &&
     quotedGuests <= maxGuests &&
@@ -139,6 +154,11 @@ export function useBookingPanelViewModel({
   return {
     ...ticketSelection,
     durationLabel,
+    scheduleLabel: schedule ? scheduleLabel(schedule) : null,
+    lengthNote:
+      sessions.scheduled && sessions.lengthDays > 1
+        ? `Each booking covers all ${sessions.lengthDays} days.`
+        : null,
     sessions,
     promo: {
       input: promoInput,
@@ -154,6 +174,9 @@ export function useBookingPanelViewModel({
     quote: quote
       ? {
           updating: quoting,
+          when: quote.session_starts_at
+            ? formatSessionWhen(quote.session_starts_at, quote.session_ends_at, quote.timezone ?? undefined)
+            : null,
           lines: quote.lines.map((line, index) => ({
             key: `${line.kind}-${index}`,
             label:

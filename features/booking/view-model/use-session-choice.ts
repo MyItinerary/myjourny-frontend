@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type { ExperienceSession, ExperienceSessions } from "../model/booking.types";
-import { addDaysToKey, dateKey, formatSessionTime, middayOf, parseDateKey, todayIn, zoneCity } from "../model/sessions";
+import { addDaysToKey, dateKey, formatSessionTime, parseDateKey, todayIn, zoneCity } from "../model/sessions";
 
 export type SessionOption = {
   startsAt: string;
@@ -22,8 +22,12 @@ export type SessionChoice = {
   allSoldOut: boolean;
   options: SessionOption[];
   session: ExperienceSession | null;
-  /** What to send as requested_datetime; null until a time can be booked. */
-  requestedDatetime: string | null;
+  /** The session to book: a start time (scheduled) or a local date
+   * (unscheduled; the server picks noon in the experience's zone). Null
+   * until something can be booked. */
+  request: { requested_datetime: string } | { requested_date: string } | null;
+  /** Days each session lasts (set by the schedule). */
+  lengthDays: number;
   selectedDate: Date | null;
   dateLabel: string;
   minDate: Date;
@@ -32,6 +36,13 @@ export type SessionChoice = {
   onSelectDate: (date: Date) => void;
   onPickSession: (startsAt: string) => void;
 };
+
+const monthDay = (key: string) => parseDateKey(key).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+
+/** "June 13", or "June 13 – June 15" for a session over several days. */
+function dayRange(startKey: string, endKey?: string | null): string {
+  return endKey && endKey !== startKey ? `${monthDay(startKey)} – ${monthDay(endKey)}` : monthDay(startKey);
+}
 
 /** Which day and session the customer is booking. Until they pick, the first
  * open session (or, without a schedule, the event date or tomorrow) is used.
@@ -84,11 +95,16 @@ export function useSessionChoice(
       selected: session?.starts_at === s.starts_at,
     })),
     session,
-    requestedDatetime: scheduled ? (session?.starts_at ?? null) : selectedDay ? middayOf(selectedDay) : null,
+    request: scheduled
+      ? session
+        ? { requested_datetime: session.starts_at }
+        : null
+      : selectedDay
+        ? { requested_date: selectedDay }
+        : null,
+    lengthDays: Math.max(sessionData?.length_days ?? 1, 1),
     selectedDate: selectedDay ? parseDateKey(selectedDay) : null,
-    dateLabel: selectedDay
-      ? parseDateKey(selectedDay).toLocaleDateString("en-US", { month: "long", day: "numeric" })
-      : "Select dates",
+    dateLabel: selectedDay ? dayRange(selectedDay, session?.end_local_date) : "Select dates",
     minDate: parseDateKey(scheduled ? today : tomorrow),
     isDateSelectable: (date) =>
       scheduled ? hasOpenSession(dateKey(date)) : dateKey(date) >= tomorrow,

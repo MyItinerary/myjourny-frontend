@@ -194,7 +194,12 @@ export type ExperienceDetail = {
   // the DTO for recurring experiences, but resolving a recurrence rule
   // into real occurrence dates isn't attempted here (see booking panel).
   event_start_date?: string | null;
+  event_end_date?: string | null;
   schedule_type?: string | null;
+  recurrence_type?: string | null;
+  recurrence_interval?: number | null;
+  recurrence_days?: string[] | null;
+  length_days?: number | null;
   price_from?: number | null;
   currency?: string | null;
   interest_tags?: string[] | null;

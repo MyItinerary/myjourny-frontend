@@ -37,14 +37,21 @@ const quote = (overrides = {}) => ({
   ...overrides,
 });
 
-function stubApi({ quoteBody = quote(), quoteStatus = 200, seatsLeft = 8 } = {}) {
+function stubApi({
+  quoteBody = quote(),
+  quoteStatus = 200,
+  seatsLeft = 8,
+  scheduled = true,
+  lengthDays = 1,
+  perDay = false,
+} = {}) {
   const quotes: Record<string, unknown>[] = [];
   let sessionLoads = 0;
   server.use(
     http.get(apiUrl("/experiences/exp-1/pricing"), () =>
       HttpResponse.json({
         currency: "NGN",
-        prices: [{ id: "adult", label: "Adult", amount: "5000", pricing_unit: "per_person" }],
+        prices: [{ id: "adult", label: "Adult", amount: "5000", pricing_unit: perDay ? "per_day" : "per_person" }],
         addons: [],
         rules: [],
       }),
@@ -53,10 +60,11 @@ function stubApi({ quoteBody = quote(), quoteStatus = 200, seatsLeft = 8 } = {})
       sessionLoads += 1;
       return HttpResponse.json({
         timezone: "Africa/Lagos",
-        scheduled: true,
-        sessions: [
-          { starts_at: startsAt, local_date: soon, local_time: "09:00:00", seats_left: seatsLeft, sold_out: false },
-        ],
+        scheduled,
+        length_days: lengthDays,
+        sessions: scheduled
+          ? [{ starts_at: startsAt, local_date: soon, local_time: "09:00:00", seats_left: seatsLeft, sold_out: false }]
+          : [],
       });
     }),
     http.post(apiUrl("/bookings/quote"), async ({ request }) => {
@@ -233,4 +241,41 @@ describe("useBookingPanelViewModel", () => {
     act(() => result.current.booking.onBook());
     expect(result.current.booking.available).toBe(false);
   });
+
+  it("books an unscheduled experience by date and lets the server set the time", async () => {
+    const quotes = stubApi({ scheduled: false });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+
+    await waitFor(() => expect(quotes.length).toBeGreaterThan(0));
+    expect(quotes[0]).toHaveProperty("requested_date");
+    expect(quotes[0]).not.toHaveProperty("requested_datetime");
+    expect(result.current.lengthNote).toBeNull();
+  });
+
+  it("fixes per-day tickets to the schedule's length and shows when the session runs", async () => {
+    const quotes = stubApi({
+      lengthDays: 3,
+      perDay: true,
+      quoteBody: quote({
+        days: 3,
+        days_fixed: true,
+        session_starts_at: "2030-06-01T08:00:00Z",
+        session_ends_at: "2030-06-03T10:00:00Z",
+        timezone: "Africa/Lagos",
+      }),
+    });
+    const { result } = renderHookWithProviders(() =>
+      useBookingPanelViewModel({
+        ...props,
+        schedule: { schedule_type: "recurring", recurrence_type: "weekly", recurrence_days: ["sat"], length_days: 3 },
+      }),
+    );
+
+    await waitFor(() => expect(result.current.quote?.when).toBe("Sat, June 1 at 9:00 AM – Mon, June 3"));
+    expect(quotes[0]).not.toHaveProperty("days");
+    expect(result.current.days.show).toBe(false);
+    expect(result.current.lengthNote).toBe("Each booking covers all 3 days.");
+    expect(result.current.scheduleLabel).toBe("Every Saturday · 3 days");
+  });
 });
+
