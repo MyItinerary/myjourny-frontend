@@ -173,7 +173,7 @@ Write the description for a reviewer or PM who hasn't read the code:
 
 `main` is protected. Nobody can push to it directly, admins included. A PR can merge only when **all** of these hold:
 
-There are two required checks, plus review:
+There are three required checks, plus review:
 
 | Check | Step | Fails when |
 |---|---|---|
@@ -184,9 +184,23 @@ There are two required checks, plus review:
 | | Build | `next build` fails |
 | | E2E tests | A Playwright spec fails |
 | **`pr-format`** | | Any of: the title isn't Conventional Commits; the branch name doesn't match; a required section is empty; "Product behaviour" has no `Before:`/`After:` (or claims no user-facing change on a `feat`/`fix`/`perf`); a box is unticked; a `feat`/`fix`/`refactor`/`perf` PR changes no test files |
+| **`ai-review`** | | Nobody has run the AI review on the latest commit yet (pending), or it left 🔴 blocker threads that aren't resolved. See [AI review](#ai-review). |
 | Review | | No approval yet from a code-owner team. See [Who reviews what](#who-reviews-what). |
 
 `ci` runs its steps in order and stops at the first failure. Open the failed step in the Actions log to see which gate tripped. `npm run check` runs every `ci` step except build and E2E.
+
+### AI review
+
+The AI review never runs on its own. When your PR is ready, comment `@myjourny` on it.
+
+The bot (`myjourny-review[bot]`) reacts 👀, reviews the diff against these rules, and posts inline comments marked 🔴 blocker, 🟡 should fix or 🔵 nit. It also flags a description whose "Product behaviour" doesn't match the code. When it's done it adds 🚀 and posts a summary.
+
+- **`ai-review` is green** once the latest commit has been reviewed and no 🔴 blocker threads are unresolved.
+- **To clear a blocker:** fix it, resolve the thread, then comment `@myjourny` again. Re-reviews don't repeat earlier comments.
+- **To answer a comment:** reply to it. The bot responds in the thread: it checks a claimed fix, accepts a reasonable explanation, or answers your question.
+- **Every push resets `ai-review` to pending**, so ask for a review once the PR is otherwise ready.
+
+The bot's code and prompts are in [`.github/helios/`](.github/helios/README.md). It was first called Helios.
 
 The branch must also be up to date with `main`, and all review threads must be resolved.
 
