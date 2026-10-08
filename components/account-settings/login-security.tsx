@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Copy, Download, Laptop, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ModalFooter, ModalShell, OtpBoxes, Row, SavedBanner, TextField } from "@/components/account settings/section-ui";
+import { ModalFooter, ModalShell, OtpBoxes, Row, SavedBanner, TextField } from "@/components/account-settings/section-ui";
 
 interface Session {
   id: string;

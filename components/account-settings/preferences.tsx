@@ -23,7 +23,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Row, SavedBanner } from "@/components/account settings/section-ui";
+import { Row, SavedBanner } from "@/components/account-settings/section-ui";
 
 interface PickOption {
   label: string;
