@@ -3,5 +3,5 @@ export type { BookingPanelProps, BookingPanelViewModel } from "./view-model/use-
 export { useBookingPanelViewModel } from "./view-model/use-booking-panel-view-model";
 export { BookingPanelView } from "./view/booking-panel-view";
 export { BookingBarView } from "./view/booking-bar-view";
-export { formatPrice, guestLoginHref } from "./model/format";
+export { formatPrice, formatSessionWhen, guestLoginHref } from "./model/format";
 export { GuestBookingCardView } from "./view/guest-booking-card-view";

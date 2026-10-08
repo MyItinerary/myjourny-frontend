@@ -58,6 +58,12 @@ describe("useTicketSelection", () => {
     });
   });
 
+  it("doesn't ask for days when the schedule fixes them", () => {
+    const { result } = render({ daysFixed: true });
+    expect(result.current.days.show).toBe(false);
+    expect(result.current.picked.days).toBeUndefined();
+  });
+
   it("warns below the minimum group size", () => {
     const { result } = render();
     act(() => result.current.tickets[1].onChange(1));

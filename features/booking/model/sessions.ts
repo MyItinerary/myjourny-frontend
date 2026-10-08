@@ -27,14 +27,6 @@ export function zoneCity(timeZone: string): string {
   return (timeZone.split("/").pop() ?? timeZone).replace(/_/g, " ");
 }
 
-/** Experiences without a schedule are booked by date and the host confirms
- * the time; midday stands in for it so the booking keeps its day. */
-export function middayOf(key: string): string {
-  const day = parseDateKey(key);
-  day.setHours(12);
-  return day.toISOString();
-}
-
 export const sessionsQueryKey = (experienceId: string) =>
   ["experiences", "sessions", experienceId] as const;
 

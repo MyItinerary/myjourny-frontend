@@ -351,6 +351,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               eventStartDate={eventStartDate}
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
+              schedule={experience}
             />
           ) : null}
         </div>
@@ -399,6 +400,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               eventStartDate={eventStartDate}
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
+              schedule={experience}
               onClose={() => setMobileBookingOpen(false)}
             />
           </div>

@@ -40,11 +40,21 @@ type Options = {
   currency: string;
   minGuests: number;
   maxGuests: number;
+  /** The schedule sets how many days a session lasts, so per-day tickets
+   * cover that many and the customer doesn't choose. */
+  daysFixed?: boolean;
 };
 
 /** Ticket quantities, add-ons and days. By default the cheapest ticket type
  * gets the minimum group size. */
-export function useTicketSelection({ pricing, fallbackPrices, currency, minGuests, maxGuests }: Options): TicketSelection {
+export function useTicketSelection({
+  pricing,
+  fallbackPrices,
+  currency,
+  minGuests,
+  maxGuests,
+  daysFixed = false,
+}: Options): TicketSelection {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedAddons, setSelectedAddons] = useState<Record<string, boolean>>({});
   const [days, setDays] = useState(1);
@@ -85,7 +95,7 @@ export function useTicketSelection({ pricing, fallbackPrices, currency, minGuest
       checked: !!selectedAddons[a.id],
       onToggle: (on) => setSelectedAddons((s) => ({ ...s, [a.id]: on })),
     })),
-    days: { show: needsDays, value: days, onChange: setDays },
+    days: { show: needsDays && !daysFixed, value: days, onChange: setDays },
     guests,
     minGuestsWarning: guests < minGuests ? `This experience needs at least ${minGuests} guests.` : null,
     picked: {
@@ -93,7 +103,7 @@ export function useTicketSelection({ pricing, fallbackPrices, currency, minGuest
         .map((t) => ({ experience_price_id: t.id, quantity: quantityOf(t.id) }))
         .filter((i) => i.quantity > 0),
       addons: addons.filter((a) => selectedAddons[a.id]).map((a) => ({ addon_id: a.id, quantity: 1 })),
-      days: needsDays ? days : undefined,
+      days: needsDays && !daysFixed ? days : undefined,
     },
   };
 }

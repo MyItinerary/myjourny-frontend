@@ -18,7 +18,8 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
       { startsAt: "b", label: "3:00 PM", note: "Sold out", disabled: true, selected: false },
     ],
     session: null,
-    requestedDatetime: "a",
+    request: { requested_datetime: "a" },
+    lengthDays: 1,
     selectedDate: new Date(2030, 5, 1),
     dateLabel: "June 1",
     minDate: new Date(2030, 0, 1),
@@ -32,6 +33,8 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
 function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): BookingPanelViewModel {
   return {
     durationLabel: "3 hours",
+    scheduleLabel: "Every Saturday · 3 days",
+    lengthNote: "Each booking covers all 3 days.",
     priceFrom: { amount: "₦5,000.00", unit: "/ person", showFrom: true },
     ruleNotes: ["10% off for 4+ guests"],
     sessions: sessionChoice(),
@@ -45,6 +48,7 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
     promo: { input: "", onInputChange: vi.fn(), onApply: vi.fn(), message: null },
     quote: {
       updating: false,
+      when: "Saturday, June 1, 9:00 AM",
       lines: [
         { key: "t", label: "Adult × 2", amount: "₦10,000.00", isDiscount: false },
         { key: "d", label: "SAVE10", amount: "-₦1,000.00", isDiscount: true },
@@ -71,6 +75,9 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("-₦1,000.00")).toHaveClass("text-green-700");
     expect(screen.getAllByText("₦9,000.00").length).toBeGreaterThan(0);
     expect(screen.getByText("Duration - 3 hours")).toBeInTheDocument();
+    expect(screen.getByText("Every Saturday · 3 days")).toBeInTheDocument();
+    expect(screen.getByText("Each booking covers all 3 days.")).toBeInTheDocument();
+    expect(screen.getByText("Saturday, June 1, 9:00 AM")).toBeInTheDocument();
     // The checkout preview was a design mock-up, not a real step.
     expect(screen.queryByRole("link", { name: /Preview/ })).not.toBeInTheDocument();
   });

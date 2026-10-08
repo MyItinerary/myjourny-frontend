@@ -10,7 +10,6 @@ import {
   addDaysToKey,
   dateKey,
   formatSessionTime,
-  middayOf,
   parseDateKey,
   todayIn,
   useExperienceSessions,
@@ -44,9 +43,6 @@ describe("date helpers", () => {
     expect(zoneCity("UTC")).toBe("UTC");
   });
 
-  it("puts a date-only booking at local midday", () => {
-    expect(new Date(middayOf("2030-06-01")).getHours()).toBe(12);
-  });
 });
 
 describe("useExperienceSessions", () => {

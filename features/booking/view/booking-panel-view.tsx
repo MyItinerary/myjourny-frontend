@@ -38,6 +38,9 @@ export function BookingPanelView(props: Props) {
           <span className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#130404]">{priceFrom.amount}</span>
           <span className="font-sans text-base font-normal text-[#6F6B72]">{priceFrom.unit}</span>
         </p>
+        {props.scheduleLabel && (
+          <p className="mt-1 font-sans text-sm font-medium text-[#130404]">{props.scheduleLabel}</p>
+        )}
         {ruleNotes.length > 0 && (
           <ul className="mt-3 flex flex-col gap-1">
             {ruleNotes.map((note) => (
@@ -69,6 +72,7 @@ export function BookingPanelView(props: Props) {
         ))}
         {minGuestsWarning && <p className="text-xs text-[#F5032D]">{minGuestsWarning}</p>}
         {props.seatsWarning && <p className="text-xs text-[#F5032D]">{props.seatsWarning}</p>}
+        {props.lengthNote && <p className="text-xs text-[#6F6B72]">{props.lengthNote}</p>}
       </div>
 
       {days.show && (
@@ -158,6 +162,7 @@ function CheckoutSummary({ promo, quote, quoteError, booking, total }: BookingPa
 
       {quote && (
         <div className={cn("flex flex-col gap-1 text-sm", quote.updating && "opacity-60")}>
+          {quote.when && <p className="pb-1 font-medium text-[#130404]">{quote.when}</p>}
           {quote.lines.map((line) => (
             <div key={line.key} className="flex items-center justify-between">
               <span className="text-[#6F6B72]">{line.label}</span>

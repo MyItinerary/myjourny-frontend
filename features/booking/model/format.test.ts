@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRule, formatPrice, guestLoginHref, UNIT_SUFFIX } from "./format";
+import { describeRule, formatPrice, formatSessionWhen, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
 
 describe("formatPrice", () => {
   it("formats money in the given currency", () => {
@@ -57,5 +57,49 @@ describe("describeRule", () => {
 describe("guestLoginHref", () => {
   it("returns to the experience after logging in", () => {
     expect(guestLoginHref("exp-1")).toBe("/login?next=%2Fexperiences%2Fexp-1");
+  });
+});
+
+describe("formatSessionWhen", () => {
+  it("shows a one-day session in its own zone", () => {
+    // 08:00 UTC is 9:00 in Lagos, whatever the test machine's zone.
+    expect(formatSessionWhen("2030-06-01T08:00:00", "2030-06-01T11:00:00", "Africa/Lagos")).toBe(
+      "Saturday, June 1 at 9:00 AM",
+    );
+  });
+
+  it("shows a session over several days as a range", () => {
+    expect(formatSessionWhen("2030-06-01T08:00:00Z", "2030-06-03T10:00:00Z", "Africa/Lagos")).toBe(
+      "Sat, June 1 at 9:00 AM – Mon, June 3",
+    );
+  });
+
+  it("defaults to Lagos and works without an end", () => {
+    expect(formatSessionWhen("2030-06-01T23:30:00")).toBe("Sunday, June 2 at 12:30 AM");
+  });
+});
+
+describe("scheduleLabel", () => {
+  it("describes weekly schedules", () => {
+    expect(scheduleLabel({ schedule_type: "recurring", recurrence_type: "weekly", recurrence_days: ["sat"], length_days: 3 })).toBe(
+      "Every Saturday · 3 days",
+    );
+    expect(
+      scheduleLabel({ schedule_type: "recurring", recurrence_type: "weekly", recurrence_interval: 2, recurrence_days: ["fri", "sat"] }),
+    ).toBe("Every 2 weeks on Fri, Sat");
+  });
+
+  it("describes other recurrences and one-offs", () => {
+    expect(scheduleLabel({ schedule_type: "recurring", recurrence_type: "monthly" })).toBe("Every month");
+    expect(scheduleLabel({ schedule_type: "recurring", recurrence_type: "daily", recurrence_interval: 3 })).toBe("Every 3 days");
+    expect(scheduleLabel({ schedule_type: "one_off", event_start_date: "2030-06-01", event_end_date: "2030-06-03" })).toBe(
+      "One-off · 3 days",
+    );
+    expect(scheduleLabel({ schedule_type: "one_off", event_start_date: "2030-06-01" })).toBe("One-off");
+  });
+
+  it("is null without a schedule", () => {
+    expect(scheduleLabel({ schedule_type: null })).toBeNull();
+    expect(scheduleLabel({ schedule_type: "recurring" })).toBeNull();
   });
 });
