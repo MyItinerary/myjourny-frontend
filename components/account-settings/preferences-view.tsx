@@ -20,7 +20,9 @@ import {
   getSocialSummary,
   getVibeSummary,
 } from "@/lib/onboarding/preference-options";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+const noopSubscribe = () => () => {};
 
 interface PreferenceRowProps {
   icon: React.ReactNode;
@@ -58,11 +60,9 @@ function PreferenceRow({ icon, title, value, href }: PreferenceRowProps) {
 export function PreferencesView() {
   const router = useRouter();
   const { data: profile } = useGetProfile();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Local preferences live in localStorage, which the server render can't
+  // read: use them only once hydrated, so both renders match.
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
 
   const localPrefs = mounted ? getPreferences() : {};
 
