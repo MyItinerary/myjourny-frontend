@@ -8,6 +8,13 @@ import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
 import { categoriesBySlug, suggestedDestinations } from "@/lib/mock-data/home";
+import { useFilteredExperiences } from "@/lib/queries/experiences";
+
+/**
+ * Debounce delay in milliseconds before querying backend experiences as the user types.
+ * Set to 600ms by default for responsive suggestions (can be adjusted to 3000ms if desired).
+ */
+export const SEARCH_SUGGESTION_DEBOUNCE_MS = 600;
 
 export const allDestinations = [
   ...suggestedDestinations,
@@ -41,6 +48,33 @@ export const popularActivities = [
   { id: "events-live-shows", label: "Events & live shows", subtitle: "Concerts, festivals, and live music" },
 ];
 
+function ExperienceSuggestionThumbnail({
+  src,
+  alt,
+  className,
+}: {
+  src?: string | null;
+  alt: string;
+  className?: string;
+}) {
+  const fallback = "/images/home/experiences/kayaking.jpg";
+  const [currentSrc, setCurrentSrc] = useState(src || fallback);
+
+  return (
+    <div className={cn("relative shrink-0 overflow-hidden rounded-[10px] bg-[#F4F2EE]", className)}>
+      <Image
+        src={currentSrc}
+        alt={alt}
+        fill
+        unoptimized
+        sizes="48px"
+        onError={() => setCurrentSrc(fallback)}
+        className="object-cover"
+      />
+    </div>
+  );
+}
+
 export interface SearchBarProps {
   className?: string;
   variant?: "hero" | "nav";
@@ -57,8 +91,9 @@ export function SearchBar({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"where" | "when" | "who" | null>(initialActiveTab);
   const [selectedWhere, setSelectedWhere] = useState<string>("");
+  const [debouncedWhere, setDebouncedWhere] = useState<string>("");
   const [selectedWhereId, setSelectedWhereId] = useState<string>("");
-  const [selectedType, setSelectedType] = useState<"destination" | "activity" | null>(null);
+  const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | null>(null);
   const [selectedWhen, setSelectedWhen] = useState<string>("");
   const [whoText, setWhoText] = useState<string>("");
   const [guests, setGuests] = useState({
@@ -120,6 +155,11 @@ export function SearchBar({
 
     onClose?.();
 
+    if (selectedType === "experience" && selectedWhereId) {
+      router.push(`/experiences/${selectedWhereId}`);
+      return;
+    }
+
     if (selectedType === "activity" && selectedWhereId) {
       router.push(`/categories/${selectedWhereId}`);
       return;
@@ -167,6 +207,25 @@ export function SearchBar({
 
     router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
   }
+
+  useEffect(() => {
+    const delay = selectedWhere.trim() ? SEARCH_SUGGESTION_DEBOUNCE_MS : 0;
+    const timer = setTimeout(() => {
+      setDebouncedWhere(selectedWhere);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [selectedWhere]);
+
+  const trimmedDebouncedWhere = debouncedWhere.trim();
+  const experiencesQuery = useFilteredExperiences({
+    search: trimmedDebouncedWhere,
+    limit: 5,
+    enabled: activeTab === "where" && trimmedDebouncedWhere.length >= 2,
+  });
+  const suggestedExperiences = experiencesQuery.data?.items ?? [];
+  const isTypingWaiting =
+    selectedWhere.trim().length >= 2 && selectedWhere.trim() !== trimmedDebouncedWhere;
+  const isSearchingExperiences = isTypingWaiting || experiencesQuery.isFetching;
 
   const totalGuests = guests.adults + guests.children + guests.infants;
   const allFieldsFilled = !!selectedWhere.trim() && !!selectedWhen.trim() && totalGuests > 0;
@@ -351,6 +410,7 @@ export function SearchBar({
                       setSelectedWhereId(dest.id);
                       setSelectedType("destination");
                       setActiveTab("when");
+                      setTimeout(() => whenInputRef.current?.focus(), 80);
                     }}
                     className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
                   >
@@ -390,6 +450,7 @@ export function SearchBar({
                       setSelectedWhereId(act.id);
                       setSelectedType("activity");
                       setActiveTab("when");
+                      setTimeout(() => whenInputRef.current?.focus(), 80);
                     }}
                     className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
                   >
@@ -423,11 +484,65 @@ export function SearchBar({
               </div>
             )}
 
-            {filteredDestinations.length === 0 && filteredActivities.length === 0 && (
-              <p className="py-3 text-sm text-muted-foreground">
-                No destinations or activities found matching &ldquo;{selectedWhere}&rdquo;
-              </p>
+            {suggestedExperiences.length > 0 && (
+              <div className="flex flex-col gap-2 border-t border-[#f0eee9] pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#6F6B72]">
+                    Experiences
+                  </span>
+                  {isSearchingExperiences && (
+                    <span className="text-[11px] text-muted-foreground animate-pulse">Updating...</span>
+                  )}
+                </div>
+                {suggestedExperiences.map((exp) => (
+                  <button
+                    key={exp.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedWhere(exp.title);
+                      setSelectedWhereId(exp.id);
+                      setSelectedType("experience");
+                      setActiveTab("when");
+                      setTimeout(() => whenInputRef.current?.focus(), 80);
+                    }}
+                    className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
+                  >
+                    <ExperienceSuggestionThumbnail
+                      src={exp.cover_image_url}
+                      alt={exp.title}
+                      className="size-[42px]"
+                    />
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-sm font-semibold leading-5 text-[#130404] truncate">
+                        {exp.title}
+                      </span>
+                      <span className="text-xs leading-4 text-[#6F6B72] truncate">
+                        {exp.city ? `${exp.city} · ` : ""}
+                        {exp.price_from != null
+                          ? `from ${exp.currency ?? "NGN"} ${exp.price_from.toLocaleString()}`
+                          : (exp.headline ?? "Experience")}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
+
+            {isSearchingExperiences && suggestedExperiences.length === 0 && selectedWhere.trim().length >= 2 && (
+              <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground border-t border-[#f0eee9] pt-3">
+                <div className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                <span>Searching experiences...</span>
+              </div>
+            )}
+
+            {filteredDestinations.length === 0 &&
+              filteredActivities.length === 0 &&
+              suggestedExperiences.length === 0 &&
+              !isSearchingExperiences && (
+                <p className="py-3 text-sm text-muted-foreground">
+                  No destinations, activities, or experiences found matching &ldquo;{selectedWhere}&rdquo;
+                </p>
+              )}
           </div>
         </div>
       )}
@@ -436,8 +551,8 @@ export function SearchBar({
       {activeTab === "when" && (
         <div
           className={cn(
-            "absolute top-[calc(100%+12px)] z-50 flex w-[440px] max-w-[calc(100vw-32px)] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
-            variant === "nav" ? "left-1/2 -translate-x-1/2" : "left-0 lg:left-[170px]"
+            "absolute z-50 flex w-[350px] max-w-[calc(100vw-32px)] flex-col items-start gap-3 rounded-[24px] border border-[#e0dfdd] bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
+            variant === "nav" ? "top-[calc(100%+8px)] left-1/2 -translate-x-1/2" : "top-[calc(100%+8px)] left-0 lg:left-[170px]"
           )}
         >
           <DatePickerCalendar
@@ -451,7 +566,8 @@ export function SearchBar({
               setSelectedWhen(
                 preset?.label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" })
               );
-              setActiveTab(null);
+              setActiveTab("who");
+              setTimeout(() => whoInputRef.current?.focus(), 80);
             }}
           />
         </div>
@@ -514,6 +630,20 @@ export function SearchBar({
                 </div>
               </div>
             ))}
+            {totalGuests > 0 && (
+              <div className="flex w-full justify-end border-t border-[#f0eee9] pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(null);
+                    handleSearch();
+                  }}
+                  className="rounded-full bg-brand px-5 py-2 font-sans text-xs font-semibold text-white transition-colors hover:bg-brand/90 cursor-pointer shadow-sm"
+                >
+                  Search
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -524,7 +654,28 @@ export function SearchBar({
 export function MobileSearchModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  useEffect(() => {
+    const delay = query.trim() ? SEARCH_SUGGESTION_DEBOUNCE_MS : 0;
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const trimmed = query.trim().toLowerCase();
+  const trimmedDebounced = debouncedQuery.trim();
+
+  const mobileExperiencesQuery = useFilteredExperiences({
+    search: trimmedDebounced,
+    limit: 5,
+    enabled: trimmedDebounced.length >= 2,
+  });
+  const mobileSuggestedExperiences = mobileExperiencesQuery.data?.items ?? [];
+  const isMobileSearching =
+    (query.trim().length >= 2 && query.trim() !== trimmedDebounced) ||
+    mobileExperiencesQuery.isFetching;
 
   const filteredDestinations = trimmed
     ? allDestinations.filter(
@@ -684,11 +835,60 @@ export function MobileSearchModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {filteredDestinations.length === 0 && filteredActivities.length === 0 && (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            No destinations or activities found matching &ldquo;{query}&rdquo;
-          </p>
+        {mobileSuggestedExperiences.length > 0 && (
+          <div className="flex flex-col gap-2 mt-4 border-t border-[#f0eee9] pt-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6F6B72]">
+                Experiences
+              </span>
+              {isMobileSearching && (
+                <span className="text-[11px] text-muted-foreground animate-pulse">Updating...</span>
+              )}
+            </div>
+            {mobileSuggestedExperiences.map((exp) => (
+              <button
+                key={exp.id}
+                type="button"
+                onClick={() => {
+                  onClose();
+                  router.push(`/experiences/${exp.id}`);
+                }}
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-[#F4F2EE]/70 cursor-pointer"
+              >
+                <ExperienceSuggestionThumbnail
+                  src={exp.cover_image_url}
+                  alt={exp.title}
+                  className="size-10"
+                />
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-sm font-semibold text-[#130404] truncate">{exp.title}</span>
+                  <span className="text-xs text-[#6F6B72] truncate">
+                    {exp.city ? `${exp.city} · ` : ""}
+                    {exp.price_from != null
+                      ? `from ${exp.currency ?? "NGN"} ${exp.price_from.toLocaleString()}`
+                      : (exp.headline ?? "Experience")}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
         )}
+
+        {isMobileSearching && mobileSuggestedExperiences.length === 0 && query.trim().length >= 2 && (
+          <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground border-t border-[#f0eee9] pt-3">
+            <div className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+            <span>Searching experiences...</span>
+          </div>
+        )}
+
+        {filteredDestinations.length === 0 &&
+          filteredActivities.length === 0 &&
+          mobileSuggestedExperiences.length === 0 &&
+          !isMobileSearching && (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No destinations, activities, or experiences found matching &ldquo;{query}&rdquo;
+            </p>
+          )}
       </div>
     </div>
   );
