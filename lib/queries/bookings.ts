@@ -20,6 +20,9 @@ export type Booking = {
   payout_status?: string | null;
   paystack_reference?: string | null;
   requested_datetime?: string | null;
+  /** When the session (all its days) ends (UTC), and the zone it runs in. */
+  session_end_at?: string | null;
+  session_timezone?: string | null;
   duration_hours?: string | null;
   party_size?: number | null;
   price_total?: string | null;

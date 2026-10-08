@@ -48,6 +48,10 @@ export type PricingSelection = {
   items: { experience_price_id: string; quantity: number }[];
   addons: { addon_id: string; quantity: number }[];
   requested_datetime?: string;
+  /** A local date ("YYYY-MM-DD") for experiences without a schedule: the
+   * server books noon there, in the experience's time zone. */
+  requested_date?: string;
+  /** Days for per-day tickets; ignored when the schedule fixes the length. */
   days?: number;
   promo_code?: string;
 };
@@ -70,6 +74,12 @@ export type Quote = {
   total: Money;
   guests: number;
   days: number;
+  /** True when `days` comes from the schedule, not the customer. */
+  days_fixed?: boolean;
+  /** The session's start and end (UTC) and the zone it runs in. */
+  session_starts_at?: string | null;
+  session_ends_at?: string | null;
+  timezone?: string | null;
   promo_code?: string | null;
   promo_applied: boolean;
   promo_message?: string | null;
@@ -82,6 +92,9 @@ export type ExperienceSession = {
   /** Date and time where the experience runs ("2030-06-01", "09:00:00"). */
   local_date: string;
   local_time: string;
+  /** UTC end, after the last day, and the local date it ends on. */
+  ends_at?: string;
+  end_local_date?: string;
   /** null when the experience doesn't limit seats. */
   seats_left: number | null;
   sold_out: boolean;
@@ -90,8 +103,11 @@ export type ExperienceSession = {
 export type ExperienceSessions = {
   /** The experience's IANA zone; local_* fields are in it. */
   timezone: string;
-  /** false when admins set no schedule: any future time is accepted. */
+  /** false when admins set no schedule: any future date is accepted. */
   scheduled: boolean;
+  schedule_type?: "one_off" | "recurring" | null;
+  /** Days each session lasts. */
+  length_days?: number;
   sessions: ExperienceSession[];
 };
 

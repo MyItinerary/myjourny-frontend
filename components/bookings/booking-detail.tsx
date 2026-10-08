@@ -15,6 +15,7 @@ import {
   useCancellationRequest,
   useRequestCancellation,
 } from "@/lib/queries/bookings";
+import { formatSessionWhen } from "@/features/booking";
 import { useExperienceDetail } from "@/lib/queries/experiences";
 import { cn } from "@/lib/utils";
 
@@ -77,14 +78,10 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   const status = STATUS_LABEL[booking.status] ?? STATUS_LABEL.confirmed;
   const openRequest = cancellation?.status === "open" ? cancellation : null;
   const refunded = Number(booking.refunded_amount ?? 0);
+  // In the zone the session runs in (not the browser's), as a date range for
+  // sessions over several days.
   const sessionDate = booking.requested_datetime
-    ? new Date(booking.requested_datetime).toLocaleString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      })
+    ? formatSessionWhen(booking.requested_datetime, booking.session_end_at, booking.session_timezone ?? undefined)
     : null;
 
   return (

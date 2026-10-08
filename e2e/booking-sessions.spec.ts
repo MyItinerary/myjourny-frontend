@@ -122,4 +122,68 @@ test.describe("booking sessions", () => {
     // Sessions were reloaded: the only session is now full.
     await expect(panel(page).getByText("All upcoming sessions are sold out.")).toBeVisible();
   });
+
+  test("shows a multi-day session's dates and doesn't ask for days", async ({ page }) => {
+    const quotes: Record<string, unknown>[] = [];
+    await openExperience(page, {
+      "GET /experiences/exp-1": (r) =>
+        r.fulfill({
+          json: { ...EXPERIENCE, schedule_type: "recurring", recurrence_type: "weekly", recurrence_days: ["sat"], length_days: 3 },
+        }),
+      "GET /experiences/exp-1/pricing": (r) =>
+        r.fulfill({
+          json: {
+            currency: "NGN",
+            prices: [{ id: "pass", label: "Day pass", amount: "5000", pricing_unit: "per_day" }],
+            addons: [],
+            rules: [],
+          },
+        }),
+      "GET /experiences/exp-1/sessions": (r) =>
+        r.fulfill({
+          json: {
+            ...sessions(8),
+            length_days: 3,
+            sessions: [{ ...sessions(8).sessions[0], end_local_date: inDays(7), ends_at: `${inDays(7)}T10:00:00Z` }],
+          },
+        }),
+      "POST /bookings/quote": async (r) => {
+        quotes.push(r.request().postDataJSON());
+        await r.fulfill({
+          json: {
+            ...quote,
+            days: 3,
+            days_fixed: true,
+            session_starts_at: STARTS_AT,
+            session_ends_at: `${inDays(7)}T10:00:00Z`,
+            timezone: "Africa/Lagos",
+          },
+        });
+      },
+    });
+
+    await expect(panel(page).getByText("Every Saturday · 3 days")).toBeVisible();
+    await expect(panel(page).getByText("Each booking covers all 3 days.")).toBeVisible();
+    await expect(panel(page).getByRole("button", { name: "Increase days" })).toHaveCount(0);
+    await expect(panel(page).getByText(/ – /).first()).toBeVisible();
+    expect(quotes.at(-1)).not.toHaveProperty("days");
+  });
+
+  test("books an unscheduled experience by date", async ({ page }) => {
+    const quotes: Record<string, unknown>[] = [];
+    await openExperience(page, {
+      "GET /experiences/exp-1/sessions": (r) => r.fulfill({ json: { timezone: "Africa/Lagos", scheduled: false, sessions: [] } }),
+      "POST /bookings/quote": async (r) => {
+        quotes.push(r.request().postDataJSON());
+        await r.fulfill({ json: quote });
+      },
+    });
+
+    await expect(panel(page).getByText(/The host will confirm the start time/)).toBeVisible();
+    await expect.poll(() => quotes.length).toBeGreaterThan(0);
+    // The date, not a guessed time in the browser's zone.
+    expect(quotes.at(-1)).toHaveProperty("requested_date");
+    expect(quotes.at(-1)).not.toHaveProperty("requested_datetime");
+  });
 });
+

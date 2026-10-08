@@ -42,7 +42,7 @@ describe("useSessionChoice", () => {
       ["8:00 AM", "2 left", true],
       ["1:00 PM", null, false],
     ]);
-    expect(result.current.requestedDatetime).toBe(`${day(5)}T08:00Z`);
+    expect(result.current.request).toEqual({ requested_datetime: `${day(5)}T08:00Z` });
     expect(result.current.isDateSelectable(parseDateKey(day(3)))).toBe(false);
     expect(result.current.isDateSelectable(parseDateKey(day(5)))).toBe(true);
   });
@@ -54,7 +54,7 @@ describe("useSessionChoice", () => {
     act(() => result.current.onSelectDate(parseDateKey(day(4))));
     act(() => result.current.onPickSession(`${day(4)}T13:00Z`));
 
-    expect(result.current.requestedDatetime).toBe(`${day(4)}T13:00Z`);
+    expect(result.current.request).toEqual({ requested_datetime: `${day(4)}T13:00Z` });
     expect(result.current.dateLabel).not.toBe("Select dates");
   });
 
@@ -63,6 +63,16 @@ describe("useSessionChoice", () => {
     const { result } = renderHookWithProviders(() => useSessionChoice(data));
     expect(result.current.allSoldOut).toBe(true);
     expect(result.current.noSessions).toBe(false);
+  });
+
+  it("labels a session over several days with its date range", () => {
+    const data = {
+      ...scheduled([session("2030-06-01", "08:00", { end_local_date: "2030-06-03" })]),
+      length_days: 3,
+    };
+    const { result } = renderHookWithProviders(() => useSessionChoice(data));
+    expect(result.current.dateLabel).toBe("June 1 – June 3");
+    expect(result.current.lengthDays).toBe(3);
   });
 
   it("shows sold-out sessions as disabled", () => {
@@ -74,7 +84,7 @@ describe("useSessionChoice", () => {
   it("says when a schedule has nothing coming up", () => {
     const { result } = renderHookWithProviders(() => useSessionChoice(scheduled([])));
     expect(result.current.noSessions).toBe(true);
-    expect(result.current.requestedDatetime).toBeNull();
+    expect(result.current.request).toBeNull();
     expect(result.current.dateLabel).toBe("Select dates");
   });
 
@@ -85,7 +95,8 @@ describe("useSessionChoice", () => {
 
     expect(plain.scheduled).toBe(false);
     expect(plain.selectedDate).toEqual(parseDateKey(day(1)));
-    expect(new Date(plain.requestedDatetime!).getHours()).toBe(12);
+    // The server books noon on that date in the experience's zone.
+    expect(plain.request).toEqual({ requested_date: day(1) });
     expect(plain.isDateSelectable(parseDateKey(day(0)))).toBe(false);
     expect(event.selectedDate).toEqual(parseDateKey(day(9)));
   });
