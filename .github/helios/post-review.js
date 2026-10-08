@@ -1,4 +1,4 @@
-// Helios: turns Claude's structured findings into one PR review plus a
+// MyJourny Review (internally "helios"): turns Claude's structured findings into one PR review plus a
 // summary comment. Loaded by .github/workflows/helios.yml from a trusted copy
 // of the default branch, never from the PR checkout.
 "use strict";
@@ -76,7 +76,7 @@ function summary({ ok, sha, seconds, posted, offDiff = [], runUrl }) {
     `| Status | ${ok ? "Success" : "Failed"} |`,
   ];
   const out = [
-    `## Helios Review ${ok ? "Complete" : "Failed"}`,
+    `## MyJourny Review ${ok ? "Complete" : "Failed"}`,
     "",
     ...rows,
     "",
@@ -101,14 +101,22 @@ function summary({ ok, sha, seconds, posted, offDiff = [], runUrl }) {
 }
 
 // Adds the finishing reaction next to 👀, so the comment ends up with both.
-async function addReaction({ github, context, start }, content) {
+// Best-effort: the trigger comment may have been deleted mid-review, and that
+// must not stop the summary from being posted.
+async function addReaction({ github, context, core, start }, content) {
   const { owner, repo } = context.repo;
   const comment_id = Number(start.commentId);
   const create =
     start.commentKind === "review"
       ? "createForPullRequestReviewComment"
       : "createForIssueComment";
-  await github.rest.reactions[create]({ owner, repo, comment_id, content });
+  try {
+    await github.rest.reactions[create]({ owner, repo, comment_id, content });
+  } catch (err) {
+    core.warning(
+      `Could not react ${content} on the trigger comment: ${err.message}`,
+    );
+  }
 }
 
 async function finish({
@@ -171,7 +179,10 @@ async function finish({
   }
 
   const seconds = (Date.now() - Number(start.startedAt)) / 1000;
-  await addReaction({ github, context, start }, ok ? "rocket" : "confused");
+  await addReaction(
+    { github, context, core, start },
+    ok ? "rocket" : "confused",
+  );
   await github.rest.issues.createComment({
     owner,
     repo,
