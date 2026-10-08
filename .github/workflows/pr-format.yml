@@ -40,10 +40,10 @@ jobs:
             const body = (pr.body || "").replace(/<!--[\s\S]*?-->/g, "");
 
             // --- 1. Required sections must exist and be non-empty -------------
+            // "Screenshots / recording" is optional: it may be left empty or removed.
             const REQUIRED = [
               "Summary", "Linked issue", "Type", "What changed (by MVVM layer)",
-              "How it was tested", "Screenshots / recording", "Risk & rollback",
-              "AI assistance", "Checklist",
+              "How it was tested", "Risk & rollback", "AI assistance", "Checklist",
             ];
             const sections = {};
             for (const chunk of body.split(/^## +/m).slice(1)) {
