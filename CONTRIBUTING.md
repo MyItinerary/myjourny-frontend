@@ -156,7 +156,14 @@ The stack is **Vitest**, **React Testing Library** and **MSW** for unit and comp
 
 The scope is the feature, e.g. `experiences`, `auth`, `booking`, `profile`. PRs are squash-merged, and the PR title becomes the commit message on `main`.
 
-**PR description:** fill in every section of the template (`.github/pull_request_template.md`) and tick every box. If an item doesn't apply, tick it and write `N/A — <reason>`. Don't delete it. Never tick a box for something you didn't do.
+**PR description:** fill in every required section of the template (`.github/pull_request_template.md`) and tick every box. If an item doesn't apply, tick it and write `N/A — <reason>`. Don't delete it. Never tick a box for something you didn't do.
+
+Write the description for a reviewer or PM who hasn't read the code:
+
+- **Product behaviour:** who is affected (traveller, guide, admin or internal only), with a `Before:` and an `After:` line. Refactor, test, docs and chore PRs can write `No user-facing change — <reason>` instead. Feat, fix and perf PRs can't.
+- **How to verify:** steps someone can follow on the Vercel preview, and what they should see.
+- **Technical notes** (optional): only what a reviewer needs. The diff already shows every file.
+- **Tests:** the behaviour each test covers. The `ci` check already shows the output.
 
 **Size:** aim for under ~400 changed lines (excluding lockfiles and generated files). Split large features into stacked PRs: model first, then view-model, then view.
 
@@ -176,7 +183,7 @@ There are two required checks, plus review:
 | | Unit tests + coverage | A Vitest test fails, or `features/**` coverage drops below 80% |
 | | Build | `next build` fails |
 | | E2E tests | A Playwright spec fails |
-| **`pr-format`** | | The title isn't Conventional Commits, the branch name doesn't match, a template section is empty, a box is unticked, or a `feat`/`fix`/`refactor`/`perf` PR changes no test files |
+| **`pr-format`** | | Any of: the title isn't Conventional Commits; the branch name doesn't match; a required section is empty; "Product behaviour" has no `Before:`/`After:` (or claims no user-facing change on a `feat`/`fix`/`perf`); a box is unticked; a `feat`/`fix`/`refactor`/`perf` PR changes no test files |
 | Review | | No approval yet from a code-owner team. See [Who reviews what](#who-reviews-what). |
 
 `ci` runs its steps in order and stops at the first failure. Open the failed step in the Actions log to see which gate tripped. `npm run check` runs every `ci` step except build and E2E.
