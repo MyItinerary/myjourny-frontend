@@ -2,6 +2,10 @@
 
 The public-facing MyJourny website — the marketing site for **MyJourny**, the travel marketplace connecting travellers with local guides for curated experiences.
 
+# Environments
+Dev => https://myjourny-frontend.vercel.app
+Prod => https://myjourny.io
+
 ## Problem
 
 Finding an authentic, local-led travel experience is harder than it should be. Generic listing sites and map apps surface the same crowded landmarks and stale reviews, with no reliable way to tell which local guides are trustworthy, available, and worth paying. On the other side, local guides have no real marketplace: no easy way to list an experience, get discovered by the right traveller, take a booking, and actually get paid — so a lot of great local expertise never reaches the travellers who'd pay for it.
