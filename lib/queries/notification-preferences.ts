@@ -10,7 +10,9 @@ import { useSession } from "@/lib/auth/session-store";
 // GET/PUT /notifications/preferences: { type: { email, push, in_app } }.
 // PUT merges whatever it's sent into what's stored, so a single toggle can
 // be sent on its own. Booking confirmations and cancellations/refunds are
-// always on (itin forces them back to true).
+// always on (itin forces them back to true). Weekly drop and product news
+// are marketing and start off. A backend that predates a type simply
+// doesn't return it, hence Partial.
 export const NOTIFICATION_TYPES = [
   "pre_trip_reminder",
   "safety_alert",
@@ -18,10 +20,14 @@ export const NOTIFICATION_TYPES = [
   "booking_confirmations",
   "cancellations_refunds",
   "payment_status",
+  "host_messages",
+  "review_requests",
+  "weekly_drop",
+  "product_news",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 export type NotificationChannel = "email" | "push" | "in_app";
-export type NotificationPreferences = Record<NotificationType, Record<NotificationChannel, boolean>>;
+export type NotificationPreferences = Partial<Record<NotificationType, Record<NotificationChannel, boolean>>>;
 
 export const LOCKED_NOTIFICATION_TYPES: ReadonlySet<NotificationType> = new Set([
   "booking_confirmations",
@@ -53,7 +59,9 @@ export function useUpdateNotificationPreferences() {
       if (previous) {
         const next = structuredClone(previous);
         for (const [type, channels] of Object.entries(change) as [NotificationType, Change[NotificationType]][]) {
-          next[type] = { ...next[type], ...channels };
+          const current = next[type];
+          // Only types the backend already returned are shown, so only those flip.
+          if (current) next[type] = { ...current, ...channels } as Record<NotificationChannel, boolean>;
         }
         queryClient.setQueryData(KEY, next);
       }
