@@ -1,10 +1,7 @@
-"use client";
-
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+// DTOs for booking an experience, matching itin's API.
 
 // itin serialises money as decimal strings ("12000.00"); convert before maths.
-type Money = string | number;
+export type Money = string | number;
 
 export type PricingUnit = "per_person" | "per_booking" | "per_day";
 
@@ -36,7 +33,7 @@ export type PriceRule = {
   min_guests?: number | null;
 };
 
-// GET /experiences/{id}/pricing — matches itin's ExperiencePricingOut.
+/** GET /experiences/{id}/pricing (itin's ExperiencePricingOut). */
 export type ExperiencePricing = {
   currency: string;
   prices: TicketType[];
@@ -44,21 +41,8 @@ export type ExperiencePricing = {
   rules: PriceRule[];
 };
 
-export function useExperiencePricing(experienceId: string) {
-  return useQuery({
-    queryKey: ["experiences", "pricing", experienceId],
-    queryFn: async () => {
-      const { data } = await apiClient.get<ExperiencePricing>(
-        `/experiences/${experienceId}/pricing`
-      );
-      return data;
-    },
-    enabled: !!experienceId,
-  });
-}
-
-// What the customer picked — the body of POST /bookings/quote and, with the
-// guide and idempotency key added, of POST /bookings/.
+/** What the customer picked: the body of POST /bookings/quote and, with the
+ * guide and idempotency key added, of POST /bookings/. */
 export type PricingSelection = {
   experience_id: string;
   items: { experience_price_id: string; quantity: number }[];
@@ -76,7 +60,7 @@ export type QuoteLine = {
   amount: Money;
 };
 
-// Matches itin's QuoteOut. `total` is what the customer is charged.
+/** itin's QuoteOut. `total` is what the customer is charged. */
 export type Quote = {
   currency: string;
   lines: QuoteLine[];
@@ -91,17 +75,37 @@ export type Quote = {
   promo_message?: string | null;
 };
 
-// POST /bookings/quote — the server prices the selection with the same
-// engine that prices the booking, so the total shown is the total charged.
-export function useBookingQuote(selection: PricingSelection | null) {
-  return useQuery({
-    queryKey: ["bookings", "quote", selection],
-    queryFn: async () => {
-      const { data } = await apiClient.post<Quote>("/bookings/quote", selection);
-      return data;
-    },
-    enabled: !!selection && selection.items.length > 0,
-    placeholderData: keepPreviousData,
-    retry: false,
-  });
-}
+/** A bookable session (itin GET /experiences/{id}/sessions). */
+export type ExperienceSession = {
+  /** UTC start; send it back unchanged as `requested_datetime`. */
+  starts_at: string;
+  /** Date and time where the experience runs ("2030-06-01", "09:00:00"). */
+  local_date: string;
+  local_time: string;
+  /** null when the experience doesn't limit seats. */
+  seats_left: number | null;
+  sold_out: boolean;
+};
+
+export type ExperienceSessions = {
+  /** The experience's IANA zone; local_* fields are in it. */
+  timezone: string;
+  /** false when admins set no schedule: any future time is accepted. */
+  scheduled: boolean;
+  sessions: ExperienceSession[];
+};
+
+/** The part of itin's BookingOut the panel needs. */
+export type BookingOut = {
+  id: string;
+  status: string;
+  payment_status: string;
+  url?: string | null;
+};
+
+export type CreateBookingPayload = PricingSelection & {
+  /** Sent as the Idempotency-Key header: the same key always returns the
+   * same booking, so a double click can't create two. */
+  idempotencyKey: string;
+  guide_id: string;
+};
