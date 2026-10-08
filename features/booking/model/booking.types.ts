@@ -62,6 +62,16 @@ export type QuoteLine = {
   quantity: number;
   unit_amount: Money;
   amount: Money;
+  /** The ticket's price before early-bird; only set when early-bird lowered it. */
+  list_unit_amount?: Money | null;
+  list_amount?: Money | null;
+};
+
+/** One discount in the quote. `amount` is positive. */
+export type QuoteSaving = {
+  kind: "early_bird" | "group" | "promo";
+  label: string;
+  amount: Money;
 };
 
 /** itin's QuoteOut. `total` is what the customer is charged. */
@@ -83,6 +93,11 @@ export type Quote = {
   promo_code?: string | null;
   promo_applied: boolean;
   promo_message?: string | null;
+  /** Ticket and add-on prices before any discount, early-bird included. */
+  subtotal_before_discounts?: Money | null;
+  /** Every discount applied. Early-bird is already in `subtotal`; group and
+   * promo make up `discount`. Missing from older servers. */
+  savings?: QuoteSaving[];
 };
 
 /** A bookable session (itin GET /experiences/{id}/sessions). */

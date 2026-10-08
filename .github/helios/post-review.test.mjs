@@ -1,9 +1,12 @@
 // Run with: node --test .github/helios/*.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
-import helios from "./post-review.js";
-
-const { commentableLines, partition, summary, finish } = helios;
+import {
+  commentableLines,
+  partition,
+  summary,
+  finish,
+} from "./post-review.mjs";
 
 const patch = [
   "@@ -10,4 +10,5 @@ export function f() {",
@@ -80,13 +83,16 @@ test("summary matches the agreed format", () => {
       "| Review ID | `565ec4d6` |",
       "| Duration | 86.9s |",
       "| Status | Success |",
+      "| Open blockers | 0 |",
       "",
       "Review comments have been posted inline on the changed files.",
+      "",
+      "✅ `ai-review` check passed.",
     ].join("\n"),
   );
   assert.match(
     summary({ ok: true, sha: "abc", seconds: 1, posted: 0 }),
-    /No issues found\.$/,
+    /^No issues found\.$/m,
   );
   const failed = summary({
     ok: false,
@@ -96,6 +102,7 @@ test("summary matches the agreed format", () => {
   });
   assert.match(failed, /^## MyJourny Review Failed/);
   assert.match(failed, /\| Review ID \| `n\/a` \|/);
+  assert.doesNotMatch(failed, /Open blockers|ai-review/);
   assert.match(failed, /\[See the workflow run\]\(https:\/\/x\/run\)/);
   const notes = summary({
     ok: true,
@@ -105,10 +112,31 @@ test("summary matches the agreed format", () => {
     offDiff: [finding({ line: 40, body: "a\nb" })],
   });
   assert.doesNotMatch(notes, /No issues found/);
-  assert.match(notes, /- 🔴 `lib\/f.ts:40`: \*\*Wrong value\*\*\. a b$/);
+  assert.match(notes, /^- 🔴 `lib\/f.ts:40`: \*\*Wrong value\*\*\. a b$/m);
 });
 
-function fakeGithub({ failBatch = false, failSingle = () => false } = {}) {
+test("summary reports skipped repeats, open blockers and status errors", () => {
+  const out = summary({
+    ok: true,
+    sha: "abc",
+    seconds: 1,
+    posted: 0,
+    skipped: 2,
+    blockers: 1,
+    statusError: "Resource not accessible by integration",
+  });
+  assert.match(out, /^No new issues found\.$/m);
+  assert.match(out, /^Skipped 2 issue\(s\) already raised/m);
+  assert.match(out, /\| Open blockers \| 1 \|/);
+  assert.match(out, /❌ `ai-review` check failing: 1 open blocker\(s\)/);
+  assert.match(out, /⚠️ Could not update the `ai-review` check: Resource not/);
+});
+
+function fakeGithub({
+  failBatch = false,
+  failSingle = () => false,
+  failStatus = false,
+} = {}) {
   const calls = [];
   const rec = (name, fn) => async (args) => {
     calls.push([name, args]);
@@ -136,10 +164,19 @@ function fakeGithub({ failBatch = false, failSingle = () => false } = {}) {
         ),
       },
       issues: { createComment: rec("createComment") },
+      repos: {
+        createCommitStatus: rec("createCommitStatus", (a) => {
+          if (failStatus) throw new Error("Resource not accessible");
+          return { data: a };
+        }),
+      },
     },
   };
 }
-const context = { repo: { owner: "o", repo: "r" } };
+const context = {
+  repo: { owner: "o", repo: "r" },
+  serverUrl: "https://github.com",
+};
 const core = { info() {}, warning() {} };
 const start = {
   commentKind: "issue",
@@ -148,7 +185,10 @@ const start = {
   startedAt: String(Date.now()),
 };
 
-test("finish posts one review, keeps 👀 and adds 🚀, then comments the summary", async () => {
+const names = (github) => github.calls.map((c) => c[0]);
+const call = (github, name) => github.calls.find((c) => c[0] === name)[1];
+
+test("finish posts one review, sets the check, keeps 👀 and adds 🚀, then comments", async () => {
   const github = fakeGithub();
   await finish({
     github,
@@ -156,18 +196,27 @@ test("finish posts one review, keeps 👀 and adds 🚀, then comments the summa
     core,
     start,
     ok: true,
-    findings: [finding(), finding({ line: 40 })],
+    findings: [finding({ severity: "nit" }), finding({ line: 40 })],
     sha: "deadbeefcafe",
   });
+  assert.deepEqual(names(github), [
+    "createReview",
+    "createCommitStatus",
+    "createForIssueComment",
+    "createComment",
+  ]);
+  assert.equal(call(github, "createReview").comments.length, 1);
+  assert.equal(call(github, "createReview").commit_id, "deadbeefcafe");
+  assert.equal(call(github, "createForIssueComment").content, "rocket");
+  // The off-diff blocker is a summary note, so it doesn't hold the check.
   assert.deepEqual(
-    github.calls.map((c) => c[0]),
-    ["createReview", "createForIssueComment", "createComment"],
+    (({ sha, state, context: ctx }) => ({ sha, state, ctx }))(
+      call(github, "createCommitStatus"),
+    ),
+    { sha: "deadbeefcafe", state: "success", ctx: "ai-review" },
   );
-  assert.equal(github.calls[0][1].comments.length, 1);
-  assert.equal(github.calls[0][1].commit_id, "deadbeefcafe");
-  assert.equal(github.calls[1][1].content, "rocket");
   assert.match(
-    github.calls[2][1].body,
+    call(github, "createComment").body,
     /Review comments have been posted inline[\s\S]*Other notes/,
   );
 });
@@ -190,13 +239,62 @@ test("finish falls back to single comments and notes the rejected ones", async (
     github.calls.filter((c) => c[0] === "createReviewComment").length,
     2,
   );
+  // Only the comment that landed counts as an open blocker.
+  assert.equal(call(github, "createCommitStatus").state, "failure");
   assert.match(
-    github.calls.at(-1)[1].body,
+    call(github, "createCommitStatus").description,
+    /^1 open blocker/,
+  );
+  assert.match(
+    call(github, "createComment").body,
     /`lib\/f.ts:12`: \*\*Bad anchor\*\*/,
   );
 });
 
-test("finish on failure adds 😕 on a review comment and posts the failed summary", async () => {
+test("finish skips repeats and counts earlier open blockers", async () => {
+  const github = fakeGithub();
+  const threads = [
+    {
+      path: "lib/f.ts",
+      title: "wrong value!",
+      severity: "nit",
+      resolved: false,
+    },
+    {
+      path: "lib/f.ts",
+      title: "Old blocker",
+      severity: "blocker",
+      resolved: false,
+    },
+    {
+      path: "lib/f.ts",
+      title: "Fixed blocker",
+      severity: "blocker",
+      resolved: true,
+    },
+  ];
+  await finish({
+    github,
+    context,
+    core,
+    start,
+    ok: true,
+    findings: [finding()],
+    threads,
+    sha: "s",
+  });
+  assert.deepEqual(names(github), [
+    "createCommitStatus",
+    "createForIssueComment",
+    "createComment",
+  ]);
+  assert.equal(call(github, "createCommitStatus").state, "failure");
+  const body = call(github, "createComment").body;
+  assert.match(body, /Skipped 1 issue/);
+  assert.match(body, /\| Open blockers \| 1 \|/);
+});
+
+test("finish on failure marks the check errored, adds 😕 and posts the failed summary", async () => {
   const github = fakeGithub();
   await finish({
     github,
@@ -204,14 +302,21 @@ test("finish on failure adds 😕 on a review comment and posts the failed summa
     core,
     start: { ...start, commentKind: "review" },
     ok: false,
+    sha: "s",
     runUrl: "https://x/run",
   });
-  assert.deepEqual(
-    github.calls.map((c) => c[0]),
-    ["createForPullRequestReviewComment", "createComment"],
+  assert.deepEqual(names(github), [
+    "createCommitStatus",
+    "createForPullRequestReviewComment",
+    "createComment",
+  ]);
+  assert.equal(call(github, "createCommitStatus").state, "error");
+  assert.equal(call(github, "createCommitStatus").target_url, "https://x/run");
+  assert.equal(
+    call(github, "createForPullRequestReviewComment").content,
+    "confused",
   );
-  assert.equal(github.calls[0][1].content, "confused");
-  assert.match(github.calls[1][1].body, /MyJourny Review Failed/);
+  assert.match(call(github, "createComment").body, /MyJourny Review Failed/);
 });
 
 test("finish still posts the summary when the trigger comment was deleted", async () => {
@@ -229,9 +334,27 @@ test("finish still posts the summary when the trigger comment was deleted", asyn
     findings: [finding()],
     sha: "s",
   });
-  assert.deepEqual(
-    github.calls.map((c) => c[0]),
-    ["createReview", "createComment"],
-  );
+  assert.deepEqual(names(github), [
+    "createReview",
+    "createCommitStatus",
+    "createComment",
+  ]);
   assert.match(warnings[0], /Could not react rocket/);
+});
+
+test("finish still posts the summary when the status can't be set", async () => {
+  const github = fakeGithub({ failStatus: true });
+  await finish({
+    github,
+    context,
+    core,
+    start,
+    ok: true,
+    findings: [],
+    sha: "s",
+  });
+  assert.match(
+    call(github, "createComment").body,
+    /⚠️ Could not update the `ai-review` check: Resource not accessible/,
+  );
 });

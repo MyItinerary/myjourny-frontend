@@ -1,14 +1,20 @@
-# MyJourny Review bot. Comment "@myjourny" on a PR: it reacts 👀, reviews the
-# diff with Claude, posts inline comments as one review, adds 🚀 next to 👀
-# and posts a summary. Posts as the myjourny-review GitHub App. Internal names
+# MyJourny Review bot. Posts as the myjourny-review GitHub App. Internal names
 # (files, secrets) still say "helios". Setup notes: .github/helios/README.md.
 #
-# GitHub starts a run for every PR comment; ones without the trigger show as
+# - review: comment "@myjourny" on a PR. It reacts 👀, reviews the diff with
+#   Claude (skipping anything it raised before), posts inline comments as one
+#   review, sets the required `ai-review` status (red while blocker threads
+#   are open), adds 🚀 next to 👀 and posts a summary.
+# - acknowledge: reply to one of the bot's inline comments and it answers in
+#   the thread.
+# The pending `ai-review` status on each push comes from ai-review-gate.yml.
+#
+# GitHub starts a run for every PR comment; ones that don't apply show as
 # skipped in the Actions tab. They take ~1s and use no minutes.
 #
 # Security: comment events run with secrets, so only repo collaborators can
-# trigger it, the PR code is read but never executed, and the posting script
-# and prompt come from the default branch, never from the PR.
+# trigger it, the PR code is read but never executed, and the scripts and
+# prompts come from the default branch, never from the PR.
 name: MyJourny Review
 
 on:
@@ -21,8 +27,9 @@ permissions:
   contents: read
 
 env:
-  # claude-sonnet-5-5 is the cheaper option.
-  HELIOS_MODEL: claude-opus-5-5
+  # Sonnet: faster and lighter on the subscription. claude-opus-5-5 for deeper reviews.
+  HELIOS_MODEL: claude-sonnet-5-5
+  HELIOS_REPLY_MODEL: claude-sonnet-5-5
 
 jobs:
   review:
@@ -91,22 +98,25 @@ jobs:
           persist-credentials: false
 
       - id: prep
-        name: Build prompt
+        name: Build prompt (with earlier threads)
+        uses: actions/github-script@v8
         env:
-          BASE_REF: ${{ steps.start.outputs.baseRef }}
-          PR_NUMBER: ${{ steps.start.outputs.prNumber }}
-          PR_TITLE: ${{ steps.start.outputs.title }}
-          PR_BODY: ${{ steps.start.outputs.body }}
-        run: |
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          delim="HELIOS_$(openssl rand -hex 16)"
-          {
-            echo "prompt<<$delim"
-            sed "s#<base>#$BASE_REF#g" "$RUNNER_TEMP/helios/review-prompt.md"
-            printf '\n## This PR\n\n- Number: #%s\n- Base: origin/%s\n- Title: %s\n\nDescription:\n\n%s\n' \
-              "$PR_NUMBER" "$BASE_REF" "$PR_TITLE" "$PR_BODY"
-            echo "$delim"
-          } >> "$GITHUB_OUTPUT"
+          START: ${{ toJSON(steps.start.outputs) }}
+          BOT_LOGIN: ${{ steps.app-token.outputs.app-slug }}[bot]
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const dir = `${process.env.RUNNER_TEMP}/helios`;
+            const { buildReviewPrompt } = await import(`${dir}/prompts.mjs`);
+            const { fetchBotThreads } = await import(`${dir}/threads.mjs`);
+            const start = JSON.parse(process.env.START);
+            const threads = await fetchBotThreads({
+              github, ...context.repo, number: Number(start.prNumber), botLogin: process.env.BOT_LOGIN,
+            });
+            core.setOutput("prompt", buildReviewPrompt({ dir, start, threads }));
+            core.setOutput("threads", JSON.stringify(threads));
+            core.setOutput("sha", require("child_process").execSync("git rev-parse HEAD").toString().trim());
+            core.info(`${threads.length} earlier thread(s) from the bot.`);
 
       - id: claude
         name: Review with Claude
@@ -121,20 +131,22 @@ jobs:
             --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
             --json-schema '{"type":"object","additionalProperties":false,"required":["findings"],"properties":{"findings":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["path","line","side","severity","title","body"],"properties":{"path":{"type":"string"},"line":{"type":"integer"},"start_line":{"type":"integer"},"side":{"enum":["RIGHT","LEFT"]},"severity":{"enum":["blocker","should-fix","nit"]},"title":{"type":"string"},"body":{"type":"string"},"suggestion":{"type":"string"}}}}}}'
 
-      - name: Post review and summary
+      - name: Post review, check and summary
         uses: actions/github-script@v8
         env:
           START: ${{ toJSON(steps.start.outputs) }}
           FINDINGS: ${{ steps.claude.outputs.structured_output }}
+          THREADS: ${{ steps.prep.outputs.threads }}
           SHA: ${{ steps.prep.outputs.sha }}
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
-            const helios = require(`${process.env.RUNNER_TEMP}/helios/post-review.js`);
+            const helios = await import(`${process.env.RUNNER_TEMP}/helios/post-review.mjs`);
             const findings = JSON.parse(process.env.FINDINGS || "{}").findings;
             if (!Array.isArray(findings)) throw new Error("Claude returned no structured findings.");
             await helios.finish({
               github, context, core, ok: true, findings,
+              threads: JSON.parse(process.env.THREADS || "[]"),
               start: JSON.parse(process.env.START), sha: process.env.SHA,
             });
 
@@ -147,9 +159,130 @@ jobs:
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
-            const helios = require(`${process.env.RUNNER_TEMP}/helios/post-review.js`);
+            const helios = await import(`${process.env.RUNNER_TEMP}/helios/post-review.mjs`);
             await helios.finish({
               github, context, core, ok: false,
               start: JSON.parse(process.env.START), sha: process.env.SHA,
               runUrl: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+  # A reply (without @myjourny) in a thread: is the thread the bot's?
+  reply-check:
+    name: helios-reply-check
+    if: >-
+      github.event_name == 'pull_request_review_comment' &&
+      github.event.comment.in_reply_to_id &&
+      !contains(github.event.comment.body, '@myjourny') &&
+      github.event.comment.user.type != 'Bot' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ours: ${{ steps.check.outputs.ours }}
+    steps:
+      - id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.HELIOS_APP_ID }}
+          private-key: ${{ secrets.HELIOS_PRIVATE_KEY }}
+      - id: check
+        uses: actions/github-script@v8
+        env:
+          BOT_LOGIN: ${{ steps.app-token.outputs.app-slug }}[bot]
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const { data: root } = await github.rest.pulls.getReviewComment({
+              owner, repo, comment_id: context.payload.comment.in_reply_to_id,
+            });
+            const ours = root.user.login === process.env.BOT_LOGIN;
+            core.setOutput("ours", String(ours));
+            if (ours) {
+              await github.rest.reactions
+                .createForPullRequestReviewComment({ owner, repo, comment_id: context.payload.comment.id, content: "eyes" })
+                .catch((err) => core.warning(`Could not react 👀: ${err.message}`));
+            }
+
+  acknowledge:
+    name: helios-reply
+    needs: reply-check
+    if: needs.reply-check.outputs.ours == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: helios-reply-${{ github.event.comment.in_reply_to_id }}
+      cancel-in-progress: false
+    steps:
+      - id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.HELIOS_APP_ID }}
+          private-key: ${{ secrets.HELIOS_PRIVATE_KEY }}
+
+      - name: Load trusted Helios files from the default branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: .helios-trusted
+          sparse-checkout: .github/helios
+          persist-credentials: false
+      - name: Stash trusted files outside the workspace
+        run: |
+          mkdir -p "$RUNNER_TEMP/helios"
+          cp .helios-trusted/.github/helios/* "$RUNNER_TEMP/helios/"
+          rm -rf .helios-trusted
+
+      - name: Check out PR
+        uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          fetch-depth: 0
+          persist-credentials: false
+
+      - id: prep
+        name: Build prompt
+        uses: actions/github-script@v8
+        env:
+          BOT_LOGIN: ${{ steps.app-token.outputs.app-slug }}[bot]
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const dir = `${process.env.RUNNER_TEMP}/helios`;
+            const { buildReplyPrompt } = await import(`${dir}/prompts.mjs`);
+            const { fetchThread } = await import(`${dir}/threads.mjs`);
+            const comments = await fetchThread({
+              github, ...context.repo,
+              pull_number: context.payload.pull_request.number,
+              rootId: context.payload.comment.in_reply_to_id,
+            });
+            core.setOutput("prompt", buildReplyPrompt({ dir, comments, botLogin: process.env.BOT_LOGIN }));
+
+      - id: claude
+        name: Draft reply with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          prompt: ${{ steps.prep.outputs.prompt }}
+          claude_args: >-
+            --model ${{ env.HELIOS_REPLY_MODEL }}
+            --max-turns 25
+            --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+            --json-schema '{"type":"object","additionalProperties":false,"required":["reply"],"properties":{"reply":{"type":"string"}}}'
+
+      - name: Post reply
+        uses: actions/github-script@v8
+        env:
+          RESULT: ${{ steps.claude.outputs.structured_output }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const reply = (JSON.parse(process.env.RESULT || "{}").reply || "").trim();
+            if (!reply) throw new Error("Claude returned no reply.");
+            await github.rest.pulls.createReplyForReviewComment({
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+              comment_id: context.payload.comment.in_reply_to_id,
+              body: reply,
             });

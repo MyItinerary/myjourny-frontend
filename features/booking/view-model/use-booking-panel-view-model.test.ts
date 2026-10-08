@@ -101,9 +101,10 @@ describe("useBookingPanelViewModel", () => {
       addons: [],
       requested_datetime: startsAt,
     });
-    expect(result.current.quote!.lines.map((l) => [l.label, l.isDiscount])).toEqual([
-      ["Adult × 2", false],
-      ["SAVE10", true],
+    expect(result.current.quote!.lines.map((l) => [l.label, l.amount, l.kind])).toEqual([
+      ["Adult × 2", "₦10,000.00", "item"],
+      ["Subtotal", "₦10,000.00", "subtotal"],
+      ["SAVE10", "-₦1,000.00", "discount"],
     ]);
     expect(result.current.total).toBe("₦9,000.00");
     expect(result.current.booking).toMatchObject({ available: true, disabled: false, label: "Book now - ₦9,000.00" });
@@ -129,13 +130,66 @@ describe("useBookingPanelViewModel", () => {
   });
 
   it("caps guests at the session's seats left", async () => {
-    stubApi({ seatsLeft: 1, quoteBody: quote({ guests: 2 }) });
+    const quotes = stubApi({ seatsLeft: 1, quoteBody: quote({ guests: 2 }) });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.seatsWarning).toBe("Only 1 spot left for this session."));
+
+    expect(result.current.tickets[0].max).toBe(1);
+    expect(result.current.booking).toMatchObject({ disabled: true, label: "Select up to 1 guest" });
+    expect(quotes).toHaveLength(0);
+  });
+
+  it("doesn't price a selection below the minimum group size", async () => {
+    const quotes = stubApi();
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.total).toBe("₦9,000.00"));
+
+    act(() => result.current.tickets[0].onChange(1));
+
+    expect(result.current.minGuestsWarning).toBe("This experience needs at least 2 guests.");
+    expect(result.current.quote).toBeNull();
+    expect(result.current.total).toBeNull();
+    expect(result.current.booking).toMatchObject({ disabled: true, label: "Select at least 2 guests" });
+    expect(quotes.every((q) => (q.items as { quantity: number }[])[0].quantity === 2)).toBe(true);
+  });
+
+  it("lists the price before early-bird and every discount", async () => {
+    stubApi({
+      quoteBody: quote({
+        lines: [
+          {
+            kind: "ticket",
+            label: "Adult",
+            quantity: 2,
+            unit_amount: "4950",
+            amount: "9900",
+            list_unit_amount: "5000",
+            list_amount: "10000",
+          },
+          { kind: "discount", label: "Group discount", quantity: 1, unit_amount: "-990", amount: "-990" },
+          { kind: "fee", label: "Payment processing fee", quantity: 1, unit_amount: "234", amount: "234" },
+        ],
+        subtotal: "9900",
+        subtotal_before_discounts: "10000",
+        discount: "990",
+        total: "9144",
+        savings: [
+          { kind: "early_bird", label: "Early-bird discount (1% off)", amount: "100" },
+          { kind: "group", label: "Group discount (10% off 2+ guests)", amount: "990" },
+        ],
+      }),
+    });
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
     await waitFor(() => expect(result.current.quote).not.toBeNull());
 
-    expect(result.current.seatsWarning).toBe("Only 1 spot left for this session.");
-    expect(result.current.tickets[0].max).toBe(1);
-    expect(result.current.booking.disabled).toBe(true);
+    expect(result.current.quote!.lines.map((l) => [l.label, l.amount, l.listAmount ?? null])).toEqual([
+      ["Adult × 2", "₦9,900.00", "₦10,000.00"],
+      ["Subtotal", "₦10,000.00", null],
+      ["Early-bird discount (1% off)", "−₦100.00", null],
+      ["Group discount (10% off 2+ guests)", "−₦990.00", null],
+      ["Payment processing fee", "₦234.00", null],
+    ]);
+    expect(result.current.quote!.savings).toBe("You save ₦1,090.00");
   });
 
   it("sends the customer to checkout", async () => {

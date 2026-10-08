@@ -7,7 +7,8 @@ The PR is checked out at the repo root. The base branch is at `origin/<base>` (g
 1. Run `git log --oneline origin/<base>..HEAD` and `git diff origin/<base>...HEAD --stat`, then read the full diff.
 2. Read `AGENTS.md`, `CONTRIBUTING.md` and, for UI changes, `DESIGN-SYSTEM.md`. They are the binding project rules.
 3. For each changed file, open the surrounding code (callers, types, sibling tests) before judging. Only flag what you have verified.
-4. Return your findings in the structured output. Return an empty list if nothing is worth raising. Silence beats noise.
+4. If the prompt ends with an "Already raised on this PR" list, never repeat those issues. Only report problems that are genuinely new, for example ones introduced by later commits.
+5. Return your findings in the structured output. Return an empty list if nothing is worth raising. Silence beats noise.
 
 ## What to look for
 
@@ -16,6 +17,7 @@ The PR is checked out at the repo root. The base branch is at `origin/<base>` (g
 - **Performance**: needless re-renders, missing memoisation where it matters, waterfalls that could be parallel, large dependencies pulled into the client bundle, images not using `next/image`.
 - **Architecture** (AGENTS.md): MVVM layer leaks (data access in views or `app/` routes, JSX in model/view-model), deep imports across features, new files in legacy `lib/queries/` or `components/<feature>/`.
 - **Tests**: new or changed `features/**` files without a sibling test, tests that only assert on mocks, missing e2e for auth/booking/checkout/payment changes, bug fixes without a regression test.
+- **Description vs. code**: compare the PR's "Product behaviour" and "How to verify" sections with the diff. If a user-visible change is missing from the description, or the description claims something the code doesn't do, raise a `should-fix` anchored to the most relevant changed line. Skip this when the PR says "No user-facing change" and the diff agrees.
 - **Quality**: duplicated logic that already exists in the codebase (name the existing helper), dead code, `console.log`/debug code, misleading names.
 
 Do not flag what CI already enforces: formatting, lint rules, type errors, the architecture script, or PR title/description format.

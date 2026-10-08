@@ -164,11 +164,27 @@ function CheckoutSummary({ promo, quote, quoteError, booking, total }: BookingPa
         <div className={cn("flex flex-col gap-1 text-sm", quote.updating && "opacity-60")}>
           {quote.when && <p className="pb-1 font-medium text-[#130404]">{quote.when}</p>}
           {quote.lines.map((line) => (
-            <div key={line.key} className="flex items-center justify-between">
-              <span className="text-[#6F6B72]">{line.label}</span>
-              <span className={cn(line.isDiscount ? "text-green-700" : "text-[#130404]")}>{line.amount}</span>
+            <div
+              key={line.key}
+              className={cn(
+                "flex items-center justify-between",
+                line.kind === "subtotal" && "mt-1 border-t border-border pt-1",
+              )}
+            >
+              <span className={cn(line.kind === "subtotal" ? "font-medium text-[#130404]" : "text-[#6F6B72]")}>
+                {line.label}
+              </span>
+              <span className="flex items-baseline gap-2">
+                {line.listAmount && (
+                  <s className="text-xs text-[#6F6B72]" aria-label={`was ${line.listAmount}`}>
+                    {line.listAmount}
+                  </s>
+                )}
+                <span className={cn(line.kind === "discount" ? "text-green-700" : "text-[#130404]")}>{line.amount}</span>
+              </span>
             </div>
           ))}
+          {quote.savings && <p className="pt-1 text-right text-xs font-medium text-green-700">{quote.savings}</p>}
         </div>
       )}
       {quoteError && <p className="text-xs text-[#F5032D]">{quoteError}</p>}
@@ -189,10 +205,12 @@ function CheckoutSummary({ promo, quote, quoteError, booking, total }: BookingPa
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-1">
-        <span className="font-sans text-lg font-bold text-[#130404]">Total</span>
-        <span className="font-sans text-xl font-bold text-[#130404]">{total}</span>
-      </div>
+      {total && (
+        <div className="flex items-center justify-between pt-1">
+          <span className="font-sans text-lg font-bold text-[#130404]">Total</span>
+          <span className="font-sans text-xl font-bold text-[#130404]">{total}</span>
+        </div>
+      )}
     </>
   );
 }

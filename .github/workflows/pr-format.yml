@@ -40,10 +40,10 @@ jobs:
             const body = (pr.body || "").replace(/<!--[\s\S]*?-->/g, "");
 
             // --- 1. Required sections must exist and be non-empty -------------
-            // "Screenshots / recording" is optional: it may be left empty or removed.
+            // "Screenshots / recording" and "Technical notes" are optional: they may be left empty or removed.
             const REQUIRED = [
-              "Summary", "Linked issue", "Type", "What changed (by MVVM layer)",
-              "How it was tested", "Risk & rollback", "AI assistance", "Checklist",
+              "Summary", "Linked issue", "Type", "Product behaviour", "How to verify",
+              "Tests", "Risk & rollback", "AI assistance", "Checklist",
             ];
             const sections = {};
             for (const chunk of body.split(/^## +/m).slice(1)) {
@@ -53,6 +53,21 @@ jobs:
             for (const name of REQUIRED) {
               if (!(name in sections)) problems.push(`Missing section "## ${name}" — use the PR template.`);
               else if (!sections[name]) problems.push(`Section "## ${name}" is empty.`);
+            }
+
+            // --- 1b. Product behaviour is described as before -> after ----------
+            const type = (pr.title.match(/^(\w+)/) || [])[1];
+            const behaviour = sections["Product behaviour"] || "";
+            const noChange = /^\s*(?:[-*]\s*)?No user-facing change\b/im.test(behaviour);
+            const hasLine = (label) => new RegExp(`^\\s*(?:[-*]\\s*)?\\**${label}\\**\\s*:\\**\\s*\\S`, "im").test(behaviour);
+            if (behaviour && !noChange && !(hasLine("Before") && hasLine("After"))) {
+              problems.push(
+                `"## Product behaviour" needs a "Before: …" and an "After: …" line describing what users see, ` +
+                `or "No user-facing change — <reason>". See the example in the PR template.`
+              );
+            }
+            if (noChange && ["feat", "fix", "perf"].includes(type)) {
+              problems.push(`A "${type}" PR changes behaviour: describe it in "## Product behaviour" with Before/After instead of "No user-facing change".`);
             }
 
             // --- 2. Every checklist box must be ticked ------------------------
@@ -66,7 +81,6 @@ jobs:
             }
 
             // --- 3. Behaviour-changing PRs must touch tests -------------------
-            const type = (pr.title.match(/^(\w+)/) || [])[1];
             const NEEDS_TESTS = ["feat", "fix", "refactor", "perf"];
             if (NEEDS_TESTS.includes(type)) {
               const files = await github.paginate(github.rest.pulls.listFiles, {

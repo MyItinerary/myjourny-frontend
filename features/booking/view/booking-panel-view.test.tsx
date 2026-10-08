@@ -50,9 +50,11 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
       updating: false,
       when: "Saturday, June 1, 9:00 AM",
       lines: [
-        { key: "t", label: "Adult × 2", amount: "₦10,000.00", isDiscount: false },
-        { key: "d", label: "SAVE10", amount: "-₦1,000.00", isDiscount: true },
+        { key: "t", label: "Adult × 2", amount: "₦10,000.00", kind: "item" },
+        { key: "s", label: "Subtotal", amount: "₦10,000.00", kind: "subtotal" },
+        { key: "d", label: "Promo code SAVE10", amount: "−₦1,000.00", kind: "discount" },
       ],
+      savings: "You save ₦1,000.00",
     },
     quoteError: null,
     seatsWarning: null,
@@ -72,7 +74,9 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("Tickets")).toBeInTheDocument();
     expect(screen.getByText("₦2,000.00 / person")).toBeInTheDocument();
     expect(screen.getByText("Adult × 2")).toBeInTheDocument();
-    expect(screen.getByText("-₦1,000.00")).toHaveClass("text-green-700");
+    expect(screen.getByText("−₦1,000.00")).toHaveClass("text-green-700");
+    expect(screen.getByText("Subtotal")).toBeInTheDocument();
+    expect(screen.getByText("You save ₦1,000.00")).toBeInTheDocument();
     expect(screen.getAllByText("₦9,000.00").length).toBeGreaterThan(0);
     expect(screen.getByText("Duration - 3 hours")).toBeInTheDocument();
     expect(screen.getByText("Every Saturday · 3 days")).toBeInTheDocument();
@@ -138,5 +142,44 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("SAVE applied")).toHaveClass("text-green-700");
     await user.click(screen.getByRole("button", { name: "Close" }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("strikes through the price before early-bird", () => {
+    renderWithProviders(
+      <BookingPanelView
+        {...panelViewModel({
+          quote: {
+            updating: false,
+            when: null,
+            lines: [
+              { key: "t", label: "Standard", amount: "₦9,900.00", listAmount: "₦10,000.00", kind: "item" },
+              { key: "s", label: "Subtotal", amount: "₦10,000.00", kind: "subtotal" },
+              { key: "e", label: "Early-bird discount (1% off)", amount: "−₦100.00", kind: "discount" },
+            ],
+            savings: "You save ₦100.00",
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByLabelText("was ₦10,000.00").tagName).toBe("S");
+    expect(screen.getByText("Early-bird discount (1% off)")).toBeInTheDocument();
+  });
+
+  it("shows no total until the selection is priced", () => {
+    renderWithProviders(
+      <BookingPanelView
+        {...panelViewModel({
+          quote: null,
+          total: null,
+          minGuestsWarning: "This experience needs at least 3 guests.",
+          booking: { available: true, disabled: true, pending: false, label: "Select at least 3 guests", onBook: vi.fn() },
+        })}
+      />,
+    );
+
+    expect(screen.queryByText("Total")).not.toBeInTheDocument();
+    expect(screen.queryByText("Payment processing fee")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Select at least 3 guests" })).toBeDisabled();
   });
 });

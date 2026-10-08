@@ -30,7 +30,7 @@ describe("useTicketSelection", () => {
       ["Day pass", 2, 6],
     ]);
     expect(result.current.tickets[0].priceLabel).toBe("₦5,000.00 / person");
-    expect(result.current.ruleNotes).toEqual(["10% off for 4+ guests"]);
+    expect(result.current.ruleNotes).toEqual(["10% off for 4+ guests, any mix of tickets. Add 2 more to qualify."]);
     // A per-day ticket is picked, so days are asked for.
     expect(result.current.days.show).toBe(true);
     expect(result.current.picked).toEqual({

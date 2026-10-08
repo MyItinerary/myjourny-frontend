@@ -56,7 +56,10 @@ Redirect-to-hosted-checkout, not an embedded payment element: booking creation r
 
 - **Unit and component tests:** Vitest + React Testing Library + MSW (`npm run test`, `npm run test:coverage`). Tests sit next to their source. Coverage on `features/**` is gated at 80%.
 - **E2E:** Playwright against a production build, with the itin API stubbed (`npm run test:e2e`). Auth, booking/checkout and payment pages require E2E.
-- **CI:** there are two required checks for merging into `main`. `ci` (`.github/workflows/ci.yml`) is one job that runs lint, typecheck, the architecture check, unit tests with coverage, the build, and E2E against that build. `pr-format` (`.github/workflows/pr-format.yml`) checks the PR title, branch name and description checklist.
+- **CI:** there are three required checks for merging into `main`:
+  - **`ci`** (`.github/workflows/ci.yml`): one job that runs lint, typecheck, the architecture check, unit tests with coverage, the build, and E2E against that build.
+  - **`pr-format`** (`.github/workflows/pr-format.yml`): checks the PR title, branch name and description. The description must lead with product behaviour: who's affected, `Before:`/`After:` lines, and steps to verify on the preview. Every checklist box must be ticked.
+  - **`ai-review`**: an AI code review that runs only when someone comments `@myjourny` on the PR. `.github/workflows/ai-review-gate.yml` sets it to pending on each push. `.github/workflows/helios.yml` runs the review as the `myjourny-review` GitHub App, posts inline comments, answers replies to them, and turns the check green when no 🔴 blocker threads are unresolved. Details: [`.github/helios/README.md`](../.github/helios/README.md).
 
 ## Related
 
