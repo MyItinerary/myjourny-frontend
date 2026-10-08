@@ -58,7 +58,7 @@ jobs:
             // --- 1b. Product behaviour is described as before -> after ----------
             const type = (pr.title.match(/^(\w+)/) || [])[1];
             const behaviour = sections["Product behaviour"] || "";
-            const noChange = /^\s*No user-facing change\b/i.test(behaviour);
+            const noChange = /^\s*(?:[-*]\s*)?No user-facing change\b/im.test(behaviour);
             const hasLine = (label) => new RegExp(`^\\s*(?:[-*]\\s*)?\\**${label}\\**\\s*:\\**\\s*\\S`, "im").test(behaviour);
             if (behaviour && !noChange && !(hasLine("Before") && hasLine("After"))) {
               problems.push(
