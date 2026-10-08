@@ -36,7 +36,7 @@ Paste the tail of `npm run check` (and `npm run test:e2e` if relevant).
 -->
 
 ## Screenshots / recording
-<!-- Required for any UI change (before/after, desktop + mobile). Otherwise "N/A — no UI change". -->
+<!-- Optional. Add before/after (desktop + mobile) when it helps review a UI change. -->
 
 ## Risk & rollback
 <!-- What could break? How do we roll back? -->
@@ -49,6 +49,5 @@ Paste the tail of `npm run check` (and `npm run test:e2e` if relevant).
 - [ ] New/changed logic is covered by tests, and `npm run check` passes locally
 - [ ] E2E (`e2e/`) added/updated if this touches auth, booking/checkout or payment pages, and `npm run test:e2e` passes
 - [ ] No new files in legacy dirs (`lib/queries/`, `components/<feature>/`); any legacy file substantially changed here has been migrated to `features/`
-- [ ] UI matches Figma / DESIGN-SYSTEM.md, and screenshots are attached
+- [ ] UI matches Figma / DESIGN-SYSTEM.md
 - [ ] No secrets, env values, `console.log` or debug code; docs updated if behaviour changed
-- [ ] I have read and understood every line of this PR, including any AI-generated code
