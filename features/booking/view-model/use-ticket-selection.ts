@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { ExperiencePricing, PricingSelection, PricingUnit, TicketType } from "../model/booking.types";
-import { describeRule, formatPrice, UNIT_SUFFIX } from "../model/format";
+import { describeRules, formatPrice, UNIT_SUFFIX } from "../model/format";
 
 export type TicketRow = {
   id: string;
@@ -77,9 +77,7 @@ export function useTicketSelection({
       unit: UNIT_SUFFIX[cheapest?.pricing_unit ?? "per_person"],
       showFrom: several,
     },
-    ruleNotes: (pricing?.rules ?? [])
-      .map((rule) => describeRule(rule, currency))
-      .filter((note): note is string => !!note),
+    ruleNotes: describeRules(pricing?.rules ?? [], currency, { guests, now: new Date() }),
     tickets: tickets.map((t) => ({
       id: t.id,
       label: several ? t.label : "Participants",

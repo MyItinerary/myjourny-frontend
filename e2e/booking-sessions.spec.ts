@@ -185,5 +185,73 @@ test.describe("booking sessions", () => {
     expect(quotes.at(-1)).toHaveProperty("requested_date");
     expect(quotes.at(-1)).not.toHaveProperty("requested_datetime");
   });
-});
 
+  test("prices only bookable selections and shows each discount", async ({ page }) => {
+    const bookBefore = `${inDays(30)}T00:00:00`;
+    const quotes: Record<string, unknown>[] = [];
+    await openExperience(page, {
+      "GET /experiences/exp-1": (r) => r.fulfill({ json: { ...EXPERIENCE, group_size_min: 3 } }),
+      "GET /experiences/exp-1/pricing": (r) =>
+        r.fulfill({
+          json: {
+            currency: "NGN",
+            prices: [{ id: "adult", label: "Adult", amount: "5000", pricing_unit: "per_person" }],
+            addons: [],
+            rules: [
+              { id: "g", kind: "group", min_guests: 3, percent_off: "10.00" },
+              { id: "e", kind: "early_bird", book_before: bookBefore, percent_off: "1.00" },
+            ],
+          },
+        }),
+      "POST /bookings/quote": async (r) => {
+        quotes.push(r.request().postDataJSON());
+        await r.fulfill({
+          json: {
+            ...quote,
+            lines: [
+              {
+                kind: "ticket",
+                label: "Adult",
+                quantity: 3,
+                unit_amount: "4950",
+                amount: "14850",
+                list_unit_amount: "5000",
+                list_amount: "15000",
+              },
+              { kind: "discount", label: "Group discount (10% off 3+ guests)", quantity: 1, unit_amount: "-1485", amount: "-1485" },
+              { kind: "fee", label: "Payment processing fee", quantity: 1, unit_amount: "300.48", amount: "300.48" },
+            ],
+            subtotal: "14850",
+            subtotal_before_discounts: "15000",
+            discount: "1485",
+            checkout_fee: "300.48",
+            total: "13665.48",
+            guests: 3,
+            savings: [
+              { kind: "early_bird", label: "Early-bird discount (1% off)", amount: "150" },
+              { kind: "group", label: "Group discount (10% off 3+ guests)", amount: "1485" },
+            ],
+          },
+        });
+      },
+    });
+    const sidebar = page.locator("div.sticky").filter({ hasText: "Free cancellation" });
+
+    await expect(sidebar.getByText("10% group discount applied (3+ guests)")).toBeVisible();
+    await expect(sidebar.getByText("Early-bird and group discounts combine.")).toBeVisible();
+    await expect(sidebar.getByText("₦15,000.00", { exact: true }).first()).toBeVisible();
+    await expect(sidebar.getByText("Early-bird discount (1% off)")).toBeVisible();
+    await expect(sidebar.getByText("−₦1,485.00")).toBeVisible();
+    await expect(sidebar.getByText("You save ₦1,635.00")).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "Book now - ₦13,665.48" })).toBeEnabled();
+
+    // Below the minimum group size nothing is priced or bookable.
+    const quotesBefore = quotes.length;
+    await sidebar.getByRole("button", { name: "Decrease Participants" }).click();
+    await expect(sidebar.getByText("This experience needs at least 3 guests.")).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "Select at least 3 guests" })).toBeDisabled();
+    await expect(sidebar.getByText("Total")).toHaveCount(0);
+    await expect(sidebar.getByText("Payment processing fee")).toHaveCount(0);
+    expect(quotes.length).toBe(quotesBefore);
+  });
+});
