@@ -16,9 +16,12 @@ import { ExperienceBeforeYouBook } from "@/components/experiences/experience-bef
 import { ExperienceItinerary } from "@/components/experiences/experience-itinerary";
 import { ExperienceReviews } from "@/components/experiences/experience-reviews";
 import {
-  ExperienceBookingBar,
-  ExperienceBookingPanel,
-} from "@/components/experiences/experience-booking-panel";
+  BookingBarView,
+  BookingPanelView,
+  formatPrice,
+  type BookingPanelProps,
+  useBookingPanelViewModel,
+} from "@/features/booking";
 import {
   experienceMatchToCardProps,
   formatDuration,
@@ -319,7 +322,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             </section>
           </div>
 
-          <ExperienceBookingPanel
+          <BookingPanel
             className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
             experienceId={experience.id}
             guideId={experience.guide_id}
@@ -350,13 +353,12 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
       <Footer />
 
-      <ExperienceBookingBar
-        priceFrom={minPrice ?? 0}
-        currency={experience.currency ?? "NGN"}
+      <BookingBarView
+        priceFrom={formatPrice(minPrice ?? 0, experience.currency ?? "NGN")}
         onBookNow={() => setMobileBookingOpen(true)}
       />
 
-      {/* Mobile bottom sheet — reuses the same ExperienceBookingPanel form
+      {/* Mobile bottom sheet — reuses the same booking panel form
           shown in the desktop sidebar rather than duplicating it. */}
       {mobileBookingOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -367,7 +369,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             className="absolute inset-0 bg-black/40"
           />
           <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl">
-            <ExperienceBookingPanel
+            <BookingPanel
               className="rounded-t-2xl rounded-b-none border-b-0"
               experienceId={experience.id}
               guideId={experience.guide_id}
@@ -392,4 +394,15 @@ export function ExperienceDetailContent({ id }: { id: string }) {
       />
     </div>
   );
+}
+
+// The booking panel: its view-model and view, rendered for the desktop
+// sidebar and the mobile sheet (each keeps its own selection).
+function BookingPanel({
+  className,
+  onClose,
+  ...props
+}: BookingPanelProps & { className?: string; onClose?: () => void }) {
+  const vm = useBookingPanelViewModel(props);
+  return <BookingPanelView {...vm} className={className} onClose={onClose} />;
 }
