@@ -1,0 +1,149 @@
+# Helios PR review bot. Comment "@helios" on a PR: it reacts 👀, reviews the
+# diff with Claude, posts inline comments as one review, swaps 👀 for 🚀 and
+# posts a summary. Setup notes: .github/helios/README.md.
+#
+# Security: comment events run with secrets, so only repo collaborators can
+# trigger it, the PR code is read but never executed, and the posting script
+# and prompt come from the default branch, never from the PR.
+name: Helios
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group: helios-pr-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # claude-sonnet-5-5 is the cheaper option.
+  HELIOS_MODEL: claude-opus-5-5
+
+jobs:
+  review:
+    name: helios
+    if: >-
+      (github.event.issue.pull_request || github.event.pull_request) &&
+      contains(github.event.comment.body, '@helios') &&
+      github.event.comment.user.type != 'Bot' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.HELIOS_APP_ID }}
+          private-key: ${{ secrets.HELIOS_PRIVATE_KEY }}
+
+      - id: start
+        name: React 👀
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const review = context.eventName === "pull_request_review_comment";
+            const comment_id = context.payload.comment.id;
+            const { data: eyes } = review
+              ? await github.rest.reactions.createForPullRequestReviewComment({ owner, repo, comment_id, content: "eyes" })
+              : await github.rest.reactions.createForIssueComment({ owner, repo, comment_id, content: "eyes" });
+            const prNumber = review ? context.payload.pull_request.number : context.payload.issue.number;
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            core.setOutput("startedAt", Date.now());
+            core.setOutput("commentKind", review ? "review" : "issue");
+            core.setOutput("commentId", comment_id);
+            core.setOutput("eyesId", eyes.id);
+            core.setOutput("prNumber", prNumber);
+            core.setOutput("baseRef", pr.base.ref);
+            core.setOutput("title", pr.title);
+            core.setOutput("body", pr.body || "");
+
+      - name: Load trusted Helios files from the default branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: .helios-trusted
+          sparse-checkout: .github/helios
+          persist-credentials: false
+      - name: Stash trusted files outside the workspace
+        run: |
+          mkdir -p "$RUNNER_TEMP/helios"
+          cp .helios-trusted/.github/helios/* "$RUNNER_TEMP/helios/"
+          rm -rf .helios-trusted
+
+      - name: Check out PR
+        uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ steps.start.outputs.prNumber }}/head
+          fetch-depth: 0
+          persist-credentials: false
+
+      - id: prep
+        name: Build prompt
+        env:
+          BASE_REF: ${{ steps.start.outputs.baseRef }}
+          PR_NUMBER: ${{ steps.start.outputs.prNumber }}
+          PR_TITLE: ${{ steps.start.outputs.title }}
+          PR_BODY: ${{ steps.start.outputs.body }}
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          delim="HELIOS_$(openssl rand -hex 16)"
+          {
+            echo "prompt<<$delim"
+            sed "s#<base>#$BASE_REF#g" "$RUNNER_TEMP/helios/review-prompt.md"
+            printf '\n## This PR\n\n- Number: #%s\n- Base: origin/%s\n- Title: %s\n\nDescription:\n\n%s\n' \
+              "$PR_NUMBER" "$BASE_REF" "$PR_TITLE" "$PR_BODY"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+
+      - id: claude
+        name: Review with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          prompt: ${{ steps.prep.outputs.prompt }}
+          claude_args: >-
+            --model ${{ env.HELIOS_MODEL }}
+            --max-turns 80
+            --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+            --json-schema '{"type":"object","additionalProperties":false,"required":["findings"],"properties":{"findings":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["path","line","side","severity","title","body"],"properties":{"path":{"type":"string"},"line":{"type":"integer"},"start_line":{"type":"integer"},"side":{"enum":["RIGHT","LEFT"]},"severity":{"enum":["blocker","should-fix","nit"]},"title":{"type":"string"},"body":{"type":"string"},"suggestion":{"type":"string"}}}}}}'
+
+      - name: Post review and summary
+        uses: actions/github-script@v8
+        env:
+          START: ${{ toJSON(steps.start.outputs) }}
+          FINDINGS: ${{ steps.claude.outputs.structured_output }}
+          SHA: ${{ steps.prep.outputs.sha }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const helios = require(`${process.env.RUNNER_TEMP}/helios/post-review.js`);
+            const findings = JSON.parse(process.env.FINDINGS || "{}").findings;
+            if (!Array.isArray(findings)) throw new Error("Claude returned no structured findings.");
+            await helios.finish({
+              github, context, core, ok: true, findings,
+              start: JSON.parse(process.env.START), sha: process.env.SHA,
+            });
+
+      - name: Report failure
+        if: failure() && steps.start.outputs.commentId
+        uses: actions/github-script@v8
+        env:
+          START: ${{ toJSON(steps.start.outputs) }}
+          SHA: ${{ steps.prep.outputs.sha }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const helios = require(`${process.env.RUNNER_TEMP}/helios/post-review.js`);
+            await helios.finish({
+              github, context, core, ok: false,
+              start: JSON.parse(process.env.START), sha: process.env.SHA,
+              runUrl: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
