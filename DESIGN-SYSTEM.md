@@ -188,8 +188,8 @@ flex gap, mobile "Where to?" compact pill), `WhyBookWithUsSection`
 (desktop "Popular experiences" is a static 2×3 grid with no carousel per
 Figma, not a carousel like the other two rails; "Top picks"/"Based on
 browsing history" carousels get their arrows in the header row, not below;
-added `wide` prop for the Categories page's 1212px column), `CtaSection`
-(mobile left-aligned/40px vs. desktop centered/48px heading), `Footer`
+added `wide` prop for the Categories page's 1212px column), `NewsletterSection`
+(image stacked above the form on mobile, side by side on desktop), `Footer`
 (72px seam between the inspiration-tabs block and the link columns, not
 48px; 22px heading not 20px; mobile stacked-column gaps).
 
@@ -223,10 +223,11 @@ pixel-diffed against Figma the way the sections above were).
 
 ## Still placeholder
 
-- **Icons**: `star-01`, `heart`/`heart-rounded`, `chevron-down`,
-  `home-smile`, `image-05` are now real Figma exports
-  ([components/icons/shared-icons.tsx](components/icons/shared-icons.tsx),
-  [nav-icons.tsx](components/icons/nav-icons.tsx)). Still lucide
+- **Icons**: `star-01`, `heart`/`heart-rounded`, `chevron-down` are now
+  real Figma exports
+  ([components/icons/shared-icons.tsx](components/icons/shared-icons.tsx)),
+  and `HomeNav`'s pill/menu icons are illustrated PNGs in
+  `public/icons/nav/`. Still lucide
   placeholders: `chevron-right` (rail arrows), `search-lg` on mobile
   category header (reuses the existing `public/icons/search-lg.svg` art
   but not yet confirmed pixel-exact for that specific compact usage).
@@ -255,13 +256,13 @@ pixel-diffed against Figma the way the sections above were).
 `components/icons/` — icon sets inlined from real Figma SVG exports
 (`onboarding-icons`, `interests-icons`, `who-with-icons`,
 `budget-icons`, `vibe-icons`, `auth-icons`, `shared-icons` — chevron/
-heart/star reused across features, `nav-icons` — `HomeNav`'s 3 icons).
+heart/star reused across features, `nav-icons` — the plane icon on `HomeNav`'s mobile search pill).
 
 `components/home/`: `home-nav`, `hero-section`,
 `why-book-with-us-section`, `experience-rail-section` (shared by
 "Popular experiences near you" / "Top picks right now" / "Based on your
 browsing history"), `categories-section`, `cities-section`,
-`cta-section`, `footer`, `mock-session-toggle` (dev-only guest/account
+`newsletter-section`, `footer`, `mock-session-toggle` (dev-only guest/account
 preview switch — see `lib/mock-session.ts`).
 
 `components/categories/`: `category-header`, `filter-chip`,

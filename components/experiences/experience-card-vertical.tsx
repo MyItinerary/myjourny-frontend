@@ -6,7 +6,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 import { HeartRoundedIcon, StarIcon } from "@/components/icons/shared-icons";
-import { useSavedExperienceIds, useToggleSaved } from "@/lib/queries/saved";
+import { useMyWishlistedIds } from "@/lib/queries/wishlists";
+import { useWishlistSave } from "@/components/wishlists/wishlist-save-provider";
 
 // Figma: "Experience card" inside "Top picks right now" (2001:8528) — a
 // different card shape from the horizontal `ExperienceCard` used in the
@@ -32,9 +33,9 @@ export function ExperienceCardVertical({
   className,
   id,
 }: ExperienceCardProps) {
-  const { data: savedIds } = useSavedExperienceIds();
-  const toggleSaved = useToggleSaved();
-  const isSaved = !!id && !!savedIds?.has(id);
+  const { data: wishlistIds } = useMyWishlistedIds();
+  const { openSave } = useWishlistSave();
+  const isSaved = !!id && !!wishlistIds?.has(id);
 
   return (
     // relative + a lower z-index Link covering the card, so the save
@@ -63,8 +64,8 @@ export function ExperienceCardVertical({
         />
         <button
           type="button"
-          aria-label={isSaved ? "Remove from wishlist" : "Save experience"}
-          onClick={() => id && toggleSaved.mutate({ experienceId: id, isSaved })}
+          aria-label={isSaved ? "Edit wishlists" : "Save to wishlist"}
+          onClick={() => id && openSave(id, title)}
           disabled={!id}
           className={cn(
             "absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors",

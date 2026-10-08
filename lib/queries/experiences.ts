@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 
@@ -15,7 +15,9 @@ export type ExperienceMatch = {
   title: string;
   headline?: string | null;
   imageUrl?: string | null;
-  price: number;
+  price?: number;
+  price_from?: number | null;
+  price_unit?: string | null;
   currency: string;
   duration?: number | null; // minutes
   rating?: number | null;
@@ -50,12 +52,12 @@ export function experienceMatchToCardProps(
     duration: formatDuration(match.duration),
     rating: match.rating ?? 0,
     reviewCount: 0,
-    priceFrom: match.price,
+    priceFrom: Number(match.price_from ?? match.price ?? 0),
     currency: match.currency,
   };
 }
 
-export function useRecommendedExperiences(params: {
+type RecommendationParams = {
   latitude?: number | null;
   longitude?: number | null;
   city?: string;
@@ -63,52 +65,94 @@ export function useRecommendedExperiences(params: {
   id?: number;
   /** Category slug — exact match against Experience.interest_tags on the backend, see /categories/[slug]. */
   interest?: string;
-  offset?: number;
-  limit?: number;
-  /**
-   * Defaults to true — no city/coordinates is a legitimate call on its own
-   * (location-agnostic, profile-scored recommendations), not something to
-   * infer disabled from. Callers that need to defer (e.g. "Popular near
-   * you" while geolocation is still resolving) pass `enabled: false`
-   * explicitly instead.
-   */
-  enabled?: boolean;
-}) {
+};
+
+async function fetchRecommendations(
+  params: RecommendationParams & { offset: number; limit: number }
+): Promise<ExperienceMatch[]> {
+  const baseParams = {
+    latitude: params.latitude ?? undefined,
+    longitude: params.longitude ?? undefined,
+    city: params.city,
+    id: params.id,
+    interest: params.interest,
+    offset: params.offset,
+    limit: params.limit,
+  };
+  try {
+    const { data } = await apiClient.get<ExperienceMatch[]>(
+      "/experiences/recommendations",
+      { params: baseParams }
+    );
+    return data;
+  } catch (error) {
+    // A backend that hasn't picked up the optional-lat/long change yet
+    // (e.g. not redeployed) still 422s on missing latitude/longitude —
+    // retry once with 0/0 dummy coordinates rather than surfacing that
+    // for what should be a perfectly valid "no location" request.
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    if (status === 422 && (baseParams.latitude === undefined || baseParams.longitude === undefined)) {
+      const { data } = await apiClient.get<ExperienceMatch[]>(
+        "/experiences/recommendations",
+        { params: { ...baseParams, latitude: baseParams.latitude ?? 0, longitude: baseParams.longitude ?? 0 } }
+      );
+      return data;
+    }
+    throw error;
+  }
+}
+
+export function useRecommendedExperiences(
+  params: RecommendationParams & {
+    offset?: number;
+    limit?: number;
+    /**
+     * Defaults to true — no city/coordinates is a legitimate call on its own
+     * (location-agnostic, profile-scored recommendations), not something to
+     * infer disabled from. Callers that need to defer (e.g. "Popular near
+     * you" while geolocation is still resolving) pass `enabled: false`
+     * explicitly instead.
+     */
+    enabled?: boolean;
+  }
+) {
   return useQuery({
     queryKey: ["experiences", "recommendations", params],
-    queryFn: async () => {
-      const baseParams = {
-        latitude: params.latitude ?? undefined,
-        longitude: params.longitude ?? undefined,
-        city: params.city,
-        id: params.id,
-        interest: params.interest,
+    queryFn: () =>
+      fetchRecommendations({
+        ...params,
         offset: params.offset ?? 0,
         limit: params.limit ?? (params.id !== undefined ? 20 : 10),
-      };
-      try {
-        const { data } = await apiClient.get<ExperienceMatch[]>(
-          "/experiences/recommendations",
-          { params: baseParams }
-        );
-        return data;
-      } catch (error) {
-        // A backend that hasn't picked up the optional-lat/long change yet
-        // (e.g. not redeployed) still 422s on missing latitude/longitude —
-        // retry once with 0/0 dummy coordinates rather than surfacing that
-        // for what should be a perfectly valid "no location" request.
-        const status = (error as { response?: { status?: number } })?.response?.status;
-        if (status === 422 && (baseParams.latitude === undefined || baseParams.longitude === undefined)) {
-          const { data } = await apiClient.get<ExperienceMatch[]>(
-            "/experiences/recommendations",
-            { params: { ...baseParams, latitude: baseParams.latitude ?? 0, longitude: baseParams.longitude ?? 0 } }
-          );
-          return data;
-        }
-        throw error;
-      }
-    },
+      }),
     enabled: params.enabled ?? true,
+  });
+}
+
+// Server-paginated recommendations for listing pages: each fetchNextPage()
+// asks itin for the next `pageSize` via offset. The endpoint returns a bare
+// list with no total, so a short page is the only "no more" signal.
+// Scores can shift between page fetches, so the same experience can land
+// on two pages — keep the first.
+export function uniqueMatches(pages: ExperienceMatch[][] | undefined): ExperienceMatch[] {
+  const seen = new Set<string>();
+  return (pages ?? []).flat().filter((m) => {
+    if (seen.has(m.experience_id)) return false;
+    seen.add(m.experience_id);
+    return true;
+  });
+}
+
+export function useInfiniteRecommendedExperiences(
+  params: RecommendationParams & { pageSize: number; enabled?: boolean }
+) {
+  const { pageSize, enabled = true, ...filters } = params;
+  return useInfiniteQuery({
+    queryKey: ["experiences", "recommendations", "infinite", filters, pageSize],
+    queryFn: ({ pageParam }) => fetchRecommendations({ ...filters, offset: pageParam, limit: pageSize }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < pageSize ? undefined : allPages.length * pageSize,
+    enabled,
   });
 }
 
@@ -224,7 +268,9 @@ export type SemanticSearchResult = {
   title: string;
   headline?: string | null;
   imageUrl?: string | null;
-  price: number;
+  price?: number;
+  price_from?: number | null;
+  price_unit?: string | null;
   currency: string;
   duration?: number | null;
   rating?: number | null;
@@ -280,3 +326,88 @@ export function useBookingPaymentSheet() {
   });
 }
 
+
+// GET /experiences/filter — plain filtered listing (no personal scoring), so
+// it's the one listing guests can use too. itin drops the exact location,
+// guide and booking link for guests. Paginated by page number with a total.
+export type ExperienceListItem = {
+  id: string;
+  title: string;
+  headline?: string | null;
+  city?: string | null;
+  country?: string | null;
+  duration_minutes?: number | null;
+  rating?: number | null;
+  currency?: string | null;
+  cover_image_url?: string | null;
+  price_from?: number | null;
+  price_unit?: string | null;
+};
+
+type ExperienceListPage = {
+  items: ExperienceListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+};
+
+export type ExperienceFilters = {
+  city?: string;
+  country?: string;
+  /** Energy/budget/comfort/social-style category slug(s), with subcategories. */
+  category?: string[];
+  /** Interest category slug — exact match against the experience's interest tags. */
+  interest?: string;
+  sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
+};
+
+export function experienceListItemToCardProps(
+  item: ExperienceListItem
+): ExperienceCardProps & { id: string } {
+  return {
+    id: item.id,
+    imageSrc: item.cover_image_url || FALLBACK_IMAGE,
+    imageAlt: item.title,
+    category: item.city || "",
+    title: item.title,
+    duration: formatDuration(item.duration_minutes),
+    rating: item.rating ?? 0,
+    reviewCount: 0,
+    priceFrom: item.price_from ?? 0,
+    currency: item.currency ?? "NGN",
+  };
+}
+
+async function fetchExperiencePage(filters: ExperienceFilters, page: number, limit: number) {
+  const { data } = await apiClient.get<ExperienceListPage>("/experiences/filter", {
+    params: { ...filters, page, limit },
+    // category=a&category=b, the way FastAPI reads list params.
+    paramsSerializer: { indexes: null },
+  });
+  return data;
+}
+
+export function useFilteredExperiences(
+  filters: ExperienceFilters & { limit: number; enabled?: boolean }
+) {
+  const { limit, enabled = true, ...rest } = filters;
+  return useQuery({
+    queryKey: ["experiences", "filter", rest, limit],
+    queryFn: () => fetchExperiencePage(rest, 1, limit),
+    enabled,
+  });
+}
+
+export function useInfiniteFilteredExperiences(
+  filters: ExperienceFilters & { pageSize: number; enabled?: boolean }
+) {
+  const { pageSize, enabled = true, ...rest } = filters;
+  return useInfiniteQuery({
+    queryKey: ["experiences", "filter", "infinite", rest, pageSize],
+    queryFn: ({ pageParam }) => fetchExperiencePage(rest, pageParam, pageSize),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page < last.total_pages ? last.page + 1 : undefined),
+    enabled,
+  });
+}

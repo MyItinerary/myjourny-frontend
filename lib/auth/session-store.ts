@@ -105,17 +105,26 @@ export function getTokens() {
   };
 }
 
-export function useSession(): { user: SessionUser | null; state: SessionState } {
+// Flips once localStorage has been read on the client, so callers can tell
+// "no session yet" apart from "definitely a guest".
+let hydrated = false;
+
+export function useSession(): { user: SessionUser | null; state: SessionState; hydrated: boolean } {
   const current = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const isHydrated = useSyncExternalStore(subscribe, () => hydrated, () => false);
 
   useEffect(() => {
+    const wasHydrated = hydrated;
+    hydrated = true;
     const fromStorage = readStorage();
     if (fromStorage && !stored) {
       persist(fromStorage);
+    } else if (!wasHydrated) {
+      emit();
     }
     // Only needs to run once, on mount — `stored`/`persist` are module-level,
     // not React values, so there's nothing to add to this array.
   }, []);
 
-  return { user: current?.user ?? null, state: current ? "account" : "guest" };
+  return { user: current?.user ?? null, state: current ? "account" : "guest", hydrated: isHydrated };
 }

@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useGoogleAuth } from "@/lib/queries/auth";
+import { isTwoFactorChallenge, useGoogleAuth } from "@/lib/queries/auth";
 
 interface BottomLink {
   prompt: string;
@@ -88,7 +89,15 @@ export function AuthForm({
               googleAuth.mutate(
                 { token: credential },
                 {
-                  onSuccess: () => router.push(googleSuccessHref),
+                  onSuccess: (data) => {
+                    // An existing account with 2FA on: the code step lives on the login page.
+                    if (isTwoFactorChallenge(data)) {
+                      toast.info("This account uses two-factor authentication. Log in to continue.");
+                      router.push("/login");
+                      return;
+                    }
+                    router.push(googleSuccessHref);
+                  },
                   onError: () => setIsGoogleAuthenticating(false),
                 }
               );

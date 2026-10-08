@@ -36,3 +36,8 @@ export function describeRule(rule: PriceRule, currency: string): string | null {
   }
   return null;
 }
+
+/** Log in, then come back to this experience. */
+export function guestLoginHref(experienceId: string): string {
+  return `/login?next=${encodeURIComponent(`/experiences/${experienceId}`)}`;
+}

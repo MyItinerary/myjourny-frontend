@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Category, useInterestCategories, useSubcategories } from "@/lib/queries/categories";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 // Figma: "Footer" (2001:8924/2001:8949) — identical between guest/account.
 // Bundles two stacked blocks: the "InspirationSection" category tabs
 // ("More ways to experience your city") above the actual footer link
@@ -34,7 +36,11 @@ const linkColumns = [
   },
 ];
 
-export function Footer() {
+const SKELETON_WIDTHS = ["w-36", "w-40", "w-32", "w-44", "w-36", "w-28"];
+
+// `tone="white"` is the home-page variant (Figma 2001:9151); every other
+// page keeps the default light-grey background.
+export function Footer({ tone = "default" }: { tone?: "default" | "white" }) {
   const categoriesQuery = useInterestCategories();
   const categories = categoriesQuery.data ?? [];
 
@@ -50,16 +56,31 @@ export function Footer() {
   const currentParentId = currentCategory?.id ?? null;
 
   // Fetch subcategories whenever a category is selected: GET /categories?parent_id=<id>
-  const { data: subcategories = [] } = useSubcategories(currentParentId);
+  const {
+    data: subcategories = [],
+    isLoading: isSubcategoriesLoading,
+    isFetching: isSubcategoriesFetching,
+  } = useSubcategories(currentParentId);
+
+  const isLoadingSubcategories =
+    categoriesQuery.isLoading ||
+    isSubcategoriesLoading ||
+    (isSubcategoriesFetching && subcategories.length === 0);
 
   return (
-    <footer className="bg-[#FCFCFC]">
+    <footer className={tone === "white" ? "bg-white" : "bg-[#FCFCFC]"}>
       <div className="mx-auto max-w-[1372px] px-6 pt-12 pb-8 lg:px-6">
         <h2 className="py-2 font-heading text-[22px] leading-[33px] font-medium text-[#222222]">
           More ways to experience your city
         </h2>
 
-        {parentCategories.length > 0 && (
+        {categoriesQuery.isLoading ? (
+          <div className="mt-4 flex gap-6 overflow-x-auto border-b border-[#EBEBEB] pb-3.5 pt-2 scrollbar-none">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-5 w-28 shrink-0 rounded bg-[#EAE8E3]" />
+            ))}
+          </div>
+        ) : parentCategories.length > 0 ? (
           <Tabs
             value={String(currentCategory?.id ?? "")}
             onValueChange={(val) => setActiveCategoryId(Number(val))}
@@ -94,22 +115,36 @@ export function Footer() {
               })}
             </TabsList>
           </Tabs>
-        )}
+        ) : null}
 
         {/* Dynamic subcategories from the endpoint: updates when a category is clicked */}
         <div className="mt-8 flex flex-wrap items-center gap-6 min-h-[48px]">
-          {subcategories.map((subcategory) => (
-            <Link
-              key={subcategory.id}
-              href={`/categories/${subcategory.slug}`}
-              className="flex flex-col pr-4 group transition-opacity hover:opacity-80"
-            >
-              <span className="text-sm font-medium text-[#222222] group-hover:underline">
-                {subcategory.text}
-              </span>
-              <span className="pt-0.5 text-[13px] text-[#717171]">Subcategory</span>
-            </Link>
-          ))}
+          {isLoadingSubcategories ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="flex flex-col pr-4 min-w-[120px]">
+                <Skeleton
+                  className={cn(
+                    "h-4 rounded bg-[#EAE8E3]",
+                    SKELETON_WIDTHS[index % SKELETON_WIDTHS.length]
+                  )}
+                />
+                <Skeleton className="mt-1.5 h-3 w-16 rounded bg-[#EAE8E3]" />
+              </div>
+            ))
+          ) : subcategories.length > 0 ? (
+            subcategories.map((subcategory) => (
+              <Link
+                key={subcategory.id}
+                href={`/categories/${subcategory.slug}`}
+                className="flex flex-col pr-4 group transition-opacity hover:opacity-80"
+              >
+                <span className="text-sm font-medium text-[#222222] group-hover:underline">
+                  {subcategory.text}
+                </span>
+                <span className="pt-0.5 text-[13px] text-[#717171]">Subcategory</span>
+              </Link>
+            ))
+          ) : null}
         </div>
 
         {/* Figma seam: InspirationSection pb-24px + Footer block pt-48px = 72px */}

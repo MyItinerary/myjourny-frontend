@@ -8,7 +8,15 @@ import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
 import { PasswordInput } from "@/components/onboarding/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useGoogleAuth, useLogin } from "@/lib/queries/auth";
+import { isTwoFactorChallenge, useGoogleAuth, useLogin } from "@/lib/queries/auth";
+
+// Where to go after login: ?next=<path> (e.g. back to an experience a
+// guest tried to book). Same-site paths only, so it can't bounce people
+// to another site.
+function nextPath() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+}
 
 // Figma "Welcome back!" login shell (2068:24743 / 2068:25586).
 export function LoginForm() {
@@ -20,12 +28,87 @@ export function LoginForm() {
   // actually happens (or the attempt fails), covering the whole gap.
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isGoogleAuthenticating, setIsGoogleAuthenticating] = useState(false);
+  // Set when the account has 2FA on: the sign-in to retry once the person
+  // enters a code. A Google ID token is reused for the retry.
+  const [challenge, setChallenge] = useState<{ via: "password" } | { via: "google"; token: string } | null>(
+    null
+  );
+  const [code, setCode] = useState("");
   const router = useRouter();
   const login = useLogin();
   const googleAuth = useGoogleAuth();
 
   const canContinue = email.length > 0 && password.length > 0;
   const isBusy = isLoggingIn || isGoogleAuthenticating;
+
+  // Shared by both sign-in paths: go on, or stop and ask for a 2FA code.
+  const afterAuth =
+    (next: { via: "password" } | { via: "google"; token: string }, done: () => void) =>
+    (data: unknown) => {
+      if (isTwoFactorChallenge(data)) {
+        setChallenge(next);
+        done();
+        return;
+      }
+      router.push(nextPath());
+    };
+
+  if (challenge) {
+    const trimmed = code.trim();
+    return (
+      <form
+        className="flex w-full max-w-[345px] flex-col items-center gap-6 lg:max-w-[402px]"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!trimmed || isBusy) return;
+          if (challenge.via === "password") {
+            setIsLoggingIn(true);
+            login.mutate(
+              { email, password, code: trimmed },
+              { onSuccess: afterAuth(challenge, () => setIsLoggingIn(false)), onError: () => setIsLoggingIn(false) }
+            );
+          } else {
+            setIsGoogleAuthenticating(true);
+            googleAuth.mutate(
+              { token: challenge.token, code: trimmed },
+              {
+                onSuccess: afterAuth(challenge, () => setIsGoogleAuthenticating(false)),
+                onError: () => setIsGoogleAuthenticating(false),
+              }
+            );
+          }
+        }}
+      >
+        <p className="text-center text-base text-muted-foreground">
+          Enter the 6-digit code from your authenticator app, or one of your recovery codes.
+        </p>
+        <Input
+          size="cta"
+          autoFocus
+          autoComplete="one-time-code"
+          inputMode="text"
+          placeholder="Code"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          className="w-full"
+          aria-label="Two-factor code"
+        />
+        <Button type="submit" size="cta" disabled={!trimmed || isBusy} className="w-full">
+          {isBusy ? "Checking…" : "Continue"}
+        </Button>
+        <button
+          type="button"
+          onClick={() => {
+            setChallenge(null);
+            setCode("");
+          }}
+          className="cursor-pointer text-sm text-brand"
+        >
+          Back
+        </button>
+      </form>
+    );
+  }
 
   return (
     <form
@@ -37,7 +120,7 @@ export function LoginForm() {
         login.mutate(
           { email, password },
           {
-            onSuccess: () => router.push("/"),
+            onSuccess: afterAuth({ via: "password" }, () => setIsLoggingIn(false)),
             onError: () => setIsLoggingIn(false),
           }
         );
@@ -50,7 +133,9 @@ export function LoginForm() {
           googleAuth.mutate(
             { token: credential },
             {
-              onSuccess: () => router.push("/"),
+              onSuccess: afterAuth({ via: "google", token: credential }, () =>
+                setIsGoogleAuthenticating(false)
+              ),
               onError: () => setIsGoogleAuthenticating(false),
             }
           );

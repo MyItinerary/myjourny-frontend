@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import { useState } from 'react';
 import { LayoutGroup } from 'motion/react';
+import { WishlistSaveProvider } from '@/components/wishlists/wishlist-save-provider';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
@@ -24,7 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <LayoutGroup id="myjourny-global-layout">
-            {children}
+            <WishlistSaveProvider>{children}</WishlistSaveProvider>
             <Toaster richColors position="top-right" />
           </LayoutGroup>
         </TooltipProvider>

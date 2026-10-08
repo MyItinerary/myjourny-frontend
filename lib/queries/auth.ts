@@ -15,6 +15,22 @@ import { clearPreferences } from "@/lib/onboarding/preferences-store";
 
 type Tokens = { access_token: string; refresh_token: string; token_type: string };
 
+// With 2FA on, login/Google/Apple answer 200 with this instead of tokens
+// until the request carries a valid `code` (TOTP or recovery code). A wrong
+// code is a 401.
+export type TwoFactorChallenge = { "2fa_required": true };
+type AuthResponse = Tokens | TwoFactorChallenge;
+
+export function isTwoFactorChallenge(data: unknown): data is TwoFactorChallenge {
+  return typeof data === "object" && data !== null && "2fa_required" in data;
+}
+
+// Finish sign-in, unless the server is asking for a 2FA code first.
+async function completeAuthUnlessChallenged(data: AuthResponse, placeholderEmail: string | null) {
+  if (isTwoFactorChallenge(data)) return;
+  await completeAuth(data, placeholderEmail);
+}
+
 type MeResponse = {
   id: string;
   email: string | null;
@@ -77,15 +93,19 @@ export function useRegister() {
 
 export function useLogin() {
   return useMutation({
-    mutationFn: async (payload: { email: string; password: string }) => {
+    mutationFn: async (payload: { email: string; password: string; code?: string }) => {
       // /auth/login is OAuth2PasswordRequestForm-based (form-urlencoded),
       // not JSON.
       const body = new URLSearchParams({ username: payload.email, password: payload.password });
-      const { data } = await apiClient.post<Tokens>("/auth/login", body);
+      if (payload.code) body.set("code", payload.code);
+      const { data } = await apiClient.post<AuthResponse>("/auth/login", body);
       return data;
     },
-    onSuccess: (tokens, variables) => completeAuth(tokens, variables.email),
-    onError: (error) => toast.error(apiErrorMessage(error, "Incorrect email or password.")),
+    onSuccess: (data, variables) => completeAuthUnlessChallenged(data, variables.email),
+    onError: (error, variables) =>
+      toast.error(
+        apiErrorMessage(error, variables.code ? "That code didn't work." : "Incorrect email or password.")
+      ),
   });
 }
 
@@ -95,14 +115,15 @@ export function useGoogleAuth() {
       token: string;
       signup_type?: string;
       user_id?: string;
+      code?: string;
     }) => {
-      const { data } = await apiClient.post<Tokens>("/auth/google", {
+      const { data } = await apiClient.post<AuthResponse>("/auth/google", {
         signup_type: "traveller",
         ...payload,
       });
       return data;
     },
-    onSuccess: (tokens) => completeAuth(tokens, null),
+    onSuccess: (data) => completeAuthUnlessChallenged(data, null),
     onError: (error) =>
       toast.error(apiErrorMessage(error, "Couldn't sign in with Google. Please try again.")),
   });
@@ -143,14 +164,15 @@ export function useAppleAuth() {
       user_id?: string;
       full_name?: string;
       signup_type?: string;
+      code?: string;
     }) => {
-      const { data } = await apiClient.post<Tokens>("/auth/apple", {
+      const { data } = await apiClient.post<AuthResponse>("/auth/apple", {
         signup_type: "traveller",
         ...payload,
       });
       return data;
     },
-    onSuccess: (tokens) => completeAuth(tokens, null),
+    onSuccess: (data) => completeAuthUnlessChallenged(data, null),
     onError: (error) =>
       toast.error(apiErrorMessage(error, "Couldn't sign in with Apple. Please try again.")),
   });

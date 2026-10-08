@@ -11,10 +11,12 @@ import {
   formatDuration,
   type SemanticSearchResult,
 } from "@/lib/queries/experiences";
-import { SaveToCollectionModal } from "@/components/wishlists/save-to-collection-modal";
 import { Button } from "@/components/ui/button";
 
 const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
+
+// 3-column grid: 15 = 5 full rows per page.
+const PAGE_SIZE = 15;
 
 export function SearchContent() {
   const router = useRouter();
@@ -22,10 +24,9 @@ export function SearchContent() {
   const initialQuery = searchParams.get("q") ?? "";
 
   const [searchInput, setSearchInput] = useState(initialQuery);
-  const [selectedExpForSave, setSelectedExpForSave] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
+  // Keyed by query so any new search (this form or the nav) starts at one page.
+  const [paging, setPaging] = useState({ query: initialQuery, count: PAGE_SIZE });
+  const visibleCount = paging.query === initialQuery ? paging.count : PAGE_SIZE;
 
   const { data: results = [], isLoading } = useSemanticSearch({
     q: initialQuery,
@@ -118,8 +119,9 @@ export function SearchContent() {
             </p>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-10">
-            {results.map((exp: SemanticSearchResult) => (
+            {results.slice(0, visibleCount).map((exp: SemanticSearchResult) => (
               <div key={exp.experience_id} className="relative group">
                 <ExperienceCardVertical
                   id={exp.experience_id}
@@ -130,7 +132,7 @@ export function SearchContent() {
                   duration={formatDuration(exp.duration)}
                   rating={exp.rating ?? 0}
                   reviewCount={0}
-                  priceFrom={exp.price ?? 0}
+                  priceFrom={Number(exp.price_from ?? exp.price ?? 0)}
                   currency={exp.currency ?? "NGN"}
                 />
 
@@ -144,18 +146,21 @@ export function SearchContent() {
               </div>
             ))}
           </div>
+          {results.length > visibleCount && (
+            <div className="mt-10 flex justify-center">
+              <Button
+                type="button"
+                size="cta"
+                onClick={() => setPaging({ query: initialQuery, count: visibleCount + PAGE_SIZE })}
+                className="w-[134px]"
+              >
+                Show more
+              </Button>
+            </div>
+          )}
+          </>
         )}
       </main>
-
-      {/* Save to Collection Modal */}
-      {selectedExpForSave && (
-        <SaveToCollectionModal
-          experienceId={selectedExpForSave.id}
-          experienceTitle={selectedExpForSave.title}
-          isOpen={true}
-          onClose={() => setSelectedExpForSave(null)}
-        />
-      )}
 
       <Footer />
     </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRule, formatPrice, UNIT_SUFFIX } from "./format";
+import { describeRule, formatPrice, guestLoginHref, UNIT_SUFFIX } from "./format";
 
 describe("formatPrice", () => {
   it("formats money in the given currency", () => {
@@ -51,5 +51,11 @@ describe("describeRule", () => {
   it("returns null for an incomplete rule", () => {
     expect(describeRule({ id: "r", kind: "group" }, "NGN")).toBeNull();
     expect(describeRule({ id: "r", kind: "day_of_week", days_of_week: [] }, "NGN")).toBeNull();
+  });
+});
+
+describe("guestLoginHref", () => {
+  it("returns to the experience after logging in", () => {
+    expect(guestLoginHref("exp-1")).toBe("/login?next=%2Fexperiences%2Fexp-1");
   });
 });

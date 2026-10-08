@@ -1,37 +1,64 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ModalShell, Row, SavedBanner, ToggleRow } from "@/components/account settings/section-ui";
+import { apiErrorMessage } from "@/lib/api-error";
+import { useMe } from "@/lib/queries/auth";
+import { useGetProfile, useUpdateProfile, type ProfileUpdatePayload, type ProfileVisibility } from "@/lib/queries/profile";
+import {
+  useBlockedUsers,
+  useLatestDataExport,
+  useRequestDataExport,
+  useUnblockUser,
+} from "@/lib/queries/privacy";
+import { ModalShell, Row, SavedBanner, SectionSkeleton, ToggleRow } from "@/components/account-settings/section-ui";
 
-interface BlockedAccount {
-  name: string;
-  meta: string;
-}
-
-const INITIAL_BLOCKED: BlockedAccount[] = [
-  { name: "Chidi Nwosu", meta: "Blocked 8 January 2026" },
+const VISIBILITY_OPTIONS: { value: ProfileVisibility; label: string; meta: string }[] = [
+  { value: "public", label: "Public", meta: "Anyone on MyJourny can see your profile" },
+  { value: "hosts_booked", label: "Hosts you have booked with", meta: "Nobody else can find you" },
 ];
-
-const VISIBILITY_OPTIONS = [
-  { label: "Public", meta: "Anyone on MyJourny can see your profile" },
-  { label: "Hosts you have booked with", meta: "Nobody else can find you" },
-] as const;
 
 type ModalKey = "visibility" | "dataRequest" | "blocked";
 
+function formatDay(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
 export function PrivacySection() {
-  const [visibility, setVisibility] = useState<string>("Public");
-  const [reviewsOn, setReviewsOn] = useState(true);
-  const [personalisationOn, setPersonalisationOn] = useState(true);
-  const [blocked, setBlocked] = useState<BlockedAccount[]>(INITIAL_BLOCKED);
+  const { data: profile, isLoading } = useGetProfile();
+  const { data: me } = useMe();
+  const updateProfile = useUpdateProfile();
+  const { data: blocked = [] } = useBlockedUsers();
+  const unblock = useUnblockUser();
+  const { data: latestExport } = useLatestDataExport();
+  const requestExport = useRequestDataExport();
+
   const [modal, setModal] = useState<ModalKey | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [visibilityDraft, setVisibilityDraft] = useState<ProfileVisibility>("public");
 
-  const [visibilityDraft, setVisibilityDraft] = useState(visibility);
+  if (isLoading) return <SectionSkeleton />;
+
+  const visibility = profile?.profile_visibility ?? "public";
+  const visibilityLabel = VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.label ?? "Public";
+  const reviewsOn = profile?.show_reviews_publicly ?? true;
+  const personalisationOn = profile?.personalization_enabled ?? true;
+  const email = me?.email ?? "your email";
+  const exportPending = latestExport && !["completed", "failed", "expired"].includes(latestExport.status);
 
   function closeModal() {
     setModal(null);
+  }
+
+  function save(payload: ProfileUpdatePayload, message?: string) {
+    updateProfile.mutate(payload, {
+      onSuccess: () => {
+        if (message) setSavedMessage(message);
+        closeModal();
+      },
+      onError: (error) => toast.error(apiErrorMessage(error, "Couldn't save that change.")),
+    });
   }
 
   function openVisibility() {
@@ -66,7 +93,7 @@ export function PrivacySection() {
       <div className="mt-2">
         <Row
           label="Profile visibility"
-          value={visibility}
+          value={visibilityLabel}
           note="The other option is visible only to hosts you have booked with."
           actionLabel="Edit"
           onAction={openVisibility}
@@ -77,7 +104,7 @@ export function PrivacySection() {
           value={reviewsOn ? "On" : "Off"}
           note="Turning this off hides your name from reviews you have written. The review text stays on the experience."
           on={reviewsOn}
-          onToggle={() => setReviewsOn((v) => !v)}
+          onToggle={() => save({ show_reviews_publicly: !reviewsOn })}
         />
 
         <ToggleRow
@@ -85,14 +112,18 @@ export function PrivacySection() {
           value={personalisationOn ? "On" : "Off"}
           note="We use the experiences you view and book, plus your city, to order your feed. Turn this off and you see the same feed as everyone in Lagos."
           on={personalisationOn}
-          onToggle={() => setPersonalisationOn((v) => !v)}
+          onToggle={() => save({ personalization_enabled: !personalisationOn })}
         />
 
         <Row
           label="Download my data"
-          value="Bookings, messages, reviews, and payment records"
+          value={
+            exportPending
+              ? `Requested ${formatDay(latestExport.created_at)}. We'll email ${email} when it's ready.`
+              : "Bookings, messages, reviews, and payment records"
+          }
           note="We email a link within 48 hours. The link works for 7 days."
-          actionLabel="Request"
+          actionLabel={exportPending ? "Requested" : "Request"}
           onAction={openDataRequest}
         />
 
@@ -101,7 +132,7 @@ export function PrivacySection() {
             <div className="text-base font-medium text-foreground">Blocked accounts</div>
             <div className="text-base text-muted-foreground">{blockedCount}</div>
             <div className="mt-0.5 text-sm text-muted-foreground">
-              Blocked people cannot message you or book an experience alongside you.
+              You won&apos;t see experiences hosted by people you have blocked.
             </div>
           </div>
           <button
@@ -117,13 +148,13 @@ export function PrivacySection() {
       {modal === "visibility" && (
         <ModalShell title="Profile visibility" onClose={closeModal}>
           <div className="flex flex-col gap-2.5">
-            {VISIBILITY_OPTIONS.map(({ label, meta }) => {
-              const selected = visibilityDraft === label;
+            {VISIBILITY_OPTIONS.map(({ value, label, meta }) => {
+              const selected = visibilityDraft === value;
               return (
                 <button
-                  key={label}
+                  key={value}
                   type="button"
-                  onClick={() => setVisibilityDraft(label)}
+                  onClick={() => setVisibilityDraft(value)}
                   className={cn(
                     "flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-4 text-left",
                     selected ? "border-brand border-2" : "border-border",
@@ -155,14 +186,14 @@ export function PrivacySection() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setVisibility(visibilityDraft);
-                setSavedMessage(
-                  `Saved. Your profile is now visible to ${visibilityDraft === "Public" ? "anyone on MyJourny" : "hosts you have booked with"}.`,
-                );
-                closeModal();
-              }}
-              className="cursor-pointer rounded-full bg-brand px-5.5 py-3 text-[15px] font-medium text-white hover:bg-[#FF4540]"
+              disabled={updateProfile.isPending}
+              onClick={() =>
+                save(
+                  { profile_visibility: visibilityDraft },
+                  `Saved. Your profile is now visible to ${visibilityDraft === "public" ? "anyone on MyJourny" : "hosts you have booked with"}.`,
+                )
+              }
+              className="cursor-pointer rounded-full bg-brand px-5.5 py-3 text-[15px] font-medium text-white hover:bg-[#FF4540] disabled:cursor-wait disabled:opacity-60"
             >
               Save
             </button>
@@ -176,7 +207,7 @@ export function PrivacySection() {
             We put together your bookings, messages, reviews, and payment records as one file.
           </div>
           <div className="mt-2.5 text-sm text-muted-foreground">
-            We email a link to t***e@gmail.com within 48 hours. The link works for 7 days.
+            We email a link to {email} within 48 hours. The link works for 7 days.
           </div>
           <div className="mt-6 flex justify-end gap-3">
             <button
@@ -188,13 +219,16 @@ export function PrivacySection() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setSavedMessage(
-                  "Request received. Watch t***e@gmail.com for the download link within 48 hours.",
-                );
-                closeModal();
-              }}
-              className="cursor-pointer rounded-full bg-brand px-5.5 py-3 text-[15px] font-medium text-white hover:bg-[#FF4540]"
+              disabled={requestExport.isPending}
+              onClick={() =>
+                requestExport.mutate(undefined, {
+                  onSuccess: () => {
+                    setSavedMessage(`Request received. Watch ${email} for the download link within 48 hours.`);
+                    closeModal();
+                  },
+                })
+              }
+              className="cursor-pointer rounded-full bg-brand px-5.5 py-3 text-[15px] font-medium text-white hover:bg-[#FF4540] disabled:cursor-wait disabled:opacity-60"
             >
               Request my data
             </button>
@@ -208,21 +242,25 @@ export function PrivacySection() {
             <div className="flex flex-col gap-3">
               {blocked.map((b) => (
                 <div
-                  key={b.name}
+                  key={b.id}
                   className="flex items-center justify-between gap-6 rounded-xl border border-border px-4 py-3.5"
                 >
                   <div>
-                    <div className="text-[15px] font-medium text-foreground">{b.name}</div>
-                    <div className="text-[13px] text-muted-foreground">{b.meta}</div>
+                    <div className="text-[15px] font-medium text-foreground">{b.name ?? "MyJourny member"}</div>
+                    <div className="text-[13px] text-muted-foreground">Blocked {formatDay(b.blocked_at)}</div>
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setBlocked((prev) => prev.filter((x) => x.name !== b.name));
-                      setSavedMessage(`${b.name} is unblocked and can message you again.`);
-                      closeModal();
-                    }}
-                    className="cursor-pointer text-sm font-medium text-brand underline"
+                    disabled={unblock.isPending}
+                    onClick={() =>
+                      unblock.mutate(b.id, {
+                        onSuccess: () => {
+                          setSavedMessage(`${b.name ?? "They"} ${b.name ? "is" : "are"} unblocked.`);
+                          closeModal();
+                        },
+                      })
+                    }
+                    className="cursor-pointer text-sm font-medium text-brand underline disabled:cursor-wait"
                   >
                     Unblock
                   </button>
@@ -233,7 +271,7 @@ export function PrivacySection() {
             <div className="text-sm text-muted-foreground">You have no blocked accounts.</div>
           )}
           <div className="mt-2.5 text-sm text-muted-foreground">
-            Blocked people cannot message you or book an experience alongside you.
+            You won&apos;t see experiences hosted by people you have blocked.
           </div>
           <div className="mt-6 flex justify-end">
             <button

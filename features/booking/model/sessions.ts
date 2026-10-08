@@ -1,20 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
+import { dateKey, formatSessionTime, parseDateKey } from "@/lib/dates";
 
 import type { ExperienceSessions } from "./booking.types";
 
-/** "YYYY-MM-DD" for a calendar day in the browser's time zone. */
-export function dateKey(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-export function parseDateKey(key: string): Date {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
+// Calendar-day and clock helpers are shared app-wide (lib/dates); re-exported
+// so the rest of this feature imports them from one place.
+export { dateKey, formatSessionTime, parseDateKey };
 
 /** Today's date ("YYYY-MM-DD") in an IANA time zone, e.g. the experience's. */
 export function todayIn(timeZone: string, now: Date = new Date()): string {
@@ -32,13 +25,6 @@ export function addDaysToKey(key: string, days: number): string {
 /** "Africa/Lagos" → "Lagos", for "Times are Lagos time". */
 export function zoneCity(timeZone: string): string {
   return (timeZone.split("/").pop() ?? timeZone).replace(/_/g, " ");
-}
-
-/** "09:00:00" → "9:00 AM". */
-export function formatSessionTime(localTime: string): string {
-  const [h, m] = localTime.split(":").map(Number);
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
 }
 
 /** Experiences without a schedule are booked by date and the host confirms
