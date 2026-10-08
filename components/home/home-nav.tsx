@@ -121,10 +121,10 @@ export function HomeNav({ className }: { className?: string }) {
   const pathname = usePathname();
   const currentPathTab = pathname?.startsWith("/wishlists") || pathname === "/wishlist"
     ? "wishlist"
-    : pathname === "/" || pathname === ""
-      ? "home"
-      : pathname?.startsWith("/explore")
-        ? "explore"
+    : pathname?.startsWith("/my-experiences") || pathname?.startsWith("/bookings")
+      ? "experiences"
+      : pathname === "/" || pathname === ""
+        ? "home"
         : null;
 
   const [activeTab, setActiveTab] = useState<string | null>(currentPathTab);
@@ -147,9 +147,9 @@ export function HomeNav({ className }: { className?: string }) {
       icon: "/icons/nav/wishlist.png",
     },
     {
-      id: "explore",
+      id: "experiences",
       label: "My experiences",
-      href: "#",
+      href: user ? "/my-experiences" : "/login",
       icon: "/icons/nav/experiences.png",
     },
   ];
@@ -472,106 +472,96 @@ export function HomeNav({ className }: { className?: string }) {
                     setProfileMenuOpen((prev) => !prev);
                     setNotificationsOpen(false);
                   }}
-                className={cn(
-                  "flex shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
-                  "size-10 sm:size-11 lg:size-12",
-                  isScrolled
-                    ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
-                    : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]",
-                  profileMenuOpen && "ring-2 ring-brand/20 bg-[#F4F2EE]"
-                )}
-                style={{
-                  borderRadius: "12px",
-                  background: profileMenuOpen || isScrolled ? "#F4F2EE" : "#FFF",
-                }}
-              >
-                <Image
-                  src="/icons/nav/profile-button.png"
-                  alt=""
-                  width={48}
-                  height={48}
-                  className="size-full rounded-[12px] object-cover"
-                />
-              </button>
+                  className={cn(
+                    "flex shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
+                    "size-10 sm:size-11 lg:size-12",
+                    isScrolled
+                      ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
+                      : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]",
+                    profileMenuOpen && "ring-2 ring-brand/20 bg-[#F4F2EE]"
+                  )}
+                  style={{
+                    borderRadius: "12px",
+                    background: profileMenuOpen || isScrolled ? "#F4F2EE" : "#FFF",
+                  }}
+                >
+                  <Image
+                    src="/icons/nav/profile-button.png"
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="size-full rounded-[12px] object-cover"
+                  />
+                </button>
 
-              {/* Floating Dropdown Card Menu */}
-              <AnimatePresence>
-                {profileMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -6 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -6 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="absolute right-0 top-[calc(100%+12px)] z-50 w-[401px] max-w-[calc(100vw-32px)] rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
-                  >
-                    <MenuRow
-                      href={user ? "/profile" : "/login"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      icon="/icons/nav/experiences.png"
-                      label="My experiences"
-                    />
-                    <MenuRow
-                      href={user ? "/notifications" : "/login"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      icon="/icons/nav/notifications.png"
-                      label="Notifications"
-                      badge={unreadCount > 0 ? unreadCount : undefined}
-                    />
-                    <MenuRow
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        if (user) router.push("/profile?tab=locale");
-                        else router.push("/login");
-                      }}
-                      icon="/icons/nav/language.png"
-                      label="Language and Currency"
-                      sublabel="English/USD"
-                    />
-                    <MenuRow
-                      href={user ? "/profile" : "/login"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      icon="/icons/nav/account-settings.png"
-                      label="Account settings"
-                    />
-                    <MenuRow
-                      href="#"
-                      onClick={() => setProfileMenuOpen(false)}
-                      icon="/icons/nav/help.png"
-                      label="Help center"
-                    />
+                {/* Floating Dropdown Card Menu */}
+                <AnimatePresence>
+                  {profileMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="absolute right-0 top-[calc(100%+12px)] z-50 w-[401px] max-w-[calc(100vw-32px)] rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
+                    >
+                      <MenuRow
+                        href={user ? "/my-experiences" : "/login"}
+                        onClick={() => setProfileMenuOpen(false)}
+                        icon="/icons/nav/experiences.png"
+                        label="My experiences"
+                      />
+                      <MenuRow
+                        href={user ? "/notifications" : "/login"}
+                        onClick={() => setProfileMenuOpen(false)}
+                        icon="/icons/nav/notifications.png"
+                        label="Notifications"
+                        badge={unreadCount > 0 ? unreadCount : undefined}
+                      />
+                      <MenuRow
+                        href={user ? "/profile" : "/login"}
+                        onClick={() => setProfileMenuOpen(false)}
+                        icon="/icons/nav/account-settings.png"
+                        label="Account settings"
+                      />
+                      <MenuRow
+                        href="#"
+                        onClick={() => setProfileMenuOpen(false)}
+                        icon="/icons/nav/help.png"
+                        label="Help center"
+                      />
 
-                    <div className="my-3 h-px w-full bg-[#EEEEEE]" />
+                      <div className="my-3 h-px w-full bg-[#EEEEEE]" />
 
-                    <MenuRow
-                      href="#"
-                      onClick={() => setProfileMenuOpen(false)}
-                      icon="/icons/nav/become-guide.png"
-                      label="Become a guide"
-                      sublabel="Make extra income from what you already love doing"
-                      accent
-                    />
+                      <MenuRow
+                        href="#"
+                        onClick={() => setProfileMenuOpen(false)}
+                        icon="/icons/nav/become-guide.png"
+                        label="Become a guide"
+                        sublabel="Make extra income from what you already love doing"
+                        accent
+                      />
 
-                    <div className="my-3 h-px w-full bg-[#EEEEEE]" />
+                      <div className="my-3 h-px w-full bg-[#EEEEEE]" />
 
-                    <MenuRow
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        if (user) {
-                          logout.mutate(undefined, { onSuccess: () => router.push("/login") });
-                        } else {
-                          router.push("/login");
-                        }
-                      }}
-                      icon={user ? "/icons/nav/logout.png" : "/icons/nav/login.png"}
-                      label={user ? "Logout" : "Login or create account"}
-                      chevron={false}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      <MenuRow
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          if (user) {
+                            logout.mutate(undefined, { onSuccess: () => router.push("/login") });
+                          } else {
+                            router.push("/login");
+                          }
+                        }}
+                        icon={user ? "/icons/nav/logout.png" : "/icons/nav/login.png"}
+                        label={user ? "Logout" : "Login or create account"}
+                        chevron={false}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
-        </div>
 
           {/* Expanded Search Bar Container inside the Fixed Navbar */}
           <AnimatePresence>
