@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
 import { suggestedDestinations } from "@/lib/mock-data/home";
+import { FALLBACK_IMAGE } from "@/lib/queries/experiences";
 
 import type {
   ActivitySuggestion,
@@ -9,6 +10,8 @@ import type {
   ExperienceSuggestion,
   SearchExperiencesParams,
 } from "./search.types";
+
+export { FALLBACK_IMAGE };
 
 export const DEFAULT_DESTINATIONS: DestinationSuggestion[] = [
   ...suggestedDestinations,
@@ -42,6 +45,17 @@ export const DEFAULT_ACTIVITIES: ActivitySuggestion[] = [
   { id: "events-live-shows", label: "Events & live shows", subtitle: "Concerts, festivals, and live music" },
 ];
 
+export function formatExperienceSubtitle(
+  exp: Pick<ExperienceSuggestion, "city" | "price_from" | "currency" | "headline">,
+): string {
+  const cityPrefix = exp.city ? `${exp.city} · ` : "";
+  if (exp.price_from != null) {
+    const currency = exp.currency ?? "NGN";
+    return `${cityPrefix}from ${currency} ${exp.price_from.toLocaleString()}`;
+  }
+  return exp.headline ?? "Experience";
+}
+
 export const searchExperiencesQueryKey = (search?: string, limit?: number) =>
   ["experiences", "filter", { search: search?.trim().toLowerCase() ?? "", limit }] as const;
 
@@ -66,6 +80,7 @@ export function useSearchExperiences({
       return data?.items ?? [];
     },
     enabled: enabled && trimmed.length >= 2,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }

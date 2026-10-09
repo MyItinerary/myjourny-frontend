@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
 
-import { SearchSuggestionList } from "./search-suggestion-item-view";
+import {
+  ExperienceSuggestionItem,
+  SearchSuggestionList,
+} from "./search-suggestion-item-view";
 
 describe("SearchSuggestionList", () => {
   const defaultProps = {
@@ -83,5 +86,28 @@ describe("SearchSuggestionList", () => {
     );
 
     expect(screen.getByText(/No destinations, activities, or experiences found/i)).toBeInTheDocument();
+  });
+});
+
+describe("ExperienceSuggestionItem", () => {
+  it("renders experience with formatted subtitle and handles selection", async () => {
+    const onSelect = vi.fn();
+    const exp = {
+      id: "exp-42",
+      title: "Lekki Conservation Walk",
+      city: "Lagos",
+      price_from: 8000,
+      currency: "NGN",
+    };
+
+    const { user } = renderWithProviders(
+      <ExperienceSuggestionItem experience={exp} onSelect={onSelect} />,
+    );
+
+    expect(screen.getByText("Lekki Conservation Walk")).toBeInTheDocument();
+    expect(screen.getByText("Lagos · from NGN 8,000")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button"));
+    expect(onSelect).toHaveBeenCalledWith(exp);
   });
 });

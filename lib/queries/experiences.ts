@@ -26,7 +26,7 @@ export type ExperienceMatch = {
   country?: string | null;
 };
 
-const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
+export const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
 
 export function formatDuration(minutes?: number | null): string {
   if (!minutes) return "";

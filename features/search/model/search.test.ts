@@ -9,19 +9,53 @@ import { renderHookWithProviders } from "@/test/utils/render";
 import {
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
+  FALLBACK_IMAGE,
+  formatExperienceSubtitle,
   searchExperiencesQueryKey,
   useSearchExperiences,
 } from "./search";
 
-describe("search model constants", () => {
-  it("provides default destinations and activities lists", () => {
+describe("search model constants & mappers", () => {
+  it("provides default destinations, activities, and fallback image", () => {
     expect(DEFAULT_DESTINATIONS.length).toBeGreaterThan(0);
     expect(DEFAULT_ACTIVITIES.length).toBeGreaterThan(0);
+    expect(FALLBACK_IMAGE).toBe("/images/home/experiences/kayaking.jpg");
   });
 
   it("builds consistent query keys", () => {
     const key = searchExperiencesQueryKey("Lagos", 5);
     expect(key).toEqual(["experiences", "filter", { search: "lagos", limit: 5 }]);
+  });
+
+  it("formats experience subtitle correctly", () => {
+    expect(
+      formatExperienceSubtitle({
+        city: "Lagos",
+        price_from: 15000,
+        currency: "NGN",
+      }),
+    ).toBe("Lagos · from NGN 15,000");
+
+    expect(
+      formatExperienceSubtitle({
+        city: null,
+        price_from: 5000,
+        currency: "USD",
+      }),
+    ).toBe("from USD 5,000");
+
+    expect(
+      formatExperienceSubtitle({
+        city: "Abuja",
+        headline: "Pottery workshop",
+      }),
+    ).toBe("Abuja · Pottery workshop");
+
+    expect(
+      formatExperienceSubtitle({
+        city: null,
+      }),
+    ).toBe("Experience");
   });
 });
 

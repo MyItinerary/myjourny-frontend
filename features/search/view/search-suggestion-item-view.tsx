@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { FALLBACK_IMAGE, formatExperienceSubtitle } from "../model/search";
 import type {
   ActivitySuggestion,
   DestinationSuggestion,
@@ -20,7 +21,7 @@ export function ExperienceSuggestionThumbnail({
   alt: string;
   className?: string;
 }) {
-  const fallback = "/images/home/experiences/kayaking.jpg";
+  const fallback = FALLBACK_IMAGE;
   const [currentSrc, setCurrentSrc] = useState(src || fallback);
 
   return (
@@ -29,12 +30,50 @@ export function ExperienceSuggestionThumbnail({
         src={currentSrc}
         alt={alt}
         fill
-        unoptimized
         sizes="48px"
         onError={() => setCurrentSrc(fallback)}
         className="object-cover"
       />
     </div>
+  );
+}
+
+export interface ExperienceSuggestionItemProps {
+  experience: ExperienceSuggestion;
+  onSelect: (exp: ExperienceSuggestion) => void;
+  className?: string;
+}
+
+export function ExperienceSuggestionItem({
+  experience,
+  onSelect,
+  className,
+}: ExperienceSuggestionItemProps) {
+  const subtitle = formatExperienceSubtitle(experience);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(experience)}
+      className={cn(
+        "flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer",
+        className,
+      )}
+    >
+      <ExperienceSuggestionThumbnail
+        src={experience.cover_image_url}
+        alt={experience.title}
+        className="size-[42px]"
+      />
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className="text-sm font-semibold leading-5 text-[#130404] truncate">
+          {experience.title}
+        </span>
+        <span className="text-xs leading-4 text-[#6F6B72] truncate">
+          {subtitle}
+        </span>
+      </div>
+    </button>
   );
 }
 
@@ -155,29 +194,11 @@ export function SearchSuggestionList({
             )}
           </div>
           {experiences.map((exp) => (
-            <button
+            <ExperienceSuggestionItem
               key={exp.id}
-              type="button"
-              onClick={() => onSelectExperience(exp)}
-              className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
-            >
-              <ExperienceSuggestionThumbnail
-                src={exp.cover_image_url}
-                alt={exp.title}
-                className="size-[42px]"
-              />
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-sm font-semibold leading-5 text-[#130404] truncate">
-                  {exp.title}
-                </span>
-                <span className="text-xs leading-4 text-[#6F6B72] truncate">
-                  {exp.city ? `${exp.city} · ` : ""}
-                  {exp.price_from != null
-                    ? `from ${exp.currency ?? "NGN"} ${exp.price_from.toLocaleString()}`
-                    : (exp.headline ?? "Experience")}
-                </span>
-              </div>
-            </button>
+              experience={exp}
+              onSelect={onSelectExperience}
+            />
           ))}
         </div>
       )}

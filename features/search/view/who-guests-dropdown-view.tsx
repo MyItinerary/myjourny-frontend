@@ -9,6 +9,7 @@ export interface WhoGuestsDropdownViewProps {
   variant?: SearchBarVariant;
   guests: GuestCounts;
   totalGuests: number;
+  allFieldsFilled?: boolean;
   guestTypes: typeof GUEST_TYPES;
   incrementGuest: (key: keyof GuestCounts) => void;
   decrementGuest: (key: keyof GuestCounts) => void;
@@ -20,6 +21,7 @@ export function WhoGuestsDropdownView({
   variant = "hero",
   guests,
   totalGuests,
+  allFieldsFilled = false,
   guestTypes,
   incrementGuest,
   decrementGuest,
@@ -67,7 +69,7 @@ export function WhoGuestsDropdownView({
             </div>
           </div>
         ))}
-        {totalGuests > 0 && (
+        {allFieldsFilled && (
           <div className="flex w-full justify-end border-t border-[#f0eee9] pt-3">
             <button
               type="button"

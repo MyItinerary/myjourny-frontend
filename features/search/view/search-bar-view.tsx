@@ -234,6 +234,7 @@ export function SearchBarView({
           variant={variant}
           guests={guests}
           totalGuests={totalGuests}
+          allFieldsFilled={allFieldsFilled}
           guestTypes={guestTypes}
           incrementGuest={incrementGuest}
           decrementGuest={decrementGuest}

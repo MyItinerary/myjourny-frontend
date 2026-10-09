@@ -105,4 +105,59 @@ describe("useSearchBarViewModel", () => {
 
     expect(mockPush).toHaveBeenCalledWith("/experiences/exp-123");
   });
+
+  it("navigates to city route on destination selection", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.onSelectDestination({
+        id: "lagos",
+        city: "Lagos, Nigeria",
+        description: "Beaches",
+      });
+      result.current.onSearch();
+    });
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos");
+  });
+
+  it("navigates to category route on activity selection", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.onSelectActivity({
+        id: "street-food-markets",
+        label: "Street food & markets",
+        subtitle: "Local bites",
+      });
+      result.current.onSearch();
+    });
+
+    expect(mockPush).toHaveBeenCalledWith("/categories/street-food-markets");
+  });
+
+  it("debounces where input with timers and fetches suggestions via MSW", async () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHookWithProviders(() =>
+      useSearchBarViewModel({ debounceMs: 400 }),
+    );
+
+    act(() => {
+      result.current.setWhereInput("Lekki");
+    });
+
+    expect(result.current.selectedWhere).toBe("Lekki");
+    expect(result.current.debouncedWhere).toBe("");
+
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+
+    expect(result.current.debouncedWhere).toBe("Lekki");
+
+    vi.useRealTimers();
+  });
 });
