@@ -288,6 +288,44 @@ describe("useBookingPanelViewModel", () => {
     expect(api.sessionLoads()).toBe(loadsBefore);
   });
 
+  it("lets a guest book without a quote and hands their picks over instead of creating a booking", async () => {
+    stubApi({ quoteBody: { detail: "Not authenticated" } as never, quoteStatus: 401 });
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
+    const onGuestBook = vi.fn();
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, onGuestBook }));
+
+    await waitFor(() => expect(result.current.booking.disabled).toBe(false));
+    expect(result.current.quoteError).toBeNull();
+
+    act(() => result.current.booking.onBook());
+
+    expect(onGuestBook).toHaveBeenCalledTimes(1);
+    expect(onGuestBook.mock.calls[0][0]).toMatchObject({
+      guideId: "g-1",
+      guests: 2,
+      ticketsLabel: "2 Adult",
+      // No quote, so the price list: 2 x ₦5,000.
+      total: "₦10,000.00",
+      currency: "NGN",
+      durationLabel: "3 hours",
+      selection: { experience_id: "exp-1", items: [{ experience_price_id: "adult", quantity: 2 }] },
+    });
+    expect(onGuestBook.mock.calls[0][0].when).toContain("9:00 AM");
+    expect(created).not.toHaveBeenCalled();
+  });
+
+  it("uses the server's total for a guest when the quote loads", async () => {
+    stubApi();
+    const onGuestBook = vi.fn();
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, onGuestBook }));
+    await waitFor(() => expect(result.current.total).toBe("₦9,000.00"));
+
+    act(() => result.current.booking.onBook());
+
+    expect(onGuestBook.mock.calls[0][0].total).toBe("₦9,000.00");
+  });
+
   it("can't be booked without a guide", async () => {
     stubApi();
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, guideId: null }));

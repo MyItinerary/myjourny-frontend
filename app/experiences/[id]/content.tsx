@@ -19,15 +19,17 @@ import {
   BookingBarView,
   BookingPanelView,
   formatPrice,
-  GuestBookingCardView,
-  guestLoginHref,
   type BookingPanelProps,
+  type GuestBookingDetails,
   useBookingPanelViewModel,
 } from "@/features/booking";
+import { saveCheckoutDraft } from "@/features/checkout";
 import {
+  experienceListItemToCardProps,
   experienceMatchToCardProps,
   formatDuration,
   useExperienceDetail,
+  useFilteredExperiences,
   useExperiencePrices,
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
@@ -70,7 +72,9 @@ function ExperienceDescription({ description }: { description: string }) {
 export function ExperienceDetailContent({ id }: { id: string }) {
   const router = useRouter();
   const { user, hydrated } = useSession();
-  // Guests can read the page; the host, meeting point and booking need an account.
+  // Guests see the whole page and the booking panel; "Book now" takes them
+  // through the email step and the payment page. Signed-in users go straight
+  // to the payment provider.
   const isAccount = user !== null;
   const isGuest = hydrated && !isAccount;
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
@@ -80,10 +84,12 @@ export function ExperienceDetailContent({ id }: { id: string }) {
     (min, p) => (min === null || p.amount < min ? p.amount : min),
     null as number | null
   );
+  // Recommendations need a profile; guests get the best-rated experiences.
   const similarQuery = useRecommendedExperiences({ offset: 0, limit: 10, enabled: isAccount });
-  const similarItems = (similarQuery.data ?? [])
-    .filter((m) => m.experience_id !== id)
-    .map(experienceMatchToCardProps);
+  const guestSimilarQuery = useFilteredExperiences({ sort: "rating_desc", limit: 10, enabled: isGuest });
+  const similarItems = isAccount
+    ? (similarQuery.data ?? []).filter((m) => m.experience_id !== id).map(experienceMatchToCardProps)
+    : (guestSimilarQuery.data?.items ?? []).filter((item) => item.id !== id).map(experienceListItemToCardProps);
 
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const { data: wishlistIds } = useMyWishlistedIds();
@@ -120,6 +126,26 @@ export function ExperienceDetailContent({ id }: { id: string }) {
       : [];
   const durationLabel = formatDuration(experience.duration_minutes) || "Flexible";
   const location = [experience.city, experience.country].filter(Boolean).join(", ");
+
+  const onGuestBook = isGuest
+    ? (details: GuestBookingDetails) => {
+        saveCheckoutDraft({
+          experienceId: experience.id,
+          guideId: details.guideId,
+          selection: details.selection,
+          title: experience.title,
+          imageUrl: images[0] ?? null,
+          rating: experience.rating ?? null,
+          when: details.when,
+          guests: details.guests,
+          ticketsLabel: details.ticketsLabel,
+          total: details.total,
+          currency: details.currency,
+          durationLabel: details.durationLabel,
+        });
+        router.push("/checkout");
+      }
+    : undefined;
 
   return (
     <div className="flex flex-1 flex-col pb-24 lg:pb-0">
@@ -222,14 +248,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
                     <span className="font-sans text-[16px] font-medium leading-[24px] text-[#333134]">
-                      {isGuest ? (
-                        <Link
-                          href={guestLoginHref(experience.id)}
-                          className="hover:text-brand hover:underline transition-colors"
-                        >
-                          Log in to see your host
-                        </Link>
-                      ) : experience.host?.id ? (
+                      {experience.host?.id ? (
                         <Link
                           href={`/guides/${experience.host.id}`}
                           className="hover:text-brand hover:underline transition-colors"
@@ -334,13 +353,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             </section>
           </div>
 
-          {isGuest ? (
-            <GuestBookingCardView
-              className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
-              priceFrom={minPrice === null ? null : formatPrice(minPrice, experience.currency ?? "NGN")}
-              loginHref={guestLoginHref(experience.id)}
-            />
-          ) : isAccount ? (
+          {hydrated ? (
             <BookingPanel
               className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
               experienceId={experience.id}
@@ -352,6 +365,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               schedule={experience}
+              onGuestBook={onGuestBook}
             />
           ) : null}
         </div>
@@ -376,7 +390,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
       <BookingBarView
         priceFrom={formatPrice(minPrice ?? 0, experience.currency ?? "NGN")}
-        onBookNow={() => (isGuest ? router.push(guestLoginHref(experience.id)) : setMobileBookingOpen(true))}
+        onBookNow={() => setMobileBookingOpen(true)}
       />
 
       {/* Mobile bottom sheet — reuses the same booking panel form
@@ -401,6 +415,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               schedule={experience}
+              onGuestBook={onGuestBook}
               onClose={() => setMobileBookingOpen(false)}
             />
           </div>

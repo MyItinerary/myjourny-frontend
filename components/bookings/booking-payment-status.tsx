@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+import { BookingConfirmedView, useBookingConfirmation } from "@/features/checkout";
 import { InterstitialScreen } from "@/components/onboarding/interstitial-screen";
 import { useSession } from "@/lib/auth/session-store";
 import {
   bookingPaymentState,
   PROCESSING_TIMEOUT_MS,
+  type Booking,
   useBooking,
   useRetryBookingPayment,
 } from "@/lib/queries/bookings";
@@ -17,6 +19,12 @@ type Props = {
   // booking can't be loaded (e.g. signed out).
   landedFrom: "success" | "cancel";
 };
+
+// "You're going!": the booking and its experience, with a way to view it and
+// add it to a calendar.
+function ConfirmedBooking({ booking }: { booking: Booking }) {
+  return <BookingConfirmedView confirmation={useBookingConfirmation(booking)} />;
+}
 
 // Shown after checkout. itin's redirect only says where the customer came
 // back from; the booking's payment_status (set by the provider's webhook) is
@@ -67,17 +75,7 @@ export function BookingPaymentStatus({ bookingId, landedFrom }: Props) {
 
   switch (bookingPaymentState(booking)) {
     case "confirmed":
-      return (
-        <InterstitialScreen
-          heading="Booking confirmed 🎉"
-          subtitle="You're all set — we've sent the details to your email. See you there!"
-          primaryLabel="View booking"
-          primaryHref={`/bookings/${booking.id}`}
-          secondaryLabel="Back to home"
-          secondaryHref="/"
-          illustration={null}
-        />
-      );
+      return <ConfirmedBooking booking={booking} />;
     case "cancelled":
       return (
         <InterstitialScreen
