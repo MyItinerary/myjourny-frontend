@@ -29,16 +29,45 @@ These rules are enforced by CI and branch protection. A PR that breaks them **ca
 - Bug fixes include a test that would have caught the bug.
 - Never use `.only`, `.skip` or `.fixme`. Never hit the real network.
 
-## Before you open or update a PR
+## Before every push and every PR
 
-1. Run `npm run check`, plus `npm run test:e2e` for critical flows. Both must pass. If something fails, fix the code, not the test or the rule.
-2. Name the branch `<type>/<kebab-case>`. Title the PR `<type>(<scope>): <summary>`, where type is one of feat, fix, refactor, perf, test, docs or chore.
-3. Fill in every required section of `.github/pull_request_template.md`. Write for a reviewer or PM who hasn't read the code:
+Check two things before you push a commit or open a PR: that the code meets the requirements, and that the author has done their part. This applies to every push, not only the first one.
+
+**The code**
+
+1. Run `npm run check` and the whole `npm run test:e2e` suite, not only the spec you touched. Both must pass. A later commit can break an older test.
+2. Fix every error, including ones inherited from `main`. `ci` stops at its first failing step, so a lint error hides typecheck, test and e2e failures behind it. If something fails, fix the code, not the test or the rule.
+3. A view that needs a helper or constant from the model gets it from the view-model through props. A view importing `../model/<anything but *.types>` fails lint.
+4. If a test and the code disagree and you can't tell which one is right, ask the author. Don't guess silently.
+
+**The PR**
+
+5. Name the branch `<type>/<kebab-case>`. Title the PR `<type>(<scope>): <summary>`, where type is one of feat, fix, refactor, perf, test, docs or chore.
+6. Fill in every required section of `.github/pull_request_template.md`. Write for a reviewer or PM who hasn't read the code:
    - Lead with what changes for users. Under "Product behaviour", say who is affected and give a `Before:` and an `After:` line, or write `No user-facing change — <reason>` (not allowed for feat, fix or perf).
    - Under "How to verify", list steps someone can follow on the preview.
    - Keep "Technical notes" to a few bullets. Under "Tests", describe the behaviour each test covers, not CI output.
    - Under "AI assistance", name the agent and what it wrote.
-4. Tick a checklist box only if it is actually true. If an item doesn't apply, write `N/A — <reason>`.
+7. Tick a checklist box only if it is actually true. If an item doesn't apply, write `N/A — <reason>`.
+
+**The author**
+
+8. Two checklist boxes are the author's own word: "I followed How to verify myself" and "UI matches Figma / DESIGN-SYSTEM.md and works on mobile". Never tick them on your own judgement. Ask the author to confirm each one, and tick it only when they have.
+
+**If a requirement isn't met**
+
+9. Fix it. If you can't, stop and tell the author exactly what is missing and why, before pushing. Never push or open a PR that you know will fail a check without saying so.
+10. If the author tells you to push anyway, open the PR as a draft and list the unmet requirements at the top of the description.
+
+**After you push**
+
+11. Watch the checks (`gh pr checks <number>`) until `ci` and `pr-format` are green. Read a failure with `gh run view <id> --log-failed` and fix it. Don't leave a PR red.
+12. Every push resets `ai-review` to pending. Once the other checks are green, tell the author to comment `@myjourny` on the PR.
+
+**Working on someone else's PR**
+
+13. Before you push a fix to their branch, leave an inline comment that tags the author and explains what was wrong and what you changed.
+14. Bring `main` in with a merge, not a rebase or force-push.
 
 ## Never do these unless the engineering manager explicitly asks
 
