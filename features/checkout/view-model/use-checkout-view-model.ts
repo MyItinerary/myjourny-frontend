@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { formatPrice, useBookingQuote, useCreateBooking } from "@/features/booking";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
-import { isTwoFactorChallenge } from "@/lib/queries/auth";
 
 import { clearCheckoutDraft } from "../model/checkout-draft";
 import { COUNTRIES, DEFAULT_COUNTRY, isValidPhone, toE164 } from "../model/countries";
@@ -217,13 +216,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     googleSignup.mutate(
       { token: credential },
       {
-        onSuccess: (data) => {
-          if (isTwoFactorChallenge(data)) {
-            toast.info("This account uses two-factor authentication. Log in to continue.");
-            router.push(`/login?next=${encodeURIComponent("/checkout")}`);
-          }
-          setGoogleLoading(false);
-        },
+        onSuccess: () => setGoogleLoading(false),
         onError: () => setGoogleLoading(false),
       },
     );
@@ -246,13 +239,8 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     if (loginPending || !loginEmail.trim() || !loginPassword) return;
     setLoginPending(true);
     try {
-      // Wrong details are reported by the login itself.
-      const result = await login.mutateAsync({ email: loginEmail.trim(), password: loginPassword });
-      if (isTwoFactorChallenge(result)) {
-        toast.info("This account uses two-factor authentication. Log in to continue.");
-        router.push(`/login?next=${encodeURIComponent("/checkout")}`);
-        return;
-      }
+      // Email and password only. Wrong details are reported by the login itself.
+      await login.mutateAsync({ email: loginEmail.trim(), password: loginPassword });
     } catch {
       setLoginPending(false);
       return;
@@ -266,13 +254,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     googleSignup.mutate(
       { token: credential },
       {
-        onSuccess: async (data) => {
-          if (isTwoFactorChallenge(data)) {
-            toast.info("This account uses two-factor authentication. Log in to continue.");
-            router.push(`/login?next=${encodeURIComponent("/checkout")}`);
-            setLoginGoogleLoading(false);
-            return;
-          }
+        onSuccess: async () => {
           setLoginGoogleLoading(false);
           await continueAfterLogin();
         },

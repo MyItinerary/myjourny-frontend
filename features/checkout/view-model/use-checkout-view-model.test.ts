@@ -11,7 +11,7 @@ import { useCheckoutViewModel } from "./use-checkout-view-model";
 
 const nav = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => nav }));
-const toast = vi.hoisted(() => ({ error: vi.fn(), info: vi.fn() }));
+const toast = vi.hoisted(() => ({ error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
 
 const session = vi.hoisted(() => ({
@@ -89,7 +89,6 @@ afterEach(() => {
   nav.push.mockReset();
   nav.replace.mockReset();
   toast.error.mockReset();
-  toast.info.mockReset();
 });
 
 function fillDetails(result: { current: ReturnType<typeof useCheckoutViewModel> }) {
@@ -224,18 +223,6 @@ describe("useCheckoutViewModel", () => {
     expect(created).not.toHaveBeenCalled();
   });
 
-  it("sends a two-factor account to the full log-in page", async () => {
-    account.login.mutateAsync.mockResolvedValue({ "2fa_required": true });
-    const result = openLogin();
-    act(() => result.current.login.onPasswordChange("secret123"));
-
-    act(() => {
-      void result.current.login.onSubmit();
-    });
-
-    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/login?next=%2Fcheckout"));
-  });
-
   it("logs in with Google from the sheet and books", async () => {
     server.use(
       http.post(apiUrl("/bookings/"), () =>
@@ -250,15 +237,12 @@ describe("useCheckoutViewModel", () => {
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-1/success"));
   });
 
-  it("handles Google problems from the sheet", () => {
+  it("stops the spinner when Google sign-in from the sheet fails", () => {
     const result = openLogin();
     account.google.mutate.mockImplementation((_payload, options) => options.onError());
     act(() => result.current.login.onGoogleCredential("cred"));
     expect(result.current.login.googleLoading).toBe(false);
-
-    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ "2fa_required": true }));
-    act(() => result.current.login.onGoogleCredential("cred"));
-    expect(nav.push).toHaveBeenCalledWith("/login?next=%2Fcheckout");
+    expect(nav.push).not.toHaveBeenCalled();
   });
 
   it("shows why booking failed after a log-in", async () => {
@@ -447,14 +431,13 @@ describe("useCheckoutViewModel", () => {
     expect(result.current.form.pending).toBe(false);
   });
 
-  it("signs in with Google, and sends a two-factor account to log in", () => {
-    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ "2fa_required": true }));
+  it("signs in with Google from the page", () => {
+    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ access_token: "a" }));
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
 
     act(() => result.current.form.onGoogleCredential("cred"));
 
     expect(account.google.mutate).toHaveBeenCalledWith({ token: "cred" }, expect.any(Object));
-    expect(nav.push).toHaveBeenCalledWith(expect.stringContaining("/login"));
     expect(result.current.form.googleLoading).toBe(false);
   });
 
