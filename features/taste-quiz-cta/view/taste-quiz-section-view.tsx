@@ -4,22 +4,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Figma: "Why book with us" (553:12749 desktop, 558:14155 mobile); the
-// "Your taste has drifted" variant is 558:13485 / 558:14128. The full-bleed
+// Figma: "Why book with us" (553:12749 desktop, 558:14155 mobile). The full-bleed
 // home-page version of the taste-quiz card, with the dashed divider underneath.
 export function TasteQuizSectionView({
   visible,
   href,
-  title = "Right now you’re seeing what everyone else sees.",
-  body = "Five questions, about 40 seconds, and this page starts looking like yours.",
-  ctaLabel = "Take it",
   className,
 }: {
   visible: boolean;
   href: string;
-  title?: string;
-  body?: string;
-  ctaLabel?: string;
   className?: string;
 }) {
   if (!visible) return null;
@@ -32,11 +25,11 @@ export function TasteQuizSectionView({
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex flex-col gap-3">
-            <h2 className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#333134]">{title}</h2>
-            <p className="font-sans text-lg leading-normal text-[#6F6B72] md:text-xl md:leading-[30px]">{body}</p>
+            <h2 className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#333134]">Right now you&rsquo;re seeing what everyone else sees.</h2>
+            <p className="font-sans text-lg leading-normal text-[#6F6B72] md:text-xl md:leading-[30px]">Five questions, about 40 seconds, and this page starts looking like yours.</p>
           </div>
           <Button size="cta" className="shrink-0" render={<Link href={href} />}>
-            {ctaLabel}
+            Take it
           </Button>
         </div>
       </div>

@@ -13,16 +13,6 @@ describe("TasteQuizSectionView", () => {
     expect(screen.getByText("Take it").closest("a")).toHaveAttribute("href", "/onboarding");
   });
 
-  it("swaps in custom copy for the drifted variant", () => {
-    renderWithProviders(
-      <TasteQuizSectionView visible href="/onboarding/get-to-know-you" title="Your taste has drifted." body="Three booked." ctaLabel="Update my taste" />,
-    );
-
-    expect(screen.getByText("Your taste has drifted.")).toBeInTheDocument();
-    expect(screen.getByText("Three booked.")).toBeInTheDocument();
-    expect(screen.getByText("Update my taste").closest("a")).toHaveAttribute("href", "/onboarding/get-to-know-you");
-  });
-
   it("renders nothing when not visible", () => {
     const { container } = renderWithProviders(<TasteQuizSectionView visible={false} href="/onboarding" />);
     expect(container).toBeEmptyDOMElement();

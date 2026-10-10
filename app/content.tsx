@@ -18,7 +18,7 @@ import { CategoriesSection } from "@/components/home/categories-section";
 import { CitiesSection } from "@/components/home/cities-section";
 import { NewsletterSection } from "@/components/home/newsletter-section";
 import { Footer } from "@/components/home/footer";
-import { TasteQuizSectionView, useTasteQuizSectionViewModel } from "@/features/taste-quiz-cta";
+import { TasteQuizSectionView, useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
 import { accountCategories, cities, guestCategories } from "@/lib/mock-data/home";
 
 // Figma "Home" (2001:9142 guest / 2001:9152 account, mobile 2001:9168 /
@@ -63,7 +63,7 @@ export function HomeContent() {
   const guestPopularItems = (guestPopularQuery.data?.items ?? []).map(experienceListItemToCardProps);
   const guestTopPicksItems = (guestTopPicksQuery.data?.items ?? []).map(experienceListItemToCardProps);
   const categoriesQuery = useInterestCategories();
-  const tasteQuiz = useTasteQuizSectionViewModel();
+  const tasteQuiz = useTasteQuizCtaViewModel();
 
   const popularIsLoading = isAccount && (geolocation === "pending" || popularQuery.isFetching);
   const topPicksIsLoading = isAccount && (geolocation === "pending" || topPicksQuery.isFetching);
@@ -141,8 +141,7 @@ export function HomeContent() {
       </Reveal>
 
       {/* Guests, and signed-in users who haven't taken the quiz, meet this just
-          past the categories. Users who took the quiz only see it, reworded, when
-          their bookings have drifted from their answers. */}
+          past the categories; it disappears once the quiz is done. */}
       <TasteQuizSectionView {...tasteQuiz} />
 
       {isAccount ? (
