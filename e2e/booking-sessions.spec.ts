@@ -52,7 +52,7 @@ const quote = {
 };
 
 async function openExperience(page: Page, overrides: Record<string, (route: Route) => unknown> = {}) {
-  // Signed in: guests can't see the guide, so they can't book.
+  // Signed in, so booking goes straight to checkout (guests are covered in guest-experience.spec.ts).
   await page.addInitScript(() => {
     window.localStorage.setItem(
       "myjourny:auth",

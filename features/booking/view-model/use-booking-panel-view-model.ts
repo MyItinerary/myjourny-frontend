@@ -27,6 +27,9 @@ export type BookingPanelProps = {
   minSpots?: number;
   /** The experience's schedule, for a label like "Every Saturday · 3 days". */
   schedule?: ScheduleSummary;
+  /** Set for guests: they pick tickets and a date like anyone else, and
+   * "Book now" sends them here instead of creating a booking. */
+  guestHref?: string;
 };
 
 export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> & {
@@ -115,6 +118,7 @@ export function useBookingPanelViewModel({
   availableSpots,
   minSpots = 1,
   schedule,
+  guestHref,
 }: BookingPanelProps): BookingPanelViewModel {
   const minGuests = Math.max(1, minSpots ?? 1);
   const router = useRouter();
@@ -170,13 +174,13 @@ export function useBookingPanelViewModel({
 
   // The server counts guests (tickets per booking count once); trust it.
   const quotedGuests = quote?.guests ?? guests;
+  // A guest isn't booking yet, so a missing or failed quote doesn't block them.
   const isReady =
     !!sessions.request &&
     !!selection &&
     quotedGuests >= minGuests &&
     quotedGuests <= maxGuests &&
-    !!quote &&
-    !quoteFailed;
+    (!!guestHref || (!!quote && !quoteFailed));
   const total = quote ? formatPrice(Number(quote.total), currency) : null;
   const savedAmount = (quote?.savings ?? []).reduce((sum, saving) => sum + Number(saving.amount), 0);
   const bookLabel = () => {
@@ -188,6 +192,10 @@ export function useBookingPanelViewModel({
 
   const onBook = () => {
     if (!guideId || !selection || !isReady) return;
+    if (guestHref) {
+      router.push(guestHref);
+      return;
+    }
     // One key per booking attempt: re-clicking reuses it, so the server
     // returns the booking it already created instead of a second one.
     bookingAttemptKey.current ??= crypto.randomUUID();
@@ -243,7 +251,7 @@ export function useBookingPanelViewModel({
           savings: savedAmount > 0 ? `You save ${formatPrice(savedAmount, currency)}` : null,
         }
       : null,
-    quoteError: quoteFailed
+    quoteError: quoteFailed && !guestHref
       ? apiErrorMessage(quoteErrorCause, "We couldn't price this selection. Please adjust it and try again.")
       : null,
     seatsWarning:
@@ -253,7 +261,7 @@ export function useBookingPanelViewModel({
     total,
     booking: {
       available: !!guideId,
-      disabled: !isReady || quoting || createBooking.isPending,
+      disabled: !isReady || (quoting && !guestHref) || createBooking.isPending,
       pending: createBooking.isPending,
       label: bookLabel(),
       onBook,

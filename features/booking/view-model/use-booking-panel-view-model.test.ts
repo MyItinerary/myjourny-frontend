@@ -288,6 +288,23 @@ describe("useBookingPanelViewModel", () => {
     expect(api.sessionLoads()).toBe(loadsBefore);
   });
 
+  it("lets a guest book without a quote and sends them to log in instead of creating a booking", async () => {
+    stubApi({ quoteBody: { detail: "Not authenticated" } as never, quoteStatus: 401 });
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
+    const { result } = renderHookWithProviders(() =>
+      useBookingPanelViewModel({ ...props, guestHref: "/login?next=%2Fexperiences%2Fexp-1" }),
+    );
+
+    await waitFor(() => expect(result.current.booking.disabled).toBe(false));
+    expect(result.current.quoteError).toBeNull();
+
+    act(() => result.current.booking.onBook());
+
+    expect(push).toHaveBeenCalledWith("/login?next=%2Fexperiences%2Fexp-1");
+    expect(created).not.toHaveBeenCalled();
+  });
+
   it("can't be booked without a guide", async () => {
     stubApi();
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, guideId: null }));

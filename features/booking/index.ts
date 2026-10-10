@@ -4,4 +4,3 @@ export { useBookingPanelViewModel } from "./view-model/use-booking-panel-view-mo
 export { BookingPanelView } from "./view/booking-panel-view";
 export { BookingBarView } from "./view/booking-bar-view";
 export { formatPrice, formatSessionWhen, guestLoginHref } from "./model/format";
-export { GuestBookingCardView } from "./view/guest-booking-card-view";
