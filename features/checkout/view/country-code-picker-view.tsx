@@ -3,31 +3,12 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { Popover } from "@base-ui/react/popover";
 import { Check, ChevronDown, Search } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 import type { Country } from "../model/country.types";
-
-const DESKTOP_QUERY = "(min-width: 1024px)";
-
-const canMatchMedia = () => typeof window.matchMedia === "function";
-
-const subscribeToViewport = (onChange: () => void) => {
-  if (!canMatchMedia()) return () => {};
-  const query = window.matchMedia(DESKTOP_QUERY);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-};
-
-/** Wide screens get a dropdown under the field; phones get a bottom sheet. */
-function useIsDesktop() {
-  return useSyncExternalStore(
-    subscribeToViewport,
-    () => !canMatchMedia() || window.matchMedia(DESKTOP_QUERY).matches,
-    () => true,
-  );
-}
+import { useIsDesktop } from "./use-is-desktop";
 
 const matches = (country: Country, query: string) => {
   const q = query.trim().toLowerCase().replace(/^\+/, "");

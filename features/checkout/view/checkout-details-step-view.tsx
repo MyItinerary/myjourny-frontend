@@ -103,7 +103,7 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
       {step === "details" && (
         <>
           <Button type="submit" size="cta" disabled={!form.canContinue} className="w-full">
-            Continue
+            {form.accountExists ? "Login and continue to book" : "Continue"}
           </Button>
           <Terms verb="continuing" />
           <div className="flex items-center gap-3 px-6">

@@ -28,6 +28,7 @@ const form = (overrides: Partial<CheckoutViewModel["form"]> = {}): CheckoutViewM
   passwordError: null,
   emailTaken: false,
   loginHref: "/login?next=%2Fcheckout",
+  accountExists: false,
   canContinue: false,
   onContinue: vi.fn(),
   canPay: false,
@@ -47,6 +48,15 @@ describe("CheckoutDetailsStepView", () => {
     expect(screen.getByText("Continue with Google")).toBeInTheDocument();
     expect(screen.queryByText("Password")).not.toBeInTheDocument();
     expect(screen.getByText(/By continuing you agree/)).toBeInTheDocument();
+  });
+
+  it("offers to log in when the email already has an account", async () => {
+    const props = form({ accountExists: true, canContinue: true, email: "juliet@example.com", phone: "7016377711" });
+    const { user } = renderWithProviders(<CheckoutDetailsStepView form={props} />);
+
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Login and continue to book" }));
+    expect(props.onContinue).toHaveBeenCalled();
   });
 
   it("passes the typed email and phone up and continues", async () => {

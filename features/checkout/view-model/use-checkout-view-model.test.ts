@@ -29,11 +29,15 @@ vi.mock("@/lib/auth/session-store", () => ({
 const account = vi.hoisted(() => ({
   register: { mutateAsync: vi.fn(), reset: vi.fn(), error: null as unknown },
   google: { mutate: vi.fn() },
+  login: { mutateAsync: vi.fn() },
+  lookup: { exists: false, checking: false },
 }));
 vi.mock("../model/guest-account", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../model/guest-account")>()),
   useGuestRegister: () => account.register,
   useGuestGoogleSignup: () => account.google,
+  useGuestLogin: () => account.login,
+  useEmailHasAccount: () => account.lookup,
 }));
 
 const draft: CheckoutDraft = {
@@ -74,6 +78,8 @@ beforeEach(() => {
   account.register.reset.mockReset();
   account.register.error = null;
   account.google.mutate.mockReset();
+  account.login.mutateAsync.mockReset();
+  account.lookup = { exists: false, checking: false };
   saveCheckoutDraft(draft);
   // The quote needs an account; most tests don't have one yet.
   server.use(http.post(apiUrl("/bookings/quote"), () => HttpResponse.json({}, { status: 401 })));
@@ -128,6 +134,144 @@ describe("useCheckoutViewModel", () => {
     expect(result.current.form.step).toBe("password");
     expect(result.current.form.emailLocked).toBe(true);
     expect(result.current.form.phoneLocked).toBe(true);
+  });
+
+  it("waits for the account lookup before letting them continue", () => {
+    account.lookup = { exists: false, checking: true };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+
+    expect(result.current.form.canContinue).toBe(false);
+  });
+
+  it("opens the log-in sheet instead of the password step when the email has an account", () => {
+    account.lookup = { exists: true, checking: false };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+    expect(result.current.form.accountExists).toBe(true);
+    expect(result.current.login.open).toBe(false);
+
+    act(() => result.current.form.onContinue());
+
+    expect(result.current.form.step).toBe("details");
+    expect(result.current.login.open).toBe(true);
+    expect(result.current.login.email).toBe("juliet@example.com");
+    expect(result.current.login.forgotHref).toBe("/login/forgot-password");
+  });
+
+  it("goes back to the first step, offering to log in, when sign-up says the email is taken", async () => {
+    account.register.mutateAsync.mockRejectedValue({ response: { data: { detail: "Email already registered" } } });
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+    act(() => result.current.form.onContinue());
+    act(() => result.current.form.onPasswordChange("longenough1"));
+    act(() => result.current.form.onConfirmPasswordChange("longenough1"));
+
+    act(() => {
+      void result.current.form.onConfirm();
+    });
+
+    await waitFor(() => expect(result.current.form.step).toBe("details"));
+    expect(result.current.form.accountExists).toBe(true);
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  function openLogin() {
+    account.lookup = { exists: true, checking: false };
+    const hook = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(hook.result);
+    act(() => hook.result.current.form.onContinue());
+    return hook.result;
+  }
+
+  it("logs in, then books and goes to the payment page without another click", async () => {
+    account.login.mutateAsync.mockResolvedValue({ access_token: "a", refresh_token: "r" });
+    server.use(
+      http.post(apiUrl("/bookings/"), () =>
+        HttpResponse.json({ id: "b-1", status: "pending", payment_status: "unpaid", url: "https://pay.test/3" }),
+      ),
+    );
+    const result = openLogin();
+    expect(result.current.login.canSubmit).toBe(false);
+    act(() => result.current.login.onPasswordChange("secret123"));
+    expect(result.current.login.canSubmit).toBe(true);
+
+    await withLocation(async () => {
+      act(() => {
+        void result.current.login.onSubmit();
+      });
+      await waitFor(() => expect(window.location.href).toBe("https://pay.test/3"));
+    });
+
+    expect(account.login.mutateAsync).toHaveBeenCalledWith({ email: "juliet@example.com", password: "secret123" });
+    expect(account.register.mutateAsync).not.toHaveBeenCalled();
+    expect(result.current.login.open).toBe(false);
+  });
+
+  it("stays on the log-in sheet when the details are wrong", async () => {
+    account.login.mutateAsync.mockRejectedValue(new Error("Incorrect email or password."));
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
+    const result = openLogin();
+    act(() => result.current.login.onPasswordChange("wrong"));
+
+    act(() => {
+      void result.current.login.onSubmit();
+    });
+
+    await waitFor(() => expect(result.current.login.pending).toBe(false));
+    expect(result.current.login.open).toBe(true);
+    expect(created).not.toHaveBeenCalled();
+  });
+
+  it("sends a two-factor account to the full log-in page", async () => {
+    account.login.mutateAsync.mockResolvedValue({ "2fa_required": true });
+    const result = openLogin();
+    act(() => result.current.login.onPasswordChange("secret123"));
+
+    act(() => {
+      void result.current.login.onSubmit();
+    });
+
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/login?next=%2Fcheckout"));
+  });
+
+  it("logs in with Google from the sheet and books", async () => {
+    server.use(
+      http.post(apiUrl("/bookings/"), () =>
+        HttpResponse.json({ id: "b-1", status: "confirmed", payment_status: "paid", url: null }),
+      ),
+    );
+    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ access_token: "a" }));
+    const result = openLogin();
+
+    act(() => result.current.login.onGoogleCredential("cred"));
+
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-1/success"));
+  });
+
+  it("handles Google problems from the sheet", () => {
+    const result = openLogin();
+    account.google.mutate.mockImplementation((_payload, options) => options.onError());
+    act(() => result.current.login.onGoogleCredential("cred"));
+    expect(result.current.login.googleLoading).toBe(false);
+
+    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ "2fa_required": true }));
+    act(() => result.current.login.onGoogleCredential("cred"));
+    expect(nav.push).toHaveBeenCalledWith("/login?next=%2Fcheckout");
+  });
+
+  it("shows why booking failed after a log-in", async () => {
+    account.login.mutateAsync.mockResolvedValue({ access_token: "a" });
+    server.use(http.post(apiUrl("/bookings/"), () => HttpResponse.json({ detail: "This date is sold out" }, { status: 409 })));
+    const result = openLogin();
+    act(() => result.current.login.onPasswordChange("secret123"));
+
+    act(() => {
+      void result.current.login.onSubmit();
+    });
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("This date is sold out"));
   });
 
   it("won't continue on an invalid phone", () => {
