@@ -28,8 +28,25 @@ export type BookingPanelProps = {
   /** The experience's schedule, for a label like "Every Saturday · 3 days". */
   schedule?: ScheduleSummary;
   /** Set for guests: they pick tickets and a date like anyone else, and
-   * "Book now" sends them here instead of creating a booking. */
-  guestHref?: string;
+   * "Book now" hands what they picked to this callback (to collect their
+   * details) instead of creating a booking. */
+  onGuestBook?: (details: GuestBookingDetails) => void;
+};
+
+/** What a guest picked, for the checkout that follows "Book now". */
+export type GuestBookingDetails = {
+  /** The same request POST /bookings/ takes, without the key. */
+  selection: PricingSelection;
+  guideId: string;
+  /** "Tuesday, September 12 at 7:30 AM", or the chosen day when unscheduled. */
+  when: string;
+  guests: number;
+  /** "1 Adult", or "3 guests" across several ticket types. */
+  ticketsLabel: string;
+  /** The server's total when the quote loaded; otherwise a price-list estimate. */
+  total: string;
+  currency: string;
+  durationLabel: string;
 };
 
 export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> & {
@@ -118,7 +135,7 @@ export function useBookingPanelViewModel({
   availableSpots,
   minSpots = 1,
   schedule,
-  guestHref,
+  onGuestBook,
 }: BookingPanelProps): BookingPanelViewModel {
   const minGuests = Math.max(1, minSpots ?? 1);
   const router = useRouter();
@@ -180,7 +197,7 @@ export function useBookingPanelViewModel({
     !!selection &&
     quotedGuests >= minGuests &&
     quotedGuests <= maxGuests &&
-    (!!guestHref || (!!quote && !quoteFailed));
+    (!!onGuestBook || (!!quote && !quoteFailed));
   const total = quote ? formatPrice(Number(quote.total), currency) : null;
   const savedAmount = (quote?.savings ?? []).reduce((sum, saving) => sum + Number(saving.amount), 0);
   const bookLabel = () => {
@@ -190,10 +207,46 @@ export function useBookingPanelViewModel({
     return total ? `Book now - ${total}` : "Book now";
   };
 
+  const guestWhen = () => {
+    const session = sessions.session;
+    if (quote?.session_starts_at) {
+      return formatSessionWhen(quote.session_starts_at, quote.session_ends_at, quote.timezone ?? undefined);
+    }
+    if (session) return formatSessionWhen(session.starts_at, session.ends_at, sessionsQuery.data?.timezone);
+    return sessions.dateLabel;
+  };
+  const ticketsLabel = () => {
+    if (picked.items.length !== 1) return `${quotedGuests} guests`;
+    const item = picked.items[0];
+    const label = (pricing?.prices ?? prices).find((price) => price.id === item.experience_price_id)?.label;
+    return `${item.quantity} ${label ?? "ticket"}`;
+  };
+  // Until a guest can be quoted, the list prices give a total to show.
+  const estimateTotal = () => {
+    const list = pricing?.prices ?? [];
+    const days = picked.days ?? 1;
+    return picked.items.reduce((sum, item) => {
+      const price = list.find((p) => p.id === item.experience_price_id) ?? prices.find((p) => p.id === item.experience_price_id);
+      if (!price) return sum;
+      const unit = "pricing_unit" in price ? price.pricing_unit : "per_person";
+      const quantity = unit === "per_booking" ? 1 : unit === "per_day" ? item.quantity * days : item.quantity;
+      return sum + Number(price.amount) * quantity;
+    }, 0);
+  };
+
   const onBook = () => {
     if (!guideId || !selection || !isReady) return;
-    if (guestHref) {
-      router.push(guestHref);
+    if (onGuestBook) {
+      onGuestBook({
+        selection,
+        guideId,
+        when: guestWhen(),
+        guests: quotedGuests,
+        ticketsLabel: ticketsLabel(),
+        total: total ?? formatPrice(estimateTotal(), currency),
+        currency,
+        durationLabel,
+      });
       return;
     }
     // One key per booking attempt: re-clicking reuses it, so the server
@@ -251,7 +304,7 @@ export function useBookingPanelViewModel({
           savings: savedAmount > 0 ? `You save ${formatPrice(savedAmount, currency)}` : null,
         }
       : null,
-    quoteError: quoteFailed && !guestHref
+    quoteError: quoteFailed && !onGuestBook
       ? apiErrorMessage(quoteErrorCause, "We couldn't price this selection. Please adjust it and try again.")
       : null,
     seatsWarning:
@@ -261,7 +314,7 @@ export function useBookingPanelViewModel({
     total,
     booking: {
       available: !!guideId,
-      disabled: !isReady || (quoting && !guestHref) || createBooking.isPending,
+      disabled: !isReady || (quoting && !onGuestBook) || createBooking.isPending,
       pending: createBooking.isPending,
       label: bookLabel(),
       onBook,
