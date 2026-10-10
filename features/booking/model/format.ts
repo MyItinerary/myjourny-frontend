@@ -32,7 +32,8 @@ export function describeRule(rule: PriceRule, currency: string, { guests, now }:
   if (rule.kind === "group" && rule.min_guests && rule.percent_off) {
     const percent = Number(rule.percent_off);
     if (guests !== undefined && guests >= rule.min_guests) {
-      return `${percent}% group discount applied (${rule.min_guests}+ guests)`;
+      // "Qualifies", not "applied": a bigger discount may be used instead.
+      return `Your booking qualifies for ${percent}% off (${rule.min_guests}+ guests)`;
     }
     const rest = guests !== undefined ? rule.min_guests - guests : 0;
     return (
@@ -54,8 +55,10 @@ export function describeRule(rule: PriceRule, currency: string, { guests, now }:
   return null;
 }
 
+export const BEST_DISCOUNT_NOTE = "Discounts don't combine: you get the biggest one you qualify for.";
+
 /** The notes shown under the price: one per rule that still applies, plus a
- * line saying early-bird and group discounts add up when both are on offer. */
+ * line saying only the biggest discount is used when several are on offer. */
 export function describeRules(rules: PriceRule[], currency: string, context: RuleContext = {}): string[] {
   const shown = rules
     .map((rule) => ({ rule, note: describeRule(rule, currency, context) }))
@@ -63,7 +66,7 @@ export function describeRules(rules: PriceRule[], currency: string, context: Rul
   const notes = shown.map((r) => r.note);
   const kinds = new Set(shown.map((r) => r.rule.kind));
   if (kinds.has("group") && kinds.has("early_bird")) {
-    notes.push("Early-bird and group discounts combine.");
+    notes.push(BEST_DISCOUNT_NOTE);
   }
   return notes;
 }
