@@ -2,3 +2,4 @@
 export type { TasteQuizCtaViewModel } from "./view-model/use-taste-quiz-cta-view-model";
 export { useTasteQuizCtaViewModel } from "./view-model/use-taste-quiz-cta-view-model";
 export { TasteQuizCtaView } from "./view/taste-quiz-cta-view";
+export { TasteQuizSectionView } from "./view/taste-quiz-section-view";
