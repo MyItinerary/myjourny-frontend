@@ -28,7 +28,7 @@ export function TasteQuizSectionView({
             <h2 className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#333134]">Right now you&rsquo;re seeing what everyone else sees.</h2>
             <p className="font-sans text-lg leading-normal text-[#6F6B72] md:text-xl md:leading-[30px]">Five questions, about 40 seconds, and this page starts looking like yours.</p>
           </div>
-          <Button size="cta" className="shrink-0" render={<Link href={href} />}>
+          <Button size="cta" className="w-[134px] shrink-0 self-start" render={<Link href={href} />}>
             Take it
           </Button>
         </div>
