@@ -18,6 +18,7 @@ The PR is checked out at the repo root. The base branch is at `origin/<base>` (g
 - **Architecture** (AGENTS.md): MVVM layer leaks (data access in views or `app/` routes, JSX in model/view-model), deep imports across features, new files in legacy `lib/queries/` or `components/<feature>/`.
 - **Tests**: new or changed `features/**` files without a sibling test, tests that only assert on mocks, missing e2e for auth/booking/checkout/payment changes, bug fixes without a regression test.
 - **Description vs. code**: compare the PR's "Product behaviour" and "How to verify" sections with the diff. If a user-visible change is missing from the description, or the description claims something the code doesn't do, raise a `should-fix` anchored to the most relevant changed line. Skip this when the PR says "No user-facing change" and the diff agrees.
+- **Checklist vs. code**: if a ticked checklist box is contradicted by the diff (for example "`npm run check` passes locally" on a PR where a view imports a model helper, or "E2E added/updated" on a checkout change with no spec), raise a `should-fix` that names the box and asks the author to fix the code or untick it.
 - **Quality**: duplicated logic that already exists in the codebase (name the existing helper), dead code, `console.log`/debug code, misleading names.
 
 Do not flag what CI already enforces: formatting, lint rules, type errors, the architecture script, or PR title/description format.
