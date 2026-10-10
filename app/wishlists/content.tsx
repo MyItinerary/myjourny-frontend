@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { HomeNav } from "@/components/home/home-nav";
@@ -10,47 +9,13 @@ import { useWishlists, useCreateWishlist } from "@/lib/queries/wishlists";
 import { useSession } from "@/lib/auth/session-store";
 import { formatUpdated } from "@/lib/wishlist-format";
 import { WishlistCover } from "@/components/wishlists/wishlist-cover";
+import { EmptyStateView } from "@/features/empty-state";
 import { NameWishlistDialog } from "@/components/wishlists/wishlist-dialogs";
 
 // The grid holds 8 tiles including the "New wishlist" tile; past that,
 // the rest sit behind "Show more".
 const COLLAPSED_COLLECTIONS = 7;
-
-function EmptyState({
-  title,
-  body,
-  cta,
-  href,
-  compact = false,
-}: {
-  title: string;
-  body: string;
-  cta: string;
-  href: string;
-  compact?: boolean;
-}) {
-  return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-6 px-6 py-10 text-center sm:gap-[45px] sm:px-0 sm:py-20">
-      <div className="relative size-[90px] overflow-hidden rounded-[4px] border-[0.5px] border-[#E0DFDD] sm:size-[180px] sm:rounded-[8px] sm:border">
-        <Image src="/images/wishlists/empty-wishlist.png" alt="" fill sizes="180px" className="object-cover" />
-      </div>
-      <div className="flex w-full max-w-[696px] flex-col gap-5">
-        <h2
-          className={`font-heading text-[32px] font-extrabold leading-[1.2] text-[#130404] ${compact ? "sm:text-[44px]" : "sm:text-[52px]"}`}
-        >
-          {title}
-        </h2>
-        <p className="text-base leading-6 text-[#6F6B72] sm:text-2xl sm:leading-normal">{body}</p>
-      </div>
-      <Link
-        href={href}
-        className="inline-flex items-center justify-center rounded-full bg-[#F5032D] px-4 py-3 text-base font-medium text-white transition-colors hover:bg-[#d90227]"
-      >
-        {cta}
-      </Link>
-    </div>
-  );
-}
+const WISHLIST_EMPTY_IMAGE = "/images/wishlists/empty-wishlist.png";
 
 export function WishlistsContent() {
   const { user, hydrated } = useSession();
@@ -69,12 +34,12 @@ export function WishlistsContent() {
 
       <main className="flex-1">
         {hydrated && !user ? (
-          <EmptyState
+          <EmptyStateView
+            imageSrc={WISHLIST_EMPTY_IMAGE}
             title="Save what catches you"
             body="Tap the heart on anything you like. We’ll keep it here, and use it to shape what we show you next."
-            cta="Get Started"
+            ctaLabel="Get Started"
             href="/login"
-            compact
           />
         ) : !hydrated || isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
@@ -82,10 +47,11 @@ export function WishlistsContent() {
             <p className="mt-3 text-sm">Loading your collections...</p>
           </div>
         ) : collections.length === 0 ? (
-          <EmptyState
+          <EmptyStateView
+            imageSrc={WISHLIST_EMPTY_IMAGE}
             title="It’s empty in here"
             body="When you start saving experiences to your wishlist they will show up here"
-            cta="Browse experiences"
+            ctaLabel="Browse experiences"
             href="/"
           />
         ) : (
