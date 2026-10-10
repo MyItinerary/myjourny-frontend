@@ -133,3 +133,49 @@ test("after paying, the booking page says you're going", async ({ page }) => {
   await expect(page.locator("a", { hasText: "View booking" })).toHaveAttribute("href", "/bookings/b-1");
   await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
 });
+
+test("a signed-in user skips checkout: Book now goes straight to the payment page", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "myjourny:auth",
+      JSON.stringify({
+        accessToken: "e2e-access",
+        refreshToken: "e2e-refresh",
+        user: { id: "user-1", email: "juliet@example.com", fullName: null, avatarUrl: null },
+      }),
+    );
+  });
+  await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
+  let created = 0;
+  await mockApi(page, {
+    "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
+    "GET /experiences/exp-1/pricing": (r) =>
+      r.fulfill({
+        json: {
+          currency: "NGN",
+          prices: [{ id: "adult", label: "Adult", amount: "16000", pricing_unit: "per_person" }],
+          addons: [],
+          rules: [],
+        },
+      }),
+    "GET /experiences/exp-1/sessions": (r) =>
+      r.fulfill({
+        json: {
+          timezone: "Africa/Lagos",
+          scheduled: true,
+          sessions: [{ starts_at: `${SESSION_DAY}T08:00:00Z`, local_date: SESSION_DAY, local_time: "09:00:00", seats_left: 8, sold_out: false }],
+        },
+      }),
+    "POST /bookings/quote": (r) => r.fulfill({ json: QUOTE }),
+    "POST /bookings": async (r) => {
+      created += 1;
+      await r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
+    },
+  });
+
+  await page.goto("/experiences/exp-1");
+  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
+
+  await expect(page).toHaveURL("https://paystack.test/pay");
+  expect(created).toBe(1);
+});
