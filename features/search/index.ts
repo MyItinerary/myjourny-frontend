@@ -3,6 +3,7 @@ export type {
   ActivitySuggestion,
   DestinationSuggestion,
   ExperienceSuggestion,
+  ExperienceSuggestionRow,
   GuestCounts,
   SearchBarVariant,
   SearchExperiencesParams,

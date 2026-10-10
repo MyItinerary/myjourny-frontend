@@ -53,7 +53,7 @@ export function formatExperienceSubtitle(
     const currency = exp.currency ?? "NGN";
     return `${cityPrefix}from ${currency} ${exp.price_from.toLocaleString()}`;
   }
-  return exp.headline ?? "Experience";
+  return exp.headline ? `${cityPrefix}${exp.headline}` : "Experience";
 }
 
 export const searchExperiencesQueryKey = (search?: string, limit?: number) =>

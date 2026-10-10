@@ -5,23 +5,23 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { FALLBACK_IMAGE, formatExperienceSubtitle } from "../model/search";
 import type {
   ActivitySuggestion,
   DestinationSuggestion,
-  ExperienceSuggestion,
+  ExperienceSuggestionRow,
 } from "../model/search.types";
 
 export function ExperienceSuggestionThumbnail({
   src,
+  fallback,
   alt,
   className,
 }: {
   src?: string | null;
+  fallback: string;
   alt: string;
   className?: string;
 }) {
-  const fallback = FALLBACK_IMAGE;
   const [currentSrc, setCurrentSrc] = useState(src || fallback);
 
   return (
@@ -39,8 +39,8 @@ export function ExperienceSuggestionThumbnail({
 }
 
 export interface ExperienceSuggestionItemProps {
-  experience: ExperienceSuggestion;
-  onSelect: (exp: ExperienceSuggestion) => void;
+  experience: ExperienceSuggestionRow;
+  onSelect: (exp: ExperienceSuggestionRow) => void;
   className?: string;
 }
 
@@ -49,8 +49,6 @@ export function ExperienceSuggestionItem({
   onSelect,
   className,
 }: ExperienceSuggestionItemProps) {
-  const subtitle = formatExperienceSubtitle(experience);
-
   return (
     <button
       type="button"
@@ -62,6 +60,7 @@ export function ExperienceSuggestionItem({
     >
       <ExperienceSuggestionThumbnail
         src={experience.cover_image_url}
+        fallback={experience.fallbackImage}
         alt={experience.title}
         className="size-[42px]"
       />
@@ -70,7 +69,7 @@ export function ExperienceSuggestionItem({
           {experience.title}
         </span>
         <span className="text-xs leading-4 text-[#6F6B72] truncate">
-          {subtitle}
+          {experience.subtitle}
         </span>
       </div>
     </button>
@@ -80,12 +79,12 @@ export function ExperienceSuggestionItem({
 export interface SearchSuggestionListProps {
   destinations: DestinationSuggestion[];
   activities: ActivitySuggestion[];
-  experiences: ExperienceSuggestion[];
+  experiences: ExperienceSuggestionRow[];
   isSearchingExperiences?: boolean;
   query?: string;
   onSelectDestination: (dest: DestinationSuggestion) => void;
   onSelectActivity: (act: ActivitySuggestion) => void;
-  onSelectExperience: (exp: ExperienceSuggestion) => void;
+  onSelectExperience: (exp: ExperienceSuggestionRow) => void;
   className?: string;
 }
 

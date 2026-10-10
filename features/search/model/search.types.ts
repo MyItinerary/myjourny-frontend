@@ -9,6 +9,13 @@ export interface ExperienceSuggestion {
   cover_image_url?: string | null;
 }
 
+/** An experience suggestion with the text and image the list shows, worked out
+ * by the view-model so the view only renders. */
+export interface ExperienceSuggestionRow extends ExperienceSuggestion {
+  subtitle: string;
+  fallbackImage: string;
+}
+
 export interface SearchExperiencesParams {
   search?: string;
   limit?: number;

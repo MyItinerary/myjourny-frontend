@@ -19,6 +19,8 @@ describe("SearchSuggestionList", () => {
         city: "Lagos",
         price_from: 15000,
         currency: "NGN",
+        subtitle: "Lagos · from NGN 15,000",
+        fallbackImage: "/images/home/experiences/kayaking.jpg",
       },
     ],
     isSearchingExperiences: false,
@@ -90,7 +92,7 @@ describe("SearchSuggestionList", () => {
 });
 
 describe("ExperienceSuggestionItem", () => {
-  it("renders experience with formatted subtitle and handles selection", async () => {
+  it("renders experience with the subtitle it is given and handles selection", async () => {
     const onSelect = vi.fn();
     const exp = {
       id: "exp-42",
@@ -98,6 +100,8 @@ describe("ExperienceSuggestionItem", () => {
       city: "Lagos",
       price_from: 8000,
       currency: "NGN",
+      subtitle: "Lagos · from NGN 8,000",
+      fallbackImage: "/images/home/experiences/kayaking.jpg",
     };
 
     const { user } = renderWithProviders(

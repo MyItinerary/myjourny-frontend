@@ -6,12 +6,15 @@ import { categoriesBySlug } from "@/lib/mock-data/home";
 import {
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
+  FALLBACK_IMAGE,
+  formatExperienceSubtitle,
   useSearchExperiences,
 } from "../model/search";
 import type {
   ActivitySuggestion,
   DestinationSuggestion,
   ExperienceSuggestion,
+  ExperienceSuggestionRow,
   GuestCounts,
   SearchBarVariant,
   SearchTab,
@@ -29,6 +32,12 @@ export const GUEST_TYPES: { key: keyof GuestCounts; label: string; description: 
   { key: "children", label: "Children", description: "Ages 2 - 12" },
   { key: "infants", label: "Infants", description: "Under 2" },
 ];
+
+function formatGuestsText(counts: GuestCounts) {
+  const total = counts.adults + counts.children + counts.infants;
+  if (total <= 0) return "";
+  return `${total} guest${total > 1 ? "s" : ""}${counts.infants > 0 ? `, ${counts.infants} infant${counts.infants > 1 ? "s" : ""}` : ""}`;
+}
 
 export function useSearchBarViewModel({
   variant = "hero",
@@ -49,7 +58,9 @@ export function useSearchBarViewModel({
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
 
-  const [whoText, setWhoText] = useState("");
+  // What they typed into "Who"; null once the steppers take over and the text
+  // comes from the counts.
+  const [typedWho, setTypedWho] = useState<string | null>(null);
   const [guests, setGuests] = useState<GuestCounts>({ adults: 0, children: 0, infants: 0 });
 
   const [prevInitialTab, setPrevInitialTab] = useState(initialActiveTab);
@@ -79,7 +90,15 @@ export function useSearchBarViewModel({
   const isTypingWaiting =
     selectedWhere.trim().length >= 2 && selectedWhere.trim() !== trimmedDebouncedWhere;
   const isSearchingExperiences = isTypingWaiting || experiencesQuery.isFetching;
-  const suggestedExperiences = experiencesQuery.data ?? [];
+  const suggestedExperiences = useMemo<ExperienceSuggestionRow[]>(
+    () =>
+      (experiencesQuery.data ?? []).map((exp) => ({
+        ...exp,
+        subtitle: formatExperienceSubtitle(exp),
+        fallbackImage: FALLBACK_IMAGE,
+      })),
+    [experiencesQuery.data],
+  );
 
   const totalGuests = guests.adults + guests.children + guests.infants;
   const allFieldsFilled = !!selectedWhere.trim() && !!selectedWhen.trim() && totalGuests > 0;
@@ -106,42 +125,22 @@ export function useSearchBarViewModel({
     );
   }, [trimmedQuery]);
 
-  const formatGuestsText = useCallback((counts: GuestCounts) => {
-    const total = counts.adults + counts.children + counts.infants;
-    if (total <= 0) return "";
-    return `${total} guest${total > 1 ? "s" : ""}${counts.infants > 0 ? `, ${counts.infants} infant${counts.infants > 1 ? "s" : ""}` : ""}`;
+  const whoText = typedWho ?? formatGuestsText(guests);
+
+  const updateGuests = useCallback((newGuests: GuestCounts) => {
+    setGuests(newGuests);
+    setTypedWho(null);
   }, []);
 
-  const updateGuests = useCallback(
-    (newGuests: GuestCounts) => {
-      setGuests(newGuests);
-      setWhoText(formatGuestsText(newGuests));
-    },
-    [formatGuestsText],
-  );
+  const incrementGuest = useCallback((key: keyof GuestCounts) => {
+    setGuests((prev) => ({ ...prev, [key]: prev[key] + 1 }));
+    setTypedWho(null);
+  }, []);
 
-  const incrementGuest = useCallback(
-    (key: keyof GuestCounts) => {
-      setGuests((prev) => {
-        const next = { ...prev, [key]: prev[key] + 1 };
-        setWhoText(formatGuestsText(next));
-        return next;
-      });
-    },
-    [formatGuestsText],
-  );
-
-  const decrementGuest = useCallback(
-    (key: keyof GuestCounts) => {
-      setGuests((prev) => {
-        if (prev[key] <= 0) return prev;
-        const next = { ...prev, [key]: prev[key] - 1 };
-        setWhoText(formatGuestsText(next));
-        return next;
-      });
-    },
-    [formatGuestsText],
-  );
+  const decrementGuest = useCallback((key: keyof GuestCounts) => {
+    setGuests((prev) => (prev[key] <= 0 ? prev : { ...prev, [key]: prev[key] - 1 }));
+    setTypedWho(null);
+  }, []);
 
   const setWhereInput = useCallback((value: string) => {
     setSelectedWhere(value);
@@ -151,7 +150,7 @@ export function useSearchBarViewModel({
 
   const setWhoInput = useCallback(
     (value: string) => {
-      setWhoText(value);
+      setTypedWho(value);
       const num = parseInt(value.replace(/\D/g, ""), 10);
       if (!isNaN(num)) {
         setGuests({ adults: num, children: 0, infants: 0 });

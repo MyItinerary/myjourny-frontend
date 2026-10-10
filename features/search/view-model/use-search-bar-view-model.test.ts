@@ -1,6 +1,9 @@
-import { act } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
+import { apiUrl } from "@/test/msw/handlers";
+import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
 import { useSearchBarViewModel } from "./use-search-bar-view-model";
@@ -116,6 +119,9 @@ describe("useSearchBarViewModel", () => {
         city: "Lagos, Nigeria",
         description: "Beaches",
       });
+    });
+    // Picking and searching are two separate clicks.
+    act(() => {
       result.current.onSearch();
     });
 
@@ -132,6 +138,9 @@ describe("useSearchBarViewModel", () => {
         label: "Street food & markets",
         subtitle: "Local bites",
       });
+    });
+    // Picking and searching are two separate clicks.
+    act(() => {
       result.current.onSearch();
     });
 
@@ -159,5 +168,43 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.debouncedWhere).toBe("Lekki");
 
     vi.useRealTimers();
+  });
+
+  it("gives each suggested experience the subtitle and fallback image the list shows", async () => {
+    server.use(
+      http.get(apiUrl("/experiences/filter"), () =>
+        HttpResponse.json({
+          items: [{ id: "exp-1", title: "Nike Art Gallery Deep Dive", city: "Lagos", price_from: 15000, currency: "NGN" }],
+          total: 1,
+        }),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel({ debounceMs: 0 }));
+
+    act(() => {
+      result.current.setWhereInput("Nike");
+    });
+
+    await waitFor(() => expect(result.current.suggestedExperiences).toHaveLength(1));
+    expect(result.current.suggestedExperiences[0]).toMatchObject({
+      id: "exp-1",
+      subtitle: "Lagos · from NGN 15,000",
+      fallbackImage: "/images/home/experiences/kayaking.jpg",
+    });
+  });
+
+  it("shows typed guest text until a stepper is used, then the counted text", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.setWhoInput("3 people");
+    });
+    expect(result.current.whoText).toBe("3 people");
+    expect(result.current.guests.adults).toBe(3);
+
+    act(() => {
+      result.current.incrementGuest("infants");
+    });
+    expect(result.current.whoText).toBe("4 guests, 1 infant");
   });
 });
