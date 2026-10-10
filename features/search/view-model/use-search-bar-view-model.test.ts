@@ -1,0 +1,210 @@
+import { act, waitFor } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
+import { describe, expect, it, vi } from "vitest";
+
+import { apiUrl } from "@/test/msw/handlers";
+import { server } from "@/test/msw/server";
+import { renderHookWithProviders } from "@/test/utils/render";
+
+import { useSearchBarViewModel } from "./use-search-bar-view-model";
+
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+describe("useSearchBarViewModel", () => {
+  it("initializes with default values", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    expect(result.current.activeTab).toBeNull();
+    expect(result.current.selectedWhere).toBe("");
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.totalGuests).toBe(0);
+    expect(result.current.allFieldsFilled).toBe(false);
+  });
+
+  it("advances from Where to When on destination selection", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.onSelectDestination({
+        id: "lagos",
+        city: "Lagos, Nigeria",
+        description: "Beaches & nightlife",
+      });
+    });
+
+    expect(result.current.selectedWhere).toBe("Lagos, Nigeria");
+    expect(result.current.activeTab).toBe("when");
+  });
+
+  it("advances from Where to When on experience selection", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.onSelectExperience({
+        id: "exp-123",
+        title: "Nike Art Gallery Deep Dive",
+        city: "Lagos",
+      });
+    });
+
+    expect(result.current.selectedWhere).toBe("Nike Art Gallery Deep Dive");
+    expect(result.current.activeTab).toBe("when");
+  });
+
+  it("advances from When to Who on date selection", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    const pickedDate = new Date(2030, 5, 15);
+    act(() => {
+      result.current.onSelectDate(pickedDate, "June 15");
+    });
+
+    expect(result.current.selectedWhen).toBe("June 15");
+    expect(result.current.activeTab).toBe("who");
+  });
+
+  it("updates guest counts correctly", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.incrementGuest("adults");
+      result.current.incrementGuest("children");
+    });
+
+    expect(result.current.guests.adults).toBe(1);
+    expect(result.current.guests.children).toBe(1);
+    expect(result.current.totalGuests).toBe(2);
+    expect(result.current.whoText).toContain("2 guests");
+
+    act(() => {
+      result.current.decrementGuest("adults");
+    });
+
+    expect(result.current.guests.adults).toBe(0);
+    expect(result.current.totalGuests).toBe(1);
+  });
+
+  it("executes search and navigates when all criteria are met", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.onSelectExperience({
+        id: "exp-123",
+        title: "Nike Art Gallery Deep Dive",
+      });
+      result.current.onSelectDate(new Date(2030, 5, 15), "June 15");
+      result.current.incrementGuest("adults");
+    });
+
+    expect(result.current.allFieldsFilled).toBe(true);
+
+    act(() => {
+      result.current.onSearch();
+    });
+
+    expect(mockPush).toHaveBeenCalledWith("/experiences/exp-123");
+  });
+
+  it("navigates to city route on destination selection", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.onSelectDestination({
+        id: "lagos",
+        city: "Lagos, Nigeria",
+        description: "Beaches",
+      });
+    });
+    // Picking and searching are two separate clicks.
+    act(() => {
+      result.current.onSearch();
+    });
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos");
+  });
+
+  it("navigates to category route on activity selection", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.onSelectActivity({
+        id: "street-food-markets",
+        label: "Street food & markets",
+        subtitle: "Local bites",
+      });
+    });
+    // Picking and searching are two separate clicks.
+    act(() => {
+      result.current.onSearch();
+    });
+
+    expect(mockPush).toHaveBeenCalledWith("/categories/street-food-markets");
+  });
+
+  it("debounces where input with timers and fetches suggestions via MSW", async () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHookWithProviders(() =>
+      useSearchBarViewModel({ debounceMs: 400 }),
+    );
+
+    act(() => {
+      result.current.setWhereInput("Lekki");
+    });
+
+    expect(result.current.selectedWhere).toBe("Lekki");
+    expect(result.current.debouncedWhere).toBe("");
+
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+
+    expect(result.current.debouncedWhere).toBe("Lekki");
+
+    vi.useRealTimers();
+  });
+
+  it("gives each suggested experience the subtitle and fallback image the list shows", async () => {
+    server.use(
+      http.get(apiUrl("/experiences/filter"), () =>
+        HttpResponse.json({
+          items: [{ id: "exp-1", title: "Nike Art Gallery Deep Dive", city: "Lagos", price_from: 15000, currency: "NGN" }],
+          total: 1,
+        }),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel({ debounceMs: 0 }));
+
+    act(() => {
+      result.current.setWhereInput("Nike");
+    });
+
+    await waitFor(() => expect(result.current.suggestedExperiences).toHaveLength(1));
+    expect(result.current.suggestedExperiences[0]).toMatchObject({
+      id: "exp-1",
+      subtitle: "Lagos · from NGN 15,000",
+      fallbackImage: "/images/home/experiences/kayaking.jpg",
+    });
+  });
+
+  it("shows typed guest text until a stepper is used, then the counted text", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => {
+      result.current.setWhoInput("3 people");
+    });
+    expect(result.current.whoText).toBe("3 people");
+    expect(result.current.guests.adults).toBe(3);
+
+    act(() => {
+      result.current.incrementGuest("infants");
+    });
+    expect(result.current.whoText).toBe("4 guests, 1 infant");
+  });
+});

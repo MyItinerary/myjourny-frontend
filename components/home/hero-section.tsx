@@ -6,7 +6,11 @@ import { motion, type Variants } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import { HomeNav } from "@/components/home/home-nav";
-import { SearchBar, MobileSearchModal } from "@/components/home/search-bar";
+import {
+  MobileSearchModalView,
+  SearchBarView,
+  useSearchBarViewModel,
+} from "@/features/search";
 
 const heroContainerVariants: Variants = {
   hidden: {},
@@ -20,6 +24,11 @@ const heroItemVariants: Variants = {
 export function HeroSection() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const heroSearchVm = useSearchBarViewModel({ variant: "hero" });
+  const mobileSearchVm = useSearchBarViewModel({
+    onClose: () => setMobileSearchOpen(false),
+  });
 
   useEffect(() => {
     function handleScroll() {
@@ -75,12 +84,12 @@ export function HeroSection() {
               <Image src="/icons/search-lg.svg" alt="" width={16} height={16} className="invert" />
             </span>
           </button>
-          <SearchBar variant="hero" className="mt-8 hidden w-full max-w-[900px] lg:mt-12 lg:flex" />
+          <SearchBarView {...heroSearchVm} className="mt-8 hidden w-full max-w-[900px] lg:mt-12 lg:flex" />
         </motion.div>
       </motion.div>
 
       {/* Mobile search modal */}
-      {mobileSearchOpen && <MobileSearchModal onClose={() => setMobileSearchOpen(false)} />}
+      {mobileSearchOpen && <MobileSearchModalView {...mobileSearchVm} />}
     </section>
   );
 }
