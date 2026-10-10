@@ -25,8 +25,8 @@ describe("tasteQuizAudience", () => {
     expect(tasteQuizAudience({ hydrated: true, signedIn: true, profileCompleted: false })).toBe("no-quiz");
   });
 
-  it("hides for a signed-in user who has taken the quiz", () => {
-    expect(tasteQuizAudience({ hydrated: true, signedIn: true, profileCompleted: true })).toBe("hidden");
+  it("marks a signed-in user who has taken the quiz as taken", () => {
+    expect(tasteQuizAudience({ hydrated: true, signedIn: true, profileCompleted: true })).toBe("taken");
   });
 });
 
@@ -46,6 +46,6 @@ describe("useTasteQuizAudience", () => {
     expect(renderHook(() => useTasteQuizAudience()).result.current).toBe("no-quiz");
 
     profile.value = { data: { completed: true } };
-    expect(renderHook(() => useTasteQuizAudience()).result.current).toBe("hidden");
+    expect(renderHook(() => useTasteQuizAudience()).result.current).toBe("taken");
   });
 });

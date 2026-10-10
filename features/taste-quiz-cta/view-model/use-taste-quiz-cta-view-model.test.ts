@@ -20,6 +20,12 @@ describe("useTasteQuizCtaViewModel", () => {
   });
 
   it("is not visible once the quiz is done", () => {
+    audience.value = "taken";
+    const { result } = renderHook(() => useTasteQuizCtaViewModel());
+    expect(result.current.visible).toBe(false);
+  });
+
+  it("is not visible while the session or profile loads", () => {
     audience.value = "hidden";
     const { result } = renderHook(() => useTasteQuizCtaViewModel());
     expect(result.current.visible).toBe(false);
