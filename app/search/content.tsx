@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search as SearchIcon, Sparkles, MapPin, SlidersHorizontal } from "lucide-react";
 import { HomeNav } from "@/components/home/home-nav";
@@ -12,7 +12,10 @@ import {
   type SemanticSearchResult,
 } from "@/lib/queries/experiences";
 import { Button } from "@/components/ui/button";
+import { TasteQuizCtaView, useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
 
+// The taste-quiz banner sits after the second row of the 3-col grid.
+const TASTE_QUIZ_CTA_AFTER = 6;
 const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
 
 // 3-column grid: 15 = 5 full rows per page.
@@ -25,6 +28,7 @@ export function SearchContent() {
 
   const [searchInput, setSearchInput] = useState(initialQuery);
   // Keyed by query so any new search (this form or the nav) starts at one page.
+  const tasteQuiz = useTasteQuizCtaViewModel();
   const [paging, setPaging] = useState({ query: initialQuery, count: PAGE_SIZE });
   const visibleCount = paging.query === initialQuery ? paging.count : PAGE_SIZE;
 
@@ -121,8 +125,9 @@ export function SearchContent() {
         ) : (
           <>
           <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-10">
-            {results.slice(0, visibleCount).map((exp: SemanticSearchResult) => (
-              <div key={exp.experience_id} className="relative group">
+            {results.slice(0, visibleCount).map((exp: SemanticSearchResult, index) => (
+              <Fragment key={exp.experience_id}>
+              <div className="relative group">
                 <ExperienceCardVertical
                   id={exp.experience_id}
                   imageSrc={exp.imageUrl || FALLBACK_IMAGE}
@@ -144,6 +149,10 @@ export function SearchContent() {
                   </div>
                 )}
               </div>
+              {index === TASTE_QUIZ_CTA_AFTER - 1 && (
+                <TasteQuizCtaView {...tasteQuiz} className="col-span-full" />
+              )}
+              </Fragment>
             ))}
           </div>
           {results.length > visibleCount && (

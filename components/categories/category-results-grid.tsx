@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { TasteQuizCtaView, useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
 import { ExperienceCardVertical } from "@/components/experiences/experience-card-vertical";
 import { ExperienceCardVerticalSkeleton } from "@/components/experiences/experience-card-vertical-skeleton";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 
 const PAGE_SIZE = 16;
+// The taste-quiz banner sits after the second row of the 4-col grid.
+const TASTE_QUIZ_CTA_AFTER = 8;
 
 // Figma: "Frame 2147226756" (2001:11998 desktop, 4-col grid / 2001:12391
 // mobile, single column) + the "Buttons" pagination CTA below it. Shows 16
@@ -28,6 +31,7 @@ export function CategoryResultsGrid({
   loadMore?: { hasMore: boolean; isLoading: boolean; onLoadMore: () => void };
 }) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const tasteQuiz = useTasteQuizCtaViewModel();
   const visible = loadMore ? items : items.slice(0, visibleCount);
   const hasMore = loadMore ? loadMore.hasMore : items.length > visibleCount;
 
@@ -67,7 +71,14 @@ export function CategoryResultsGrid({
           ? Array.from({ length: PAGE_SIZE }).map((_, index) => (
               <ExperienceCardVerticalSkeleton key={index} />
             ))
-          : visible.map((item) => <ExperienceCardVertical key={item.id} {...item} />)}
+          : visible.map((item, index) => (
+              <Fragment key={item.id}>
+                <ExperienceCardVertical {...item} />
+                {index === TASTE_QUIZ_CTA_AFTER - 1 && (
+                  <TasteQuizCtaView {...tasteQuiz} className="col-span-full" />
+                )}
+              </Fragment>
+            ))}
       </div>
 
       {hasMore ? (
