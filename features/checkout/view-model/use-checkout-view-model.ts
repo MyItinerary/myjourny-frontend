@@ -6,7 +6,8 @@ import { formatPrice, useBookingQuote, useCreateBooking } from "@/features/booki
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 
-import { clearCheckoutDraft } from "../model/checkout-draft";
+import { clearCheckoutDraft, saveCheckoutContact } from "../model/checkout-draft";
+import { rememberCheckoutReturn } from "../model/checkout-return";
 import { COUNTRIES, DEFAULT_COUNTRY, isValidPhone, toE164 } from "../model/countries";
 import type { Country } from "../model/country.types";
 import { useCheckoutDraft } from "../model/checkout-draft-store";
@@ -51,6 +52,8 @@ export type CheckoutLogin = {
   onGoogleCredential: (credential: string) => void;
   googleLoading: boolean;
   forgotHref: string;
+  /** Leaving to reset a password: remember where to come back to. */
+  onForgotPassword: () => void;
 };
 
 export type CheckoutViewModel = {
@@ -109,8 +112,9 @@ export function useCheckoutViewModel(): CheckoutViewModel {
 
   const [stage, setStage] = useState<"details" | "password">("details");
   const [emailInput, setEmailInput] = useState("");
-  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
-  const [phone, setPhone] = useState("");
+  // Until they type, what was typed before leaving to reset a password.
+  const [pickedCountry, setCountry] = useState<Country | null>(null);
+  const [typedPhone, setPhone] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -125,6 +129,10 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   const [loginPending, setLoginPending] = useState(false);
   const [loginGoogleLoading, setLoginGoogleLoading] = useState(false);
   const lookup = useEmailHasAccount(emailInput);
+
+  const country =
+    pickedCountry ?? COUNTRIES.find((c) => c.iso === draft?.contact?.countryIso) ?? DEFAULT_COUNTRY;
+  const phone = typedPhone ?? draft?.contact?.phone ?? "";
 
   const signedIn = !!user?.email;
   // Once they have an account the server can price the booking for real.
@@ -312,6 +320,12 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       onGoogleCredential: onLoginGoogle,
       googleLoading: loginGoogleLoading,
       forgotHref: "/login/forgot-password",
+      onForgotPassword: () => {
+        // The reset email link opens elsewhere: keep the booking and the
+        // phone, and note that the end of the flow should come back here.
+        saveCheckoutContact({ phone, countryIso: country.iso });
+        rememberCheckoutReturn();
+      },
     },
   };
 }

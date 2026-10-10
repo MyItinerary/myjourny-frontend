@@ -9,3 +9,4 @@ export { CheckoutLoginView } from "./view/checkout-login-view";
 export { CheckoutDetailsStepView } from "./view/checkout-details-step-view";
 export { CheckoutShellView } from "./view/checkout-shell-view";
 export { OrderSummaryView } from "./view/order-summary-view";
+export { clearCheckoutReturn, useCheckoutReturnHref } from "./model/checkout-return";

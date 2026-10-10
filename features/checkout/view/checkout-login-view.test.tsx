@@ -38,6 +38,7 @@ const login = (overrides: Partial<CheckoutLogin> = {}): CheckoutLogin => ({
   onGoogleCredential: vi.fn(),
   googleLoading: false,
   forgotHref: "/login/forgot-password",
+  onForgotPassword: vi.fn(),
   ...overrides,
 });
 
@@ -54,6 +55,16 @@ describe.each([
     expect(screen.getByLabelText("Email address")).toHaveValue("juliet@example.com");
     expect(screen.getByText("Forgot password?").closest("a")).toHaveAttribute("href", "/login/forgot-password");
     expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+
+  it("notes where to come back to when they head off to reset their password", async () => {
+    viewport(desktop);
+    const props = login();
+    const { user } = renderWithProviders(<CheckoutLoginView login={props} />);
+
+    await user.click(screen.getByText("Forgot password?"));
+
+    expect(props.onForgotPassword).toHaveBeenCalled();
   });
 
   it("sends the password up and logs in on submit", async () => {

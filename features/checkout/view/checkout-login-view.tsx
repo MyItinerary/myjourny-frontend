@@ -47,7 +47,7 @@ function LoginForm({ login, header }: { login: CheckoutLogin; header: React.Reac
         />
         <div className="flex flex-col gap-2">
           <PasswordInput placeholder="Enter password" value={login.password} onChange={login.onPasswordChange} />
-          <Link href={login.forgotHref} className="self-start font-sans text-sm font-medium text-[#F5032D]">
+          <Link href={login.forgotHref} onClick={login.onForgotPassword} className="self-start font-sans text-sm font-medium text-[#F5032D]">
             Forgot password?
           </Link>
         </div>

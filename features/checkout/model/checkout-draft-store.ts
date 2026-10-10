@@ -1,27 +1,22 @@
 import { useMemo, useSyncExternalStore } from "react";
 
-import type { CheckoutDraft } from "./checkout-draft";
+import { CHECKOUT_DRAFT_KEY, type CheckoutDraft, parseCheckoutDraft } from "./checkout-draft";
 
-const STORAGE_KEY = "myjourny:checkout-draft";
-
-const subscribe = () => () => {};
+const subscribe = (onChange: () => void) => {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+};
 const read = () => {
   try {
-    return window.sessionStorage.getItem(STORAGE_KEY);
+    return window.localStorage.getItem(CHECKOUT_DRAFT_KEY);
   } catch {
     return null;
   }
 };
 
-/** The draft saved by the experience page; null on the server and when there
- * is none. */
+/** The draft saved by the experience page; null on the server, when there is
+ * none, and when it has gone stale. */
 export function useCheckoutDraft(): CheckoutDraft | null {
   const raw = useSyncExternalStore(subscribe, read, () => null);
-  return useMemo(() => {
-    try {
-      return raw ? (JSON.parse(raw) as CheckoutDraft) : null;
-    } catch {
-      return null;
-    }
-  }, [raw]);
+  return useMemo(() => parseCheckoutDraft(raw), [raw]);
 }

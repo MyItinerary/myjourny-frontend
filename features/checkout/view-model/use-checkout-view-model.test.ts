@@ -85,7 +85,7 @@ beforeEach(() => {
   server.use(http.post(apiUrl("/bookings/quote"), () => HttpResponse.json({}, { status: 401 })));
 });
 afterEach(() => {
-  window.sessionStorage.clear();
+  window.localStorage.clear();
   nav.push.mockReset();
   nav.replace.mockReset();
   toast.error.mockReset();
@@ -112,7 +112,7 @@ describe("useCheckoutViewModel", () => {
   });
 
   it("sends the guest home when there is no saved booking", () => {
-    window.sessionStorage.clear();
+    window.localStorage.clear();
     renderHookWithProviders(() => useCheckoutViewModel());
     expect(nav.replace).toHaveBeenCalledWith("/");
   });
@@ -182,6 +182,29 @@ describe("useCheckoutViewModel", () => {
     act(() => hook.result.current.form.onContinue());
     return hook.result;
   }
+
+  it("keeps the booking and phone, and notes the way back, when they go to reset a password", () => {
+    const result = openLogin();
+    act(() => result.current.form.onPhoneChange("7016377711"));
+
+    act(() => result.current.login.onForgotPassword());
+
+    const stored = JSON.parse(window.localStorage.getItem("myjourny:checkout-draft")!);
+    expect(stored.contact).toEqual({ phone: "7016377711", countryIso: "NG" });
+    expect(window.localStorage.getItem("myjourny:checkout-return")).toBeTruthy();
+  });
+
+  it("fills the phone back in when they return from resetting a password", () => {
+    saveCheckoutDraft({ ...draft, contact: { phone: "7911123456", countryIso: "GB" } });
+    session.value = signedIn;
+
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+
+    expect(result.current.form.step).toBe("pay");
+    expect(result.current.form.phone).toBe("7911123456");
+    expect(result.current.form.country.selected.iso).toBe("GB");
+    expect(result.current.form.canPay).toBe(true);
+  });
 
   it("logs in, then books and goes to the payment page without another click", async () => {
     account.login.mutateAsync.mockResolvedValue({ access_token: "a", refresh_token: "r" });
@@ -327,7 +350,7 @@ describe("useCheckoutViewModel", () => {
     expect(order).toEqual(["register", "book"]);
     expect(body).toMatchObject({ experience_id: "exp-1", guide_id: "g-1", items: [{ experience_price_id: "adult", quantity: 1 }] });
     expect(key).toBeTruthy();
-    expect(window.sessionStorage.getItem("myjourny:checkout-draft")).toBeNull();
+    expect(window.localStorage.getItem("myjourny:checkout-draft")).toBeNull();
   });
 
   it("stays on the password step and doesn't book when sign-up fails", async () => {

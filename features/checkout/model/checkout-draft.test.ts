@@ -1,6 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { type CheckoutDraft, clearCheckoutDraft, loadCheckoutDraft, saveCheckoutDraft } from "./checkout-draft";
+import {
+  CHECKOUT_DRAFT_KEY,
+  CHECKOUT_DRAFT_TTL_MS,
+  type CheckoutDraft,
+  clearCheckoutDraft,
+  loadCheckoutDraft,
+  parseCheckoutDraft,
+  saveCheckoutContact,
+  saveCheckoutDraft,
+} from "./checkout-draft";
 
 const draft: CheckoutDraft = {
   experienceId: "exp-1",
@@ -17,10 +26,10 @@ const draft: CheckoutDraft = {
   durationLabel: "2.5 hours",
 };
 
-afterEach(() => window.sessionStorage.clear());
+afterEach(() => window.localStorage.clear());
 
 describe("checkout draft", () => {
-  it("round-trips through the tab's storage", () => {
+  it("round-trips through storage", () => {
     saveCheckoutDraft(draft);
     expect(loadCheckoutDraft()).toEqual(draft);
   });
@@ -33,7 +42,23 @@ describe("checkout draft", () => {
   });
 
   it("ignores a corrupt entry", () => {
-    window.sessionStorage.setItem("myjourny:checkout-draft", "{not json");
+    window.localStorage.setItem(CHECKOUT_DRAFT_KEY, "{not json");
     expect(loadCheckoutDraft()).toBeNull();
+  });
+
+  it("drops a draft older than an hour", () => {
+    const raw = JSON.stringify({ ...draft, savedAt: 1_000 });
+    expect(parseCheckoutDraft(raw, 1_000 + CHECKOUT_DRAFT_TTL_MS)).toEqual(draft);
+    expect(parseCheckoutDraft(raw, 1_001 + CHECKOUT_DRAFT_TTL_MS)).toBeNull();
+    expect(parseCheckoutDraft(JSON.stringify(draft), 1_000)).toBeNull();
+  });
+
+  it("keeps the contact details added to it", () => {
+    saveCheckoutContact({ phone: "7016377711", countryIso: "NG" });
+    expect(loadCheckoutDraft()).toBeNull();
+
+    saveCheckoutDraft(draft);
+    saveCheckoutContact({ phone: "7016377711", countryIso: "NG" });
+    expect(loadCheckoutDraft()).toEqual({ ...draft, contact: { phone: "7016377711", countryIso: "NG" } });
   });
 });
