@@ -1,6 +1,8 @@
-import { Check, Info, Lock } from "lucide-react";
+import { Check, Info } from "lucide-react";
 import Link from "next/link";
 
+import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
+import { PasswordInput } from "@/components/onboarding/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,14 +28,35 @@ function NigeriaFlag() {
   );
 }
 
-// Figma "Desktop - 6" / "Desktop - 7" (filled): confirm contact details, then pay.
-export function CheckoutDetailsStepView({ details }: { details: CheckoutViewModel["details"] }) {
+function Terms({ verb }: { verb: "continuing" | "confirming" }) {
+  return (
+    <p className="font-sans text-sm font-medium leading-[21px] text-[#6F6B72]">
+      By {verb} you agree to our{" "}
+      <Link href="/terms" className="text-[#F5032D]">
+        terms of service
+      </Link>{" "}
+      and{" "}
+      <Link href="/privacy" className="text-[#F5032D]">
+        privacy policy
+      </Link>
+    </p>
+  );
+}
+
+// Figma "Desktop - 4" to "Desktop - 7" and "Desktop - 18" to "Desktop - 20": one
+// form in three steps. Email and phone, then Continue; then a password and
+// "Confirm and pay"; or, when already signed in, just "Confirm and pay".
+export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["form"] }) {
+  const { step } = form;
+  const emailValid = form.emailLocked || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+
   return (
     <form
       className="flex flex-col gap-6"
       onSubmit={(e) => {
         e.preventDefault();
-        details.onConfirm();
+        if (step === "details") form.onContinue();
+        else form.onConfirm();
       }}
     >
       <h1 className="font-sans text-2xl font-extrabold leading-[1.2] text-[#333134] lg:text-[32px]">
@@ -41,9 +64,20 @@ export function CheckoutDetailsStepView({ details }: { details: CheckoutViewMode
       </h1>
 
       <Field label="Email address">
-        <div className="flex h-12 items-center gap-2.5 rounded-full bg-muted px-4">
-          <span className="min-w-0 flex-1 truncate font-sans text-base font-medium text-[#333134]">{details.email}</span>
-          <Check className="size-5 shrink-0 text-[#02A078]" aria-label="Verified" />
+        <div className="relative">
+          <Input
+            type="email"
+            size="cta"
+            autoComplete="email"
+            placeholder="Enter email address"
+            value={form.email}
+            readOnly={form.emailLocked}
+            onChange={(e) => form.onEmailChange(e.target.value)}
+            className="pr-12 font-medium text-[#333134]"
+          />
+          {form.email && emailValid && (
+            <Check className="absolute top-1/2 right-4 size-5 -translate-y-1/2 text-[#02A078]" aria-label="Valid email" />
+          )}
         </div>
       </Field>
 
@@ -61,9 +95,11 @@ export function CheckoutDetailsStepView({ details }: { details: CheckoutViewMode
             autoComplete="tel-national"
             placeholder="Enter phone number"
             aria-label="Phone number"
-            value={details.phone}
-            onChange={(e) => details.onPhoneChange(e.target.value)}
+            value={form.phone}
+            readOnly={form.phoneLocked}
+            onChange={(e) => form.onPhoneChange(e.target.value)}
             maxLength={11}
+            className="font-medium text-[#333134]"
           />
         </div>
         <p className="flex items-start gap-1 font-sans text-xs leading-[18px] text-[#6F6B72]">
@@ -72,40 +108,71 @@ export function CheckoutDetailsStepView({ details }: { details: CheckoutViewMode
         </p>
       </div>
 
-      <Field label="Leave a note for the guide">
-        <textarea
-          value={details.note}
-          onChange={(e) => details.onNoteChange(e.target.value)}
-          placeholder="Anything you’d need to make your experience easy or memorable?"
-          rows={4}
-          className="min-h-[120px] w-full resize-none rounded-lg bg-muted px-4 py-3 font-sans text-base font-medium text-[#333134] outline-none placeholder:text-[#BCBCBC] focus-visible:ring-3 focus-visible:ring-ring/50"
-        />
-      </Field>
+      {step === "details" && (
+        <>
+          <Button type="submit" size="cta" disabled={!form.canContinue} className="w-full">
+            Continue
+          </Button>
+          <Terms verb="continuing" />
+          <div className="flex items-center gap-3 px-6">
+            <span aria-hidden className="h-px flex-1 bg-[#E7E7E7]" />
+            <span className="font-sans text-base text-[#333134]">or</span>
+            <span aria-hidden className="h-px flex-1 bg-[#E7E7E7]" />
+          </div>
+          <GoogleAuthButton loading={form.googleLoading} onCredential={form.onGoogleCredential} />
+        </>
+      )}
 
-      <div className="flex items-start gap-4 rounded-lg bg-[#F4F2EE] p-4">
-        <Lock className="size-6 shrink-0 text-[#6F6B72]" />
-        <div className="flex flex-col gap-2 font-sans">
-          <p className="text-lg font-semibold leading-[27px] text-[#333134]">Payment secured by Paystack</p>
-          <p className="text-sm leading-[22px] text-[#757575]">
-            Payment methods like card, bank transfer, USSD and Pay with Zap all available
-          </p>
-        </div>
-      </div>
+      {step === "password" && (
+        <>
+          <div className="flex flex-col gap-4">
+            <Field label="Password">
+              <PasswordInput
+                placeholder="Enter password here"
+                value={form.password}
+                onChange={form.onPasswordChange}
+              />
+            </Field>
+            <Field label="Confirm password">
+              <PasswordInput
+                placeholder="Re enter password here"
+                value={form.confirmPassword}
+                onChange={form.onConfirmPasswordChange}
+              />
+            </Field>
+            <p
+              role={form.passwordError ? "alert" : undefined}
+              className={`flex items-start gap-2 font-sans text-sm font-medium leading-[21px] ${
+                form.passwordError ? "text-[#F5032D]" : "text-[#6F6B72]"
+              }`}
+            >
+              <Info className="mt-0.5 size-5 shrink-0" />
+              {form.passwordError ?? "Your password should contain at least 8 characters, a letter and a number"}
+            </p>
+            {form.emailTaken && (
+              <p className="font-sans text-sm text-[#6F6B72]">
+                That email already has an account.{" "}
+                <Link href={form.loginHref} className="font-medium text-[#F5032D]">
+                  Log in instead
+                </Link>
+              </p>
+            )}
+          </div>
+          <Terms verb="confirming" />
+          <Button type="submit" size="cta" disabled={!form.canPay} className="w-full">
+            {form.pending ? "Starting checkout…" : "Confirm and pay"}
+          </Button>
+        </>
+      )}
 
-      <p className="font-sans text-sm font-medium leading-[21px] text-[#6F6B72]">
-        By confirming you agree to our{" "}
-        <Link href="/terms" className="text-[#F5032D]">
-          terms of service
-        </Link>{" "}
-        and{" "}
-        <Link href="/privacy" className="text-[#F5032D]">
-          privacy policy
-        </Link>
-      </p>
-
-      <Button type="submit" size="cta" disabled={!details.canPay} className="w-full">
-        {details.pending ? "Starting checkout…" : "Confirm and pay"}
-      </Button>
+      {step === "pay" && (
+        <>
+          <Terms verb="confirming" />
+          <Button type="submit" size="cta" disabled={!form.canPay} className="w-full">
+            {form.pending ? "Starting checkout…" : "Confirm and pay"}
+          </Button>
+        </>
+      )}
     </form>
   );
 }

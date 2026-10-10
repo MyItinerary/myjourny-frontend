@@ -9,7 +9,7 @@ import { isTwoFactorChallenge } from "@/lib/queries/auth";
 
 import { clearCheckoutDraft } from "../model/checkout-draft";
 import { useCheckoutDraft } from "../model/checkout-draft-store";
-import { useGuestEmailSignup, useGuestGoogleSignup } from "../model/guest-signup";
+import { isEmailTakenError, useGuestGoogleSignup, useGuestRegister } from "../model/guest-account";
 
 export type OrderSummary = {
   title: string;
@@ -26,29 +26,38 @@ export type OrderSummary = {
   changeHref: string;
 };
 
+/** details: email and phone, then Continue. password: choose one, then pay.
+ * pay: already signed in (Google, or an account), so just the phone. */
+export type CheckoutStep = "details" | "password" | "pay";
+
 export type CheckoutViewModel = {
   /** False until the saved booking is read; a missing one sends the guest back. */
   ready: boolean;
   summary: OrderSummary | null;
-  step: "email" | "details";
-  email: {
-    value: string;
-    onChange: (value: string) => void;
-    canContinue: boolean;
-    pending: boolean;
-    onContinue: () => void;
-    onGoogleCredential: (credential: string) => void;
-    googleLoading: boolean;
-  };
-  details: {
+  form: {
+    step: CheckoutStep;
     email: string;
+    onEmailChange: (value: string) => void;
+    /** Typed email is fine to use; the email is locked once signed in or past the first step. */
+    emailLocked: boolean;
     phone: string;
     onPhoneChange: (value: string) => void;
-    note: string;
-    onNoteChange: (value: string) => void;
+    phoneLocked: boolean;
+    password: string;
+    onPasswordChange: (value: string) => void;
+    confirmPassword: string;
+    onConfirmPasswordChange: (value: string) => void;
+    passwordError: string | null;
+    /** Sign-up failed because the email already has an account. */
+    emailTaken: boolean;
+    loginHref: string;
+    canContinue: boolean;
+    onContinue: () => void;
     canPay: boolean;
     pending: boolean;
     onConfirm: () => void;
+    onGoogleCredential: (credential: string) => void;
+    googleLoading: boolean;
   };
 };
 
@@ -56,19 +65,27 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Nigerian numbers: 10 digits after +234, or 11 with the leading 0.
 const PHONE_DIGITS = /^\d{10,11}$/;
 
+// Matches the rule the form states: 8+ characters, a letter and a number.
+const passwordValid = (password: string) => password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
+
 export function useCheckoutViewModel(): CheckoutViewModel {
   const router = useRouter();
   const { user, hydrated } = useSession();
   const draft = useCheckoutDraft();
-  const signup = useGuestEmailSignup();
+  const register = useGuestRegister();
   const googleSignup = useGuestGoogleSignup();
   const createBooking = useCreateBooking();
   const attemptKey = useRef<string | null>(null);
 
+  const [stage, setStage] = useState<"details" | "password">("details");
   const [emailInput, setEmailInput] = useState("");
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [phone, setPhone] = useState("");
-  const [note, setNote] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
+  // Held from "Confirm and pay" until the page leaves: signing up makes the
+  // guest signed in, which must not flip the form to its signed-in layout mid-way.
+  const [submitting, setSubmitting] = useState(false);
 
   const signedIn = !!user?.email;
   // Once they have an account the server can price the booking for real.
@@ -95,11 +112,56 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       }
     : null;
 
-  const onContinue = () => {
-    if (!EMAIL_PATTERN.test(emailInput.trim()) || signup.isPending) return;
-    signup.mutate(emailInput.trim(), {
-      onError: (error) => toast.error(apiErrorMessage(error, "Couldn't continue with that email. Please try again.")),
+  const step: CheckoutStep = signedIn && !submitting ? "pay" : stage;
+  const email = step === "pay" ? (user?.email ?? "") : emailInput.trim();
+  const phoneValid = PHONE_DIGITS.test(phone);
+  const detailsValid = EMAIL_PATTERN.test(emailInput.trim()) && phoneValid;
+
+  const confirmMismatch = confirmPassword.length > 0 && password !== confirmPassword;
+  const passwordError =
+    password.length > 0 && !passwordValid(password)
+      ? "Your password should contain at least 8 characters, a letter and a number"
+      : confirmMismatch
+        ? "The passwords don't match"
+        : null;
+  const passwordsReady = passwordValid(password) && password === confirmPassword;
+
+  const bookAndPay = async () => {
+    if (!draft) return;
+    // One key per attempt, so a retry can't book twice.
+    attemptKey.current ??= crypto.randomUUID();
+    const booking = await createBooking.mutateAsync({
+      ...draft.selection,
+      idempotencyKey: attemptKey.current,
+      guide_id: draft.guideId,
     });
+    clearCheckoutDraft();
+    if (booking.url) window.location.href = booking.url;
+    else if (booking.status === "confirmed") router.push(`/bookings/${booking.id}/success`);
+    else router.push(`/bookings/${booking.id}`);
+  };
+
+  // The phone is checked but not sent yet: itin only takes a phone number
+  // through its verified phone-change flow, and the booking has no field for it.
+  const onConfirm = async () => {
+    if (submitting || !draft || !phoneValid) return;
+    if (step === "password" && !passwordsReady) return;
+    setSubmitting(true);
+    register.reset();
+    // Sign-up reports its own failure; once it worked, anything that fails is the booking.
+    let accountReady = step !== "password";
+    try {
+      // Create the account first, then book with it, then on to the payment page.
+      if (step === "password") {
+        await register.mutateAsync({ email, password });
+        accountReady = true;
+      }
+      await bookAndPay();
+    } catch (error) {
+      attemptKey.current = null;
+      if (accountReady) toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again."));
+      setSubmitting(false);
+    }
   };
 
   const onGoogleCredential = (credential: string) => {
@@ -119,52 +181,33 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     );
   };
 
-  const phoneValid = PHONE_DIGITS.test(phone);
-  // The phone is checked but not sent yet: itin only takes a phone number
-  // through its verified phone-change flow, and the booking has no field for it.
-  const onConfirm = () => {
-    if (!draft || !phoneValid || createBooking.isPending) return;
-    // One key per attempt, so a double click can't book twice.
-    attemptKey.current ??= crypto.randomUUID();
-    createBooking.mutate(
-      { ...draft.selection, idempotencyKey: attemptKey.current, guide_id: draft.guideId },
-      {
-        onSuccess: (booking) => {
-          clearCheckoutDraft();
-          if (booking.url) window.location.href = booking.url;
-          else if (booking.status === "confirmed") router.push(`/bookings/${booking.id}/success`);
-          else router.push(`/bookings/${booking.id}`);
-        },
-        onError: (error) => {
-          attemptKey.current = null;
-          toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again."));
-        },
-      },
-    );
-  };
-
   return {
     ready: hydrated && !!draft,
     summary,
-    step: signedIn ? "details" : "email",
-    email: {
-      value: emailInput,
-      onChange: setEmailInput,
-      canContinue: EMAIL_PATTERN.test(emailInput.trim()) && !signup.isPending && !googleLoading,
-      pending: signup.isPending,
-      onContinue,
-      onGoogleCredential,
-      googleLoading,
-    },
-    details: {
-      email: user?.email ?? "",
+    form: {
+      step,
+      email: step === "pay" ? email : emailInput,
+      onEmailChange: setEmailInput,
+      emailLocked: step !== "details",
       phone,
       onPhoneChange: (value) => setPhone(value.replace(/\D/g, "")),
-      note,
-      onNoteChange: setNote,
-      canPay: phoneValid && !createBooking.isPending,
-      pending: createBooking.isPending,
+      phoneLocked: step === "password",
+      password,
+      onPasswordChange: setPassword,
+      confirmPassword,
+      onConfirmPasswordChange: setConfirmPassword,
+      passwordError,
+      emailTaken: isEmailTakenError(register.error),
+      loginHref: `/login?next=${encodeURIComponent("/checkout")}`,
+      canContinue: detailsValid && !googleLoading,
+      onContinue: () => {
+        if (detailsValid) setStage("password");
+      },
+      canPay: step === "password" ? passwordsReady && !submitting : phoneValid && !submitting,
+      pending: submitting,
       onConfirm,
+      onGoogleCredential,
+      googleLoading,
     },
   };
 }

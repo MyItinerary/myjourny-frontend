@@ -30,8 +30,9 @@ const QUOTE = {
   promo_applied: false,
 };
 
-test("a guest books from the experience page: email, details, then the payment page", async ({ page }) => {
+test("a guest books from the experience page: details, password, then the payment page", async ({ page }) => {
   let bookingBody: Record<string, unknown> | null = null;
+  let registerBody: Record<string, unknown> | null = null;
   await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
   await mockApi(page, {
     "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
@@ -57,9 +58,12 @@ test("a guest books from the experience page: email, details, then the payment p
       r.request().headers().authorization
         ? r.fulfill({ json: QUOTE })
         : r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
-    "POST /auth/temp": (r) => r.fulfill({ json: { access_token: "temp-access", refresh_token: "temp-refresh", user_id: "temp-1" } }),
-    "POST /auth/activate": (r) =>
-      r.fulfill({ json: { id: "temp-1", email: "juliet@example.com", full_name: null, avatar_url: null } }),
+    "POST /auth/register": (r) => {
+      registerBody = r.request().postDataJSON();
+      return r.fulfill({ json: { access_token: "new-access", refresh_token: "new-refresh" } });
+    },
+    "GET /auth/me": (r) =>
+      r.fulfill({ json: { id: "user-1", email: "juliet@example.com", full_name: null, avatar_url: null } }),
     "POST /bookings": async (r) => {
       bookingBody = r.request().postDataJSON();
       await r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
@@ -69,24 +73,24 @@ test("a guest books from the experience page: email, details, then the payment p
   await page.goto("/experiences/exp-1");
   await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
 
-  // Step 1: the email.
+  // Step 1: email and phone.
   await expect(page).toHaveURL(/\/checkout$/);
-  const confirm = page.getByRole("button", { name: "Continue", exact: true });
-  await expect(confirm).toBeDisabled();
-  await page.getByLabel("Email address").fill("juliet@example.com");
-  await confirm.click();
+  const next = page.getByRole("button", { name: "Continue", exact: true });
+  await expect(next).toBeDisabled();
+  await page.getByPlaceholder("Enter email address").fill("juliet@example.com");
+  await page.getByLabel("Phone number").fill("7016377711");
+  await next.click();
 
-  // Step 2: phone and a note, then pay.
-  await expect(page.getByRole("heading", { name: "Confirm your details and pay" })).toBeVisible();
-  await expect(page.getByText("juliet@example.com")).toBeVisible();
+  // Step 2: a password, then pay. The account is made as they confirm.
   const pay = page.getByRole("button", { name: "Confirm and pay" });
   await expect(pay).toBeDisabled();
-  await page.getByLabel("Phone number").fill("7016377711");
-  await page.getByLabel("Leave a note for the guide").fill("Just bring me a wheelchair");
+  await page.getByPlaceholder("Enter password here", { exact: true }).fill("longenough1");
+  await page.getByPlaceholder("Re enter password here").fill("longenough1");
   await expect(pay).toBeEnabled();
   await pay.click();
 
   await expect(page).toHaveURL("https://paystack.test/pay");
+  expect(registerBody).toMatchObject({ email: "juliet@example.com", password: "longenough1" });
   expect(bookingBody).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
 });
 

@@ -2,7 +2,6 @@
 
 import {
   CheckoutDetailsStepView,
-  CheckoutEmailStepView,
   CheckoutShellView,
   OrderSummaryView,
   useCheckoutViewModel,
@@ -14,11 +13,7 @@ export function CheckoutContent() {
 
   return (
     <CheckoutShellView summary={<OrderSummaryView summary={vm.summary} />}>
-      {vm.step === "email" ? (
-        <CheckoutEmailStepView email={vm.email} />
-      ) : (
-        <CheckoutDetailsStepView details={vm.details} />
-      )}
+      <CheckoutDetailsStepView form={vm.form} />
     </CheckoutShellView>
   );
 }
