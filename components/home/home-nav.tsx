@@ -505,7 +505,7 @@ export function HomeNav({ className }: { className?: string }) {
                       className="absolute right-0 top-[calc(100%+12px)] z-50 w-[401px] max-w-[calc(100vw-32px)] rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
                     >
                       <MenuRow
-                        href={"/my-experiences"}
+                        href="/my-experiences"
                         onClick={() => setProfileMenuOpen(false)}
                         icon="/icons/nav/experiences.png"
                         label="My experiences"
