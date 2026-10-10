@@ -90,7 +90,7 @@ test("a guest books from the experience page: details, password, then the paymen
   await pay.click();
 
   await expect(page).toHaveURL("https://paystack.test/pay");
-  expect(registerBody).toMatchObject({ email: "juliet@example.com", password: "longenough1" });
+  expect(registerBody).toMatchObject({ email: "juliet@example.com", password: "longenough1", phone_number: "+2347016377711" });
   expect(bookingBody).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
 });
 

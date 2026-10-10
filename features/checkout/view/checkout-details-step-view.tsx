@@ -6,6 +6,7 @@ import { PasswordInput } from "@/components/onboarding/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { CountryCodePickerView } from "./country-code-picker-view";
 import type { CheckoutViewModel } from "../view-model/use-checkout-view-model";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -14,17 +15,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="font-sans text-base font-medium leading-6 text-[#333134]">{label}</span>
       {children}
     </label>
-  );
-}
-
-// The Nigerian flag, round (Figma "Flags/Round").
-function NigeriaFlag() {
-  return (
-    <span aria-hidden className="flex size-6 overflow-hidden rounded-full">
-      <span className="h-full flex-1 bg-[#008751]" />
-      <span className="h-full flex-1 bg-white" />
-      <span className="h-full flex-1 bg-[#008751]" />
-    </span>
   );
 }
 
@@ -84,10 +74,12 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
       <div className="flex flex-col gap-2">
         <span className="font-sans text-base font-medium leading-6 text-[#333134]">Phone number</span>
         <div className="flex gap-2">
-          <span className="flex h-12 shrink-0 items-center gap-1 rounded-full bg-muted px-3">
-            <NigeriaFlag />
-            <span className="font-sans text-base font-medium text-[#333134]">+234</span>
-          </span>
+          <CountryCodePickerView
+            selected={form.country.selected}
+            options={form.country.options}
+            onSelect={form.country.onSelect}
+            disabled={form.phoneLocked}
+          />
           <Input
             type="tel"
             size="cta"
@@ -98,7 +90,7 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
             value={form.phone}
             readOnly={form.phoneLocked}
             onChange={(e) => form.onPhoneChange(e.target.value)}
-            maxLength={11}
+            maxLength={14}
             className="font-medium text-[#333134]"
           />
         </div>

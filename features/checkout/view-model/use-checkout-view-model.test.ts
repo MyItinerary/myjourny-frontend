@@ -191,7 +191,11 @@ describe("useCheckoutViewModel", () => {
       await waitFor(() => expect(window.location.href).toBe("https://pay.test/1"));
     });
 
-    expect(account.register.mutateAsync).toHaveBeenCalledWith({ email: "juliet@example.com", password: "longenough1" });
+    expect(account.register.mutateAsync).toHaveBeenCalledWith({
+      email: "juliet@example.com",
+      password: "longenough1",
+      phone_number: "+2347016377711",
+    });
     expect(order).toEqual(["register", "book"]);
     expect(body).toMatchObject({ experience_id: "exp-1", guide_id: "g-1", items: [{ experience_price_id: "adult", quantity: 1 }] });
     expect(key).toBeTruthy();

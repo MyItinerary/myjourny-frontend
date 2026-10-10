@@ -78,7 +78,13 @@ async function completeAuth(tokens: Tokens, placeholderEmail: string | null) {
 
 export function useRegister() {
   return useMutation({
-    mutationFn: async (payload: { email: string; password: string; signup_type?: string }) => {
+    mutationFn: async (payload: {
+      email: string;
+      password: string;
+      signup_type?: string;
+      /** E.164, e.g. +2347016377711; saved to the new profile. */
+      phone_number?: string;
+    }) => {
       const { data } = await apiClient.post<Tokens>("/auth/register", {
         signup_type: "traveller",
         ...payload,

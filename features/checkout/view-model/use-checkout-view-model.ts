@@ -8,6 +8,8 @@ import { useSession } from "@/lib/auth/session-store";
 import { isTwoFactorChallenge } from "@/lib/queries/auth";
 
 import { clearCheckoutDraft } from "../model/checkout-draft";
+import { COUNTRIES, DEFAULT_COUNTRY, isValidPhone, toE164 } from "../model/countries";
+import type { Country } from "../model/country.types";
 import { useCheckoutDraft } from "../model/checkout-draft-store";
 import { isEmailTakenError, useGuestGoogleSignup, useGuestRegister } from "../model/guest-account";
 
@@ -40,6 +42,11 @@ export type CheckoutViewModel = {
     onEmailChange: (value: string) => void;
     /** Typed email is fine to use; the email is locked once signed in or past the first step. */
     emailLocked: boolean;
+    country: {
+      selected: Country;
+      options: Country[];
+      onSelect: (country: Country) => void;
+    };
     phone: string;
     onPhoneChange: (value: string) => void;
     phoneLocked: boolean;
@@ -62,8 +69,6 @@ export type CheckoutViewModel = {
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Nigerian numbers: 10 digits after +234, or 11 with the leading 0.
-const PHONE_DIGITS = /^\d{10,11}$/;
 
 // Matches the rule the form states: 8+ characters, a letter and a number.
 const passwordValid = (password: string) => password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
@@ -79,6 +84,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
 
   const [stage, setStage] = useState<"details" | "password">("details");
   const [emailInput, setEmailInput] = useState("");
+  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -114,7 +120,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
 
   const step: CheckoutStep = signedIn && !submitting ? "pay" : stage;
   const email = step === "pay" ? (user?.email ?? "") : emailInput.trim();
-  const phoneValid = PHONE_DIGITS.test(phone);
+  const phoneValid = isValidPhone(country, phone);
   const detailsValid = EMAIL_PATTERN.test(emailInput.trim()) && phoneValid;
 
   const confirmMismatch = confirmPassword.length > 0 && password !== confirmPassword;
@@ -141,8 +147,9 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     else router.push(`/bookings/${booking.id}`);
   };
 
-  // The phone is checked but not sent yet: itin only takes a phone number
-  // through its verified phone-change flow, and the booking has no field for it.
+  // A new account is created with the phone as well as the email, so it lands
+  // on their profile. (Someone already signed in, e.g. with Google, has no
+  // sign-up to attach it to; saving theirs needs itin's verified phone-change flow.)
   const onConfirm = async () => {
     if (submitting || !draft || !phoneValid) return;
     if (step === "password" && !passwordsReady) return;
@@ -153,7 +160,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     try {
       // Create the account first, then book with it, then on to the payment page.
       if (step === "password") {
-        await register.mutateAsync({ email, password });
+        await register.mutateAsync({ email, password, phone_number: toE164(country, phone) });
         accountReady = true;
       }
       await bookAndPay();
@@ -189,6 +196,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       email: step === "pay" ? email : emailInput,
       onEmailChange: setEmailInput,
       emailLocked: step !== "details",
+      country: { selected: country, options: COUNTRIES, onSelect: setCountry },
       phone,
       onPhoneChange: (value) => setPhone(value.replace(/\D/g, "")),
       phoneLocked: step === "password",

@@ -10,11 +10,14 @@ vi.mock("@/components/onboarding/google-auth-button", () => ({
   GoogleAuthButton: () => <button type="button">Continue with Google</button>,
 }));
 
+const nigeria = { iso: "NG", name: "Nigeria", dial: "234" };
+
 const form = (overrides: Partial<CheckoutViewModel["form"]> = {}): CheckoutViewModel["form"] => ({
   step: "details",
   email: "",
   onEmailChange: vi.fn(),
   emailLocked: false,
+  country: { selected: nigeria, options: [nigeria, { iso: "GB", name: "United Kingdom", dial: "44" }], onSelect: vi.fn() },
   phone: "",
   onPhoneChange: vi.fn(),
   phoneLocked: false,
