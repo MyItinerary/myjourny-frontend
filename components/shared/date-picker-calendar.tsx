@@ -70,15 +70,15 @@ export function DatePickerCalendar({
   const minDay = minDate ? startOfDay(minDate) : null;
 
   return (
-    <div className={cn("flex w-full flex-col gap-4", className)}>
+    <div className={cn("flex w-full flex-col gap-3", className)}>
       {presets && presets.length > 0 && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {presets.map((preset) => (
             <button
               key={preset.label}
               type="button"
               onClick={() => onSelect(preset.date)}
-              className="rounded-[20px] border border-[#E0E0E0] bg-white px-3 py-0.5 text-center font-sans text-[12px] font-normal leading-[24px] text-[#130404] transition-colors hover:bg-[#F4F2EE]"
+              className="rounded-full border border-[#E0E0E0] bg-white px-3 py-1 text-center font-sans text-xs font-normal text-[#130404] transition-colors hover:bg-[#F4F2EE] hover:border-brand/40 cursor-pointer"
             >
               {preset.label}
             </button>
@@ -86,32 +86,32 @@ export function DatePickerCalendar({
         </div>
       )}
 
-      <div className="flex w-full flex-col gap-3 pt-1">
+      <div className="flex w-full flex-col gap-2 pt-0.5">
         {/* Days of week header */}
-        <div className="grid grid-cols-7 text-center font-sans text-[12px] font-normal leading-4 text-[#6F6B72]">
+        <div className="grid grid-cols-7 text-center font-sans text-[11px] font-medium leading-4 text-[#6F6B72]">
           {WEEKDAY_LABELS.map((day) => (
-            <div key={day} className="py-1">
+            <div key={day} className="py-0.5">
               {day}
             </div>
           ))}
         </div>
 
         {/* Month header */}
-        <div className="flex items-center justify-between py-1">
+        <div className="flex items-center justify-between py-0.5">
           <button
             type="button"
             onClick={() => setViewDate(new Date(year, month - 1, 1))}
             aria-label="Previous month"
-            className="flex size-8 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE]"
+            className="flex size-7 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE] cursor-pointer"
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="font-sans text-base font-bold leading-6 text-[#130404]">{monthName}</span>
+          <span className="font-sans text-sm font-bold text-[#130404]">{monthName} {year}</span>
           <button
             type="button"
             onClick={() => setViewDate(new Date(year, month + 1, 1))}
             aria-label="Next month"
-            className="flex size-8 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE]"
+            className="flex size-7 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE] cursor-pointer"
           >
             <ChevronRight className="size-4" />
           </button>
@@ -120,7 +120,7 @@ export function DatePickerCalendar({
         {/* Dates grid */}
         <div className="grid grid-cols-7 gap-y-1 text-center">
           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-10 w-full" />
+            <div key={`empty-${i}`} className="h-8 w-full" />
           ))}
 
           {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -136,7 +136,7 @@ export function DatePickerCalendar({
                   disabled={isDisabled}
                   onClick={() => onSelect(date)}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center text-center font-sans text-[14px] font-normal leading-[22px] transition-colors",
+                    "flex h-8 w-8 items-center justify-center text-center font-sans text-xs font-normal transition-colors cursor-pointer",
                     isSelected
                       ? "rounded-[8px] bg-[#F5032D] font-medium text-white shadow-sm"
                       : isDisabled
