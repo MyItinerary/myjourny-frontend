@@ -134,19 +134,6 @@ export function signOutLocally(queryClient: QueryClient) {
   }
 }
 
-export function useDeleteAccount() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const { data } = await apiClient.delete("/auth/me");
-      return data;
-    },
-    onSuccess: () => signOutLocally(queryClient),
-    onError: (error) => toast.error(apiErrorMessage(error, "Couldn't delete your account.")),
-  });
-}
-
 // Phone: a 6-digit code goes to the account's current email, then the
 // confirm call sets the new number. Email: a link goes to the new address,
 // opening /profile/email/confirm?token=…
