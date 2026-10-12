@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { motion } from "motion/react";
 
 import { HomeNav } from "@/components/home/home-nav";
 import { Footer } from "@/components/home/footer";
+import { EmptyStateView } from "@/features/empty-state";
 import { BookingCard } from "@/components/my-experiences/booking-card";
 import { useSession } from "@/lib/auth/session-store";
 import { useMyBookings, type MyExperiencesTab } from "@/lib/queries/bookings";
@@ -22,19 +21,22 @@ const TABS: { key: TabKey; label: string }[] = [
 
 const EMPTY_STATES: Record<
   TabKey,
-  { title: string; body: string }
+  { title: string; body: string; ctaLabel: string }
 > = {
   upcoming: {
     title: "Your experiences live here",
     body: "Once you book, this is where you'll find your meeting point, your host's number, and everything you need on the day.",
+    ctaLabel: "Get Started",
   },
   past: {
     title: "No past experiences",
     body: "You haven't completed any experiences yet. Once you take a trip, your details will be saved here.",
+    ctaLabel: "Homepage",
   },
   cancelled: {
     title: "No cancelled experiences",
     body: "You haven't cancelled any bookings. All your confirmed bookings remain on your schedule.",
+    ctaLabel: "Homepage",
   },
 };
 
@@ -63,6 +65,7 @@ export function MyExperiencesContent() {
     ? {
       title: "Your experiences live here",
       body: "Once you book, this is where you'll find your meeting point, your host's number, and everything you need on the day.",
+      ctaLabel: "Get Started",
       href: "/login",
     }
     : {
@@ -186,52 +189,14 @@ export function MyExperiencesContent() {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="mx-auto flex w-full max-w-7xl flex-col items-center gap-6 px-4 py-12 text-center sm:gap-10 sm:px-0 sm:py-20"
           >
-            <div className="relative size-[140px] sm:size-[180px]">
-              <Image
-                src="/images/home/experiences/1.png"
-                alt=""
-                width={180}
-                height={180}
-                className="size-full object-contain"
-                priority
-              />
-            </div>
-
-            <div className="flex w-full max-w-[696px] flex-col gap-4 sm:gap-5">
-              <h2
-                style={{
-                  color: "#130404",
-                  textAlign: "center",
-                  fontFamily: '"TikTok Sans 18pt", var(--font-heading), sans-serif',
-                  fontWeight: 800,
-                  lineHeight: "120%",
-                }}
-                className="text-center font-extrabold text-[#130404] text-[30px] sm:text-[38px] md:text-[40px]"
-              >
-                {currentEmptyState.title}
-              </h2>
-              <p
-                style={{
-                  color: "#6F6B72",
-                  textAlign: "center",
-                  fontFamily: '"TikTok Sans", var(--font-sans), sans-serif',
-                  fontWeight: 400,
-                  lineHeight: "normal",
-                }}
-                className="text-center font-normal leading-normal text-[#6F6B72] text-base sm:text-xl md:text-[20px]"
-              >
-                {currentEmptyState.body}
-              </p>
-            </div>
-
-            <Link
+            <EmptyStateView
+              imageSrc="/images/my-experiences/empty-experiences.png"
+              title={currentEmptyState.title}
+              body={currentEmptyState.body}
+              ctaLabel={currentEmptyState.ctaLabel}
               href={currentEmptyState.href}
-              className="inline-flex items-center justify-center rounded-full bg-[#F5032D] px-6 py-3 text-base font-medium text-white transition-colors hover:bg-[#d90227]"
-            >
-              Homepage
-            </Link>
+            />
           </motion.div>
         )}
       </main>

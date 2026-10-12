@@ -1,8 +1,8 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 
 import { AuthScreenLayout } from "@/components/onboarding/auth-screen-layout";
-import { Button } from "@/components/ui/button";
+
+import { ResetSuccessAction } from "./content";
 
 export const metadata: Metadata = {
   title: "Password reset | MyJourny",
@@ -15,9 +15,7 @@ export default function ResetSuccessPage() {
   return (
     <AuthScreenLayout heading="You reset your password successfully" subtitle="Continue to login">
       <div className="flex w-full max-w-[345px] flex-col lg:max-w-[402px]">
-        <Button size="cta" className="w-full" render={<Link href="/login" />}>
-          Back to login
-        </Button>
+        <ResetSuccessAction />
       </div>
     </AuthScreenLayout>
   );

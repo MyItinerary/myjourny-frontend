@@ -26,7 +26,7 @@ export type ExperienceMatch = {
   country?: string | null;
 };
 
-const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
+export const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
 
 export function formatDuration(minutes?: number | null): string {
   if (!minutes) return "";
@@ -364,6 +364,14 @@ export type ExperienceFilters = {
   category?: string[];
   /** Interest category slug — exact match against the experience's interest tags. */
   interest?: string;
+  /** Free-text search query across experiences */
+  search?: string;
+  price_min?: number;
+  price_max?: number;
+  duration_min?: number;
+  duration_max?: number;
+  time_of_day?: string;
+  rating_min?: number;
   sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
 };
 
