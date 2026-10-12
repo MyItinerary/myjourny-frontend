@@ -13,7 +13,7 @@ import { useSession } from "@/lib/auth/session-store";
 import { useLogout } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
-import { SearchBar } from "@/components/home/search-bar";
+import { SearchBarView, useSearchBarViewModel } from "@/features/search";
 
 // Illustrated nav/menu icons (Figma "image 16"): the 44px artwork is cropped
 // to a 32px window, so it's shifted by -6px inside an overflow-clip box.
@@ -149,7 +149,7 @@ export function HomeNav({ className }: { className?: string }) {
     {
       id: "experiences",
       label: "My experiences",
-      href: user ? "/my-experiences" : "/login",
+      href: "/my-experiences",
       icon: "/icons/nav/experiences.png",
     },
   ];
@@ -505,7 +505,7 @@ export function HomeNav({ className }: { className?: string }) {
                       className="absolute right-0 top-[calc(100%+12px)] z-50 w-[401px] max-w-[calc(100vw-32px)] rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
                     >
                       <MenuRow
-                        href={user ? "/my-experiences" : "/login"}
+                        href="/my-experiences"
                         onClick={() => setProfileMenuOpen(false)}
                         icon="/icons/nav/experiences.png"
                         label="My experiences"
@@ -574,8 +574,7 @@ export function HomeNav({ className }: { className?: string }) {
                 className="overflow-visible pb-4 pt-1 px-4 lg:px-20"
               >
                 <div className="mx-auto flex w-full max-w-[860px] justify-center">
-                  <SearchBar
-                    variant="nav"
+                  <NavSearchBar
                     initialActiveTab={activeSearchTab}
                     onClose={handleCloseSearch}
                     className="w-full"
@@ -589,3 +588,21 @@ export function HomeNav({ className }: { className?: string }) {
     </>
   );
 }
+
+function NavSearchBar({
+  initialActiveTab,
+  onClose,
+  className,
+}: {
+  initialActiveTab?: "where" | "when" | "who" | null;
+  onClose?: () => void;
+  className?: string;
+}) {
+  const vm = useSearchBarViewModel({
+    variant: "nav",
+    initialActiveTab,
+    onClose,
+  });
+  return <SearchBarView {...vm} className={className} />;
+}
+
