@@ -31,7 +31,7 @@ describe("describeRule", () => {
     expect(describeRule(group, "NGN", { guests: 1 })).toBe(
       "10% off for 3+ guests, any mix of tickets. Add 2 more to qualify.",
     );
-    expect(describeRule(group, "NGN", { guests: 3 })).toBe("10% group discount applied (3+ guests)");
+    expect(describeRule(group, "NGN", { guests: 3 })).toBe("Your booking qualifies for 10% off (3+ guests)");
   });
 
   it("hides an early-bird offer that has ended", () => {
@@ -124,15 +124,15 @@ describe("describeRules", () => {
   const group = { id: "g", kind: "group", min_guests: 3, percent_off: "10.00" } as const;
   const early = { id: "e", kind: "early_bird", book_before: "2030-06-01T00:00:00", percent_off: 1 } as const;
 
-  it("says early-bird and group discounts combine when both are on offer", () => {
+  it("says only the biggest discount is used when several are on offer", () => {
     expect(describeRules([group, early], "NGN", { now: new Date("2030-05-01T00:00:00Z") })).toEqual([
       "10% off for 3+ guests, any mix of tickets",
       "1% early-bird discount when booked before June 1",
-      "Early-bird and group discounts combine.",
+      "Discounts don't combine: you get the biggest one you qualify for.",
     ]);
   });
 
-  it("drops the combine note once early-bird has ended", () => {
+  it("drops that note once early-bird has ended", () => {
     expect(describeRules([group, early], "NGN", { now: new Date("2030-07-01T00:00:00Z") })).toEqual([
       "10% off for 3+ guests, any mix of tickets",
     ]);

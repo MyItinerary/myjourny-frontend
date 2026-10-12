@@ -6,7 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils";
 import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
 import { useMe } from "@/lib/queries/auth";
-import { useDeleteAccount } from "@/lib/queries/profile";
+import { DeleteAccountDialogView, useDeleteAccountViewModel } from "@/features/account-deletion";
 import {
   useAuthSessions,
   useChangePassword,
@@ -43,8 +43,7 @@ type ModalKey =
   | "connect"
   | "disconnect"
   | "deactivate"
-  | "delete1"
-  | "delete2";
+  | "delete";
 
 function formatDay(iso: string | null | undefined) {
   if (!iso) return "";
@@ -114,7 +113,6 @@ export function LoginSecuritySection() {
   const disconnectGoogle = useDisconnectGoogle();
   const revokeSession = useRevokeSession();
   const deactivate = useDeactivateAccount();
-  const deleteAccount = useDeleteAccount();
 
   const [modal, setModal] = useState<ModalKey | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
@@ -127,10 +125,15 @@ export function LoginSecuritySection() {
   const [copied, setCopied] = useState(false);
   const [offPassword, setOffPassword] = useState("");
   const [offCode, setOffCode] = useState("");
-  const [deleteDraft, setDeleteDraft] = useState("");
 
-  // Only fetched once someone opens deactivate/delete.
-  const preview = useDeletionPreview(modal === "deactivate" || modal === "delete1" || modal === "delete2");
+  // Only fetched once someone opens deactivate.
+  const preview = useDeletionPreview(modal === "deactivate");
+  const deleteDialog = useDeleteAccountViewModel({
+    open: modal === "delete",
+    email: me?.email ?? "your email",
+    onClose: () => setModal(null),
+    onDeactivateInstead: () => setModal("deactivate"),
+  });
   const upcoming = preview.data?.upcoming_booking_count ?? 0;
 
   if (twofaLoading || connectionsLoading || sessionsLoading) return <SectionSkeleton />;
@@ -177,8 +180,7 @@ export function LoginSecuritySection() {
 
   function openDelete() {
     setSavedMessage(null);
-    setDeleteDraft("");
-    setModal("delete1");
+    setModal("delete");
   }
 
   return (
@@ -303,8 +305,8 @@ export function LoginSecuritySection() {
               Delete account permanently
             </div>
             <div className="mt-0.5 text-sm text-muted-foreground">
-              Your account and everything in it are deleted and cannot be brought back.
-              Deactivating instead keeps everything and hides it.
+              Your personal details are deleted and cannot be brought back. Booking and payment
+              records are kept without them. Deactivating instead keeps everything and hides it.
             </div>
           </div>
           <button
@@ -664,122 +666,7 @@ export function LoginSecuritySection() {
         </ModalShell>
       )}
 
-      {modal === "delete1" && (
-        <ModalShell title="Delete your account" onClose={closeModal}>
-          <div className="text-[13px] font-medium text-brand">Step 1 of 2</div>
-          {preview.isLoading ? (
-            <div className="mt-3.5 text-base text-muted-foreground">Checking your bookings…</div>
-          ) : upcoming > 0 ? (
-            // Deleting would erase these bookings with no refund and no word to
-            // the host, so it's blocked until they're cancelled.
-            <div className="mt-3.5 rounded-xl bg-muted p-4.5">
-              <div className="text-[15px] font-medium text-foreground">
-                You have {upcoming === 1 ? "an upcoming booking" : `${upcoming} upcoming bookings`}
-              </div>
-              <div className="mt-1 text-sm text-muted-foreground">
-                Cancel {upcoming === 1 ? "it" : "them"} first, so the host knows and any refund can
-                follow the cancellation policy. Then you can delete your account.
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="mt-3.5 text-base text-foreground">
-                Deleting is permanent. Here is what goes.
-              </div>
-              <div className="mt-4.5 flex flex-col gap-3.5">
-                <div className="rounded-xl border border-border p-4">
-                  <div className="text-[15px] font-medium text-foreground">Your profile and preferences</div>
-                  <div className="mt-0.5 text-sm text-muted-foreground">
-                    Including your preference answers, which cannot be rebuilt.
-                  </div>
-                </div>
-                <div className="rounded-xl border border-border p-4">
-                  <div className="text-[15px] font-medium text-foreground">
-                    Your booking history and payment records
-                  </div>
-                  <div className="mt-0.5 text-sm text-muted-foreground">
-                    Download your data from Privacy first if you want to keep receipts.
-                  </div>
-                </div>
-                <div className="rounded-xl border border-border p-4">
-                  <div className="text-[15px] font-medium text-foreground">
-                    Saved experiences, wishlists and messages
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-          <div className="mt-5 rounded-xl bg-muted p-4.5">
-            <div className="text-[15px] font-medium text-foreground">
-              Deactivating hides your account and is reversible
-            </div>
-            <div className="mt-1 text-sm text-muted-foreground">
-              Your profile stops being visible, and signing in brings it back.
-            </div>
-            <button
-              type="button"
-              onClick={() => setModal("deactivate")}
-              className="mt-2.5 cursor-pointer text-sm font-medium text-brand underline"
-            >
-              Deactivate instead
-            </button>
-          </div>
-          <div className="mt-6 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="cursor-pointer rounded-full bg-muted px-5.5 py-3 text-[15px] font-medium text-foreground"
-            >
-              Keep my account
-            </button>
-            <button
-              type="button"
-              disabled={preview.isLoading || upcoming > 0}
-              onClick={() => setModal("delete2")}
-              className="cursor-pointer rounded-full border border-foreground px-5.5 py-3 text-[15px] font-medium text-foreground hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Continue to delete
-            </button>
-          </div>
-        </ModalShell>
-      )}
-
-      {modal === "delete2" && (
-        <ModalShell title="Delete your account" onClose={closeModal}>
-          <div className="text-[13px] font-medium text-brand">Step 2 of 2</div>
-          <div className="mt-3.5 text-base text-foreground">
-            This deletes {email} and everything in it, straight away.
-          </div>
-          <TextField
-            label="Type DELETE to confirm"
-            value={deleteDraft}
-            onChange={(e) => setDeleteDraft(e.target.value)}
-            className="tracking-[0.08em]"
-          />
-          <div className="mt-6 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => setModal("delete1")}
-              className="cursor-pointer text-[15px] font-medium text-muted-foreground underline hover:text-primary"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              disabled={deleteDraft.trim().toUpperCase() !== "DELETE" || deleteAccount.isPending}
-              onClick={() => deleteAccount.mutate()}
-              className={cn(
-                "cursor-pointer rounded-full px-5.5 py-3 text-[15px] font-medium",
-                deleteDraft.trim().toUpperCase() !== "DELETE" || deleteAccount.isPending
-                  ? "cursor-not-allowed bg-[#E0E0E0] text-[#BDBDBD]"
-                  : "bg-brand text-white hover:bg-[#FF4540]",
-              )}
-            >
-              {deleteAccount.isPending ? "Deleting…" : "Delete my account"}
-            </button>
-          </div>
-        </ModalShell>
-      )}
+      <DeleteAccountDialogView {...deleteDialog} />
     </div>
   );
 }
