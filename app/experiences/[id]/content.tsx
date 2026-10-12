@@ -11,7 +11,6 @@ import { ExperienceRailSection } from "@/components/home/experience-rail-section
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StarIcon } from "@/components/icons/shared-icons";
-import { ExperienceGallery } from "@/components/experiences/experience-gallery";
 import { ExperienceBeforeYouBook } from "@/components/experiences/experience-before-you-book";
 import { ExperienceItinerary } from "@/components/experiences/experience-itinerary";
 import { ExperienceReviews } from "@/components/experiences/experience-reviews";
@@ -24,6 +23,7 @@ import {
   useBookingPanelViewModel,
 } from "@/features/booking";
 import { saveCheckoutDraft } from "@/features/checkout";
+import { ExperienceGalleryView, useExperienceGalleryViewModel } from "@/features/experience-gallery";
 import {
   experienceListItemToCardProps,
   experienceMatchToCardProps,
@@ -79,6 +79,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const isGuest = hydrated && !isAccount;
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
+  const gallery = useExperienceGalleryViewModel(experience);
   const { data: prices } = useExperiencePrices(id);
   const minPrice = (prices ?? []).reduce(
     (min, p) => (min === null || p.amount < min ? p.amount : min),
@@ -119,11 +120,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
     ? parseIsoDateLocal(experience.event_start_date)
     : null;
 
-  const images = experience.images?.length
-    ? experience.images
-    : experience.cover_image_url
-      ? [experience.cover_image_url]
-      : [];
+  const { images } = gallery;
   const durationLabel = formatDuration(experience.duration_minutes) || "Flexible";
   const location = [experience.city, experience.country].filter(Boolean).join(", ");
 
@@ -227,11 +224,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
         <div className="mt-4 lg:grid lg:grid-cols-[1fr_380px] lg:items-start lg:gap-10">
           <div className="flex flex-col gap-10">
-            {images.length > 0 ? (
-              <ExperienceGallery images={images} alt={experience.title} />
-            ) : (
-              <div className="aspect-[4/3] w-full rounded-2xl bg-muted lg:aspect-auto lg:h-[352px]" />
-            )}
+            <ExperienceGalleryView {...gallery} alt={experience.title} />
 
             {experience.description && (
               <ExperienceDescription description={experience.description} />

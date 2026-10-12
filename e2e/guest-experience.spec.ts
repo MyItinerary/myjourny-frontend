@@ -65,3 +65,45 @@ test.describe("experience page for a guest", () => {
     await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
   });
 });
+
+test.describe("experience photos", () => {
+  const PHOTOS = [1, 2, 3, 4, 5].map((n) => `https://photos.test/lagos-food-walk-${n}.jpg`);
+  // A 1x1 PNG, so the page never loads a real photo.
+  const PIXEL = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    "base64",
+  );
+
+  test.beforeEach(async ({ page }) => {
+    await page.route("https://photos.test/**", (r) => r.fulfill({ contentType: "image/png", body: PIXEL }));
+    await mockApi(page, {
+      "GET /experiences/exp-1": (r) => r.fulfill({ json: { ...EXPERIENCE, images: PHOTOS } }),
+      "GET /experiences/exp-1/pricing": (r) =>
+        r.fulfill({ json: { currency: "NGN", prices: [], addons: [], rules: [] } }),
+      "GET /experiences/exp-1/sessions": (r) =>
+        r.fulfill({ json: { timezone: "Africa/Lagos", scheduled: false, sessions: [] } }),
+    });
+    await page.goto("/experiences/exp-1");
+    await expect(page.getByRole("heading", { name: "Lagos Food Walk" }).first()).toBeVisible();
+  });
+
+  test("View all opens every photo, one at a time", async ({ page }) => {
+    await page.getByRole("button", { name: "View all 5 photos" }).click();
+    const viewer = page.getByRole("dialog", { name: "Photo 1 of 5" });
+    await expect(viewer).toBeVisible();
+
+    await page.getByRole("button", { name: "Next photo" }).click();
+    await expect(page.getByRole("dialog", { name: "Photo 2 of 5" })).toBeVisible();
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    await expect(page.getByRole("dialog", { name: "Photo 5 of 5" })).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
+
+  test("clicking a photo opens the viewer on that photo", async ({ page }) => {
+    await page.getByTestId("gallery-grid").getByRole("button", { name: "View photo 3 of 5" }).click();
+    await expect(page.getByRole("dialog", { name: "Photo 3 of 5" })).toBeVisible();
+  });
+});
