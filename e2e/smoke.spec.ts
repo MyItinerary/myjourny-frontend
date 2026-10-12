@@ -19,4 +19,13 @@ test.describe("smoke", () => {
       await expect(submit).toBeEnabled({ timeout: 1_000 });
     }).toPass();
   });
+
+  test("login page's hero photo loads", async ({ page }) => {
+    await page.goto("/login");
+    const photo = page.getByAltText(/A woman laughing/);
+    await expect(photo).toBeVisible();
+    // The server resizes this photo on request; a heavy source file once left
+    // the request hanging, so the page never finished loading.
+    await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+  });
 });

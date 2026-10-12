@@ -36,7 +36,7 @@ export function AuthScreenLayout({ heading, subtitle, children }: AuthScreenLayo
 
       <div className="hidden lg:block lg:flex-1">
         <OnboardingSlide
-          imageSrc="/images/onboarding/curated-around-you.png"
+          imageSrc="/images/onboarding/curated-around-you.jpg"
           imageAlt="A woman laughing, held up in celebration by a crowd of hands, outdoors under trees."
           headline="Experiences, curated around you"
         />
