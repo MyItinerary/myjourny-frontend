@@ -233,7 +233,7 @@ pixel-diffed against Figma the way the sections above were).
   but not yet confirmed pixel-exact for that specific compact usage).
 - **Images**: components take `imageSrc` as a prop. Downloaded and
   committed so far: onboarding hero photo
-  ([public/images/onboarding/curated-around-you.png](public/images/onboarding/curated-around-you.png)),
+  ([public/images/onboarding/curated-around-you.jpg](public/images/onboarding/curated-around-you.jpg)),
   homepage city photos
   ([public/images/home/cities/](public/images/home/cities/), 8 cities),
   and one placeholder experience photo reused across all experience
