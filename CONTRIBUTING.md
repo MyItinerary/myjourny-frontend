@@ -165,6 +165,15 @@ Write the description for a reviewer or PM who hasn't read the code:
 - **Technical notes** (optional): only what a reviewer needs. The diff already shows every file.
 - **Tests:** the behaviour each test covers. The `ci` check already shows the output.
 
+**Before you push**, on every push and not only the first:
+
+1. Run `npm run check` and the whole `npm run test:e2e` suite. Both must pass.
+2. Check the title, branch name, template sections and checklist against the rules above.
+3. Tick "I followed How to verify myself" and "UI matches Figma" only once you have done them yourself. An AI agent must not tick these two for you; it has to ask you first.
+4. If a requirement isn't met, fix it or open the PR as a draft and list what is missing at the top of the description.
+
+After pushing, watch the checks until `ci` and `pr-format` are green, then comment `@myjourny`. A red PR is the author's to fix before asking anyone for review. If someone else pushes a fix to your branch, they leave an inline comment that tags you and explains it.
+
 **Size:** aim for under ~400 changed lines (excluding lockfiles and generated files). Split large features into stacked PRs: model first, then view-model, then view.
 
 ---
