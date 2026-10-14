@@ -31,7 +31,7 @@ export function EmailTemplatesPreviewView(props: EmailTemplatesViewModel) {
     onCopyHtml,
   } = props;
 
-  const maxWidthClass = viewport === "mobile" ? "max-w-[360px]" : "max-w-[560px]";
+  const maxWidthClass = viewport === "mobile" ? "max-w-[375px]" : "max-w-[600px]";
 
   const renderActiveTemplate = () => {
     switch (activeTemplateId) {
@@ -53,29 +53,7 @@ export function EmailTemplatesPreviewView(props: EmailTemplatesViewModel) {
   };
 
   const handleCopyCurrentHtml = () => {
-    // Generate a basic HTML representation of the active template
-    const activeItem = catalog.find((item) => item.id === activeTemplateId);
-    const htmlSnippet = `<!-- MyJourny Email Template: ${activeItem?.title || activeTemplateId} -->
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${activeItem?.title || "MyJourny"}</title>
-</head>
-<body style="margin:0;padding:24px;background-color:#F4F2EE;font-family:'TikTok Sans',-apple-system,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:28px;overflow:hidden;border:1px solid #E0DFDD;">
-    <div style="background:#2C0101;padding:40px 24px;text-align:center;">
-      <img src="https://myjourny.app/images/email-templates/3.png" alt="MyJourny" style="max-width:180px;height:auto;" />
-    </div>
-    <div style="padding:32px;">
-      <h1 style="color:#130404;font-size:24px;margin-bottom:8px;">${activeItem?.title}</h1>
-      <p style="color:#6F6B72;font-size:14px;line-height:1.6;">${activeItem?.description}</p>
-    </div>
-  </div>
-</body>
-</html>`;
-    onCopyHtml(htmlSnippet);
+    void onCopyHtml();
   };
 
   return (

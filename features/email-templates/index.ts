@@ -29,6 +29,16 @@ export {
   EMAIL_TEMPLATES_CATALOG,
 } from "./model/email-templates-data";
 
+export {
+  generateBookingCancelledEmailHtml,
+  generateBookingConfirmedEmailHtml,
+  generateEmailHtmlForTemplate,
+  generatePasswordResetEmailHtml,
+  generatePaymentConfirmedEmailHtml,
+  generateTodayReminderEmailHtml,
+  generateVerifyEmailHtml,
+} from "./model/email-templates-html";
+
 export type {
   EmailTemplatesViewModel,
   UseEmailTemplatesViewModelProps,

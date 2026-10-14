@@ -34,7 +34,7 @@ export function EmailTemplateShellView({
   footerCopyright = "© 2026 MyJourny Ltd. Lagos, Nigeria.",
   children,
   className,
-  maxWidthClass = "max-w-[560px]",
+  maxWidthClass = "max-w-[600px]",
 }: EmailTemplateShellProps) {
   return (
     <div
@@ -46,7 +46,7 @@ export function EmailTemplateShellView({
       {/* Email Card Container */}
       <div
         className={cn(
-          "w-full overflow-hidden rounded-[28px] border border-[#E0DFDD]/70 bg-white shadow-sm",
+          "w-full overflow-hidden rounded-[28px] border border-[#E0DFDD]/70 bg-white shadow-sm @container",
           maxWidthClass,
         )}
       >
@@ -56,7 +56,7 @@ export function EmailTemplateShellView({
             src={heroImageSrc}
             alt=""
             fill
-            sizes="(max-width: 640px) 100vw, 560px"
+            sizes="(max-width: 640px) 100vw, 600px"
             priority
             className="object-cover object-center"
           />
