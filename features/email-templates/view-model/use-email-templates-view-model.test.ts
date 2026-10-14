@@ -114,7 +114,7 @@ describe("useEmailTemplatesViewModel", () => {
     expect(writeTextMock).toHaveBeenCalled();
     const copiedHtml = writeTextMock.mock.calls[0][0] as string;
     expect(copiedHtml).toContain("<!DOCTYPE html>");
-    expect(copiedHtml).toContain("Let's get you back in");
+    expect(copiedHtml).toContain("Let&#39;s get you back in");
     expect(toast.success).toHaveBeenCalledWith("Email template HTML copied to clipboard");
   });
 
