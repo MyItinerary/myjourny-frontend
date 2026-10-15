@@ -3,10 +3,55 @@ import { describe, expect, it } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
 
-import { EMPTY_PITCH, EXAMPLES, EXAMPLES_COPY, SELL_POINTS } from "../model/home-copy";
-import { SAMPLE_HOME } from "../model/sample-home";
+import type { HostHomeData } from "../model/home.types";
 import type { HostHomeViewModel } from "../view-model/use-host-home-view-model";
 import { HostHomeView } from "./host-home-view";
+
+const SAMPLE_HOME: HostHomeData = {
+  stats: [
+    { label: "Bookings coming up", value: "4", note: "6 guests tomorrow", tone: "muted" },
+    { label: "Earned this month", value: "₦248,000", note: "up from ₦180,000 in August", tone: "green" },
+  ],
+  attention: [
+    { id: "b1", title: "Amaka Eze wants 2 places on Saturday", sub: "Request to book", timer: "2h left", urgent: true, action: "Open", href: "/host/dashboard/bookings" },
+    { id: "b2", title: "Chidi Okafor has been waiting 2 days", sub: "Request to book", timer: "Late", urgent: false, action: "Open", href: "/host/dashboard/bookings" },
+    { id: "l1", title: "Lagos Island Photowalk is missing photos", sub: "It cannot go live", timer: "2 to fix", urgent: false, action: "Finish it", href: "/host/dashboard/listings/new" },
+  ],
+  listings: [
+    { id: "l1", imageUrl: "/a.jpg", status: "Live", title: "Lagos Island Photowalk", meta: "Sat 20 Sept · 6 of 8 booked", href: "/host/dashboard/listings/new" },
+    { id: "l2", imageUrl: "/b.jpg", status: "In review", title: "Sunset Kayak and Paint", meta: "Sent 2 days ago", href: "/host/dashboard/listings/new" },
+    { id: "l3", imageUrl: "/c.jpg", status: "Archived", title: "Harmattan Portrait Session", meta: "Ran 11 times", href: "/host/dashboard/listings" },
+  ],
+  earnings: {
+    total: "₦1,046,000",
+    months: [
+      { month: "Apr", amountK: 96 },
+      { month: "May", amountK: 132 },
+      { month: "Jun", amountK: 158 },
+      { month: "Jul", amountK: 204 },
+      { month: "Aug", amountK: 180 },
+      { month: "Sep", amountK: 248 },
+    ],
+  },
+  next: {
+    title: "Lagos Island Photowalk",
+    when: "Tomorrow, Sat 20 Sept · 16:00 · 3 hours",
+    guests: "6 of 8",
+    payout: "₦51,000",
+    meeting: "Meeting at the yellow gate",
+    href: "/host/dashboard/bookings",
+  },
+  reviews: [
+    { name: "Ifeoma A.", stars: 5, when: "3 days ago", text: "Left with eleven pictures I actually like." },
+    { name: "Segun O.", stars: 5, when: "last week", text: "Found the gate immediately." },
+  ],
+};
+
+const EXAMPLE_ITEMS = [
+  { imageUrl: "/1.jpg", eyebrow: "Art & creativity", title: "Golden hour portrait walk", sub: "Six people.", money: "8 guests × ₦10,000 = ₦80,000" },
+  { imageUrl: "/2.jpg", eyebrow: "Street life", title: "Market to plate, on camera", sub: "Two hours.", money: "6 guests × ₦12,000 = ₦72,000" },
+  { imageUrl: "/3.jpg", eyebrow: "Water activity", title: "Boat morning, film only", sub: "One boat.", money: "5 guests × ₦18,000 = ₦90,000" },
+];
 
 const base = {
   header: { title: "Good afternoon, Tunde", subtitle: "", actions: [] },
@@ -17,9 +62,18 @@ const base = {
     { label: "List an experience", href: "/host/dashboard/listings/new" },
     { label: "Report a problem with a booking", href: "/host/dashboard/bookings" },
   ],
-  pitch: EMPTY_PITCH,
-  examples: { ...EXAMPLES_COPY, items: EXAMPLES },
-  sellPoints: SELL_POINTS,
+  pitch: {
+    eyebrow: "You are approved",
+    heading: "You already know how to do the thing, now sell it to eight people at once.",
+    body: "A private shoot is one client.",
+    cta: "Create your first experience",
+  },
+  examples: { heading: "Three that work in your category", body: "Photography, Lagos.", items: EXAMPLE_ITEMS },
+  sellPoints: [
+    { n: "1", title: "Sell the feeling, not the schedule", body: "Nobody books six locations." },
+    { n: "2", title: "One landmark beats any address", body: "The yellow gate." },
+    { n: "3", title: "Price the seat, not your day", body: "Work out your day rate." },
+  ],
 };
 
 const full: HostHomeViewModel = { ...base, kind: "full", data: SAMPLE_HOME };
