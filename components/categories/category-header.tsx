@@ -27,7 +27,7 @@ export function CategoryHeader({
 }) {
   const countText = isLoading
     ? loadingText
-    : isError
+    : isError && (count === 0 || count === undefined)
       ? errorText
       : total !== undefined
         ? `(${total} ${total === 1 ? "result" : "results"})`

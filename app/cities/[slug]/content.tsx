@@ -61,7 +61,7 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
 
   const countLabel = cityQuery.isPending
     ? "(Loading experiences…)"
-    : cityQuery.isError
+    : cityQuery.isError && items.length === 0
       ? "(Failed to load)"
       : total !== undefined
         ? `(${total} ${total === 1 ? "result" : "results"})`
@@ -149,6 +149,7 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
             loadMore={{
               hasMore: cityQuery.hasNextPage,
               isLoading: cityQuery.isFetchingNextPage,
+              isError: cityQuery.isFetchNextPageError,
               onLoadMore: () => cityQuery.fetchNextPage(),
             }}
           />

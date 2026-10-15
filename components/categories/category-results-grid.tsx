@@ -34,14 +34,19 @@ export function CategoryResultsGrid({
   errorMessage?: string;
   onRetry?: () => void;
   moreLabel?: string;
-  loadMore?: { hasMore: boolean; isLoading: boolean; onLoadMore: () => void };
+  loadMore?: {
+    hasMore: boolean;
+    isLoading: boolean;
+    isError?: boolean;
+    onLoadMore: () => void;
+  };
 }) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const tasteQuiz = useTasteQuizCtaViewModel();
   const visible = loadMore ? items : items.slice(0, visibleCount);
   const hasMore = loadMore ? loadMore.hasMore : items.length > visibleCount;
 
-  if (isError) {
+  if (isError && items.length === 0) {
     return (
       <div className="flex w-full flex-col items-center justify-center rounded-3xl border border-dashed border-[#e0dfdd] bg-[#FAF9F7] px-6 py-16 text-center">
         <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-[#FEE2E2] text-brand">
@@ -128,14 +133,25 @@ export function CategoryResultsGrid({
       </div>
 
       {hasMore ? (
-        <Button
-          size="cta"
-          disabled={loadMore?.isLoading}
-          onClick={() => (loadMore ? loadMore.onLoadMore() : setVisibleCount((n) => n + PAGE_SIZE))}
-          className="w-[134px]"
-        >
-          {loadMore?.isLoading ? "Loading..." : moreLabel}
-        </Button>
+        <div className="flex flex-col items-center gap-2">
+          <Button
+            size="cta"
+            disabled={loadMore?.isLoading}
+            onClick={() => (loadMore ? loadMore.onLoadMore() : setVisibleCount((n) => n + PAGE_SIZE))}
+            className="w-auto min-w-[134px] px-6"
+          >
+            {loadMore?.isLoading
+              ? "Loading..."
+              : isError || loadMore?.isError
+                ? "Retry loading more"
+                : moreLabel}
+          </Button>
+          {(isError || loadMore?.isError) && (
+            <p className="text-xs text-muted-foreground">
+              Couldn&apos;t load more experiences. Tap to retry.
+            </p>
+          )}
+        </div>
       ) : null}
     </div>
   );

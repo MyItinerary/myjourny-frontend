@@ -94,4 +94,35 @@ describe("CategoryResultsGrid", () => {
     expect(screen.getByText("Surfing in Tarkwa Bay")).toBeInTheDocument();
     expect(screen.queryByText(/No experiences found/i)).not.toBeInTheDocument();
   });
+
+  it("maintains the loaded cards and provides a retry button when load-more fails", async () => {
+    const handleLoadMore = vi.fn();
+    const { user } = renderWithProviders(
+      <CategoryResultsGrid
+        items={mockItems}
+        categoryLabel="Beaches"
+        isLoading={false}
+        isError={true}
+        loadMore={{
+          hasMore: true,
+          isLoading: false,
+          isError: true,
+          onLoadMore: handleLoadMore,
+        }}
+      />
+    );
+
+    // Existing cards are preserved
+    expect(screen.getByText("Surfing in Tarkwa Bay")).toBeInTheDocument();
+    // Full error container is NOT shown
+    expect(screen.queryByText("Failed to load experiences")).not.toBeInTheDocument();
+
+    // Retry load more button is shown
+    const retryButton = screen.getByRole("button", { name: "Retry loading more" });
+    expect(retryButton).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load more experiences. Tap to retry.")).toBeInTheDocument();
+
+    await user.click(retryButton);
+    expect(handleLoadMore).toHaveBeenCalledOnce();
+  });
 });

@@ -54,6 +54,7 @@ export function PopularExperiencesContent() {
       loadMore={{
         hasMore: query.hasNextPage,
         isLoading: query.isFetchingNextPage,
+        isError: query.isFetchNextPageError,
         onLoadMore: () => query.fetchNextPage(),
       }}
     />

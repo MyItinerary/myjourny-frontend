@@ -66,6 +66,7 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
       loadMore={{
         hasMore: guestQuery.hasNextPage,
         isLoading: guestQuery.isFetchingNextPage,
+        isError: guestQuery.isFetchNextPageError,
         onLoadMore: () => guestQuery.fetchNextPage(),
       }}
     />

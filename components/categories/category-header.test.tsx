@@ -32,7 +32,7 @@ describe("CategoryHeader", () => {
     expect(screen.queryByText("(0 results)")).not.toBeInTheDocument();
   });
 
-  it("displays error placeholder instead of 0 results when request fails", () => {
+  it("displays error placeholder instead of 0 results when request fails on initial load", () => {
     renderWithProviders(
       <CategoryHeader
         label="Beaches & waterfronts"
@@ -44,6 +44,21 @@ describe("CategoryHeader", () => {
 
     expect(screen.getByText("(Failed to load)")).toBeInTheDocument();
     expect(screen.queryByText("(0 results)")).not.toBeInTheDocument();
+  });
+
+  it("maintains the result count when isError occurs but items are already loaded", () => {
+    renderWithProviders(
+      <CategoryHeader
+        label="Beaches & waterfronts"
+        count={16}
+        total={24}
+        isLoading={false}
+        isError={true}
+      />
+    );
+
+    expect(screen.getByText("(24 results)")).toBeInTheDocument();
+    expect(screen.queryByText("(Failed to load)")).not.toBeInTheDocument();
   });
 
   it("displays exact result count after successful API response", () => {
