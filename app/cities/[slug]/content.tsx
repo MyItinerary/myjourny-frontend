@@ -59,8 +59,15 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
 
   const categoryChips = (categoriesQuery.data ?? []).filter((c) => c.parent_id === null);
 
-  const countLabel =
-    total === undefined ? "" : `(${total} ${total === 1 ? "result" : "results"})`;
+  const countLabel = cityQuery.isPending
+    ? "(Loading experiences…)"
+    : cityQuery.isError
+      ? "(Failed to load)"
+      : total !== undefined
+        ? `(${total} ${total === 1 ? "result" : "results"})`
+        : items.length === 0
+          ? "(0 results)"
+          : `(${items.length}+ results)`;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -136,6 +143,8 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
             items={items}
             categoryLabel={cityName}
             isLoading={cityQuery.isPending}
+            isError={cityQuery.isError}
+            onRetry={() => cityQuery.refetch()}
             moreLabel="Show more"
             loadMore={{
               hasMore: cityQuery.hasNextPage,

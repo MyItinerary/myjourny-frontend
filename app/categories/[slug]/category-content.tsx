@@ -36,21 +36,33 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
   const guestQuery = useInfiniteFilteredExperiences({ interest: slug, pageSize: PAGE_SIZE, enabled: isGuest });
 
   if (isAccount) {
+    const isLoading = !hydrated || categoriesQuery.isLoading || accountQuery.isFetching;
+    const isError = categoriesQuery.isError || accountQuery.isError;
     return (
       <CategoryContent
         label={resolvedLabel}
         items={(accountQuery.data ?? []).map(experienceMatchToCardProps)}
-        isLoading={categoriesQuery.isLoading || accountQuery.isFetching}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => {
+          categoriesQuery.refetch();
+          accountQuery.refetch();
+        }}
       />
     );
   }
+
+  const isLoading = !hydrated || guestQuery.isPending;
+  const isError = guestQuery.isError;
 
   return (
     <CategoryContent
       label={resolvedLabel}
       items={(guestQuery.data?.pages ?? []).flatMap((p) => p.items).map(experienceListItemToCardProps)}
       total={guestQuery.data?.pages[0]?.total}
-      isLoading={!hydrated || guestQuery.isPending}
+      isLoading={isLoading}
+      isError={isError}
+      onRetry={() => guestQuery.refetch()}
       loadMore={{
         hasMore: guestQuery.hasNextPage,
         isLoading: guestQuery.isFetchingNextPage,

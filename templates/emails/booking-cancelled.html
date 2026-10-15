@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{{#if title}}{{title}}{{else}}This booking's been cancelled{{/if}}</title>
+  <style>
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100% !important; background-color: #F4F2EE; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+  </style>
+</head>
+<body style="margin:0;padding:24px 12px;background-color:#F4F2EE;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td align="center">
+        <!-- Main Card Container (600px canvas) -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:28px;overflow:hidden;border:1px solid #E0DFDD;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+          <!-- Hero Header Banner with Logo -->
+          <tr>
+            <td align="center" style="background-color:#2C0101;background-image:url('https://myjourny.app/images/email-templates/1.png');background-size:cover;background-position:center;padding:48px 24px;text-align:center;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <img src="https://myjourny.app/images/email-templates/3.png" alt="MyJourny" width="180" style="display:block;max-width:180px;height:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.35));" />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Card Body Content -->
+          <tr>
+            <td style="padding:32px 28px 28px 28px;">
+              <!-- Eyebrow -->
+              <p style="margin:0 0 8px 0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#F5032D;">
+                {{#if eyebrow}}{{eyebrow}}{{else}}BOOKING CANCELLED{{/if}}
+              </p>
+
+              <!-- Heading -->
+              <h1 style="margin:0 0 12px 0;font-size:24px;line-height:1.3;font-weight:800;color:#130404;letter-spacing:-0.02em;">
+                {{#if title}}{{title}}{{else}}This booking's been cancelled{{/if}}
+              </h1>
+
+              <!-- Subtitle -->
+              <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;color:#6F6B72;">
+                {{#if subtitle}}{{subtitle}}{{else}}Dawn Yoga at Millennium Park on Sat, 14 February is no longer happening. Here's what that means for your refund.{{/if}}
+              </p>
+
+              <!-- Refund Summary Table -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F8F7F5;border:1px solid #E0DFDD;border-radius:14px;padding:16px;font-size:13px;margin-bottom:16px;">
+                <tr>
+                  <td style="padding:4px 0;color:#6F6B72;">Cancelled by</td>
+                  <td align="right" style="padding:4px 0;font-weight:600;color:#130404;">{{#if cancelledBy}}{{cancelledBy}}{{else}}You, 3 days ago{{/if}}</td>
+                </tr>
+                <tr>
+                  <td style="padding:4px 0;color:#6F6B72;">Refund amount</td>
+                  <td align="right" style="padding:4px 0;font-weight:800;color:#130404;">{{#if refundAmountFormatted}}{{refundAmountFormatted}}{{else}}₦5,000{{/if}}</td>
+                </tr>
+                <tr>
+                  <td style="padding:4px 0;color:#6F6B72;">Refund status</td>
+                  <td align="right" style="padding:4px 0;font-weight:600;color:#130404;">{{#if refundStatus}}{{refundStatus}}{{else}}Arrived Feb 12 · Bank transfer{{/if}}</td>
+                </tr>
+              </table>
+
+              <!-- Policy Note -->
+              <p style="margin:0 0 20px 0;font-size:12px;line-height:1.6;color:#6F6B72;">
+                {{#if policyNote}}{{policyNote}}{{else}}You cancelled within the free window, so the full amount was returned automatically, no action needed on your end.{{/if}}
+              </p>
+
+              <!-- Browse CTA Section -->
+              <div style="border-top:1px solid #F4F2EE;padding-top:20px;text-align:center;">
+                <p style="margin:0 0 12px 0;font-size:13px;font-weight:500;color:#6F6B72;">
+                  {{#if browsePrompt}}{{browsePrompt}}{{else}}Your city's still full of things to do when you're ready{{/if}}
+                </p>
+                <a href="{{browseUrl}}" style="display:inline-block;background-color:#F5032D;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 36px;border-radius:9999px;">
+                  Browse experiences
+                </a>
+              </div>
+
+              <!-- Help Discrepancy Note -->
+              <p style="margin:20px 0 0 0;font-size:12px;color:#6F6B72;">
+                Think this isn't right? <a href="mailto:{{#if billingEmail}}{{billingEmail}}{{else}}billing@myjourny.app{{/if}}" style="color:#F5032D;text-decoration:underline;font-weight:500;">{{#if billingEmail}}{{billingEmail}}{{else}}billing@myjourny.app{{/if}}</a>
+              </p>
+
+              <!-- Sign-off & Social Icons Divider -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top:32px;border-top:1px solid #F4F2EE;padding-top:24px;">
+                <tr>
+                  <td align="left" style="font-size:13px;color:#6F6B72;line-height:1.5;">
+                    <p style="margin:0 0 2px 0;">{{#if signOffPrefix}}{{signOffPrefix}}{{else}}Until next time,{{/if}}</p>
+                    <p style="margin:0;font-weight:600;color:#333134;">{{#if signOffTeam}}{{signOffTeam}}{{else}}MyJourny Team{{/if}}</p>
+                  </td>
+                  <td align="right">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding-left:8px;">
+                          <a href="https://instagram.com/myjournyapp" style="display:inline-block;color:#6F6B72;text-decoration:none;font-size:12px;font-weight:600;">IG</a>
+                        </td>
+                        <td style="padding-left:12px;">
+                          <a href="https://x.com/myjournyapp" style="display:inline-block;color:#6F6B72;text-decoration:none;font-size:12px;font-weight:600;">X</a>
+                        </td>
+                        <td style="padding-left:12px;">
+                          <a href="https://tiktok.com/@myjournyapp" style="display:inline-block;color:#6F6B72;text-decoration:none;font-size:12px;font-weight:600;">TT</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <!-- External Footer -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:500px;margin-top:24px;text-align:center;">
+          <tr>
+            <td style="font-size:12px;line-height:1.6;color:#8A868D;text-align:center;">
+              <p style="margin:0 0 4px 0;">{{#if footerNotice}}{{footerNotice}}{{else}}This confirms the cancellation of booking MJ-10552.{{/if}}</p>
+              <p style="margin:0 0 6px 0;">Need help? <a href="mailto:{{#if helpEmail}}{{helpEmail}}{{else}}support@myjourny.app{{/if}}" style="color:#F5032D;text-decoration:none;font-weight:600;">{{#if helpEmail}}{{helpEmail}}{{else}}support@myjourny.app{{/if}}</a></p>
+              <p style="margin:0;font-size:11px;color:#A39FA7;">{{#if copyright}}{{copyright}}{{else}}© 2026 MyJourny Ltd. Lagos, Nigeria.{{/if}}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
