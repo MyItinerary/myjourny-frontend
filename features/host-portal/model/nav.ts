@@ -12,7 +12,7 @@ export type HostNavItem = {
 };
 
 export const HOST_NAV_ITEMS: HostNavItem[] = [
-  { key: "dashboard", label: "Dashboard", icon: "dash", href: HOST_PORTAL_BASE },
+  { key: "dashboard", label: "Home", icon: "dash", href: HOST_PORTAL_BASE },
   { key: "listings", label: "Listings", icon: "list", href: `${HOST_PORTAL_BASE}/listings` },
   { key: "calendar", label: "Calendar", icon: "cal", href: `${HOST_PORTAL_BASE}/calendar` },
   { key: "bookings", label: "Bookings", icon: "book", href: `${HOST_PORTAL_BASE}/bookings` },
@@ -22,7 +22,7 @@ export const HOST_NAV_ITEMS: HostNavItem[] = [
 ];
 
 /** The current destination, matched by route prefix so Listings stays active
- * inside the builder (listings/new, listings/<id>). Dashboard only matches itself. */
+ * inside the builder (listings/new, listings/<id>). Home only matches itself. */
 export function activeNavKey(pathname: string | null): HostNavKey | null {
   if (!pathname) return null;
   const path = pathname.replace(/\/+$/, "");

@@ -7,7 +7,7 @@ import type { HostSidebarViewModel } from "../view-model/use-host-sidebar-view-m
 import { HostSidebarView } from "./host-sidebar-view";
 
 const NAV = [
-  ["dashboard", "Dashboard", "dash", "/host/dashboard"],
+  ["dashboard", "Home", "dash", "/host/dashboard"],
   ["listings", "Listings", "list", "/host/dashboard/listings"],
   ["calendar", "Calendar", "cal", "/host/dashboard/calendar"],
   ["bookings", "Bookings", "book", "/host/dashboard/bookings"],
@@ -37,7 +37,7 @@ describe("HostSidebarView, expanded", () => {
     expect(screen.getByAltText("Myjourny")).toBeInTheDocument();
     expect(screen.getByText("myjourny")).toBeInTheDocument();
     expect(screen.getAllByRole("link").map((l) => l.textContent)).toEqual([
-      "Dashboard", "Listings", "Calendar", "Bookings", "Earnings", "Profile", "Help",
+      "Home", "Listings", "Calendar", "Bookings", "Earnings", "Profile", "Help",
     ]);
     expect(screen.getByText("Tunde Bakare")).toBeInTheDocument();
     expect(screen.getByText("Verified host")).toBeInTheDocument();

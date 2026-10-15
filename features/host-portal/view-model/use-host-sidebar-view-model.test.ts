@@ -31,7 +31,7 @@ describe("useHostSidebarViewModel", () => {
     const { result } = renderHook(() => useHostSidebarViewModel());
 
     expect(result.current.items.map((i) => i.label)).toEqual([
-      "Dashboard", "Listings", "Calendar", "Bookings", "Earnings", "Profile", "Help",
+      "Home", "Listings", "Calendar", "Bookings", "Earnings", "Profile", "Help",
     ]);
     expect(result.current.items.filter((i) => i.active).map((i) => i.key)).toEqual(["bookings"]);
   });

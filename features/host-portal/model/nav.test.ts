@@ -5,7 +5,7 @@ import { activeNavKey, countLabel, HOST_NAV_ITEMS } from "./nav";
 describe("HOST_NAV_ITEMS", () => {
   it("lists the seven destinations in order", () => {
     expect(HOST_NAV_ITEMS.map((i) => i.label)).toEqual([
-      "Dashboard",
+      "Home",
       "Listings",
       "Calendar",
       "Bookings",
