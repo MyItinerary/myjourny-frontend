@@ -7,12 +7,13 @@ export const metadata: Metadata = {
   title: "Host portal — MyJourny",
 };
 
-// The host portal: the sidebar rail beside whichever section is open.
+// The host portal: the sidebar rail beside whichever section is open. Each
+// section draws its own header bar and scrolls on its own.
 export default function HostPortalLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-dvh bg-white">
+    <div className="flex h-dvh overflow-hidden bg-white">
       <HostSidebar />
-      <main className="min-w-0 flex-1 p-10">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col bg-white">{children}</main>
     </div>
   );
 }
