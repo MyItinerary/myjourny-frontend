@@ -99,6 +99,16 @@ export function formatSessionWhen(startsAt: string, endsAt?: string | null, time
   }).format(start);
 }
 
+/**
+ * The day only, "Saturday, October 17": for experiences without a schedule,
+ * where the host confirms the start time and the server's noon is a placeholder.
+ */
+export function formatSessionDay(startsAt: string, timeZone = "Africa/Lagos"): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone, weekday: "long", month: "long", day: "numeric" }).format(
+    parseUtc(startsAt),
+  );
+}
+
 /** The parts of an experience's schedule a label needs. */
 export type ScheduleSummary = {
   schedule_type?: string | null;
