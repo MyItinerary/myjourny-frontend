@@ -208,7 +208,9 @@ export type ExperienceDetail = {
   rating?: number | null;
   cover_image_url?: string | null;
   cancellation_policy?: string | null;
-  requirements?: { fitness?: string; age?: string; accessibility?: string } | null;
+  requirements?: { fitness_level?: string | null; age?: string | null; accessibility?: string | null } | null;
+  itinerary?: { title: string; description?: string | null }[] | null;
+  what_to_bring?: string | null;
   safety_info?: {
     riskLevel?: string;
     notes?: string[];
