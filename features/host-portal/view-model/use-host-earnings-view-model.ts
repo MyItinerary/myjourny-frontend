@@ -1,4 +1,3 @@
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +14,7 @@ import { useHostEarnings } from "../model/earnings-data";
 import type { EarningsRange, EarningsStat } from "../model/earnings.types";
 import type { HostPageHeader } from "./use-host-home-view-model";
 import { useToday } from "./use-today";
+import { usePreviewMode } from "./use-preview-mode";
 
 export type HostEarningsViewModel = {
   ready: boolean;
@@ -42,7 +42,7 @@ const EMPTY_STATS: EarningsStat[] = [
 ];
 
 export function useHostEarningsViewModel(): HostEarningsViewModel {
-  const preview = useSearchParams().get("preview");
+  const preview = usePreviewMode();
   const today = useToday();
   const earnings = useHostEarnings(preview, today);
   const [range, setRange] = useState<EarningsRange>("This month");

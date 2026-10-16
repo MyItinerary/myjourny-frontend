@@ -25,3 +25,6 @@ export { HostProfileView } from "./view/host-profile-view";
 export type { HostHelpViewModel } from "./view-model/use-host-help-view-model";
 export { useHostHelpViewModel } from "./view-model/use-host-help-view-model";
 export { HostHelpView } from "./view/host-help-view";
+export type { HostPreviewSwitchViewModel } from "./view-model/use-host-preview-switch-view-model";
+export { useHostPreviewSwitchViewModel } from "./view-model/use-host-preview-switch-view-model";
+export { HostPreviewSwitchView } from "./view/host-preview-switch-view";

@@ -1,4 +1,3 @@
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +19,7 @@ import type { ListingStatus } from "../model/home.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
 import { useToday } from "./use-today";
+import { usePreviewMode } from "./use-preview-mode";
 
 export type BookingRow = { booking: HostBooking; chip: ListingStatus };
 
@@ -59,7 +59,7 @@ export type HostBookingsViewModel = {
 const NOT_CONNECTED = "This will work once your bookings are connected.";
 
 export function useHostBookingsViewModel(): HostBookingsViewModel {
-  const preview = useSearchParams().get("preview");
+  const preview = usePreviewMode();
   const today = useToday();
   const bookings = useHostBookings(preview, today);
 

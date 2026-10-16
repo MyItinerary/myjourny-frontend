@@ -1,4 +1,3 @@
-import { useSearchParams } from "next/navigation";
 import { useSyncExternalStore } from "react";
 
 import {
@@ -15,6 +14,7 @@ import type { EmptyPitch, ExampleListing, SellPoint } from "../model/home-copy.t
 import type { HostHomeData } from "../model/home.types";
 import { useHostHome } from "../model/home-data";
 import { HOST_PORTAL_BASE } from "../model/nav";
+import { usePreviewMode } from "./use-preview-mode";
 
 export type HostPageHeader = {
   title: string;
@@ -49,7 +49,7 @@ function useNow(): Date | null {
 }
 
 export function useHostHomeViewModel(): HostHomeViewModel {
-  const { state, firstName } = useHostHome(useSearchParams().get("preview"));
+  const { state, firstName } = useHostHome(usePreviewMode());
   const now = useNow();
 
   const newListingHref = `${HOST_PORTAL_BASE}/listings/new`;

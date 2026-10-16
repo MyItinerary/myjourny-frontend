@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 
+import { HostPreviewSwitch } from "./preview-switch";
 import { HostSidebar } from "./sidebar";
 
 export const metadata: Metadata = {
@@ -14,6 +15,9 @@ export default function HostPortalLayout({ children }: { children: ReactNode }) 
     <div className="flex h-dvh overflow-hidden bg-white">
       <HostSidebar />
       <main className="flex min-w-0 flex-1 flex-col bg-white">{children}</main>
+      <Suspense>
+        <HostPreviewSwitch />
+      </Suspense>
     </div>
   );
 }

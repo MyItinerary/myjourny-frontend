@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useHostEarningsViewModel } from "./use-host-earnings-view-model";
 
-const nav = vi.hoisted(() => ({ preview: "full" as string | null }));
+const nav = vi.hoisted(() => ({ preview: "full" as string | null, quiet: false }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(nav.preview ? `preview=${nav.preview}` : ""),
 }));
@@ -12,9 +12,9 @@ vi.mock("../model/earnings-data", async (importOriginal) => {
   const { sampleEarnings } = await import("../model/sample-earnings");
   return {
     ...real,
-    // "?preview=quiet": earnings exist, but none fall in any range.
+    // quiet: earnings exist, but none fall in any range.
     useHostEarnings: (preview: string | null, today: string | null) =>
-      preview === "quiet" && today ? { ...sampleEarnings(today), transactions: [] } : real.useHostEarnings(preview, today),
+      nav.quiet && preview === "full" && today ? { ...sampleEarnings(today), transactions: [] } : real.useHostEarnings(preview, today),
   };
 });
 const toast = vi.hoisted(() => ({ info: vi.fn() }));
@@ -25,6 +25,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 8, 19, 10, 0));
   nav.preview = "full";
+  nav.quiet = false;
   toast.info.mockReset();
 });
 afterEach(() => vi.useRealTimers());
@@ -70,7 +71,7 @@ describe("with earnings", () => {
   });
 
   it("says when a range has nothing in it", () => {
-    nav.preview = "quiet";
+    nav.quiet = true;
     const { current } = render();
 
     expect(current.header.subtitle).toBe("₦248,000 this month · ₦68,000 clearing");

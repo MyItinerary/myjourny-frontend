@@ -17,6 +17,7 @@ import { useHostProfile } from "../model/profile-data";
 import type { HostProfile, PayoutSchedule, ProfilePaneKey, ProfileRow, SetupTask } from "../model/profile.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
+import { usePreviewMode } from "./use-preview-mode";
 
 export type ProfileNavItem = {
   key: ProfilePaneKey;
@@ -60,7 +61,7 @@ export function useHostProfileViewModel(): HostProfileViewModel {
   const router = useRouter();
   const params = useSearchParams();
   const { user } = useSession();
-  const profile = useHostProfile(params.get("preview"), user);
+  const profile = useHostProfile(usePreviewMode(), user);
 
   const fromUrl = params.get("pane");
   const [pane, setPane] = useState<ProfilePaneKey>(isPane(fromUrl) ? fromUrl : "personal");

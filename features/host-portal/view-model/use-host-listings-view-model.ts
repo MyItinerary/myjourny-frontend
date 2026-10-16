@@ -1,4 +1,4 @@
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ import type {
 } from "../model/listings.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
+import { usePreviewMode } from "./use-preview-mode";
 
 export type ListingColumn = { key: ListingSortKey; label: string; direction: "asc" | "desc" | null };
 
@@ -88,7 +89,7 @@ const NOT_CONNECTED = "This will work once your listings are connected.";
 
 export function useHostListingsViewModel(): HostListingsViewModel {
   const router = useRouter();
-  const preview = useSearchParams().get("preview");
+  const preview = usePreviewMode();
   const listings = useHostListings(preview);
 
   const [filters, setFilters] = useState<ListingFilters>(NO_FILTERS);

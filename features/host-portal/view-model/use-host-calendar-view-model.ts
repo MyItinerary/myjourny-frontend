@@ -1,4 +1,3 @@
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -22,6 +21,7 @@ import type { CalendarEvent, CalendarView } from "../model/calendar.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
 import { useToday } from "./use-today";
+import { usePreviewMode } from "./use-preview-mode";
 
 export type CalendarCellModel = {
   date: string | null;
@@ -83,7 +83,7 @@ const VIEWS: { key: CalendarView; label: string }[] = [
 const HINT = "Click a date, or press and drag across dates, to block them.";
 
 export function useHostCalendarViewModel(): HostCalendarViewModel {
-  const preview = useSearchParams().get("preview");
+  const preview = usePreviewMode();
   const today = useToday();
   const { events, initialBlocked } = useHostCalendar(preview, today);
 
