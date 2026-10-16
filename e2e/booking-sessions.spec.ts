@@ -117,11 +117,9 @@ test.describe("booking sessions", () => {
     });
 
     await panel(page).getByRole("button", { name: /Book now/ }).click();
-    await page.getByRole("button", { name: "Confirm and pay" }).click();
 
     await expect(page.getByText("This date is sold out")).toBeVisible();
-    // Back on the experience with sessions reloaded: the only one is now full.
-    await expect(page).toHaveURL(/\/experiences\/exp-1$/);
+    // Sessions were reloaded: the only session is now full.
     await expect(panel(page).getByText("All upcoming sessions are sold out.")).toBeVisible();
   });
 

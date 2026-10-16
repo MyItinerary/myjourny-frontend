@@ -154,14 +154,12 @@ test("an email that only signs in with Google is pointed to Google", async ({ pa
   await expect(page.getByPlaceholder("Enter password")).toHaveCount(0);
 });
 
-test("a signed-in user lands on the checkout with step 1 done", async ({ page }) => {
+test("a signed-in user skips checkout: Book now goes straight to the payment page", async ({ page }) => {
   await page.addInitScript((auth) => window.localStorage.setItem("myjourny:auth", JSON.stringify(auth)), SIGNED_IN);
   const booked = await mockBooking(page);
 
-  await bookNow(page);
-  await expect(page.getByText("Logged in as juliet@example.com")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Continue", exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "Confirm and pay" }).click();
+  await page.goto("/experiences/exp-1");
+  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
 
   await expect(page).toHaveURL("https://paystack.test/pay");
   expect(booked).toHaveLength(1);

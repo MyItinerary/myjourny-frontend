@@ -305,6 +305,30 @@ describe("useCheckoutViewModel: log in or sign up", () => {
     expect(result.current.auth.stage).toBe("email");
   });
 
+  it.each([
+    ["closed", (result: Result) => result.current.auth.onOpenChange(false)],
+    ["went back", (result: Result) => result.current.auth.onBack()],
+    ["changed the email", (result: Result) => result.current.auth.onEmailChange("other@example.com")],
+  ])("ignores an email check that answers after they %s", async (_, interrupt) => {
+    let answer!: (value: unknown) => void;
+    account.lookup.mutateAsync = vi.fn(() => new Promise((resolve) => (answer = resolve)));
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    act(() => result.current.steps.onStartAuth());
+    act(() => result.current.auth.onEmailChange("juliet@example.com"));
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.auth.onContinue();
+    });
+
+    act(() => interrupt(result));
+    await act(async () => {
+      answer({ exists: true, hasPassword: true });
+      await pending;
+    });
+
+    expect(result.current.auth.stage).toBe("email");
+  });
+
   it("notes the way back to checkout when they go to reset a password", async () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     expect(result.current.auth.forgotHref).toBe("/login/forgot-password");

@@ -19,7 +19,7 @@ import {
   BookingPanelView,
   formatPrice,
   type BookingPanelProps,
-  type CheckoutDetails,
+  type GuestBookingDetails,
   useBookingPanelViewModel,
 } from "@/features/booking";
 import { saveCheckoutDraft } from "@/features/checkout";
@@ -72,8 +72,9 @@ function ExperienceDescription({ description }: { description: string }) {
 export function ExperienceDetailContent({ id }: { id: string }) {
   const router = useRouter();
   const { user, hydrated } = useSession();
-  // Guests see the whole page, the host and the booking panel. "Book now"
-  // opens the checkout for everyone; guests log in or sign up there.
+  // Guests see the whole page, the host and the booking panel; "Book now"
+  // takes them to the checkout, which signs them in or up first. Signed-in
+  // users go straight to the payment provider.
   const isAccount = user !== null;
   const isGuest = hydrated && !isAccount;
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
@@ -124,24 +125,25 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const location = [experience.city, experience.country].filter(Boolean).join(", ");
   const hostLabel = experience.host?.display_name ? `Hosted by ${experience.host.display_name}` : "Your host";
 
-  // Everyone books through the checkout; guests log in or sign up there.
-  const onCheckout = (details: CheckoutDetails) => {
-    saveCheckoutDraft({
-      experienceId: experience.id,
-      guideId: details.guideId,
-      selection: details.selection,
-      title: experience.title,
-      imageUrl: images[0] ?? null,
-      rating: experience.rating ?? null,
-      when: details.when,
-      guests: details.guests,
-      ticketsLabel: details.ticketsLabel,
-      total: details.total,
-      currency: details.currency,
-      durationLabel: details.durationLabel,
-    });
-    router.push("/checkout");
-  };
+  const onGuestBook = isGuest
+    ? (details: GuestBookingDetails) => {
+        saveCheckoutDraft({
+          experienceId: experience.id,
+          guideId: details.guideId,
+          selection: details.selection,
+          title: experience.title,
+          imageUrl: images[0] ?? null,
+          rating: experience.rating ?? null,
+          when: details.when,
+          guests: details.guests,
+          ticketsLabel: details.ticketsLabel,
+          total: details.total,
+          currency: details.currency,
+          durationLabel: details.durationLabel,
+        });
+        router.push("/checkout");
+      }
+    : undefined;
 
   return (
     <div className="flex flex-1 flex-col pb-24 lg:pb-0">
@@ -357,7 +359,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               schedule={experience}
-              onCheckout={onCheckout}
+              onGuestBook={onGuestBook}
             />
           ) : null}
         </div>
@@ -407,7 +409,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               schedule={experience}
-              onCheckout={onCheckout}
+              onGuestBook={onGuestBook}
               onClose={() => setMobileBookingOpen(false)}
             />
           </div>

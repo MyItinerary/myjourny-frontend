@@ -59,7 +59,7 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
     quoteError: null,
     seatsWarning: null,
     total: "₦9,000.00",
-    booking: { available: true, disabled: false, label: "Book now - ₦9,000.00", onBook: vi.fn() },
+    booking: { available: true, disabled: false, pending: false, label: "Book now - ₦9,000.00", onBook: vi.fn() },
     ...overrides,
   };
 }
@@ -113,7 +113,7 @@ describe("BookingPanelView", () => {
           seatsWarning: "Only 1 spot left for this session.",
           promo: { input: "OLD", onInputChange: vi.fn(), onApply: vi.fn(), message: { text: "OLD has expired", ok: false } },
           quoteError: "We couldn't price this selection.",
-          booking: { available: true, disabled: true, label: "Starting checkout…", onBook: vi.fn() },
+          booking: { available: true, disabled: true, pending: true, label: "Starting checkout…", onBook: vi.fn() },
         })}
       />,
     );
@@ -130,7 +130,7 @@ describe("BookingPanelView", () => {
     const { user } = renderWithProviders(
       <BookingPanelView
         {...panelViewModel({
-          booking: { available: false, disabled: true, label: "", onBook: vi.fn() },
+          booking: { available: false, disabled: true, pending: false, label: "", onBook: vi.fn() },
           quote: null,
           promo: { input: "", onInputChange: vi.fn(), onApply: vi.fn(), message: { text: "SAVE applied", ok: true } },
         })}
@@ -173,7 +173,7 @@ describe("BookingPanelView", () => {
           quote: null,
           total: null,
           minGuestsWarning: "This experience needs at least 3 guests.",
-          booking: { available: true, disabled: true, label: "Select at least 3 guests", onBook: vi.fn() },
+          booking: { available: true, disabled: true, pending: false, label: "Select at least 3 guests", onBook: vi.fn() },
         })}
       />,
     );

@@ -49,7 +49,7 @@ export type CheckoutAuth = {
   onEmailChange: (value: string) => void;
   canContinue: boolean;
   checking: boolean;
-  onContinue: () => void;
+  onContinue: () => Promise<void>;
   password: string;
   onPasswordChange: (value: string) => void;
   confirmPassword: string;
@@ -102,6 +102,9 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   const login = useGuestLogin();
   const createBooking = useCreateBooking();
   const attemptKey = useRef<string | null>(null);
+  // Bumped when the dialog closes, goes back or the email changes, so an
+  // email check still running from before can't move the dialog.
+  const lookupRun = useRef(0);
 
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<AuthStage>("email");
@@ -166,7 +169,9 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   const onContinue = async () => {
     if (!EMAIL_PATTERN.test(trimmedEmail) || lookup.isPending) return;
     resetSecrets();
+    const run = ++lookupRun.current;
     const found = await lookup.mutateAsync(trimmedEmail);
+    if (run !== lookupRun.current) return;
     if (!found?.exists) setStage("signup");
     else setStage(found.hasPassword ? "login" : "google");
   };
@@ -272,17 +277,22 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       onOpenChange: (next) => {
         setOpen(next);
         if (!next) {
+          lookupRun.current += 1;
           setStage("email");
           resetSecrets();
         }
       },
       stage,
       onBack: () => {
+        lookupRun.current += 1;
         setStage("email");
         resetSecrets();
       },
       email,
-      onEmailChange: setEmail,
+      onEmailChange: (value) => {
+        lookupRun.current += 1;
+        setEmail(value);
+      },
       canContinue: EMAIL_PATTERN.test(trimmedEmail) && !lookup.isPending && !googleLoading,
       checking: lookup.isPending,
       onContinue,

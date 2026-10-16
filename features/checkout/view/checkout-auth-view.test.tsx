@@ -34,7 +34,7 @@ const auth = (overrides: Partial<CheckoutAuth> = {}): CheckoutAuth => ({
   onEmailChange: vi.fn(),
   canContinue: true,
   checking: false,
-  onContinue: vi.fn(),
+  onContinue: vi.fn(async () => {}),
   password: "",
   onPasswordChange: vi.fn(),
   confirmPassword: "",

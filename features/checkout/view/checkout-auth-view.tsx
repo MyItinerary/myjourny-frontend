@@ -59,7 +59,7 @@ function EmailStep({ auth }: { auth: CheckoutAuth }) {
       className="flex flex-col gap-6"
       onSubmit={(e) => {
         e.preventDefault();
-        auth.onContinue();
+        void auth.onContinue();
       }}
     >
       <Input
