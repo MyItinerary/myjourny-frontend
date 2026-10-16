@@ -46,6 +46,19 @@ export type Booking = {
   cancelled_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  // Only once the booking is confirmed (itin hides them before that).
+  meeting_point?: {
+    latitude?: number | null;
+    longitude?: number | null;
+    instructions?: string | null;
+    city?: string | null;
+    country?: string | null;
+  } | null;
+  what_to_bring?: string | null;
+  host_phone?: string | null;
+  // Signed downloads: the PDF receipt once paid, the calendar file once confirmed.
+  receipt_url?: string | null;
+  calendar_url?: string | null;
 };
 
 // A cancellation request (itin's RefundRequestOut). Support decides the

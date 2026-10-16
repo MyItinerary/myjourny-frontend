@@ -16,6 +16,7 @@ import {
   useRequestCancellation,
 } from "@/lib/queries/bookings";
 import { formatSessionWhen } from "@/features/booking";
+import { BookingDayDetailsView, useBookingDayDetailsViewModel } from "@/features/booking-day-details";
 import { useExperienceDetail } from "@/lib/queries/experiences";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,9 @@ const STATUS_LABEL: Record<string, { text: string; className: string }> = {
   completed: { text: "Completed", className: "bg-[#F4F2EE] text-[#130404]" },
 };
 
+// Stable stand-in while the booking loads, so the hook below runs every render.
+const EMPTY_BOOKING_DETAILS = {};
+
 function canRequestCancellation(booking: Booking) {
   return booking.status === "confirmed" || booking.status === "pending";
 }
@@ -48,12 +52,16 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   const requestCancellation = useRequestCancellation(bookingId);
   const [showForm, setShowForm] = useState(false);
   const [reason, setReason] = useState("");
+  const dayDetails = useBookingDayDetailsViewModel(booking ?? EMPTY_BOOKING_DETAILS);
 
   if (!user) {
     return (
       <Shell>
         <p className="text-[#6F6B72]">
-          <Link href="/login" className="font-medium text-brand">Sign in</Link> to see this booking.
+          <Link href={`/login?next=${encodeURIComponent(`/bookings/${bookingId}`)}`} className="font-medium text-brand">
+            Sign in
+          </Link>{" "}
+          to see this booking.
         </p>
       </Shell>
     );
@@ -110,6 +118,8 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           </span>
         )}
       </div>
+
+      <BookingDayDetailsView {...dayDetails} />
 
       <section className="mt-8 rounded-2xl border border-border p-6">
         <h2 className="font-sans text-lg font-bold text-[#130404]">Receipt</h2>
