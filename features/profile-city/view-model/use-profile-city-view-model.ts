@@ -74,7 +74,6 @@ export function useProfileCityViewModel({ city, ready, open, onClose, onSaved, o
 
   useEffect(() => {
     if (!ready || city || detectionTried.current) return;
-    detectionTried.current = true;
     let cancelled = false;
     (async () => {
       try {
@@ -90,6 +89,9 @@ export function useProfileCityViewModel({ city, ready, open, onClose, onSaved, o
         );
       } catch {
         // Nothing was asked for, so nothing is reported: the row stays "Not provided".
+      } finally {
+        // Only a finished run counts; Strict Mode's discarded first run must not block the real one.
+        if (!cancelled) detectionTried.current = true;
       }
     })();
     return () => {

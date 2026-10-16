@@ -45,9 +45,13 @@ const onClose = vi.fn();
 const onSaved = vi.fn();
 const onError = vi.fn();
 
-function setup(options: { city?: string | null; ready?: boolean; open?: boolean } = {}) {
-  return renderHookWithProviders(() =>
-    useProfileCityViewModel({ city: "Lagos", ready: true, open: true, onClose, onSaved, onError, ...options }),
+function setup(
+  options: { city?: string | null; ready?: boolean; open?: boolean } = {},
+  { reactStrictMode = false } = {},
+) {
+  return renderHookWithProviders(
+    () => useProfileCityViewModel({ city: "Lagos", ready: true, open: true, onClose, onSaved, onError, ...options }),
+    { reactStrictMode },
   );
 }
 
@@ -184,6 +188,15 @@ describe("useProfileCityViewModel: filling an empty city", () => {
       expect(onSaved).toHaveBeenCalledWith("We set your city to Accra from your location. Use Edit to change it."),
     );
     expect(calls.saved).toEqual([{ city: "Accra" }]);
+  });
+
+  it("still detects the city under React Strict Mode", async () => {
+    locationPermission.mockResolvedValue("granted");
+    const calls = stubApi({ reverse: accra });
+
+    setup({ city: null, open: false }, { reactStrictMode: true });
+
+    await waitFor(() => expect(calls.saved).toEqual([{ city: "Accra" }]));
   });
 
   it.each(["prompt", "denied", "unknown"])("never asks for location when permission is %s", async (state) => {
