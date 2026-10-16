@@ -1,5 +1,5 @@
 // Public API of the booking feature. Other code imports only from here.
-export type { BookingPanelProps, BookingPanelViewModel, GuestBookingDetails } from "./view-model/use-booking-panel-view-model";
+export type { BookingPanelProps, BookingPanelViewModel, CheckoutDetails } from "./view-model/use-booking-panel-view-model";
 export { useBookingPanelViewModel } from "./view-model/use-booking-panel-view-model";
 export { BookingPanelView } from "./view/booking-panel-view";
 export { BookingBarView } from "./view/booking-bar-view";

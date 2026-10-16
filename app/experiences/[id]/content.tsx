@@ -19,7 +19,7 @@ import {
   BookingPanelView,
   formatPrice,
   type BookingPanelProps,
-  type GuestBookingDetails,
+  type CheckoutDetails,
   useBookingPanelViewModel,
 } from "@/features/booking";
 import { saveCheckoutDraft } from "@/features/checkout";
@@ -72,9 +72,8 @@ function ExperienceDescription({ description }: { description: string }) {
 export function ExperienceDetailContent({ id }: { id: string }) {
   const router = useRouter();
   const { user, hydrated } = useSession();
-  // Guests see the whole page and the booking panel; "Book now" takes them
-  // through the email step and the payment page. Signed-in users go straight
-  // to the payment provider.
+  // Guests see the whole page, the host and the booking panel. "Book now"
+  // opens the checkout for everyone; guests log in or sign up there.
   const isAccount = user !== null;
   const isGuest = hydrated && !isAccount;
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
@@ -123,26 +122,26 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const { images } = gallery;
   const durationLabel = formatDuration(experience.duration_minutes) || "Flexible";
   const location = [experience.city, experience.country].filter(Boolean).join(", ");
+  const hostLabel = experience.host?.display_name ? `Hosted by ${experience.host.display_name}` : "Your host";
 
-  const onGuestBook = isGuest
-    ? (details: GuestBookingDetails) => {
-        saveCheckoutDraft({
-          experienceId: experience.id,
-          guideId: details.guideId,
-          selection: details.selection,
-          title: experience.title,
-          imageUrl: images[0] ?? null,
-          rating: experience.rating ?? null,
-          when: details.when,
-          guests: details.guests,
-          ticketsLabel: details.ticketsLabel,
-          total: details.total,
-          currency: details.currency,
-          durationLabel: details.durationLabel,
-        });
-        router.push("/checkout");
-      }
-    : undefined;
+  // Everyone books through the checkout; guests log in or sign up there.
+  const onCheckout = (details: CheckoutDetails) => {
+    saveCheckoutDraft({
+      experienceId: experience.id,
+      guideId: details.guideId,
+      selection: details.selection,
+      title: experience.title,
+      imageUrl: images[0] ?? null,
+      rating: experience.rating ?? null,
+      when: details.when,
+      guests: details.guests,
+      ticketsLabel: details.ticketsLabel,
+      total: details.total,
+      currency: details.currency,
+      durationLabel: details.durationLabel,
+    });
+    router.push("/checkout");
+  };
 
   return (
     <div className="flex flex-1 flex-col pb-24 lg:pb-0">
@@ -246,10 +245,10 @@ export function ExperienceDetailContent({ id }: { id: string }) {
                           href={`/guides/${experience.host.id}`}
                           className="hover:text-brand hover:underline transition-colors"
                         >
-                          {experience.host?.display_name ?? "Your host"}
+                          {hostLabel}
                         </Link>
                       ) : (
-                        experience.host?.display_name ?? "Your host"
+                        hostLabel
                       )}
                     </span>
                     {experience.host?.is_verified && (
@@ -358,7 +357,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               schedule={experience}
-              onGuestBook={onGuestBook}
+              onCheckout={onCheckout}
             />
           ) : null}
         </div>
@@ -408,7 +407,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               schedule={experience}
-              onGuestBook={onGuestBook}
+              onCheckout={onCheckout}
               onClose={() => setMobileBookingOpen(false)}
             />
           </div>
