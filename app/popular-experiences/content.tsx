@@ -24,7 +24,7 @@ export function PopularExperiencesContent() {
   const isGuest = hydrated && !isAccount;
 
   const geolocation = useGeolocation();
-  const hasCoords = typeof geolocation === "object";
+  const hasCoords = typeof geolocation === "object" && geolocation !== null;
 
   const accountQuery = useInfiniteRecommendedExperiences({
     latitude: hasCoords ? geolocation.latitude : undefined,
@@ -39,16 +39,22 @@ export function PopularExperiencesContent() {
     ? uniqueMatches(accountQuery.data?.pages).map(experienceMatchToCardProps)
     : (guestQuery.data?.pages ?? []).flatMap((p) => p.items).map(experienceListItemToCardProps);
 
+  const isLoading = !hydrated || (isAccount && geolocation === "pending") || query.isPending;
+  const isError = query.isError;
+
   return (
     <CategoryContent
       label={isAccount ? "Popular experiences near you" : "Popular experiences"}
       items={items}
       total={isAccount ? undefined : guestQuery.data?.pages[0]?.total}
-      isLoading={!hydrated || (isAccount && geolocation === "pending") || query.isPending}
+      isLoading={isLoading}
+      isError={isError}
+      onRetry={() => query.refetch()}
       moreLabel="Show more"
       loadMore={{
         hasMore: query.hasNextPage,
         isLoading: query.isFetchingNextPage,
+        isError: query.isFetchNextPageError,
         onLoadMore: () => query.fetchNextPage(),
       }}
     />
