@@ -264,10 +264,7 @@ export function useBookingPanelViewModel({
         },
         onError: (error) => {
           bookingAttemptKey.current = null;
-          // 409: the session filled up or stopped running. Show fresh seats.
-          if ((error as { response?: { status?: number } })?.response?.status === 409) {
-            void sessionsQuery.refetch();
-          }
+          // A 409 (the session filled up) reloads the sessions in the model.
           toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again."));
         },
       },
