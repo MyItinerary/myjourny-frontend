@@ -72,9 +72,9 @@ function ExperienceDescription({ description }: { description: string }) {
 export function ExperienceDetailContent({ id }: { id: string }) {
   const router = useRouter();
   const { user, hydrated } = useSession();
-  // Guests see the whole page and the booking panel; "Book now" takes them
-  // through the email step and the payment page. Signed-in users go straight
-  // to the payment provider.
+  // Guests see the whole page, the host and the booking panel; "Book now"
+  // takes them to the checkout, which signs them in or up first. Signed-in
+  // users go straight to the payment provider.
   const isAccount = user !== null;
   const isGuest = hydrated && !isAccount;
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
@@ -123,6 +123,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const { images } = gallery;
   const durationLabel = formatDuration(experience.duration_minutes) || "Flexible";
   const location = [experience.city, experience.country].filter(Boolean).join(", ");
+  const hostLabel = experience.host?.display_name ? `Hosted by ${experience.host.display_name}` : "Your host";
 
   const onGuestBook = isGuest
     ? (details: GuestBookingDetails) => {
@@ -246,10 +247,10 @@ export function ExperienceDetailContent({ id }: { id: string }) {
                           href={`/guides/${experience.host.id}`}
                           className="hover:text-brand hover:underline transition-colors"
                         >
-                          {experience.host?.display_name ?? "Your host"}
+                          {hostLabel}
                         </Link>
                       ) : (
-                        experience.host?.display_name ?? "Your host"
+                        hostLabel
                       )}
                     </span>
                     {experience.host?.is_verified && (

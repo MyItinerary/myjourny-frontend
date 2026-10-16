@@ -43,25 +43,38 @@ test.describe("experience page for a guest", () => {
             ],
           },
         }),
-      // The quote needs an account; a guest still gets the panel.
-      "POST /bookings/quote": (r) => r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
+      // The quote is public, so a guest sees the price like anyone else.
+      "POST /bookings/quote": (r) =>
+        r.fulfill({
+          json: {
+            currency: "NGN",
+            lines: [{ kind: "ticket", label: "Adult", quantity: 1, unit_amount: "5000", amount: "5000" }],
+            subtotal: "5000",
+            discount: "0",
+            checkout_fee: "0",
+            total: "5000",
+            guests: 1,
+            days: 1,
+            promo_applied: false,
+          },
+        }),
     });
     await page.goto("/experiences/exp-1");
     await expect(page.getByRole("heading", { name: "Lagos Food Walk" }).first()).toBeVisible();
   });
 
-  test("shows the host and the booking panel, not a log-in wall", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Kayan Thrille" })).toBeVisible();
+  test("shows who hosts it and the booking panel, not a log-in wall", async ({ page }) => {
+    await expect(page.getByRole("link", { name: "Hosted by Kayan Thrille" })).toBeVisible();
     await expect(page.getByText("Log in to see your host")).toHaveCount(0);
     await expect(page.getByText("Log in to book")).toHaveCount(0);
     await expect(page.locator("div.sticky").getByRole("button", { name: /Book now/ })).toBeVisible();
   });
 
-  test("Book now starts checkout by asking for the guest's details", async ({ page }) => {
+  test("Book now opens the checkout, which starts with log in or sign up", async ({ page }) => {
     await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
 
     await expect(page).toHaveURL(/\/checkout$/);
-    await expect(page.getByRole("heading", { name: "Confirm your details and pay" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "1. Log in or sign up" })).toBeVisible();
     await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
   });
 });

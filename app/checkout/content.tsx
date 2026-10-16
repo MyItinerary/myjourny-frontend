@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  CheckoutDetailsStepView,
-  CheckoutLoginView,
+  CheckoutAuthView,
   CheckoutShellView,
+  CheckoutStepsView,
   OrderSummaryView,
   useCheckoutViewModel,
 } from "@/features/checkout";
@@ -14,8 +14,8 @@ export function CheckoutContent() {
 
   return (
     <CheckoutShellView summary={<OrderSummaryView summary={vm.summary} />}>
-      <CheckoutDetailsStepView form={vm.form} />
-      <CheckoutLoginView login={vm.login} />
+      <CheckoutStepsView steps={vm.steps} />
+      <CheckoutAuthView auth={vm.auth} />
     </CheckoutShellView>
   );
 }

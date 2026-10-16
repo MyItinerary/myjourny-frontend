@@ -15,8 +15,6 @@ export type CheckoutDraft = {
   total: string;
   currency: string;
   durationLabel: string;
-  /** What they'd typed, kept when they leave to reset a password. */
-  contact?: { phone: string; countryIso: string };
 };
 
 export const CHECKOUT_DRAFT_KEY = "myjourny:checkout-draft";
@@ -54,12 +52,6 @@ export function loadCheckoutDraft(): CheckoutDraft | null {
   } catch {
     return null;
   }
-}
-
-/** Adds the contact details to the saved draft, if there is one. */
-export function saveCheckoutContact(contact: NonNullable<CheckoutDraft["contact"]>) {
-  const draft = loadCheckoutDraft();
-  if (draft) saveCheckoutDraft({ ...draft, contact });
 }
 
 export function clearCheckoutDraft() {

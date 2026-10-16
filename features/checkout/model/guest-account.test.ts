@@ -1,4 +1,3 @@
-import { waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
@@ -6,7 +5,7 @@ import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
-import { EMAIL_LOOKUP_PATH, isEmailTakenError, useEmailHasAccount } from "./guest-account";
+import { EMAIL_LOOKUP_PATH, isEmailTakenError, useEmailLookup } from "./guest-account";
 
 const failure = (detail: unknown) => ({ response: { data: { detail } } });
 
@@ -23,41 +22,35 @@ describe("isEmailTakenError", () => {
   });
 });
 
-describe("useEmailHasAccount", () => {
-  it("looks up a valid email once typing settles", async () => {
+describe("useEmailLookup", () => {
+  it("says whether the email has an account and whether it has a password", async () => {
     const asked: unknown[] = [];
     server.use(
       http.post(apiUrl(EMAIL_LOOKUP_PATH), async ({ request }) => {
         asked.push(await request.json());
-        return HttpResponse.json({ exists: true });
+        return HttpResponse.json({ exists: true, has_password: false });
       }),
     );
-    const { result } = renderHookWithProviders(() => useEmailHasAccount(" Juliet@Example.com "));
+    const { result } = renderHookWithProviders(() => useEmailLookup());
 
-    expect(result.current.exists).toBe(false);
-    await waitFor(() => expect(result.current.exists).toBe(true));
-    expect(result.current.checking).toBe(false);
+    await expect(result.current.mutateAsync("juliet@example.com")).resolves.toEqual({
+      exists: true,
+      hasPassword: false,
+    });
     expect(asked).toEqual([{ email: "juliet@example.com" }]);
   });
 
   it("says a new email has no account", async () => {
-    server.use(http.post(apiUrl(EMAIL_LOOKUP_PATH), () => HttpResponse.json({ exists: false })));
-    const { result } = renderHookWithProviders(() => useEmailHasAccount("new@example.com"));
+    server.use(http.post(apiUrl(EMAIL_LOOKUP_PATH), () => HttpResponse.json({ exists: false, has_password: false })));
+    const { result } = renderHookWithProviders(() => useEmailLookup());
 
-    await waitFor(() => expect(result.current.checking).toBe(false));
-    expect(result.current.exists).toBe(false);
+    await expect(result.current.mutateAsync("new@example.com")).resolves.toEqual({ exists: false, hasPassword: false });
   });
 
-  it("treats the email as new when the lookup fails", async () => {
-    server.use(http.post(apiUrl(EMAIL_LOOKUP_PATH), () => HttpResponse.json({}, { status: 404 })));
-    const { result } = renderHookWithProviders(() => useEmailHasAccount("juliet@example.com"));
+  it("answers null when the lookup fails, so the email is treated as new", async () => {
+    server.use(http.post(apiUrl(EMAIL_LOOKUP_PATH), () => HttpResponse.json({}, { status: 429 })));
+    const { result } = renderHookWithProviders(() => useEmailLookup());
 
-    await waitFor(() => expect(result.current.checking).toBe(false));
-    expect(result.current.exists).toBe(false);
-  });
-
-  it("doesn't look up something that isn't an email", () => {
-    const { result } = renderHookWithProviders(() => useEmailHasAccount("not-an-email"));
-    expect(result.current).toEqual({ exists: false, checking: false });
+    await expect(result.current.mutateAsync("juliet@example.com")).resolves.toBeNull();
   });
 });
