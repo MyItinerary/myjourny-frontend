@@ -80,6 +80,8 @@ test("a guest sees the real itinerary, policy and rating, with no made-up detail
   await expect(page.getByText("Await hotel pickup")).toHaveCount(0);
 
   await expect(page.getByRole("heading", { name: "No reviews yet" })).toBeVisible();
+  // No "0.0" star next to the title either.
+  await expect(page.getByText("0.0", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/168 reviews/)).toHaveCount(0);
   await expect(page.getByText("Bank transfer and cash accepted")).toHaveCount(0);
   await expect(page.getByText("Up to 24 hours before, full refund")).toHaveCount(0);

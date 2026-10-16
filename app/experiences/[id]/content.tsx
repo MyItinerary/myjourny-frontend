@@ -215,11 +215,15 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
         <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
           <span>{durationLabel}</span>
-          <span aria-hidden>•</span>
-          <span className="inline-flex items-center gap-1">
-            <StarIcon className="size-[14px] fill-brand text-brand" />
-            {(experience.rating ?? 0).toFixed(1)}
-          </span>
+          {experienceDetails.rating && (
+            <>
+              <span aria-hidden>•</span>
+              <span className="inline-flex items-center gap-1">
+                <StarIcon className="size-[14px] fill-brand text-brand" />
+                {experienceDetails.rating}
+              </span>
+            </>
+          )}
           {location && (
             <>
               <span aria-hidden>·</span>
