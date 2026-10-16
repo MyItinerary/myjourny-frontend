@@ -167,6 +167,14 @@ describe("selection and bulk actions", () => {
 describe("row actions", () => {
   const listing = SAMPLE_LISTINGS[0];
 
+  it("opens the details for See details, and the builder for a draft", () => {
+    const result = render();
+    act(() => result.current.onRowAction(listing, "details"));
+    expect(nav.push).toHaveBeenCalledWith("/host/dashboard/listings/l1");
+    act(() => result.current.onRowAction(SAMPLE_LISTINGS[3], "details"));
+    expect(nav.push).toHaveBeenLastCalledWith("/host/dashboard/listings/new");
+  });
+
   it("opens the builder for Edit", () => {
     const result = render();
     act(() => result.current.onRowAction(listing, "edit"));

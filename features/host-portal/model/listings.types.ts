@@ -37,6 +37,7 @@ export type ListingFilters = {
 };
 
 export type ListingRowAction =
+  | "details"
   | "edit"
   | "duplicate"
   | "preview"

@@ -134,7 +134,7 @@ function Table({ vm }: { vm: HostListingsViewModel }) {
             )}
           >
             <Checkbox checked={row.selected} label={`Select ${row.listing.title}`} onChange={() => vm.selection.onToggleRow(row.listing.id)} />
-            <div className={cn(COL_WIDTH.title, "flex items-center gap-[11px]")}>
+            <Link href={row.href} className={cn(COL_WIDTH.title, "flex items-center gap-[11px]")}>
               <span className="relative h-[34px] w-11 shrink-0 overflow-hidden rounded-lg bg-muted">
                 <Image src={row.listing.imageUrl} alt="" fill sizes="44px" className="object-cover" />
               </span>
@@ -142,7 +142,7 @@ function Table({ vm }: { vm: HostListingsViewModel }) {
                 <p className="truncate text-[13.5px] font-medium text-[#333134]">{row.listing.title}</p>
                 <p className="mt-px text-[11.5px] text-[#6F6B72]">{row.listing.sub}</p>
               </div>
-            </div>
+            </Link>
             <span className={cn(COL_WIDTH.cat, "min-w-0")}>
               <span className="block truncate text-[12.5px] text-[#6F6B72]">{row.listing.cat}</span>
               <span className="mt-px block truncate text-[11.5px] text-[#A09DA3]">{row.listing.subcat}</span>

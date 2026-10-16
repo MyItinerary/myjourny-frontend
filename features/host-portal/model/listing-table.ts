@@ -78,6 +78,7 @@ export function listingsSummary(listings: HostListing[]): string {
 /** The row menu: the same list for every listing, but a hidden one offers to show it again. */
 export function rowActions(listing: HostListing): { action: ListingRowAction; label: string; danger: boolean }[] {
   const list: [ListingRowAction, string][] = [
+    ["details", listing.status === "Draft" ? "Continue editing" : "See details"],
     ["edit", "Edit"],
     ["duplicate", "Duplicate"],
     ["preview", "Preview as a guest"],
@@ -91,3 +92,7 @@ export function rowActions(listing: HostListing): { action: ListingRowAction; la
 }
 
 export const priceLabel = formatNaira;
+
+/** Where a click on the listing itself goes: a draft reopens in the builder, anything else shows its details. */
+export const listingHref = (listing: HostListing, base: string) =>
+  listing.status === "Draft" ? `${base}/listings/new` : `${base}/listings/${listing.id}`;

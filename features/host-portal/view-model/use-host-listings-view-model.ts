@@ -11,6 +11,7 @@ import {
   priceLabel,
   RATING_OPTIONS,
   resultLine,
+  listingHref,
   rowActions,
   sortListings,
   STATUS_OPTIONS,
@@ -35,6 +36,8 @@ export type ListingRow = {
   selected: boolean;
   price: string;
   actions: { action: ListingRowAction; label: string; danger: boolean }[];
+  /** Where the listing's name leads: its details, or the builder for a draft. */
+  href: string;
 };
 
 export type DeleteDialog = { kind: "blocked"; title: string; upcoming: number } | { kind: "ok"; title: string; rating: string | null };
@@ -152,6 +155,9 @@ export function useHostListingsViewModel(): HostListingsViewModel {
 
   const onRowAction = (listing: HostListing, action: ListingRowAction) => {
     switch (action) {
+      case "details":
+        router.push(listingHref(listing, HOST_PORTAL_BASE));
+        return;
       case "edit":
         router.push(newListingHref);
         return;
@@ -201,6 +207,7 @@ export function useHostListingsViewModel(): HostListingsViewModel {
       selected: selected.includes(listing.id),
       price: priceLabel(listing.price),
       actions: rowActions(listing),
+      href: listingHref(listing, HOST_PORTAL_BASE),
     })),
     noMatches: listings.length > 0 && shown.length === 0,
     onShowEverything: () => change(NO_FILTERS),

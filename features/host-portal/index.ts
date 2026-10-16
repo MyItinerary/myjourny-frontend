@@ -31,3 +31,6 @@ export { HostPreviewSwitchView } from "./view/host-preview-switch-view";
 export type { HostListingBuilderViewModel } from "./view-model/use-host-listing-builder-view-model";
 export { useHostListingBuilderViewModel } from "./view-model/use-host-listing-builder-view-model";
 export { HostListingBuilderView } from "./view/host-listing-builder-view";
+export type { HostListingDetailViewModel } from "./view-model/use-host-listing-detail-view-model";
+export { useHostListingDetailViewModel } from "./view-model/use-host-listing-detail-view-model";
+export { HostListingDetailView } from "./view/host-listing-detail-view";

@@ -8,6 +8,7 @@ import {
   NO_FILTERS,
   RATING_OPTIONS,
   resultLine,
+  listingHref,
   rowActions,
   sortListings,
   STATUS_OPTIONS,
@@ -95,12 +96,19 @@ describe("summaries", () => {
 });
 
 describe("rowActions", () => {
-  it("offers the same eight actions, with Delete last and dangerous", () => {
+  it("offers nine actions, with Delete last and dangerous", () => {
     const live = rowActions(SAMPLE_LISTINGS[0]);
     expect(live.map((a) => a.label)).toEqual([
-      "Edit", "Duplicate", "Preview as a guest", "Copy the link", "Hide from search", "Pause new bookings", "Archive", "Delete",
+      "See details", "Edit", "Duplicate", "Preview as a guest", "Copy the link", "Hide from search", "Pause new bookings", "Archive", "Delete",
     ]);
     expect(live.filter((a) => a.danger).map((a) => a.action)).toEqual(["delete"]);
+  });
+
+  it("reopens a draft in the builder instead of showing details", () => {
+    const draft = SAMPLE_LISTINGS.find((l) => l.status === "Draft")!;
+    expect(rowActions(draft)[0].label).toBe("Continue editing");
+    expect(listingHref(draft, "/host/dashboard")).toBe("/host/dashboard/listings/new");
+    expect(listingHref(SAMPLE_LISTINGS[0], "/host/dashboard")).toBe("/host/dashboard/listings/l1");
   });
 
   it("offers to show a hidden listing again", () => {

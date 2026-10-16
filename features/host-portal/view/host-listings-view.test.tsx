@@ -27,6 +27,7 @@ const row = (l: HostListing, selected = false) => ({
   listing: l,
   selected,
   price: "₦10,000",
+  href: `/host/dashboard/listings/${l.id}`,
   actions: [
     { action: "edit" as const, label: "Edit", danger: false },
     { action: "delete" as const, label: "Delete", danger: true },
@@ -119,6 +120,11 @@ describe("HostListingsView, the table", () => {
     expect(props.selection.onToggleRow).toHaveBeenCalledWith("l2");
     await user.click(screen.getByRole("checkbox", { name: "Select all listings" }));
     expect(props.selection.onToggleAll).toHaveBeenCalled();
+  });
+
+  it("links each listing's name to its details", () => {
+    renderWithProviders(<HostListingsView vm={vm()} />);
+    expect(screen.getByRole("link", { name: /Lagos Island Photowalk/ })).toHaveAttribute("href", "/host/dashboard/listings/l1");
   });
 
   it("shows the selected rows ticked", () => {
