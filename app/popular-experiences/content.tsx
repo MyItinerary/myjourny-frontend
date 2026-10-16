@@ -24,7 +24,7 @@ export function PopularExperiencesContent() {
   const isGuest = hydrated && !isAccount;
 
   const geolocation = useGeolocation();
-  const hasCoords = typeof geolocation === "object";
+  const hasCoords = typeof geolocation === "object" && geolocation !== null;
 
   const accountQuery = useInfiniteRecommendedExperiences({
     latitude: hasCoords ? geolocation.latitude : undefined,
