@@ -90,7 +90,9 @@ describe("BookingDetailView", () => {
     const { user } = renderWithProviders(<BookingDetailView vm={props} />);
 
     expect(screen.queryByText("You have 2 hours to answer this")).not.toBeInTheDocument();
-    expect(await screen.findByRole("link", { name: "Scan their ticket" })).toHaveAttribute("href", "/host/dashboard/bookings/scan");
+    const scan = await screen.findByRole("link", { name: "Scan their ticket" });
+    expect(scan).toHaveAttribute("href", "/host/dashboard/bookings/scan");
+    expect(scan).toHaveClass("lg:hidden");
     await user.click(screen.getByRole("button", { name: "Report a no show" }));
     expect(props.onReportNoShow).toHaveBeenCalled();
   });

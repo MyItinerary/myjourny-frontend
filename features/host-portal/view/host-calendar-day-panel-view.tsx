@@ -53,7 +53,7 @@ export function CalendarDayPanelView({
                       </Link>
                       <Link
                         href={event.scanHref}
-                        className="flex h-[38px] items-center rounded-full bg-white px-[15px] text-[13px] font-medium text-[#333134] shadow-[inset_0_0_0_1px_#E7E7E7]"
+                        className="flex h-[38px] items-center rounded-full bg-white px-[15px] text-[13px] font-medium text-[#333134] shadow-[inset_0_0_0_1px_#E7E7E7] lg:hidden"
                       >
                         Scan tickets
                       </Link>

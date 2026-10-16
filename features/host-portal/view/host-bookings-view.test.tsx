@@ -104,6 +104,8 @@ describe("HostBookingsView, the toolbar", () => {
     await user.type(screen.getByRole("searchbox", { name: "Search bookings" }), "m");
     expect(props.onQuery).toHaveBeenCalledWith("m");
     expect(screen.getByRole("link", { name: "Scan tickets" })).toHaveAttribute("href", "/host/dashboard/bookings/scan");
+    // Scanning is for a phone at the door: hidden on a desktop screen.
+    expect(screen.getByRole("link", { name: "Scan tickets" })).toHaveClass("lg:hidden");
   });
 
   it("only offers Clear filters when a filter is on, and picks from a dropdown", async () => {

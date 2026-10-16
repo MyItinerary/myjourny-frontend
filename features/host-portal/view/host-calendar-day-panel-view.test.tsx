@@ -33,6 +33,7 @@ describe("CalendarDayPanelView", () => {
     expect(screen.getByText("6 of 8 guests")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "See the guest list" })).toHaveAttribute("href", "/host/dashboard/bookings");
     expect(screen.getByRole("link", { name: "Scan tickets" })).toHaveAttribute("href", "/host/dashboard/bookings/scan");
+    expect(screen.getByRole("link", { name: "Scan tickets" })).toHaveClass("lg:hidden");
     expect(screen.getByText(/only stops new bookings/)).toBeInTheDocument();
   });
 
