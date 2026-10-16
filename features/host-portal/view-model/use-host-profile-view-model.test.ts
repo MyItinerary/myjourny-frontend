@@ -113,7 +113,7 @@ describe("row actions", () => {
     act(() => result.current.onRowAction(next));
     expect(nav.push).toHaveBeenCalledWith("/host/dashboard/earnings");
     act(() => result.current.onRowAction(commission));
-    expect(nav.push).toHaveBeenCalledWith("/host/dashboard/help");
+    expect(nav.push).toHaveBeenCalledWith("/host/dashboard/help?guide=1");
   });
 
   it("says edits and uploads aren't connected yet", () => {

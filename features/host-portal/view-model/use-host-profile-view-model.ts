@@ -101,7 +101,7 @@ export function useHostProfileViewModel(): HostProfileViewModel {
     rows: pane === "notify" ? [] : profile.rows[pane],
     onRowAction: (row) => {
       if (row.link === "earnings") router.push(`${HOST_PORTAL_BASE}/earnings`);
-      else if (row.link === "help") router.push(`${HOST_PORTAL_BASE}/help`);
+      else if (row.link === "help") router.push(`${HOST_PORTAL_BASE}/help?guide=1`);
       else soon();
     },
     preview: pane === "public" ? profile.preview : null,

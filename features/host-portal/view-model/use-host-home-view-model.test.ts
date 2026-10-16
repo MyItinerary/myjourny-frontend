@@ -62,7 +62,7 @@ describe("useHostHomeViewModel", () => {
     expect(result.current.quick.map((q) => q.href)).toEqual([
       "/host/dashboard/listings/new",
       "/host/dashboard/profile?pane=payouts",
-      "/host/dashboard/help",
+      "/host/dashboard/help?guide=1",
       "/host/dashboard/bookings",
     ]);
     expect(result.current.listingsHref).toBe("/host/dashboard/listings");

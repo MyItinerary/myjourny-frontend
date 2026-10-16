@@ -22,3 +22,6 @@ export { HostEarningsView } from "./view/host-earnings-view";
 export type { HostProfileViewModel } from "./view-model/use-host-profile-view-model";
 export { useHostProfileViewModel } from "./view-model/use-host-profile-view-model";
 export { HostProfileView } from "./view/host-profile-view";
+export type { HostHelpViewModel } from "./view-model/use-host-help-view-model";
+export { useHostHelpViewModel } from "./view-model/use-host-help-view-model";
+export { HostHelpView } from "./view/host-help-view";
