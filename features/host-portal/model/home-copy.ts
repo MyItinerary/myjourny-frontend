@@ -83,7 +83,7 @@ export const SELL_POINTS: SellPoint[] = [
 
 export const QUICK_ACTIONS = [
   { label: "List an experience", to: "listings/new" },
-  { label: "Change your payout account", to: "profile" },
+  { label: "Change your payout account", to: "profile?pane=payouts" },
   { label: "How should I price this", to: "help" },
   { label: "Report a problem with a booking", to: "bookings" },
 ] as const;

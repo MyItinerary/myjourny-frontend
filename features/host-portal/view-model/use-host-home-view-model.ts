@@ -18,6 +18,8 @@ import { HOST_PORTAL_BASE } from "../model/nav";
 
 export type HostPageHeader = {
   title: string;
+  /** A small pill beside the title: "Live", "Draft". */
+  chip?: string;
   subtitle: string;
   /** A link when it has an `href`, a button when it has an `onClick`. */
   actions: { label: string; href?: string; onClick?: () => void; primary: boolean }[];

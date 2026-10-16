@@ -36,6 +36,11 @@ describe("HostPageHeaderView", () => {
     expect(screen.queryByRole("link", { name: "Block dates" })).not.toBeInTheDocument();
   });
 
+  it("puts a chip beside the title when there is one", () => {
+    renderWithProviders(<HostPageHeaderView title="Your profile" chip="Live" subtitle="" actions={[]} />);
+    expect(screen.getByText("Live")).toBeInTheDocument();
+  });
+
   it("leaves out an empty subtitle", () => {
     const { container } = renderWithProviders(<HostPageHeaderView title="Calendar" subtitle="" actions={[]} />);
     expect(container.querySelector("header p")).toBeNull();

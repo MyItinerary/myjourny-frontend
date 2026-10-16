@@ -61,7 +61,7 @@ describe("useHostHomeViewModel", () => {
     const { result } = renderHook(() => useHostHomeViewModel());
     expect(result.current.quick.map((q) => q.href)).toEqual([
       "/host/dashboard/listings/new",
-      "/host/dashboard/profile",
+      "/host/dashboard/profile?pane=payouts",
       "/host/dashboard/help",
       "/host/dashboard/bookings",
     ]);
