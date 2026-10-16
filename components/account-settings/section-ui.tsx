@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { CircleCheck, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -117,19 +117,33 @@ export function ModalShell({
 
 export function TextField({
   label,
+  error,
   className,
   ...props
-}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+}: { label: string; error?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const id = useId();
+  const errorId = `${id}-error`;
   return (
     <div>
-      <div className="text-sm font-medium text-foreground">{label}</div>
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
+        {label}
+      </label>
       <input
         {...props}
+        id={id}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
         className={cn(
           "mt-2 h-12 w-full rounded-xl border border-border px-4 font-sans text-base text-foreground outline-none focus-visible:border-brand focus-visible:ring-4 focus-visible:ring-brand/16",
+          error && "border-destructive",
           className,
         )}
       />
+      {error && (
+        <div id={errorId} role="alert" className="mt-1.5 text-sm text-destructive">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
