@@ -10,3 +10,6 @@ export { HostPageHeaderView } from "./view/host-page-header-view";
 export type { HostListingsViewModel } from "./view-model/use-host-listings-view-model";
 export { useHostListingsViewModel } from "./view-model/use-host-listings-view-model";
 export { HostListingsView } from "./view/host-listings-view";
+export type { HostCalendarViewModel } from "./view-model/use-host-calendar-view-model";
+export { useHostCalendarViewModel } from "./view-model/use-host-calendar-view-model";
+export { HostCalendarView } from "./view/host-calendar-view";

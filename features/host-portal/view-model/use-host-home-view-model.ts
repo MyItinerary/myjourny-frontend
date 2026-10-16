@@ -19,7 +19,8 @@ import { HOST_PORTAL_BASE } from "../model/nav";
 export type HostPageHeader = {
   title: string;
   subtitle: string;
-  actions: { label: string; href: string; primary: boolean }[];
+  /** A link when it has an `href`, a button when it has an `onClick`. */
+  actions: { label: string; href?: string; onClick?: () => void; primary: boolean }[];
 };
 
 export type HostHomeViewModel = {

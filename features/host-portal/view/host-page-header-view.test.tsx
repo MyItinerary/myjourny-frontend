@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
 
@@ -23,6 +23,17 @@ describe("HostPageHeaderView", () => {
     expect(screen.getByRole("link", { name: "Start a new listing" })).toHaveAttribute("href", "/host/dashboard/listings/new");
     expect(screen.getByRole("link", { name: "Start a new listing" })).toHaveClass("bg-[#F5032D]");
     expect(screen.getByRole("link", { name: "Download statement" })).not.toHaveClass("bg-[#F5032D]");
+  });
+
+  it("makes an action with a handler a button", async () => {
+    const onClick = vi.fn();
+    const { user } = renderWithProviders(
+      <HostPageHeaderView title="Calendar" subtitle="" actions={[{ label: "Block dates", onClick, primary: false }]} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Block dates" }));
+    expect(onClick).toHaveBeenCalled();
+    expect(screen.queryByRole("link", { name: "Block dates" })).not.toBeInTheDocument();
   });
 
   it("leaves out an empty subtitle", () => {
