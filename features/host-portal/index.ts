@@ -16,3 +16,6 @@ export { HostCalendarView } from "./view/host-calendar-view";
 export type { HostBookingsViewModel } from "./view-model/use-host-bookings-view-model";
 export { useHostBookingsViewModel } from "./view-model/use-host-bookings-view-model";
 export { HostBookingsView } from "./view/host-bookings-view";
+export type { HostEarningsViewModel } from "./view-model/use-host-earnings-view-model";
+export { useHostEarningsViewModel } from "./view-model/use-host-earnings-view-model";
+export { HostEarningsView } from "./view/host-earnings-view";
