@@ -50,7 +50,7 @@ export const SAMPLE_HOME: HostHomeData = {
       status: "Live",
       title: "Lagos Island Photowalk",
       meta: "Sat 20 Sept · 6 of 8 booked",
-      href: `${listings}/new`,
+      href: `${listings}/l1`,
     },
     {
       id: "l2",
@@ -58,7 +58,7 @@ export const SAMPLE_HOME: HostHomeData = {
       status: "In review",
       title: "Sunset Kayak and Paint",
       meta: "Sent 2 days ago · ₦16,000",
-      href: `${listings}/new`,
+      href: `${listings}/l2`,
     },
     {
       id: "l3",
@@ -66,7 +66,7 @@ export const SAMPLE_HOME: HostHomeData = {
       status: "Archived",
       title: "Harmattan Portrait Session",
       meta: "Ran 11 times · 4.9",
-      href: listings,
+      href: `${listings}/l3`
     },
   ],
   earnings: {
