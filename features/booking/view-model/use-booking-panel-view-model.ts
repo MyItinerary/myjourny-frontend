@@ -84,11 +84,12 @@ export type SummaryLine = {
   amount: string;
   /** The price before early-bird, shown struck through. */
   listAmount?: string | null;
-  kind: "item" | "subtotal" | "discount" | "fee";
+  kind: "item" | "subtotal" | "discount";
 };
 
 /** The quote as summary rows: tickets and add-ons (with their pre-early-bird
- * price), then the subtotal and each discount when there are any, then the fee. */
+ * price), then the subtotal and each discount when there are any. The
+ * processing fee isn't listed: it's added at checkout. */
 function summaryLines(quote: Quote, currency: string): SummaryLine[] {
   const money = (amount: number | string) => formatPrice(Number(amount), currency);
   const items: SummaryLine[] = quote.lines
@@ -100,9 +101,6 @@ function summaryLines(quote: Quote, currency: string): SummaryLine[] {
       listAmount: line.list_amount != null ? money(line.list_amount) : null,
       kind: "item",
     }));
-  const fees: SummaryLine[] = quote.lines
-    .filter((line) => line.kind === "fee")
-    .map((line, index) => ({ key: `fee-${index}`, label: line.label, amount: money(line.amount), kind: "fee" }));
   // Older servers don't list savings; their discount lines say enough.
   const savings = quote.savings;
   const discounts: SummaryLine[] = savings
@@ -115,14 +113,21 @@ function summaryLines(quote: Quote, currency: string): SummaryLine[] {
     : quote.lines
         .filter((line) => line.kind === "discount")
         .map((line, index) => ({ key: `discount-${index}`, label: line.label, amount: money(line.amount), kind: "discount" }));
-  if (discounts.length === 0) return [...items, ...fees];
+  if (discounts.length === 0) return items;
   const subtotal: SummaryLine = {
     key: "subtotal",
     label: "Subtotal",
     amount: money(quote.subtotal_before_discounts ?? quote.subtotal),
     kind: "subtotal",
   };
-  return [...items, subtotal, ...discounts, ...fees];
+  return [...items, subtotal, ...discounts];
+}
+
+/** What the trip costs: the quote's total without the processing fee, which
+ * is added at checkout. */
+function tripTotal(quote: Quote): number {
+  const fees = quote.lines.filter((line) => line.kind === "fee").reduce((sum, line) => sum + Number(line.amount), 0);
+  return Number(quote.total) - fees;
 }
 
 export function useBookingPanelViewModel({
@@ -198,7 +203,7 @@ export function useBookingPanelViewModel({
     quotedGuests >= minGuests &&
     quotedGuests <= maxGuests &&
     (!!onGuestBook || (!!quote && !quoteFailed));
-  const total = quote ? formatPrice(Number(quote.total), currency) : null;
+  const total = quote ? formatPrice(tripTotal(quote), currency) : null;
   const savedAmount = (quote?.savings ?? []).reduce((sum, saving) => sum + Number(saving.amount), 0);
   const bookLabel = () => {
     if (createBooking.isPending) return "Starting checkout…";
