@@ -1,3 +1,4 @@
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -64,7 +65,8 @@ export function useHostBookingsViewModel(): HostBookingsViewModel {
   const bookings = useHostBookings(preview, today);
 
   const [filters, setFilters] = useState<BookingFilters>(NO_BOOKING_FILTERS);
-  const [openId, setOpenId] = useState<string | null>(null);
+  // ?booking=<id> opens that booking (Home's "needs you" links land here).
+  const [openId, setOpenId] = useState<string | null>(useSearchParams().get("booking"));
 
   const shown = filterBookings(bookings, filters);
   const open = bookings.find((b) => b.id === openId) ?? null;

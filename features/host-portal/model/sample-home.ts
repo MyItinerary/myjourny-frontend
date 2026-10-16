@@ -22,7 +22,7 @@ export const SAMPLE_HOME: HostHomeData = {
       timer: "2h left",
       urgent: true,
       action: "Open",
-      href: bookings,
+      href: `${bookings}?booking=b1`,
     },
     {
       id: "b2",
@@ -31,7 +31,7 @@ export const SAMPLE_HOME: HostHomeData = {
       timer: "Late",
       urgent: false,
       action: "Open",
-      href: bookings,
+      href: `${bookings}?booking=b2`,
     },
     {
       id: "l1",

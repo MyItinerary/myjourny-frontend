@@ -3,9 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useHostBookingsViewModel } from "./use-host-bookings-view-model";
 
-const nav = vi.hoisted(() => ({ preview: "full" as string | null }));
+const nav = vi.hoisted(() => ({ preview: "full" as string | null, booking: null as string | null }));
 vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(nav.preview ? `preview=${nav.preview}` : ""),
+  useSearchParams: () =>
+    new URLSearchParams([nav.preview ? `preview=${nav.preview}` : "", nav.booking ? `booking=${nav.booking}` : ""].filter(Boolean).join("&")),
 }));
 const toast = vi.hoisted(() => ({ info: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
@@ -15,12 +16,20 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 8, 19, 10, 0));
   nav.preview = "full";
+  nav.booking = null;
   toast.info.mockReset();
 });
 afterEach(() => vi.useRealTimers());
 
 const render = () => renderHook(() => useHostBookingsViewModel()).result;
 const names = (result: { current: ReturnType<typeof useHostBookingsViewModel> }) => result.current.rows.map((r) => r.booking.name);
+
+describe("a link from Home", () => {
+  it("opens the booking named in the URL", () => {
+    nav.booking = "b1";
+    expect(render().current.detail?.booking.name).toBe("Amaka Eze");
+  });
+});
 
 describe("the table", () => {
   it("lists every booking, requests first, with the page summary", () => {
