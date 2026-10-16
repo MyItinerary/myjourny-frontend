@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { DeleteDialogView } from "./host-listing-delete-dialog-view";
-import { BulkBar, MENU, Toolbar } from "./host-listing-filters-view";
+import { MENU } from "./host-filter-dropdown-view";
+import { BulkBar, Toolbar } from "./host-listing-filters-view";
 
 import { cn } from "@/lib/utils";
 

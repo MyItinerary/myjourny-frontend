@@ -13,7 +13,7 @@ const vm = (over: Partial<HostListingsViewModel> = {}) =>
     resultLine: "3 listings",
     hasFilters: true,
     onClearFilters: vi.fn(),
-    groups: [{ key: "rating", label: "Rating", current: "4 and up", active: true, options: [{ value: "4 and up", label: "4 and up", selected: true, subs: [] }] }],
+    groups: [{ key: "rating", label: "Rating", current: "4 and up", active: true, anyValue: "All", anyLabel: "Any rating", options: [{ value: "4 and up", label: "4 and up", selected: true, subs: [] }] }],
     onPick: vi.fn(),
     selection: { count: 1, label: "1 listing selected", allSelected: false, onToggleAll: vi.fn(), onToggleRow: vi.fn(), onClear: vi.fn(), onBulk: vi.fn() },
     ...over,

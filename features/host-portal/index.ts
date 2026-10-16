@@ -13,3 +13,6 @@ export { HostListingsView } from "./view/host-listings-view";
 export type { HostCalendarViewModel } from "./view-model/use-host-calendar-view-model";
 export { useHostCalendarViewModel } from "./view-model/use-host-calendar-view-model";
 export { HostCalendarView } from "./view/host-calendar-view";
+export type { HostBookingsViewModel } from "./view-model/use-host-bookings-view-model";
+export { useHostBookingsViewModel } from "./view-model/use-host-bookings-view-model";
+export { HostBookingsView } from "./view/host-bookings-view";

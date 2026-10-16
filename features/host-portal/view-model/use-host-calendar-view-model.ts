@@ -1,5 +1,5 @@
 import { useSearchParams } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -21,6 +21,7 @@ import { useHostCalendar } from "../model/calendar-data";
 import type { CalendarEvent, CalendarView } from "../model/calendar.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
+import { useToday } from "./use-today";
 
 export type CalendarCellModel = {
   date: string | null;
@@ -78,15 +79,6 @@ const VIEWS: { key: CalendarView; label: string }[] = [
   { key: "week", label: "Week" },
   { key: "list", label: "List" },
 ];
-
-const subscribe = () => () => {};
-const dayNow = () => Math.floor(Date.now() / 3_600_000);
-
-/** Today's date, once on the client; null while rendering on the server. */
-function useToday(): string | null {
-  const hour = useSyncExternalStore(subscribe, dayNow, () => null);
-  return hour === null ? null : dateKey(new Date(hour * 3_600_000));
-}
 
 const HINT = "Click a date, or press and drag across dates, to block them.";
 
@@ -168,7 +160,7 @@ export function useHostCalendarViewModel(): HostCalendarViewModel {
             title: e.title,
             note: e.note,
             guestListHref: `${HOST_PORTAL_BASE}/bookings`,
-            scanHref: `${HOST_PORTAL_BASE}/bookings?checkin=true`,
+            scanHref: `${HOST_PORTAL_BASE}/bookings/scan`,
           })),
           blocked: isBlocked,
           blockLabel: isBlocked ? "Open this date again" : "Block this date",

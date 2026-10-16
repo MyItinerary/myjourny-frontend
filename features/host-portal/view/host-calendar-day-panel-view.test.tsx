@@ -10,7 +10,7 @@ const panel = (over: Partial<DayPanel> = {}): DayPanel => ({
   title: "Sunday 20 September",
   subtitle: "1 experience runs on this date",
   events: [
-    { id: "e1", title: "Photowalk 16:00", note: "6 of 8 guests", guestListHref: "/host/dashboard/bookings", scanHref: "/host/dashboard/bookings?checkin=true" },
+    { id: "e1", title: "Photowalk 16:00", note: "6 of 8 guests", guestListHref: "/host/dashboard/bookings", scanHref: "/host/dashboard/bookings/scan" },
   ],
   blocked: false,
   blockLabel: "Block this date",
@@ -32,7 +32,7 @@ describe("CalendarDayPanelView", () => {
     expect(screen.getByText("Photowalk 16:00")).toBeInTheDocument();
     expect(screen.getByText("6 of 8 guests")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "See the guest list" })).toHaveAttribute("href", "/host/dashboard/bookings");
-    expect(screen.getByRole("link", { name: "Scan tickets" })).toHaveAttribute("href", "/host/dashboard/bookings?checkin=true");
+    expect(screen.getByRole("link", { name: "Scan tickets" })).toHaveAttribute("href", "/host/dashboard/bookings/scan");
     expect(screen.getByText(/only stops new bookings/)).toBeInTheDocument();
   });
 

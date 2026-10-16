@@ -16,6 +16,7 @@ import {
   STATUS_OPTIONS,
 } from "../model/listing-table";
 import { useHostListings } from "../model/listings-data";
+import type { FilterGroup } from "../model/filter-group.types";
 import type {
   BulkAction,
   HostListing,
@@ -25,25 +26,6 @@ import type {
 } from "../model/listings.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
-
-export type FilterKey = "status" | "category" | "rating";
-
-export type FilterOption = {
-  value: string;
-  label: string;
-  selected: boolean;
-  /** Categories only: their subcategories. */
-  subs: { value: string; selected: boolean }[];
-};
-
-export type FilterGroup = {
-  key: FilterKey;
-  label: string;
-  /** "Any", or the chosen value (a chosen subcategory wins over its category). */
-  current: string;
-  active: boolean;
-  options: FilterOption[];
-};
 
 export type ListingColumn = { key: ListingSortKey; label: string; direction: "asc" | "desc" | null };
 
@@ -67,7 +49,7 @@ export type HostListingsViewModel = {
   hasFilters: boolean;
   onClearFilters: () => void;
   groups: FilterGroup[];
-  onPick: (key: FilterKey, value: string, subcategory?: string) => void;
+  onPick: (key: string, value: string, subcategory?: string) => void;
   columns: ListingColumn[];
   onSort: (key: ListingSortKey) => void;
   rows: ListingRow[];
@@ -132,6 +114,8 @@ export function useHostListingsViewModel(): HostListingsViewModel {
       label: "Status",
       current: filters.status === "All" ? "Any" : filters.status,
       active: filters.status !== "All",
+      anyValue: "All",
+      anyLabel: "Any status",
       options: STATUS_OPTIONS.map((s) => ({ value: s, label: s, selected: filters.status === s, subs: [] })),
     },
     {
@@ -139,6 +123,8 @@ export function useHostListingsViewModel(): HostListingsViewModel {
       label: "Category",
       current: filters.subcategory !== "All" ? filters.subcategory : filters.category === "All" ? "Any" : filters.category,
       active: filters.category !== "All" || filters.subcategory !== "All",
+      anyValue: "All",
+      anyLabel: "Any category",
       options: Object.entries(CATEGORY_TREE).map(([category, subs]) => ({
         value: category,
         label: category,
@@ -151,11 +137,13 @@ export function useHostListingsViewModel(): HostListingsViewModel {
       label: "Rating",
       current: filters.rating === "All" ? "Any" : filters.rating,
       active: filters.rating !== "All",
+      anyValue: "All",
+      anyLabel: "Any rating",
       options: RATING_OPTIONS.filter((r) => r !== "All").map((r) => ({ value: r, label: r, selected: filters.rating === r, subs: [] })),
     },
   ];
 
-  const onPick = (key: FilterKey, value: string, subcategory?: string) => {
+  const onPick = (key: string, value: string, subcategory?: string) => {
     if (key === "status") change({ status: value as ListingFilters["status"] });
     else if (key === "rating") change({ rating: value as ListingFilters["rating"] });
     else change({ category: value, subcategory: subcategory ?? "All" });

@@ -118,7 +118,7 @@ describe("a date", () => {
       title: "Photowalk 16:00",
       note: "6 of 8 guests",
       guestListHref: "/host/dashboard/bookings",
-      scanHref: "/host/dashboard/bookings?checkin=true",
+      scanHref: "/host/dashboard/bookings/scan",
     });
 
     act(() => result.current.onClosePanel());

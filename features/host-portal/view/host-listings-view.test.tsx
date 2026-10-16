@@ -43,15 +43,17 @@ const vm = (over: Partial<HostListingsViewModel> = {}): HostListingsViewModel =>
   hasFilters: false,
   onClearFilters: vi.fn(),
   groups: [
-    { key: "status", label: "Status", current: "Any", active: false, options: [{ value: "Live", label: "Live", selected: false, subs: [] }] },
+    { key: "status", label: "Status", current: "Any", active: false, anyValue: "All", anyLabel: "Any status", options: [{ value: "Live", label: "Live", selected: false, subs: [] }] },
     {
       key: "category",
       label: "Category",
       current: "Any",
       active: false,
+      anyValue: "All",
+      anyLabel: "Any category",
       options: [{ value: "Yoga", label: "Yoga", selected: false, subs: [{ value: "Hot yoga", selected: false }] }],
     },
-    { key: "rating", label: "Rating", current: "Any", active: false, options: [{ value: "4 and up", label: "4 and up", selected: false, subs: [] }] },
+    { key: "rating", label: "Rating", current: "Any", active: false, anyValue: "All", anyLabel: "Any rating", options: [{ value: "4 and up", label: "4 and up", selected: false, subs: [] }] },
   ],
   onPick: vi.fn(),
   columns: [
@@ -200,8 +202,8 @@ describe("HostListingsView, the toolbar", () => {
       <HostListingsView
         vm={vm({
           groups: [
-            { key: "category", label: "Category", current: "Football and street games", active: true, options: [] },
-            { key: "rating", label: "Rating", current: "4 and up", active: true, options: [] },
+            { key: "category", label: "Category", current: "Football and street games", active: true, anyValue: "All", anyLabel: "Any category", options: [] },
+            { key: "rating", label: "Rating", current: "4 and up", active: true, anyValue: "All", anyLabel: "Any rating", options: [] },
           ],
         })}
       />,
