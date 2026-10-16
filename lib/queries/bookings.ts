@@ -43,6 +43,16 @@ export type Booking = {
   hold_expires_at?: string | null;
   // The experience's cancellation policy as shown when this was booked.
   cancellation_policy_snapshot?: string | null;
+  // Day-of details, only on confirmed or completed bookings.
+  meeting_point?: {
+    latitude?: number | null;
+    longitude?: number | null;
+    instructions?: string | null;
+    city?: string | null;
+    country?: string | null;
+  } | null;
+  what_to_bring?: string | null;
+  host_phone?: string | null;
   cancelled_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
