@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
 const SECTIONS: Record<string, string> = {
-  listings: "Your listings",
   calendar: "Calendar",
   bookings: "Bookings",
   earnings: "Earnings",

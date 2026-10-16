@@ -7,3 +7,6 @@ export type { HostHomeViewModel, HostPageHeader } from "./view-model/use-host-ho
 export { useHostHomeViewModel } from "./view-model/use-host-home-view-model";
 export { HostHomeView } from "./view/host-home-view";
 export { HostPageHeaderView } from "./view/host-page-header-view";
+export type { HostListingsViewModel } from "./view-model/use-host-listings-view-model";
+export { useHostListingsViewModel } from "./view-model/use-host-listings-view-model";
+export { HostListingsView } from "./view/host-listings-view";
