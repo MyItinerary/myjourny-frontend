@@ -201,7 +201,7 @@ function CheckoutSummary({ promo, quote, quoteError, booking, total }: BookingPa
           >
             {booking.label}
           </Button>
-          <p className="text-center text-xs text-[#6F6B72]">You won&apos;t be charged yet. You&apos;ll confirm on the next step.</p>
+          <p className="text-center text-xs text-[#6F6B72]">You won&apos;t be charged yet. A payment processing fee is added at checkout.</p>
         </div>
       )}
 
