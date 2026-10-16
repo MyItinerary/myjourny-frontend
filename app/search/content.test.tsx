@@ -112,4 +112,26 @@ describe("SearchContent", () => {
     expect(screen.getByText((_, el) => el?.tagName === "P" && !!el?.textContent?.includes("Found 1 experience"))).toBeInTheDocument();
     expect(screen.queryByText("No matching experiences found")).not.toBeInTheDocument();
   });
+
+  it("retains already-loaded search results and count if background refetch fails", () => {
+    searchState.isLoading = false;
+    searchState.isError = true;
+    searchState.data = [
+      {
+        experience_id: "exp-1",
+        title: "Tarkwa Bay Kayaking",
+        city: "Lagos",
+        duration: 2,
+        rating: 4.9,
+        price_from: 20000,
+        currency: "NGN",
+      },
+    ];
+
+    renderWithProviders(<SearchContent />);
+
+    expect(screen.getByText("Tarkwa Bay Kayaking")).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.tagName === "P" && !!el?.textContent?.includes("Found 1 experience"))).toBeInTheDocument();
+    expect(screen.queryByText("Failed to load search results")).not.toBeInTheDocument();
+  });
 });

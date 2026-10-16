@@ -96,7 +96,7 @@ export function SearchContent() {
           <p className="text-sm font-semibold text-foreground">
             {isLoading ? (
               "Loading experiences…"
-            ) : isError ? (
+            ) : isError && results.length === 0 ? (
               <span className="text-destructive font-medium">Failed to load experiences</span>
             ) : (
               <>
@@ -114,7 +114,7 @@ export function SearchContent() {
               <ExperienceCardVerticalSkeleton key={index} />
             ))}
           </div>
-        ) : isError ? (
+        ) : isError && results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
             <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-[#FEE2E2] text-brand">
               <AlertCircle className="size-8" />

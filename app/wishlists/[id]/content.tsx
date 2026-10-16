@@ -63,7 +63,7 @@ export function WishlistDetailContent({ id }: { id: string }) {
               <p className="text-base text-[#6F6B72] sm:text-2xl">
                 {isLoading ? (
                   "Loading experiences…"
-                ) : isError ? (
+                ) : isError && experiences.length === 0 ? (
                   "Failed to load experiences"
                 ) : (
                   `${count} ${count === 1 ? "experience" : "experiences"} saved`
@@ -98,7 +98,7 @@ export function WishlistDetailContent({ id }: { id: string }) {
               <div className="size-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
               <p className="mt-3 text-sm">Loading saved experiences...</p>
             </div>
-          ) : isError ? (
+          ) : isError && experiences.length === 0 ? (
             <div className="flex flex-col items-center gap-4 px-4 py-20 text-center">
               <h2 className="font-heading text-2xl font-bold text-[#130404]">Failed to load experiences</h2>
               <p className="max-w-sm text-base text-[#6F6B72]">

@@ -111,4 +111,28 @@ describe("WishlistDetailContent", () => {
     expect(screen.getByText(/1 experience saved/i)).toBeInTheDocument();
     expect(screen.queryByText("This wishlist is empty")).not.toBeInTheDocument();
   });
+
+  it("retains already-loaded experiences and result count if background refetch fails", () => {
+    wishlistState.isLoading = false;
+    wishlistState.isError = true;
+    wishlistState.experiences = [
+      {
+        id: "wi-1",
+        experienceId: "exp-1",
+        title: "Tarkwa Bay Boat Tour",
+        imageUrl: "/images/surf.jpg",
+        price: 15000,
+        currency: "NGN",
+        duration: 3,
+        city: "Lagos",
+        rating: 4.8,
+      },
+    ];
+
+    renderWithProviders(<WishlistDetailContent id="w-1" />);
+
+    expect(screen.getByText("Tarkwa Bay Boat Tour")).toBeInTheDocument();
+    expect(screen.getByText(/1 experience saved/i)).toBeInTheDocument();
+    expect(screen.queryByText("Failed to load experiences")).not.toBeInTheDocument();
+  });
 });
