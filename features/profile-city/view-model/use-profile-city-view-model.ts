@@ -108,11 +108,17 @@ export function useProfileCityViewModel({ city, ready, open, onClose, onSaved, o
   if (typed && results.isError) notice = "City search is unavailable right now. Try again shortly.";
   else if (typed && !waiting && choices.length === 0) notice = "No city matches that. Check the spelling, or try the nearest large city.";
 
+  // Bumped on every reset, so a location lookup still running from an
+  // earlier opening can't fill in the next one.
+  const session = useRef(0);
+
   const reset = () => {
+    session.current += 1;
     setSearch("");
     setQuery("");
     setSelected(null);
     setLocated(null);
+    setLocating(false);
     setLocationNotice(null);
   };
 
@@ -123,10 +129,12 @@ export function useProfileCityViewModel({ city, ready, open, onClose, onSaved, o
 
   const onUseMyLocation = async () => {
     if (locating) return;
+    const started = session.current;
     setLocating(true);
     setLocationNotice(null);
     try {
       const here = await fetchCityAt(await currentPosition());
+      if (session.current !== started) return;
       if (here) {
         setSearch("");
         setQuery("");
@@ -136,13 +144,14 @@ export function useProfileCityViewModel({ city, ready, open, onClose, onSaved, o
         setLocationNotice("We couldn't work out your city. Search for it instead.");
       }
     } catch (error) {
+      if (session.current !== started) return;
       setLocationNotice(
         (error as { denied?: boolean })?.denied
           ? "Location is blocked for this site. Search for your city instead."
           : "We couldn't work out your city. Search for it instead.",
       );
     } finally {
-      setLocating(false);
+      if (session.current === started) setLocating(false);
     }
   };
 

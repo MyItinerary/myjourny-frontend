@@ -175,6 +175,27 @@ describe("useProfileCityViewModel: the dialog", () => {
     expect(result.current.selectedKey).toBeNull();
     expect(onClose).toHaveBeenCalled();
   });
+
+  it.each([
+    ["a city", () => Promise.resolve({ latitude: 5.6, longitude: -0.19 })],
+    ["an error", () => Promise.reject({ denied: true })],
+  ])("ignores %s from a location lookup that finishes after closing", async (_, outcome) => {
+    stubApi({ reverse: accra });
+    let finish!: () => void;
+    currentPosition.mockReturnValue(new Promise<void>((resolve) => (finish = resolve)).then(outcome));
+    const { result } = setup();
+
+    act(() => void result.current.onUseMyLocation());
+    expect(result.current.locating).toBe(true);
+    act(() => result.current.onClose());
+    await act(async () => finish());
+
+    expect(result.current.selectedKey).toBeNull();
+    expect(result.current.choices.map((c) => c.name)).not.toContain("Accra");
+    expect(result.current.notice).toBeNull();
+    expect(result.current.locating).toBe(false);
+    expect(result.current.canSave).toBe(false);
+  });
 });
 
 describe("useProfileCityViewModel: filling an empty city", () => {
