@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { FilterChip } from "@/components/categories/filter-chip";
+import { FilterChip } from "./filter-chip";
 
 const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
 
