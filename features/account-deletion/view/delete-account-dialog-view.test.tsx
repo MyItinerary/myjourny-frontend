@@ -38,9 +38,15 @@ describe("DeleteAccountDialogView", () => {
     const { user } = renderWithProviders(<DeleteAccountDialogView {...vm} />);
 
     expect(screen.getByText("Step 1 of 2")).toBeInTheDocument();
-    expect(screen.getByText("Your profile and preferences")).toBeInTheDocument();
-    expect(screen.getByText("What we keep")).toBeInTheDocument();
-    expect(screen.getByText(/Booking and payment records, without your name or contact details/)).toBeInTheDocument();
+    // Two labelled sections, so what is kept can't be read as one more thing that goes.
+    const deleted = screen.getByRole("heading", { name: "What gets deleted" });
+    const kept = screen.getByRole("heading", { name: "What we keep" });
+    const profile = screen.getByText("Your profile and preferences");
+    const records = screen.getByText("Booking and payment records");
+    expect(deleted.compareDocumentPosition(profile) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(profile.compareDocumentPosition(kept) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(kept.compareDocumentPosition(records) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText(/refunds, disputes and legal compliance/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Continue to delete" }));
     await user.click(screen.getByRole("button", { name: "Deactivate instead" }));
