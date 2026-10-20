@@ -72,14 +72,9 @@ export function SessionDateView({
 
 /** "Choose a time" and the chips for the chosen day: loading, empty, or the times. */
 export function SessionTimesView({ sessions, locked = false }: { sessions: SessionChoice; locked?: boolean }) {
-  const { scheduled, noSessions, allSoldOut, options, loading, dayStatus, nextOpen, onJumpToNext, timezoneNote } = sessions;
-  if (!scheduled && !loading) {
-    return (
-      <p className="text-sm leading-[22px] text-[#6F6B72]">
-        Select your preferred date. The host will confirm the start time with you.
-      </p>
-    );
-  }
+  const { scheduled, noSessions, allSoldOut, options, loading, dayStatus, nextOpen, onJumpToNext } = sessions;
+  // Without a schedule only the date is picked; the host sets the time.
+  if (!scheduled && !loading) return null;
   if (noSessions && !loading) return <p className="text-sm text-[#6F6B72]">No upcoming sessions yet. Check back soon.</p>;
   if (allSoldOut && options.length === 0 && !loading) return <p className="text-sm text-[#6F6B72]">All upcoming sessions are sold out.</p>;
 
@@ -124,7 +119,6 @@ export function SessionTimesView({ sessions, locked = false }: { sessions: Sessi
           ))}
         </div>
       )}
-      <p className="text-xs text-[#6F6B72]">{timezoneNote}</p>
     </div>
   );
 }

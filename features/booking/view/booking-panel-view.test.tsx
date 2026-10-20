@@ -11,7 +11,6 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
   return {
     loading: false,
     scheduled: true,
-    timezoneNote: "Times are Lagos time.",
     noSessions: false,
     allSoldOut: false,
     options: [

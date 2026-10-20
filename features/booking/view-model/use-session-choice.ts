@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 
 import type { ExperienceSession, ExperienceSessions } from "../model/booking.types";
 import { dateFieldLabel, shortDay, urgencyFor, weekdayDay, type DayState } from "../model/booking-card";
-import { addDaysToKey, dateKey, formatSessionTime, parseDateKey, todayIn, zoneCity } from "../model/sessions";
+import { addDaysToKey, dateKey, formatSessionTime, parseDateKey, todayIn } from "../model/sessions";
 
 export type SessionOption = {
   startsAt: string;
@@ -17,8 +17,6 @@ export type SessionChoice = {
   /** The sessions are still loading. */
   loading: boolean;
   scheduled: boolean;
-  /** "Times are Lagos time.": session times are in the experience's zone. */
-  timezoneNote: string;
   /** Scheduled, but nothing is coming up. */
   noSessions: boolean;
   /** Sessions are coming up, but every one is full. */
@@ -105,7 +103,6 @@ export function useSessionChoice(
   return {
     loading,
     scheduled,
-    timezoneNote: timeZone ? `Times are ${zoneCity(timeZone)} time.` : "Times are local to the experience.",
     noSessions: scheduled && byDate.size === 0,
     allSoldOut: scheduled && byDate.size > 0 && firstOpenDay === null,
     options: daySessions.map((s) => ({

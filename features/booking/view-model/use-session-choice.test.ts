@@ -112,12 +112,10 @@ describe("useSessionChoice", () => {
 
     expect(result.current.selectedDate).toEqual(parseDateKey("2030-06-03"));
     expect(result.current.isDateSelectable(parseDateKey("2030-06-02"))).toBe(false);
-    expect(result.current.timezoneNote).toBe("Times are Lagos time.");
   });
 
   it("falls back to the browser's day before sessions load", () => {
     const { result } = renderHookWithProviders(() => useSessionChoice(undefined));
-    expect(result.current.timezoneNote).toBe("Times are local to the experience.");
     expect(result.current.selectedDate).toEqual(parseDateKey(day(1)));
   });
 

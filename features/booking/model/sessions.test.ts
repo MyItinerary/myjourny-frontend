@@ -13,7 +13,6 @@ import {
   parseDateKey,
   todayIn,
   useExperienceSessions,
-  zoneCity,
 } from "./sessions";
 
 describe("date helpers", () => {
@@ -37,12 +36,9 @@ describe("date helpers", () => {
     expect(todayIn("America/Los_Angeles", now)).toBe("2030-06-01");
   });
 
-  it("moves dates and names zones", () => {
+  it("moves dates", () => {
     expect(addDaysToKey("2030-06-30", 1)).toBe("2030-07-01");
-    expect(zoneCity("America/Los_Angeles")).toBe("Los Angeles");
-    expect(zoneCity("UTC")).toBe("UTC");
   });
-
 });
 
 describe("useExperienceSessions", () => {

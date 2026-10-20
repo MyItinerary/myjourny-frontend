@@ -10,7 +10,6 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
   return {
     loading: false,
     scheduled: true,
-    timezoneNote: "Times are Lagos time.",
     noSessions: false,
     allSoldOut: false,
     options: [
@@ -45,7 +44,6 @@ describe("SessionTimesView", () => {
     expect(screen.getByText("Choose a time")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "9:00 AM" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "3:00 PM" })).toBeDisabled();
-    expect(screen.getByText("Times are Lagos time.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "9:00 AM" }));
 
     expect(choice.onPickSession).toHaveBeenCalledWith("a");
@@ -81,9 +79,10 @@ describe("SessionTimesView", () => {
     expect(screen.getByText("All upcoming sessions are sold out.")).toBeInTheDocument();
   });
 
-  it("asks only for a date when there's no schedule", () => {
+  it("shows no times and no helper text when there's no schedule", () => {
     renderWithProviders(<SessionTimesView sessions={sessionChoice({ scheduled: false, options: [] })} />);
-    expect(screen.getByText(/The host will confirm the start time/)).toBeInTheDocument();
+    expect(screen.queryByText("Choose a time")).not.toBeInTheDocument();
+    expect(screen.queryByText(/host will confirm/i)).not.toBeInTheDocument();
   });
 });
 

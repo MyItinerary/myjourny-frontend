@@ -93,7 +93,6 @@ test.describe("booking sessions", () => {
     await openExperience(page);
 
     await expect(panel(page).getByRole("button", { name: /9:00 AM/ })).toBeVisible();
-    await expect(panel(page).getByText("Times are Lagos time.")).toBeVisible();
     await expect(page.getByRole("link", { name: /Preview/ })).toHaveCount(0);
   });
 
@@ -180,7 +179,7 @@ test.describe("booking sessions", () => {
       },
     });
 
-    await expect(panel(page).getByText(/The host will confirm the start time/)).toBeVisible();
+    await expect(panel(page).getByText("Choose a time")).toHaveCount(0);
     await expect.poll(() => quotes.length).toBeGreaterThan(0);
     // The date, not a guessed time in the browser's zone.
     expect(quotes.at(-1)).toHaveProperty("requested_date");

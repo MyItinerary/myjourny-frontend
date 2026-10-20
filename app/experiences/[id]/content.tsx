@@ -349,8 +349,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
           {hydrated ? (
             <BookingPanel
-              // The nav is fixed and 100px tall on desktop: sit below it, and scroll inside if the card is taller than what is left.
-              className="sticky top-6 mt-8 hidden lg:top-[124px] lg:mt-0 lg:flex lg:max-h-[calc(100vh-148px)] lg:overflow-y-auto"
+              // The nav is fixed and 100px tall on desktop: sit below it.
+              className="sticky top-6 mt-8 hidden lg:top-[124px] lg:mt-0 lg:flex"
               experienceId={experience.id}
               guideId={experience.guide_id}
               prices={prices ?? []}
