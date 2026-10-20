@@ -45,10 +45,10 @@ export function SessionDateView({
         aria-label={`Date: ${label}`}
         className="w-full cursor-pointer text-left disabled:cursor-not-allowed"
       >
-        <PillRow className="h-14 px-4">
+        <PillRow className="px-4 py-3">
           <span className="flex min-w-0 flex-1 items-center gap-2">
             <Calendar aria-hidden className="size-6 shrink-0 text-[#333134]" />
-            <span className="truncate text-base font-medium text-[#333134]">{label}</span>
+            <span className="truncate text-base leading-6 text-[#333134]">{label}</span>
           </span>
           <ChevronDown aria-hidden className={cn("size-6 shrink-0 text-[#333134] transition-transform", open && "rotate-180")} />
         </PillRow>

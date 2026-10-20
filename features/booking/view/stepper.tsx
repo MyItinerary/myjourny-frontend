@@ -3,7 +3,7 @@ import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BUTTON =
-  "flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#E0DFDD] bg-white text-[#333134] transition-colors hover:bg-[#F4F2EE] disabled:cursor-not-allowed disabled:border-transparent disabled:bg-[#F5F5F5] disabled:text-[#BDBDBD] disabled:hover:bg-[#F5F5F5]";
+  "flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-[0.727px] border-[#E0DFDD] bg-white text-[#333134] transition-colors hover:bg-[#F4F2EE] disabled:cursor-not-allowed disabled:border-transparent disabled:bg-[#F5F5F5] disabled:text-[#BDBDBD] disabled:hover:bg-[#F5F5F5]";
 
 /** Round minus/plus around a count. Each end greys out at its limit. */
 export function Stepper({
@@ -33,7 +33,7 @@ export function Stepper({
         onClick={() => onChange(Math.max(min, value - 1))}
         className={BUTTON}
       >
-        <Minus className="size-4" />
+        <Minus className="size-3" />
       </button>
       <span className="w-7 text-center text-base font-medium text-[#333134]">{value}</span>
       <button
@@ -43,7 +43,7 @@ export function Stepper({
         onClick={() => onChange(Math.min(max, value + 1))}
         className={BUTTON}
       >
-        <Plus className="size-4" />
+        <Plus className="size-3" />
       </button>
     </div>
   );

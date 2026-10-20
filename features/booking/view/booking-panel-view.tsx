@@ -75,11 +75,11 @@ export function BookingPanelView(props: Props) {
 
         <div className={cn("flex flex-col gap-2 pt-1", card.locked && "opacity-60")}>
           {tickets.map((ticket) => (
-            <PillRow key={ticket.id} className="min-h-[60px] py-2 pr-2 pl-4">
+            <PillRow key={ticket.id} className="py-2 pr-2 pl-4">
               <span className="flex min-w-0 items-center gap-2">
                 <User aria-hidden className="size-6 shrink-0 text-[#333134]" />
                 <span className="flex flex-col">
-                  <span className="text-base leading-[22px] font-medium text-[#333134]">{several ? ticket.label : "Guests"}</span>
+                  <span className="text-base leading-[22px] text-[#333134]">{several ? ticket.label : "Guests"}</span>
                   {ticket.priceLabel && <span className="text-[13px] leading-[18px] text-[#6F6B72]">{ticket.priceLabel}</span>}
                 </span>
               </span>
@@ -89,8 +89,8 @@ export function BookingPanelView(props: Props) {
         </div>
 
         {days.show && (
-          <PillRow className="min-h-[60px] py-2 pr-2 pl-4">
-            <span className="text-base font-medium text-[#333134]">Days</span>
+          <PillRow className="py-2 pr-2 pl-4">
+            <span className="text-base leading-[22px] text-[#333134]">Days</span>
             <Stepper label="days" value={days.value} min={1} max={60} onChange={days.onChange} disabled={card.locked} />
           </PillRow>
         )}
