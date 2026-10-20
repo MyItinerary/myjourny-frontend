@@ -83,15 +83,13 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
 /** What the redesigned card shows beyond the pickers themselves. */
 export type BookingCardState = {
   /** "₦16,000 per person", or "From ₦16,000" when ticket types differ. */
-  headline: { showFrom: boolean; amount: string; unit: string };
+  headline: { showFrom: boolean; amount: string; unit: string; was: string | null; pill: string | null };
   /** Lines under the headline: the schedule, any pricing rules, what a multi-day booking covers. */
   notes: string[];
   /** "Sat 12 September · 2.5 hours". */
   dateField: string;
   /** Inputs are frozen while a booking starts. */
   locked: boolean;
-  /** One line under the guest rows: the cap, the minimum, or seats left. */
-  guestHelper: string | null;
   notice: {
     tone: "neutral" | "error";
     title: string;
@@ -132,7 +130,8 @@ function summaryLines(quote: Quote, currency: string): SummaryLine[] {
     .filter((line) => line.kind === "fee")
     .map((line, index) => ({ key: `fee-${index}`, label: line.label, amount: money(line.amount), kind: "fee" }));
   // Older servers don't list savings; their discount lines say enough.
-  const savings = quote.savings;
+  // An early-bird price shows as the struck-through list price in the headline, not as a row of its own.
+  const savings = quote.savings?.every((saving) => saving.kind === "early_bird") ? [] : quote.savings;
   const discounts: SummaryLine[] = savings
     ? savings.map((saving, index) => ({
         key: `saving-${index}`,
@@ -152,10 +151,6 @@ function summaryLines(quote: Quote, currency: string): SummaryLine[] {
   };
   return [...items, subtotal, ...discounts, ...fees];
 }
-
-/** "Only 2 spots left for this session." when the guests picked outnumber the seats. */
-const seatsWarningFor = (seatsLeft: number | null, guests: number) =>
-  seatsLeft !== null && guests > seatsLeft ? `Only ${seatsLeft} spot${seatsLeft === 1 ? "" : "s"} left for this session.` : null;
 
 export function useBookingPanelViewModel({
   experienceId,
@@ -231,8 +226,16 @@ export function useBookingPanelViewModel({
     quotedGuests <= maxGuests &&
     (!!onGuestBook || (!!quote && !quoteFailed));
   const total = quote ? shortPrice(Number(quote.total), currency) : null;
-  const savedAmount = (quote?.savings ?? []).reduce((sum, saving) => sum + Number(saving.amount), 0);
+  const allSavings = quote?.savings ?? [];
+  // Early-bird alone shows as the struck-through headline price, so there is nothing to "save" below.
+  const savedAmount = allSavings.every((saving) => saving.kind === "early_bird") ? 0 : allSavings.reduce((sum, saving) => sum + Number(saving.amount), 0);
   const soldOutDay = sessions.dayStatus === "soldout";
+  // When early-bird is the only saving and one ticket type is picked, the headline shows its price struck through.
+  const ticketLines = quote?.lines.filter((line) => line.kind === "ticket") ?? [];
+  const earlyBird =
+    ticketLines.length === 1 && ticketLines[0].list_unit_amount != null && allSavings.every((saving) => saving.kind === "early_bird")
+      ? { unit_amount: ticketLines[0].unit_amount, list_unit_amount: ticketLines[0].list_unit_amount }
+      : null;
   const bookLabel = () => {
     if (createBooking.isPending) return "Starting checkout…";
     if (guests < minGuests) return `Select at least ${minGuests} guests`;
@@ -307,13 +310,6 @@ export function useBookingPanelViewModel({
   const noTimeYet = sessions.scheduled && !sessions.session;
   const quoteProblem = quoteFailed && !onGuestBook ? apiErrorMessage(quoteErrorCause, "We couldn't price this selection. Please adjust it and try again.") : null;
   const liveTotal = total ?? (selection && sessions.request ? shortPrice(estimateTotal(), currency) : null);
-  const closeToCap = seatsLeft !== null && seatsLeft <= 5 && guests >= maxGuests;
-  const guestHelper =
-    seatsWarningFor(seatsLeft, guests) ??
-    (guests < minGuests ? `Minimum ${minGuests} guests on this one` : null) ??
-    (closeToCap ? `Only ${seatsLeft} spot${seatsLeft === 1 ? "" : "s"} left at this time.` : null) ??
-    (guests >= maxGuests ? `Max ${maxGuests} guests on this one` : null) ??
-    (minGuests > 1 && guests <= minGuests ? `Minimum ${minGuests} guests on this one` : null);
   const jumpLabel = sessions.nextOpen ? `Jump to ${sessions.nextOpen.shortLabel}` : null;
   const showDates = sessions.selectedDate ? shortDay(dateKey(sessions.selectedDate)) : "";
   const notice: BookingCardState["notice"] = quoteProblem
@@ -328,7 +324,13 @@ export function useBookingPanelViewModel({
       : null;
   const bookDisabled = !isReady || (quoting && !onGuestBook) || createBooking.isPending;
   const card: BookingCardState = {
-    headline: { showFrom: ticketSelection.priceFrom.showFrom, amount: ticketSelection.priceFrom.amount, unit: ticketSelection.priceFrom.unitWords },
+    headline: {
+      showFrom: ticketSelection.priceFrom.showFrom && !earlyBird,
+      amount: earlyBird ? shortPrice(Number(earlyBird.unit_amount), currency) : ticketSelection.priceFrom.amount,
+      unit: ticketSelection.priceFrom.unitWords,
+      was: earlyBird ? shortPrice(Number(earlyBird.list_unit_amount), currency) : null,
+      pill: earlyBird ? "Early bird" : null,
+    },
     notes: [
       ...(schedule ? [scheduleLabel(schedule)].filter((n): n is string => !!n) : []),
       ...ticketSelection.ruleNotes,
@@ -336,7 +338,6 @@ export function useBookingPanelViewModel({
     ],
     dateField: `${sessions.fieldLabel}${sessions.selectedDate && durationLabel ? ` · ${durationLabel}` : ""}`,
     locked: createBooking.isPending,
-    guestHelper,
     notice,
     onRetry: () => void retryQuote(),
     total: {

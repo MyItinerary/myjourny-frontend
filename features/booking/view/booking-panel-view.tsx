@@ -51,8 +51,16 @@ export function BookingPanelView(props: Props) {
         <p className="flex flex-wrap items-baseline gap-x-2">
           {card.headline.showFrom && <span className="text-2xl font-semibold text-[#333134]">From</span>}
           <span className="text-2xl leading-8 font-semibold text-[#333134]">{card.headline.amount}</span>
+          {card.headline.was && (
+            <s className="text-sm text-[#6F6B72]" aria-label={`was ${card.headline.was}`}>
+              {card.headline.was}
+            </s>
+          )}
           <span className="text-base text-[#6F6B72]">{card.headline.unit}</span>
         </p>
+        {card.headline.pill && (
+          <span className="w-fit rounded-full bg-[#F4F2EE] px-2 py-0.5 text-xs text-[#333134]">{card.headline.pill}</span>
+        )}
         {card.notes.map((note) => (
           <p key={note} className="text-sm leading-5 text-[#6F6B72]">
             {note}
@@ -78,7 +86,6 @@ export function BookingPanelView(props: Props) {
               <Stepper label={several ? ticket.label : "guests"} value={ticket.quantity} min={0} max={ticket.max} onChange={ticket.onChange} disabled={card.locked} />
             </PillRow>
           ))}
-          {card.guestHelper && <p className="text-[13px] leading-[18px] text-[#6F6B72]">{card.guestHelper}</p>}
         </div>
 
         {days.show && (

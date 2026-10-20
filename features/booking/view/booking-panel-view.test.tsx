@@ -69,11 +69,10 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
     total: "₦9,000",
     booking: { available: true, disabled: false, pending: false, label: "Book now - ₦9,000", onBook: vi.fn() },
     card: {
-      headline: { showFrom: true, amount: "₦5,000", unit: "per person" },
+      headline: { showFrom: true, amount: "₦5,000", unit: "per person", was: null, pill: null },
       notes: ["Every Saturday · 3 days", "10% off for 4+ guests"],
       dateField: "Sat 1 June · 3 hours",
       locked: false,
-      guestHelper: "Minimum 2 guests on this one",
       notice: null,
       onRetry: vi.fn(),
       total: { amount: "₦9,000", muted: null, fees: "Fees and taxes included" },
@@ -103,7 +102,6 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("Choose a time")).toBeInTheDocument();
     expect(screen.getByText("Adult")).toBeInTheDocument();
     expect(screen.getByText("₦2,000 / person")).toBeInTheDocument();
-    expect(screen.getByText("Minimum 2 guests on this one")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
     expect(screen.getByText("₦9,000")).toBeInTheDocument();
     expect(screen.getByText("Fees and taxes included")).toBeInTheDocument();
@@ -231,6 +229,14 @@ describe("BookingPanelView", () => {
     expect(screen.getByLabelText("was ₦10,000").tagName).toBe("S");
     expect(screen.getByText("Early-bird discount (1% off)")).toBeInTheDocument();
     expect(screen.getByText("You save ₦100")).toBeInTheDocument();
+  });
+
+  it("shows the early-bird price with its list price struck through and a pill", () => {
+    const vm = withCard({ headline: { showFrom: false, amount: "₦16,000", unit: "per person", was: "₦20,000", pill: "Early bird" } });
+    renderWithProviders(<BookingPanelView {...vm} />);
+    expect(screen.getByLabelText("was ₦20,000").tagName).toBe("S");
+    expect(screen.getByText("Early bird")).toBeInTheDocument();
+    expect(screen.queryByText("From")).not.toBeInTheDocument();
   });
 
   it("doesn't itemise a single ticket line, which just repeats the total", () => {

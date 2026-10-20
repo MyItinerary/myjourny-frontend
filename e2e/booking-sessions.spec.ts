@@ -103,7 +103,6 @@ test.describe("booking sessions", () => {
     });
 
     await expect(panel(page).getByText(/^Last spot at 9:00 AM on /)).toBeVisible();
-    await expect(panel(page).getByText("Only 1 spot left at this time.")).toBeVisible();
     await expect(panel(page).getByRole("button", { name: "Increase guests" })).toBeDisabled();
   });
 
@@ -241,7 +240,6 @@ test.describe("booking sessions", () => {
     // Below the minimum group size nothing is priced or bookable.
     const quotesBefore = quotes.length;
     await sidebar.getByRole("button", { name: "Decrease guests" }).click();
-    await expect(sidebar.getByText("Minimum 3 guests on this one")).toBeVisible();
     await expect(sidebar.getByRole("button", { name: "Book now" })).toBeDisabled();
     await expect(sidebar.getByText("Needs 3 guests")).toBeVisible();
     await expect(sidebar.getByText("Payment processing fee")).toHaveCount(0);

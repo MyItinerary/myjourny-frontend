@@ -159,7 +159,6 @@ describe("useBookingPanelViewModel", () => {
 
     expect(result.current.minGuestsWarning).toBe("This experience needs at least 2 guests.");
     expect(result.current.card.total).toMatchObject({ amount: null, muted: "Needs 2 guests" });
-    expect(result.current.card.guestHelper).toBe("Minimum 2 guests on this one");
     expect(result.current.quote).toBeNull();
     expect(result.current.total).toBeNull();
     expect(result.current.booking).toMatchObject({ disabled: true, label: "Select at least 2 guests" });
@@ -391,12 +390,11 @@ describe("the booking card", () => {
     await waitFor(() => expect(result.current.card.total.amount).toBe("₦9,000"));
 
     const { card } = result.current;
-    expect(card.headline).toEqual({ showFrom: false, amount: "₦5,000", unit: "per person" });
+    expect(card.headline).toEqual({ showFrom: false, amount: "₦5,000", unit: "per person", was: null, pill: null });
     expect(card.dateField).toMatch(/ · 3 hours$/);
     expect(card.total).toEqual({ amount: "₦9,000", muted: null, fees: "Fees and taxes included" });
     expect(card.button).toMatchObject({ label: "Book now", loading: false, disabled: false });
     expect(card.cancellation.body).toMatch(/^Until .*\. After that ₦9,000 is non-refundable\.$/);
-    expect(card.guestHelper).toBe("Minimum 2 guests on this one");
     expect(card.notice).toBeNull();
     expect(card.locked).toBe(false);
   });
@@ -429,5 +427,24 @@ describe("the booking card", () => {
     const before = quotes.length;
     act(() => result.current.card.onRetry());
     await waitFor(() => expect(quotes.length).toBeGreaterThan(before));
+  });
+
+  it("shows an early-bird price struck through with a pill, and no row or saving for it below", async () => {
+    stubApi({
+      quoteBody: quote({
+        lines: [{ kind: "ticket", label: "Adult", quantity: 2, unit_amount: "4000", amount: "8000", list_unit_amount: "5000", list_amount: "10000" }],
+        subtotal: "8000",
+        subtotal_before_discounts: "10000",
+        discount: "0",
+        total: "8000",
+        savings: [{ kind: "early_bird", label: "Early-bird discount (20% off)", amount: "2000" }],
+      }),
+    });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+
+    expect(result.current.card.headline).toEqual({ showFrom: false, amount: "₦4,000", unit: "per person", was: "₦5,000", pill: "Early bird" });
+    expect(result.current.quote!.lines.map((l) => l.label)).toEqual(["Adult × 2"]);
+    expect(result.current.quote!.savings).toBeNull();
   });
 });
