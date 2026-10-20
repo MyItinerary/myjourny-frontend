@@ -3,104 +3,128 @@
 import { Calendar, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
 import { cn } from "@/lib/utils";
 
 import type { SessionChoice } from "../view-model/use-session-choice";
+import { BookingCalendarView } from "./booking-calendar-view";
+import { PillRow } from "./booking-card-parts";
 
-/** The session times for the chosen day. */
-export function SessionTimesView({
-  scheduled,
-  noSessions,
-  allSoldOut,
-  options,
-  onPickSession,
-  timezoneNote,
-}: SessionChoice) {
-  if (noSessions) {
-    return <span className="font-sans text-sm text-[#130404]">No upcoming sessions yet. Check back soon.</span>;
-  }
-  if (allSoldOut && options.length === 0) {
-    return <span className="font-sans text-sm text-[#130404]">All upcoming sessions are sold out.</span>;
-  }
-  if (!scheduled) {
-    return (
-      <span className="font-sans text-sm font-normal text-[#130404]">
-        Select your preferred date. The host will confirm the start time with you.
-      </span>
-    );
-  }
-  return (
-    <>
-      <span className="font-sans text-sm font-normal text-[#130404]">
-        Select your preferred date and a starting time
-      </span>
-      <div className="flex flex-wrap gap-2">
-        {options.map((option) => (
-          <button
-            key={option.startsAt}
-            type="button"
-            disabled={option.disabled}
-            aria-pressed={option.selected}
-            onClick={() => onPickSession(option.startsAt)}
-            className={cn(
-              "flex-1 rounded-[12px] border px-3 py-2 text-sm font-medium transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40",
-              option.selected
-                ? "border-transparent bg-[#2C0101] text-white"
-                : "border-[#E0DFDD] bg-white text-[#130404] hover:bg-[#F4F2EE]",
-            )}
-          >
-            {option.label}
-            {option.note && <span className="block text-[10px] font-normal">{option.note}</span>}
-          </button>
-        ))}
-      </div>
-      <span className="text-xs text-[#6F6B72]">{timezoneNote}</span>
-    </>
-  );
-}
-
-/** The date button and its dropdown calendar. */
-export function SessionDateView({ selectedDate, dateLabel, minDate, isDateSelectable, onSelectDate }: SessionChoice) {
-  const [open, setOpen] = useState(false);
+/** The date row and, opened, its calendar. `openRef` lets a notice open it from outside. */
+export function SessionDateView({
+  sessions,
+  label,
+  locked = false,
+  open,
+  onOpenChange,
+}: {
+  sessions: SessionChoice;
+  /** What the field says: the day and how long it runs. */
+  label: string;
+  locked?: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!open) return;
     function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node)) onOpenChange(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [open, onOpenChange]);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={cn("flex flex-col gap-3", locked && "opacity-60")}>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        disabled={locked}
+        onClick={() => onOpenChange(!open)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-[24px] bg-[#F4F2EE] px-4 py-3 text-left cursor-pointer"
+        aria-label={`Date: ${label}`}
+        className="w-full cursor-pointer text-left disabled:cursor-not-allowed"
       >
-        <span className="flex items-center gap-2 font-sans text-sm text-[#130404]">
-          <Calendar className="size-4 text-[#130404]" />
-          {dateLabel}
-        </span>
-        <ChevronDown className="size-4 text-[#130404]" />
+        <PillRow className="h-14 px-4">
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <Calendar aria-hidden className="size-6 shrink-0 text-[#333134]" />
+            <span className="truncate text-base font-medium text-[#333134]">{label}</span>
+          </span>
+          <ChevronDown aria-hidden className={cn("size-6 shrink-0 text-[#333134] transition-transform", open && "rotate-180")} />
+        </PillRow>
       </button>
       {open && (
-        <div className="absolute top-[calc(100%+8px)] left-0 z-50 w-full min-w-[320px] rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-          <DatePickerCalendar
-            selectedDate={selectedDate}
-            minDate={minDate}
-            isDateEnabled={isDateSelectable}
-            presets={computeDatePresets().filter((p) => isDateSelectable(p.date))}
-            onSelect={(date) => {
-              onSelectDate(date);
-              setOpen(false);
-            }}
-          />
+        <BookingCalendarView
+          selectedDate={sessions.selectedDate}
+          endDate={sessions.endDate}
+          minDate={sessions.minDate}
+          isDateSelectable={sessions.isDateSelectable}
+          dayState={sessions.dayState}
+          onSelectDate={(date) => {
+            sessions.onSelectDate(date);
+            onOpenChange(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/** "Choose a time" and the chips for the chosen day: loading, empty, or the times. */
+export function SessionTimesView({ sessions, locked = false }: { sessions: SessionChoice; locked?: boolean }) {
+  const { scheduled, noSessions, allSoldOut, options, loading, dayStatus, nextOpen, onJumpToNext, timezoneNote } = sessions;
+  if (!scheduled && !loading) {
+    return (
+      <p className="text-sm leading-[22px] text-[#6F6B72]">
+        Select your preferred date. The host will confirm the start time with you.
+      </p>
+    );
+  }
+  if (noSessions && !loading) return <p className="text-sm text-[#6F6B72]">No upcoming sessions yet. Check back soon.</p>;
+  if (allSoldOut && options.length === 0 && !loading) return <p className="text-sm text-[#6F6B72]">All upcoming sessions are sold out.</p>;
+
+  return (
+    <div className={cn("flex flex-col gap-2 pt-1", locked && "opacity-60")}>
+      <p className="text-sm font-medium text-[#333134]">Choose a time</p>
+      {loading ? (
+        <div className="flex gap-2" aria-busy="true" aria-label="Loading times">
+          {[0, 1, 2].map((i) => (
+            <span key={i} className="h-11 flex-1 animate-pulse rounded-[10px] bg-[#F5F5F5]" />
+          ))}
+        </div>
+      ) : dayStatus === "empty" ? (
+        <p className="flex items-center justify-between rounded-[10px] border border-[#E7E7E7] px-3.5 py-3 text-sm text-[#6F6B72]">
+          No times on this day.
+          {nextOpen && (
+            <button type="button" onClick={onJumpToNext} className="cursor-pointer font-medium text-[#333134] underline">
+              Try {nextOpen.shortLabel}
+            </button>
+          )}
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {options.map((option) => (
+            <button
+              key={option.startsAt}
+              type="button"
+              disabled={option.disabled || locked}
+              aria-pressed={option.selected}
+              onClick={() => sessions.onPickSession(option.startsAt)}
+              className={cn(
+                "h-11 min-w-[88px] flex-1 cursor-pointer rounded-[10px] text-base transition-colors disabled:cursor-not-allowed",
+                option.selected
+                  ? "bg-[#32070F] text-white"
+                  : option.disabled
+                    ? "bg-[#F5F5F5] text-[#BDBDBD] line-through"
+                    : "border border-[#E7E7E7] bg-white text-[#333134] hover:bg-[#F4F2EE]",
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       )}
+      <p className="text-xs text-[#6F6B72]">{timezoneNote}</p>
     </div>
   );
 }

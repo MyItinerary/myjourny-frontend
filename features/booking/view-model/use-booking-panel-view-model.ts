@@ -6,9 +6,10 @@ import { apiErrorMessage } from "@/lib/api-error";
 
 import type { PricingSelection, Quote } from "../model/booking.types";
 import { useCreateBooking } from "../model/bookings";
-import { formatPrice, formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
+import { cancellationBody, shortDay, shortPrice } from "../model/booking-card";
+import { formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
-import { useExperienceSessions } from "../model/sessions";
+import { dateKey, useExperienceSessions } from "../model/sessions";
 import { type SessionChoice, useSessionChoice } from "./use-session-choice";
 import { type TicketSelection, useTicketSelection } from "./use-ticket-selection";
 
@@ -76,6 +77,33 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
   /** Null until the selection can be booked and is priced. */
   total: string | null;
   booking: { available: boolean; disabled: boolean; pending: boolean; label: string; onBook: () => void };
+  card: BookingCardState;
+};
+
+/** What the redesigned card shows beyond the pickers themselves. */
+export type BookingCardState = {
+  /** "₦16,000 per person", or "From ₦16,000" when ticket types differ. */
+  headline: { showFrom: boolean; amount: string; unit: string };
+  /** Lines under the headline: the schedule, any pricing rules, what a multi-day booking covers. */
+  notes: string[];
+  /** "Sat 12 September · 2.5 hours". */
+  dateField: string;
+  /** Inputs are frozen while a booking starts. */
+  locked: boolean;
+  /** One line under the guest rows: the cap, the minimum, or seats left. */
+  guestHelper: string | null;
+  notice: {
+    tone: "neutral" | "error";
+    title: string;
+    body: string;
+    action: { label: string; kind: "dates" | "retry" } | null;
+  } | null;
+  onRetry: () => void;
+  /** The amount when something real is picked, otherwise what is missing. */
+  total: { amount: string | null; muted: string | null; fees: string };
+  button: { label: string | null; loading: boolean; disabled: boolean; onClick: () => void };
+  buttonNote: string | null;
+  cancellation: { title: string; body: string };
 };
 
 export type SummaryLine = {
@@ -90,7 +118,7 @@ export type SummaryLine = {
 /** The quote as summary rows: tickets and add-ons (with their pre-early-bird
  * price), then the subtotal and each discount when there are any, then the fee. */
 function summaryLines(quote: Quote, currency: string): SummaryLine[] {
-  const money = (amount: number | string) => formatPrice(Number(amount), currency);
+  const money = (amount: number | string) => shortPrice(Number(amount), currency);
   const items: SummaryLine[] = quote.lines
     .filter((line) => line.kind === "ticket" || line.kind === "addon")
     .map((line, index) => ({
@@ -125,6 +153,10 @@ function summaryLines(quote: Quote, currency: string): SummaryLine[] {
   return [...items, subtotal, ...discounts, ...fees];
 }
 
+/** "Only 2 spots left for this session." when the guests picked outnumber the seats. */
+const seatsWarningFor = (seatsLeft: number | null, guests: number) =>
+  seatsLeft !== null && guests > seatsLeft ? `Only ${seatsLeft} spot${seatsLeft === 1 ? "" : "s"} left for this session.` : null;
+
 export function useBookingPanelViewModel({
   experienceId,
   guideId,
@@ -141,7 +173,7 @@ export function useBookingPanelViewModel({
   const router = useRouter();
   const { data: pricing } = useExperiencePricing(experienceId);
   const sessionsQuery = useExperienceSessions(experienceId);
-  const sessions = useSessionChoice(sessionsQuery.data, eventStartDate);
+  const sessions = useSessionChoice(sessionsQuery.data, eventStartDate, sessionsQuery.isLoading);
   // No more guests than the chosen session has seats for.
   const seatsLeft = sessions.session?.seats_left ?? null;
   const maxGuests = Math.min(availableSpots ?? 10, seatsLeft ?? Infinity);
@@ -178,7 +210,7 @@ export function useBookingPanelViewModel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [experienceId, pickedKey, requestKey, appliedPromo, withinGroupSize],
   );
-  const { data: lastQuote, isFetching: quoting, isError: quoteFailed, error: quoteErrorCause } = useBookingQuote(selection);
+  const { data: lastQuote, isFetching: quoting, isError: quoteFailed, error: quoteErrorCause, refetch: retryQuote } = useBookingQuote(selection);
   // The query keeps the previous quote while a new one loads; drop it once
   // there's nothing to price, so no stale total is shown.
   const quote = selection ? lastQuote : undefined;
@@ -198,8 +230,9 @@ export function useBookingPanelViewModel({
     quotedGuests >= minGuests &&
     quotedGuests <= maxGuests &&
     (!!onGuestBook || (!!quote && !quoteFailed));
-  const total = quote ? formatPrice(Number(quote.total), currency) : null;
+  const total = quote ? shortPrice(Number(quote.total), currency) : null;
   const savedAmount = (quote?.savings ?? []).reduce((sum, saving) => sum + Number(saving.amount), 0);
+  const soldOutDay = sessions.dayStatus === "soldout";
   const bookLabel = () => {
     if (createBooking.isPending) return "Starting checkout…";
     if (guests < minGuests) return `Select at least ${minGuests} guests`;
@@ -243,7 +276,7 @@ export function useBookingPanelViewModel({
         when: guestWhen(),
         guests: quotedGuests,
         ticketsLabel: ticketsLabel(),
-        total: total ?? formatPrice(estimateTotal(), currency),
+        total: total ?? shortPrice(estimateTotal(), currency),
         currency,
         durationLabel,
       });
@@ -269,6 +302,66 @@ export function useBookingPanelViewModel({
         },
       },
     );
+  };
+
+  const noTimeYet = sessions.scheduled && !sessions.session;
+  const quoteProblem = quoteFailed && !onGuestBook ? apiErrorMessage(quoteErrorCause, "We couldn't price this selection. Please adjust it and try again.") : null;
+  const liveTotal = total ?? (selection && sessions.request ? shortPrice(estimateTotal(), currency) : null);
+  const closeToCap = seatsLeft !== null && seatsLeft <= 5 && guests >= maxGuests;
+  const guestHelper =
+    seatsWarningFor(seatsLeft, guests) ??
+    (guests < minGuests ? `Minimum ${minGuests} guests on this one` : null) ??
+    (closeToCap ? `Only ${seatsLeft} spot${seatsLeft === 1 ? "" : "s"} left at this time.` : null) ??
+    (guests >= maxGuests ? `Max ${maxGuests} guests on this one` : null) ??
+    (minGuests > 1 && guests <= minGuests ? `Minimum ${minGuests} guests on this one` : null);
+  const jumpLabel = sessions.nextOpen ? `Jump to ${sessions.nextOpen.shortLabel}` : null;
+  const showDates = sessions.selectedDate ? shortDay(dateKey(sessions.selectedDate)) : "";
+  const notice: BookingCardState["notice"] = quoteProblem
+    ? { tone: "error", title: "We couldn't price this selection", body: `${quoteProblem} Nothing has been booked or charged.`, action: { label: "Try again", kind: "retry" } }
+    : soldOutDay
+      ? {
+          tone: "neutral",
+          title: `Sold out on ${showDates}`,
+          body: sessions.nextOpen ? `Next available: ${sessions.nextOpen.label}.` : "Nothing else is open right now.",
+          action: { label: "See all dates", kind: "dates" },
+        }
+      : null;
+  const bookDisabled = !isReady || (quoting && !onGuestBook) || createBooking.isPending;
+  const card: BookingCardState = {
+    headline: { showFrom: ticketSelection.priceFrom.showFrom, amount: ticketSelection.priceFrom.amount, unit: ticketSelection.priceFrom.unitWords },
+    notes: [
+      ...(schedule ? [scheduleLabel(schedule)].filter((n): n is string => !!n) : []),
+      ...ticketSelection.ruleNotes,
+      ...(sessions.scheduled && sessions.lengthDays > 1 ? [`Each booking covers all ${sessions.lengthDays} days.`] : []),
+    ],
+    dateField: `${sessions.fieldLabel}${sessions.selectedDate && durationLabel ? ` · ${durationLabel}` : ""}`,
+    locked: createBooking.isPending,
+    guestHelper,
+    notice,
+    onRetry: () => void retryQuote(),
+    total: {
+      amount: soldOutDay || noTimeYet || guests < minGuests ? null : liveTotal,
+      muted:
+        soldOutDay || sessions.dayStatus === "empty"
+          ? "Pick another date"
+          : noTimeYet
+            ? "Select a time"
+            : guests < minGuests
+              ? `Needs ${minGuests} guests`
+              : liveTotal
+                ? null
+                : "Select a date",
+      fees: "Fees and taxes included",
+    },
+    button:
+      soldOutDay && jumpLabel
+        ? { label: jumpLabel, loading: false, disabled: false, onClick: sessions.onJumpToNext }
+        : { label: "Book now", loading: createBooking.isPending, disabled: bookDisabled, onClick: onBook },
+    buttonNote: "You won't be charged yet. You'll confirm on the next step.",
+    cancellation: {
+      title: "Free cancellation",
+      body: cancellationBody(sessions.session?.starts_at ?? null, sessionsQuery.data?.timezone, liveTotal),
+    },
   };
 
   return {
@@ -298,20 +391,19 @@ export function useBookingPanelViewModel({
             ? formatSessionWhen(quote.session_starts_at, quote.session_ends_at, quote.timezone ?? undefined)
             : null,
           lines: summaryLines(quote, currency),
-          savings: savedAmount > 0 ? `You save ${formatPrice(savedAmount, currency)}` : null,
+          savings: savedAmount > 0 ? `You save ${shortPrice(savedAmount, currency)}` : null,
         }
       : null,
-    quoteError: quoteFailed && !onGuestBook
-      ? apiErrorMessage(quoteErrorCause, "We couldn't price this selection. Please adjust it and try again.")
-      : null,
+    quoteError: quoteProblem,
     seatsWarning:
       seatsLeft !== null && guests > seatsLeft
         ? `Only ${seatsLeft} spot${seatsLeft === 1 ? "" : "s"} left for this session.`
         : null,
     total,
+    card,
     booking: {
       available: !!guideId,
-      disabled: !isReady || (quoting && !onGuestBook) || createBooking.isPending,
+      disabled: bookDisabled,
       pending: createBooking.isPending,
       label: bookLabel(),
       onBook,

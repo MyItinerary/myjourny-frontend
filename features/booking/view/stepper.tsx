@@ -1,39 +1,49 @@
-const BUTTON_CLASS =
-  "flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer disabled:cursor-not-allowed";
+import { Minus, Plus } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
+const BUTTON =
+  "flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#E0DFDD] bg-white text-[#333134] transition-colors hover:bg-[#F4F2EE] disabled:cursor-not-allowed disabled:border-transparent disabled:bg-[#F5F5F5] disabled:text-[#BDBDBD] disabled:hover:bg-[#F5F5F5]";
+
+/** Round minus/plus around a count. Each end greys out at its limit. */
 export function Stepper({
   label,
   value,
   min,
   max,
   onChange,
+  disabled = false,
+  className,
 }: {
   label: string;
   value: number;
   min: number;
   max: number;
   onChange: (value: number) => void;
+  /** Locks both buttons, while a booking starts. */
+  disabled?: boolean;
+  className?: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className={cn("flex items-center gap-1", className)}>
       <button
         type="button"
         aria-label={`Decrease ${label}`}
-        disabled={value <= min}
+        disabled={disabled || value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
-        className={BUTTON_CLASS}
+        className={BUTTON}
       >
-        −
+        <Minus className="size-4" />
       </button>
-      <span className="min-w-[1ch] text-center font-sans text-sm font-semibold text-[#130404]">{value}</span>
+      <span className="w-7 text-center text-base font-medium text-[#333134]">{value}</span>
       <button
         type="button"
         aria-label={`Increase ${label}`}
-        disabled={value >= max}
+        disabled={disabled || value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
-        className={BUTTON_CLASS}
+        className={BUTTON}
       >
-        +
+        <Plus className="size-4" />
       </button>
     </div>
   );

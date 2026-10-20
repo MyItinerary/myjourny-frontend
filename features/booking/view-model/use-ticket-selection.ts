@@ -1,7 +1,8 @@
 import { useState } from "react";
 
 import type { ExperiencePricing, PricingSelection, PricingUnit, TicketType } from "../model/booking.types";
-import { describeRules, formatPrice, UNIT_SUFFIX } from "../model/format";
+import { shortPrice, UNIT_WORDS } from "../model/booking-card";
+import { describeRules, UNIT_SUFFIX } from "../model/format";
 
 export type TicketRow = {
   id: string;
@@ -22,7 +23,7 @@ export type AddonRow = {
 };
 
 export type TicketSelection = {
-  priceFrom: { amount: string; unit: string; showFrom: boolean };
+  priceFrom: { amount: string; unit: string; unitWords: string; showFrom: boolean };
   ruleNotes: string[];
   tickets: TicketRow[];
   addons: AddonRow[];
@@ -73,15 +74,16 @@ export function useTicketSelection({
 
   return {
     priceFrom: {
-      amount: formatPrice(Number(cheapest?.amount ?? 0), currency),
+      amount: shortPrice(Number(cheapest?.amount ?? 0), currency),
       unit: UNIT_SUFFIX[cheapest?.pricing_unit ?? "per_person"],
+      unitWords: UNIT_WORDS[cheapest?.pricing_unit ?? "per_person"],
       showFrom: several,
     },
     ruleNotes: describeRules(pricing?.rules ?? [], currency, { guests, now: new Date() }),
     tickets: tickets.map((t) => ({
       id: t.id,
       label: several ? t.label : "Participants",
-      priceLabel: several ? `${formatPrice(Number(t.amount), currency)} ${UNIT_SUFFIX[t.pricing_unit]}` : null,
+      priceLabel: several ? `${shortPrice(Number(t.amount), currency)} ${UNIT_SUFFIX[t.pricing_unit]}` : null,
       quantity: quantityOf(t.id),
       max: Math.max(0, maxGuests - guests + quantityOf(t.id)),
       onChange: (quantity) => setQuantities((q) => ({ ...q, [t.id]: quantity })),
@@ -89,7 +91,7 @@ export function useTicketSelection({
     addons: addons.map((a) => ({
       id: a.id,
       label: a.label,
-      priceLabel: `${formatPrice(Number(a.amount), currency)}${a.pricing_unit === "per_person" ? " / person" : ""}`,
+      priceLabel: `${shortPrice(Number(a.amount), currency)}${a.pricing_unit === "per_person" ? " / person" : ""}`,
       checked: !!selectedAddons[a.id],
       onToggle: (on) => setSelectedAddons((s) => ({ ...s, [a.id]: on })),
     })),

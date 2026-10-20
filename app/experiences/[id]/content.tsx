@@ -397,9 +397,9 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             onClick={() => setMobileBookingOpen(false)}
             className="absolute inset-0 bg-black/40"
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl">
+          <div className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-[32px]">
             <BookingPanel
-              className="rounded-t-2xl rounded-b-none border-b-0"
+              title={experience.title}
               experienceId={experience.id}
               guideId={experience.guide_id}
               prices={prices ?? []}
@@ -432,8 +432,9 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 function BookingPanel({
   className,
   onClose,
+  title,
   ...props
-}: BookingPanelProps & { className?: string; onClose?: () => void }) {
+}: BookingPanelProps & { className?: string; onClose?: () => void; title?: string }) {
   const vm = useBookingPanelViewModel(props);
-  return <BookingPanelView {...vm} className={className} onClose={onClose} />;
+  return <BookingPanelView {...vm} className={className} onClose={onClose} title={title} />;
 }

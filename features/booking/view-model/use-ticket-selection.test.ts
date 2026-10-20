@@ -24,12 +24,12 @@ const render = (options: Partial<Parameters<typeof useTicketSelection>[0]> = {})
 describe("useTicketSelection", () => {
   it("starts the cheapest ticket at the minimum group size", () => {
     const { result } = render();
-    expect(result.current.priceFrom).toEqual({ amount: "₦3,000.00", unit: "/ person / day", showFrom: true });
+    expect(result.current.priceFrom).toEqual({ amount: "₦3,000", unit: "/ person / day", unitWords: "per person, per day", showFrom: true });
     expect(result.current.tickets.map((t) => [t.label, t.quantity, t.max])).toEqual([
       ["Adult", 0, 4],
       ["Day pass", 2, 6],
     ]);
-    expect(result.current.tickets[0].priceLabel).toBe("₦5,000.00 / person");
+    expect(result.current.tickets[0].priceLabel).toBe("₦5,000 / person");
     expect(result.current.ruleNotes).toEqual(["10% off for 4+ guests, any mix of tickets. Add 2 more to qualify."]);
     // A per-day ticket is picked, so days are asked for.
     expect(result.current.days.show).toBe(true);
@@ -47,7 +47,7 @@ describe("useTicketSelection", () => {
     act(() => result.current.addons[0].onToggle(true));
 
     expect(result.current.guests).toBe(3);
-    expect(result.current.addons[0]).toMatchObject({ checked: true, priceLabel: "₦1,500.00 / person" });
+    expect(result.current.addons[0]).toMatchObject({ checked: true, priceLabel: "₦1,500 / person" });
     expect(result.current.picked).toEqual({
       items: [
         { experience_price_id: "adult", quantity: 1 },
