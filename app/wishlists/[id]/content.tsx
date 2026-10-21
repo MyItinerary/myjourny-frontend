@@ -133,9 +133,9 @@ export function WishlistDetailContent({ id }: { id: string }) {
                     <Link
                       href={`/experiences/${exp.experienceId}`}
                       aria-label={exp.title}
-                      className="absolute inset-0 z-0"
+                      className="absolute inset-0 z-0 cursor-pointer"
                     />
-                    <div className="relative aspect-[262/174] w-full overflow-hidden rounded-2xl bg-muted">
+                    <div className="pointer-events-none relative aspect-[262/174] w-full overflow-hidden rounded-2xl bg-muted">
                       <Image
                         src={exp.imageUrl || FALLBACK_IMAGE}
                         alt={exp.title}
@@ -147,10 +147,11 @@ export function WishlistDetailContent({ id }: { id: string }) {
                       <button
                         type="button"
                         aria-label="Remove from wishlist"
-                        onClick={() =>
-                          removeFromCollection({ collectionId: id, experienceId: exp.experienceId })
-                        }
-                        className="absolute right-3 top-3 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFromCollection({ collectionId: id, experienceId: exp.experienceId });
+                        }}
+                        className="pointer-events-auto absolute right-3 top-3 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
                       >
                         <HeartRoundedIcon className="size-5 fill-[#F5032D] text-[#F5032D]" />
                       </button>
