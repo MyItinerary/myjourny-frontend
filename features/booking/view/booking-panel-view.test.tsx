@@ -86,6 +86,9 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("Saturday, June 1, 9:00 AM")).toBeInTheDocument();
     // The checkout preview was a design mock-up, not a real step.
     expect(screen.queryByRole("link", { name: /Preview/ })).not.toBeInTheDocument();
+    // No hint under the button: that the fee comes at checkout is expected.
+    expect(screen.queryByText(/won.t be charged yet/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/processing fee/i)).not.toBeInTheDocument();
   });
 
   it("passes changes and the booking click to the view-model", async () => {

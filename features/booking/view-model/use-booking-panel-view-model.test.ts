@@ -187,8 +187,9 @@ describe("useBookingPanelViewModel", () => {
       ["Subtotal", "₦10,000.00", null],
       ["Early-bird discount (1% off)", "−₦100.00", null],
       ["Group discount (10% off 2+ guests)", "−₦990.00", null],
-      ["Payment processing fee", "₦234.00", null],
     ]);
+    // The processing fee is added at checkout, not shown here.
+    expect(result.current.total).toBe("₦8,910.00");
     expect(result.current.quote!.savings).toBe("You save ₦1,090.00");
   });
 
