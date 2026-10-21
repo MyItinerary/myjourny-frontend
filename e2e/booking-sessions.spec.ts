@@ -233,7 +233,9 @@ test.describe("booking sessions", () => {
     await expect(sidebar.getByText("Early-bird discount (1% off)")).toHaveCount(0);
     await expect(sidebar.getByText("−₦1,500.00")).toBeVisible();
     await expect(sidebar.getByText("You save ₦1,500.00")).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Book now - ₦13,802.50" })).toBeEnabled();
+    // The processing fee is added at checkout, not shown on the experience.
+    await expect(sidebar.getByRole("button", { name: "Book now - ₦13,500.00" })).toBeEnabled();
+    await expect(sidebar.getByText("Payment processing fee", { exact: true })).toHaveCount(0);
 
     // Below the minimum group size nothing is priced or bookable.
     const quotesBefore = quotes.length;
@@ -241,7 +243,7 @@ test.describe("booking sessions", () => {
     await expect(sidebar.getByText("This experience needs at least 3 guests.")).toBeVisible();
     await expect(sidebar.getByRole("button", { name: "Select at least 3 guests" })).toBeDisabled();
     await expect(sidebar.getByText("Total")).toHaveCount(0);
-    await expect(sidebar.getByText("Payment processing fee")).toHaveCount(0);
+    await expect(sidebar.getByText("Payment processing fee", { exact: true })).toHaveCount(0);
     expect(quotes.length).toBe(quotesBefore);
   });
 });
