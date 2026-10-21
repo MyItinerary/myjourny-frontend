@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRule, describeRules, formatPrice, formatSessionWhen, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
+import { describeRule, describeRules, formatPrice, formatSessionDay, formatSessionWhen, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
 
 describe("formatPrice", () => {
   it("formats money in the given currency", () => {
@@ -136,5 +136,13 @@ describe("describeRules", () => {
     expect(describeRules([group, early], "NGN", { now: new Date("2030-07-01T00:00:00Z") })).toEqual([
       "10% off for 3+ guests, any mix of tickets",
     ]);
+  });
+});
+
+describe("formatSessionDay", () => {
+  it("gives the day only, in the session's zone", () => {
+    expect(formatSessionDay("2030-10-19T11:00:00Z", "Africa/Lagos")).toBe("Saturday, October 19");
+    // 23:30 UTC is already the next day in Lagos.
+    expect(formatSessionDay("2030-10-19T23:30:00Z", "Africa/Lagos")).toBe("Sunday, October 20");
   });
 });
