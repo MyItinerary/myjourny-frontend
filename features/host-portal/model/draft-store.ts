@@ -9,9 +9,13 @@ const SERVER_DRAFT = blankDraft();
 
 let cachedRaw: string | null | undefined;
 let cachedDraft: ListingDraft = SERVER_DRAFT;
+// True after a write the browser refused: the draft in memory is newer than
+// the stored one, so reads keep it until a write succeeds again.
+let memoryOnly = false;
 
 /** The saved draft, the same object until the stored text changes (React needs that). */
 function read(): ListingDraft {
+  if (memoryOnly) return cachedDraft;
   let raw: string | null = null;
   try {
     raw = window.localStorage.getItem(KEY);
@@ -43,9 +47,10 @@ function write(draft: ListingDraft | null) {
     if (raw) window.localStorage.setItem(KEY, raw);
     else window.localStorage.removeItem(KEY);
     cachedRaw = undefined;
+    memoryOnly = false;
   } catch {
-    // Storage blocked: keep it in memory so the form still works this visit.
-    cachedRaw = raw;
+    // Storage blocked or full: keep it in memory so the form still works this visit.
+    memoryOnly = true;
     cachedDraft = draft ?? SERVER_DRAFT;
   }
   listeners.forEach((listener) => listener());
