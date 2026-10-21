@@ -30,7 +30,6 @@ export const DEFAULT_ACTIVITIES: ActivitySuggestion[] = [
   { id: "street-food-markets", label: "Street food & markets", subtitle: "Local delicacies and bustling night markets" },
   { id: "cafes-coffee-culture", label: "Cafés & coffee culture", subtitle: "Artisan coffee, cozy spots, and pastry shops" },
   { id: "bars-nightlife-drinks", label: "Bars & nightlife drinks", subtitle: "Cocktail bars, speakeasies, and rooftop lounges" },
-  { id: "nightlife", label: "Nightlife", subtitle: "Clubs, lounges, and late-night spots" },
   { id: "culture-history", label: "Culture & history", subtitle: "Museums, heritage, and local stories" },
   { id: "museums-heritage-sites", label: "Museums & heritage sites", subtitle: "Historical landmarks, art galleries, and monuments" },
   { id: "local-traditions-festivals", label: "Local traditions & festivals", subtitle: "Cultural celebrations and traditional ceremonies" },

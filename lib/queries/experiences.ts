@@ -64,7 +64,7 @@ type RecommendationParams = {
   city?: string;
   /** Category numeric ID — passed as ?id=<id> to GET /experiences/recommendations */
   id?: number;
-  /** Category slug — exact match against Experience.interest_tags on the backend, see /categories/[slug]. */
+  /** Interest category or subcategory slug; the backend also matches its subcategories and older tags. */
   interest?: string;
 };
 

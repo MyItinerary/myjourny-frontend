@@ -22,6 +22,20 @@ describe("search model constants & mappers", () => {
     expect(FALLBACK_IMAGE).toBe("/images/home/experiences/kayaking.jpg");
   });
 
+  it("only suggests activities that are real interest categories, so each one opens a page with results", () => {
+    // The interest category and subcategory slugs GET /categories returns.
+    const interestSlugs = new Set([
+      "local-food-drinks", "street-food-markets", "cafes-coffee-culture", "bars-nightlife-drinks",
+      "culture-history", "museums-heritage-sites", "local-traditions-festivals", "historic-neighborhoods-landmarks",
+      "nature-outdoors", "hiking-trails", "beaches-waterfronts", "parks-green-spaces",
+      "art-creativity", "galleries-exhibitions", "street-art-murals", "design-creative-spaces",
+      "wellness-calm", "spas-massage", "yoga-meditation", "quiet-retreats-nature-escapes",
+      "street-life", "markets-vendors", "neighborhood-walks", "local-hangout-spots",
+      "events-live-shows", "concerts-festivals", "comedy-theatre", "sports-watch-parties",
+    ]);
+    expect(DEFAULT_ACTIVITIES.filter((a) => !interestSlugs.has(a.id)).map((a) => a.id)).toEqual([]);
+  });
+
   it("builds consistent query keys", () => {
     const key = searchExperiencesQueryKey("Lagos", 5);
     expect(key).toEqual(["experiences", "filter", { search: "lagos", limit: 5 }]);
