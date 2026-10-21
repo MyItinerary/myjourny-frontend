@@ -39,6 +39,24 @@ describe("ExperienceCardVertical", () => {
     expect(link).toHaveClass("absolute", "inset-0", "cursor-pointer");
   });
 
+  it("shows the from price, Free for a ₦0 experience, and no price when nothing is on sale", () => {
+    const { unmount } = renderWithProviders(<ExperienceCardVertical {...defaultProps} />);
+    expect(screen.getByText("from")).toBeInTheDocument();
+    expect(screen.getByText("₦15,000.00")).toBeInTheDocument();
+    unmount();
+
+    const free = renderWithProviders(<ExperienceCardVertical {...defaultProps} priceFrom={0} />);
+    expect(screen.getByText("Free")).toBeInTheDocument();
+    expect(screen.queryByText("from")).not.toBeInTheDocument();
+    expect(screen.queryByText("₦0.00")).not.toBeInTheDocument();
+    free.unmount();
+
+    renderWithProviders(<ExperienceCardVertical {...defaultProps} priceFrom={null} />);
+    expect(screen.queryByText("from")).not.toBeInTheDocument();
+    expect(screen.queryByText("Free")).not.toBeInTheDocument();
+    expect(screen.queryByText(/₦/)).not.toBeInTheDocument();
+  });
+
   it("ensures the image container allows clicks to pass through to the link", () => {
     renderWithProviders(<ExperienceCardVertical {...defaultProps} />);
 

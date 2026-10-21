@@ -6,7 +6,7 @@ import { apiErrorMessage } from "@/lib/api-error";
 
 import type { PricingSelection, Quote } from "../model/booking.types";
 import { useCreateBooking } from "../model/bookings";
-import { formatPrice, formatSessionDay, formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
+import { formatPrice, formatPriceOrFree, formatSessionDay, formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
 import { useExperienceSessions } from "../model/sessions";
 import { type SessionChoice, useSessionChoice } from "./use-session-choice";
@@ -98,12 +98,15 @@ export type SummaryLine = {
  * processing fee isn't listed: it's added at checkout. */
 function summaryLines(quote: Quote, currency: string): SummaryLine[] {
   const money = (amount: number | string) => formatPrice(Number(amount), currency);
+  // Tickets, add-ons and the subtotal are prices to pay, so ₦0 reads "Free".
+  // Discounts keep their amount.
+  const price = (amount: number | string) => formatPriceOrFree(Number(amount), currency);
   const items: SummaryLine[] = quote.lines
     .filter((line) => line.kind === "ticket" || line.kind === "addon")
     .map((line, index) => ({
       key: `${line.kind}-${index}`,
       label: line.label + (line.quantity > 1 ? ` × ${line.quantity}` : ""),
-      amount: money(line.amount),
+      amount: price(line.amount),
       listAmount: line.list_amount != null ? money(line.list_amount) : null,
       kind: "item",
     }));
@@ -123,7 +126,7 @@ function summaryLines(quote: Quote, currency: string): SummaryLine[] {
   const subtotal: SummaryLine = {
     key: "subtotal",
     label: "Subtotal",
-    amount: money(quote.subtotal_before_discounts ?? quote.subtotal),
+    amount: price(quote.subtotal_before_discounts ?? quote.subtotal),
     kind: "subtotal",
   };
   return [...items, subtotal, ...discounts];
@@ -210,12 +213,14 @@ export function useBookingPanelViewModel({
     quotedGuests >= minGuests &&
     quotedGuests <= maxGuests &&
     (!!onGuestBook || (!!quote && !quoteFailed));
-  const total = quote ? formatPrice(tripTotal(quote), currency) : null;
+  const total = quote ? formatPriceOrFree(tripTotal(quote), currency) : null;
+  const free = !!quote && tripTotal(quote) === 0;
   const savedAmount = (quote?.savings ?? []).reduce((sum, saving) => sum + Number(saving.amount), 0);
   const bookLabel = () => {
     if (createBooking.isPending) return "Starting checkout…";
     if (guests < minGuests) return `Select at least ${minGuests} guests`;
     if (guests > maxGuests) return `Select up to ${maxGuests} guest${maxGuests === 1 ? "" : "s"}`;
+    if (free) return "Book for free";
     return total ? `Book now - ${total}` : "Book now";
   };
 
@@ -261,7 +266,7 @@ export function useBookingPanelViewModel({
         when: guestWhen(),
         guests: quotedGuests,
         ticketsLabel: ticketsLabel(),
-        total: total ?? formatPrice(estimateTotal(), currency),
+        total: total ?? formatPriceOrFree(estimateTotal(), currency),
         currency,
         durationLabel,
       });

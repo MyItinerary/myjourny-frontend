@@ -140,7 +140,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           ))}
           <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold text-[#130404]">
             <span>{booking.payment_status === "unpaid" ? "Total" : "Paid"}</span>
-            <span>{money(booking.price_total, currency)}</span>
+            <span>{booking.price_total != null && Number(booking.price_total) === 0 ? "Free" : money(booking.price_total, currency)}</span>
           </div>
           {refunded > 0 && (
             <div className="flex justify-between text-green-700">

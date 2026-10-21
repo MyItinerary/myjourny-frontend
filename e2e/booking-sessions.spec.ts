@@ -97,6 +97,40 @@ test.describe("booking sessions", () => {
     await expect(page.getByRole("link", { name: /Preview/ })).toHaveCount(0);
   });
 
+  test("a free experience says Free, not ₦0.00, and books with no payment page", async ({ page }) => {
+    await openExperience(page, {
+      "GET /experience-prices": (r) => r.fulfill({ json: [{ id: "adult", experience_id: "exp-1", label: "Adult", amount: 0 }] }),
+      "GET /experiences/exp-1/pricing": (r) =>
+        r.fulfill({
+          json: {
+            currency: "NGN",
+            prices: [{ id: "adult", label: "Adult", amount: "0.00", pricing_unit: "per_person" }],
+            addons: [],
+            rules: [],
+          },
+        }),
+      "POST /bookings/quote": (r) =>
+        r.fulfill({
+          json: {
+            ...quote,
+            lines: [{ kind: "ticket", label: "Adult", quantity: 1, unit_amount: "0", amount: "0" }],
+            subtotal: "0",
+            total: "0",
+          },
+        }),
+      "POST /bookings": (r) => r.fulfill({ json: { id: "b-free", status: "confirmed", payment_status: "paid", url: null } }),
+    });
+
+    // The button no longer says "Book now", so find the sidebar by its stepper.
+    const sidebar = page.locator("div.sticky").filter({ hasText: "Participants" });
+    await expect(sidebar.getByRole("button", { name: "Book for free" })).toBeVisible();
+    await expect(sidebar.getByText("Free", { exact: true }).first()).toBeVisible();
+    await expect(sidebar.getByText("₦0.00")).toHaveCount(0);
+
+    await sidebar.getByRole("button", { name: "Book for free" }).click();
+    await expect(page).toHaveURL(/\/bookings\/b-free\/success$/);
+  });
+
   test("caps guests at the seats left in the session", async ({ page }) => {
     await openExperience(page, {
       "GET /experiences/exp-1/sessions": (r) => r.fulfill({ json: sessions(1) }),

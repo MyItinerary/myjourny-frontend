@@ -31,13 +31,19 @@ describe("buildBookingConfirmation", () => {
       dateLabel: "July 16th, 2026",
       guestsLabel: "1 guest",
       totalLabel: "₦10,000.00",
+      totalHeadline: "₦10,000.00 total",
       viewHref: "/bookings/b-1",
     });
     expect(confirmation.calendarHref).toContain("calendar.google.com");
   });
 
+  it("says Free, not ₦0.00 total, when nothing was charged", () => {
+    const confirmation = buildBookingConfirmation({ ...booking, price_total: "0.00" });
+    expect(confirmation).toMatchObject({ totalLabel: "Free", totalHeadline: "Free" });
+  });
+
   it("copes with the experience not having loaded", () => {
     const confirmation = buildBookingConfirmation({ ...booking, party_size: 3, price_total: null });
-    expect(confirmation).toMatchObject({ title: "Your experience", imageUrl: null, guestsLabel: "3 guests", totalLabel: null });
+    expect(confirmation).toMatchObject({ title: "Your experience", imageUrl: null, guestsLabel: "3 guests", totalLabel: null, totalHeadline: null });
   });
 });

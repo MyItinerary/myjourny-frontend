@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { ExperiencePricing, PricingSelection, PricingUnit, TicketType } from "../model/booking.types";
-import { describeRules, formatPrice, UNIT_SUFFIX } from "../model/format";
+import { describeRules, formatPriceOrFree, UNIT_SUFFIX } from "../model/format";
 
 export type TicketRow = {
   id: string;
@@ -70,18 +70,24 @@ export function useTicketSelection({
   const guests = tickets.reduce((sum, t) => sum + quantityOf(t.id), 0);
   const needsDays = tickets.some((t) => t.pricing_unit === "per_day" && quantityOf(t.id) > 0);
   const several = tickets.length > 1;
+  const cheapestFree = !!cheapest && Number(cheapest.amount) === 0;
+  const ticketPrice = (t: TicketType) =>
+    Number(t.amount) === 0 ? "Free" : `${formatPriceOrFree(Number(t.amount), currency)} ${UNIT_SUFFIX[t.pricing_unit]}`;
 
   return {
-    priceFrom: {
-      amount: formatPrice(Number(cheapest?.amount ?? 0), currency),
-      unit: UNIT_SUFFIX[cheapest?.pricing_unit ?? "per_person"],
-      showFrom: several,
-    },
+    // A free cheapest ticket reads "Free", with no "from" or "/ person".
+    priceFrom: cheapestFree
+      ? { amount: "Free", unit: "", showFrom: false }
+      : {
+          amount: formatPriceOrFree(Number(cheapest?.amount ?? 0), currency),
+          unit: UNIT_SUFFIX[cheapest?.pricing_unit ?? "per_person"],
+          showFrom: several,
+        },
     ruleNotes: describeRules(pricing?.rules ?? [], currency, { guests, now: new Date() }),
     tickets: tickets.map((t) => ({
       id: t.id,
       label: several ? t.label : "Participants",
-      priceLabel: several ? `${formatPrice(Number(t.amount), currency)} ${UNIT_SUFFIX[t.pricing_unit]}` : null,
+      priceLabel: several ? ticketPrice(t) : null,
       quantity: quantityOf(t.id),
       max: Math.max(0, maxGuests - guests + quantityOf(t.id)),
       onChange: (quantity) => setQuantities((q) => ({ ...q, [t.id]: quantity })),
@@ -89,7 +95,10 @@ export function useTicketSelection({
     addons: addons.map((a) => ({
       id: a.id,
       label: a.label,
-      priceLabel: `${formatPrice(Number(a.amount), currency)}${a.pricing_unit === "per_person" ? " / person" : ""}`,
+      priceLabel:
+        Number(a.amount) === 0
+          ? "Free"
+          : `${formatPriceOrFree(Number(a.amount), currency)}${a.pricing_unit === "per_person" ? " / person" : ""}`,
       checked: !!selectedAddons[a.id],
       onToggle: (on) => setSelectedAddons((s) => ({ ...s, [a.id]: on })),
     })),

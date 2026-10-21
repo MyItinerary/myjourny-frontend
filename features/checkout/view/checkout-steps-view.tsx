@@ -40,7 +40,7 @@ export function CheckoutStepsView({ steps }: { steps: CheckoutViewModel["steps"]
           <ArrowLeft className="size-5" />
         </Link>
         <h1 className="font-sans text-2xl font-extrabold leading-[1.2] text-[#333134] lg:text-[32px]">
-          Confirm and pay
+          {steps.free ? "Confirm and book" : "Confirm and pay"}
         </h1>
       </div>
 
@@ -62,14 +62,24 @@ export function CheckoutStepsView({ steps }: { steps: CheckoutViewModel["steps"]
       </StepCard>
 
       <StepCard active={signedIn}>
-        <h2 className={cn(stepTitle, !signedIn && "text-[#A8A5AA]")}>2. Review and pay</h2>
+        <h2 className={cn(stepTitle, !signedIn && "text-[#A8A5AA]")}>
+          {steps.free ? "2. Review and book" : "2. Review and pay"}
+        </h2>
         {signedIn && (
           <>
             <p className="font-sans text-sm leading-[22px] text-[#6F6B72]">
-              Check your booking details. You&apos;ll pay on our secure payment page next.
+              {steps.free
+                ? "Check your booking details. This experience is free, so there's nothing to pay."
+                : "Check your booking details. You'll pay on our secure payment page next."}
             </p>
             <Button size="cta" disabled={!steps.canPay} onClick={steps.onConfirm} className="w-full">
-              {steps.paying ? "Starting payment…" : "Confirm and pay"}
+              {steps.free
+                ? steps.paying
+                  ? "Booking…"
+                  : "Confirm booking"
+                : steps.paying
+                  ? "Starting payment…"
+                  : "Confirm and pay"}
             </Button>
           </>
         )}

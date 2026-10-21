@@ -11,6 +11,7 @@ const steps = (overrides: Partial<CheckoutViewModel["steps"]> = {}): CheckoutVie
   account: null,
   onStartAuth: vi.fn(),
   canPay: false,
+  free: false,
   paying: false,
   onConfirm: vi.fn(),
   ...overrides,
@@ -39,6 +40,19 @@ describe("CheckoutStepsView", () => {
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Confirm and pay" }));
+    expect(props.onConfirm).toHaveBeenCalled();
+  });
+
+  it("says there's nothing to pay for a free experience", async () => {
+    const props = steps({ account: "juliet@example.com", canPay: true, free: true });
+    const { user } = renderWithProviders(<CheckoutStepsView steps={props} />);
+
+    expect(screen.getByRole("heading", { name: "Confirm and book" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "2. Review and book" })).toBeInTheDocument();
+    expect(screen.getByText(/This experience is free, so there's nothing to pay/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Confirm and pay" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
     expect(props.onConfirm).toHaveBeenCalled();
   });
 

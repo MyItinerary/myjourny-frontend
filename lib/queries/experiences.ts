@@ -52,7 +52,8 @@ export function experienceMatchToCardProps(
     duration: formatDuration(match.duration),
     rating: match.rating ?? 0,
     reviewCount: 0,
-    priceFrom: Number(match.price_from ?? match.price ?? 0),
+    // price_from is null when nothing is on sale; the legacy `price` is 0 then, which isn't "Free".
+    priceFrom: match.price_from != null ? Number(match.price_from) : null,
     currency: match.currency,
   };
 }
@@ -389,7 +390,7 @@ export function experienceListItemToCardProps(
     duration: formatDuration(item.duration_minutes),
     rating: item.rating ?? 0,
     reviewCount: 0,
-    priceFrom: item.price_from ?? 0,
+    priceFrom: item.price_from ?? null,
     currency: item.currency ?? "NGN",
   };
 }
