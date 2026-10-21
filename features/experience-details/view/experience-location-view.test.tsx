@@ -44,6 +44,27 @@ describe("ExperienceLocationView", () => {
     expect(screen.queryByText(/shared after booking/)).not.toBeInTheDocument();
   });
 
+  it("shows only the map when the page lists the details itself", () => {
+    renderWithProviders(
+      <ExperienceLocationView
+        heading="Where to meet"
+        mapOnly
+        location={{
+          mode: "exact",
+          label: "Lagos, Nigeria",
+          latitude: 6.49,
+          longitude: 3.39,
+          instructions: "Blue gate at the jetty",
+          embedUrl: "https://www.openstreetmap.org/export/embed.html?marker=6.49,3.39",
+          directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=6.49,3.39",
+        }}
+      />,
+    );
+    expect(screen.getByTitle("Meeting point map")).toBeInTheDocument();
+    expect(screen.queryByText("Blue gate at the jetty")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Get directions" })).not.toBeInTheDocument();
+  });
+
   it("shows instructions without a map when there are no coordinates", () => {
     renderWithProviders(
       <ExperienceLocationView location={{ mode: "exact-text", label: "Lagos, Nigeria", instructions: "Call on arrival" }} />,
