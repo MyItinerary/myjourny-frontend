@@ -1,7 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useListingDraft } from "./draft-store";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -31,6 +35,26 @@ describe("useListingDraft", () => {
     act(() => result.current.update((d) => ({ ...d, title: "x" })));
     act(() => result.current.clear());
     expect(result.current.draft.title).toBe("");
+  });
+
+  it("keeps the latest edit in memory when the browser won't save it, then saves once it can", () => {
+    const { result } = renderHook(() => useListingDraft());
+    act(() => result.current.update((d) => ({ ...d, title: "Lekki Market Walk" })));
+
+    // Storage is full: the old draft can still be read, but nothing new saves.
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("full", "QuotaExceededError");
+    });
+    act(() => result.current.update((d) => ({ ...d, title: "Lekki Market Food Walk" })));
+    act(() => result.current.update((d) => ({ ...d, city: "Abuja" })));
+
+    expect(result.current.draft.title).toBe("Lekki Market Food Walk");
+    expect(result.current.draft.city).toBe("Abuja");
+
+    setItem.mockRestore();
+    act(() => result.current.update((d) => ({ ...d, hook: "Street food by the lagoon" })));
+    const saved = JSON.parse(window.localStorage.getItem("myjourny:host-listing-draft") ?? "{}");
+    expect(saved).toMatchObject({ title: "Lekki Market Food Walk", city: "Abuja", hook: "Street food by the lagoon" });
   });
 
   it("ignores a damaged saved draft", () => {
