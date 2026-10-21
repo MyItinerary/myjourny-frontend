@@ -70,6 +70,7 @@ export function BookingPanelView(props: Props) {
             <Stepper label={ticket.label} value={ticket.quantity} min={0} max={ticket.max} onChange={ticket.onChange} />
           </div>
         ))}
+        {props.groupSizeNote && <p className="text-xs text-[#6F6B72]">{props.groupSizeNote}</p>}
         {minGuestsWarning && <p className="text-xs text-[#F5032D]">{minGuestsWarning}</p>}
         {props.seatsWarning && <p className="text-xs text-[#F5032D]">{props.seatsWarning}</p>}
         {props.lengthNote && <p className="text-xs text-[#6F6B72]">{props.lengthNote}</p>}

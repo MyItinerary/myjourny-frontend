@@ -53,13 +53,46 @@ describe("beforeYouBookItems", () => {
       cancellation_policy: "Free cancellation up to 24 hours before",
     });
     expect(items.map((item) => [item.label, item.description])).toEqual([
-      ["Group size", "Up to 6 guests in total"],
+      ["Group size", "Up to 6 guests per booking"],
       ["Total time spent", "This experience runs about 1h 30m"],
       ["Guest requirements", "Fitness: Moderate · Age: 12+"],
       ["What's included", "Life jacket, Water"],
       ["What to bring", "Sunscreen"],
       ["Cancellation policy", "Free cancellation up to 24 hours before"],
     ]);
+  });
+
+  it("states the minimum and maximum guests together", () => {
+    const groupSize = (group_size_min?: number | null, group_size_max?: number | null) =>
+      beforeYouBookItems({ ...base, group_size_min, group_size_max }).find((item) => item.kind === "guests")?.description;
+    expect(groupSize(3, 8)).toBe("3–8 guests per booking");
+    expect(groupSize(3, null)).toBe("At least 3 guests per booking");
+    expect(groupSize(4, 4)).toBe("Exactly 4 guests per booking");
+    expect(groupSize(1, null)).toBeUndefined();
+  });
+
+  it("lists what isn't included and the guide's safety notes", () => {
+    const items = beforeYouBookItems({
+      ...base,
+      whats_not_included: ["Transport", " "],
+      safety_info: { riskLevel: "LOW", notes: ["Life jackets provided"], emergencyGuidance: "Guide carries a first-aid kit" },
+    });
+    expect(items.map((item) => [item.label, item.description])).toEqual([
+      ["Not included", "Transport"],
+      ["Safety", "Life jackets provided · Guide carries a first-aid kit"],
+    ]);
+  });
+
+  it("skips the placeholder safety info itin sends when the guide set none", () => {
+    const items = beforeYouBookItems({
+      ...base,
+      safety_info: {
+        riskLevel: "UNKNOWN",
+        notes: ["Safety info not available"],
+        emergencyGuidance: "Follow general travel safety disclaimer.",
+      },
+    });
+    expect(items).toEqual([]);
   });
 
   it("has no generic payment, pickup or packing copy", () => {

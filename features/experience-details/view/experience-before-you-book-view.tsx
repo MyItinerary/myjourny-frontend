@@ -1,5 +1,5 @@
 import type { ComponentType, SVGProps } from "react";
-import { Backpack, Check, Clock, HeartPulse, Users, XCircle, Zap } from "lucide-react";
+import { Backpack, Ban, Check, Clock, HeartPulse, ShieldCheck, Users, XCircle, Zap } from "lucide-react";
 
 import type { BeforeYouBookItem, BeforeYouBookKind } from "../model/experience-details.types";
 
@@ -9,7 +9,9 @@ const ICONS: Record<BeforeYouBookKind, ComponentType<SVGProps<SVGSVGElement>>> =
   duration: Clock,
   requirements: HeartPulse,
   included: Check,
+  not_included: Ban,
   bring: Backpack,
+  safety: ShieldCheck,
   cancellation: XCircle,
 };
 

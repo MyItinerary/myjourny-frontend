@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
+import { groupSizeLabel } from "@/features/booking";
 import { useSession } from "@/lib/auth/session-store";
 import { formatDuration } from "@/lib/queries/experiences";
 import type {
@@ -21,15 +22,25 @@ export function itinerarySteps(experience: ExperienceDetailsFields): ItinerarySt
     .map((title) => ({ title, description: null }));
 }
 
+// What itin sends when the guide set no safety info. Not worth showing.
+const PLACEHOLDER_SAFETY_NOTES = new Set(["Safety info not available"]);
+const PLACEHOLDER_EMERGENCY = new Set(["Follow general travel safety disclaimer."]);
+
+/** The guide's own safety notes and emergency guidance, or null. */
+export function safetyDescription(safety: ExperienceDetailsFields["safety_info"]): string | null {
+  if (!safety) return null;
+  const notes = (safety.notes ?? []).map((note) => note.trim()).filter((note) => note && !PLACEHOLDER_SAFETY_NOTES.has(note));
+  const emergency = safety.emergencyGuidance?.trim();
+  const parts = [...notes, emergency && !PLACEHOLDER_EMERGENCY.has(emergency) ? emergency : null].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
+
 /** Only what the experience actually says; nothing generic. */
 export function beforeYouBookItems(experience: ExperienceDetailsFields): BeforeYouBookItem[] {
   const items: BeforeYouBookItem[] = [];
-  if (experience.group_size_max) {
-    items.push({
-      kind: "guests",
-      label: "Group size",
-      description: `Up to ${experience.group_size_max} guests in total`,
-    });
+  const groupSize = groupSizeLabel(experience.group_size_min, experience.group_size_max);
+  if (groupSize) {
+    items.push({ kind: "guests", label: "Group size", description: groupSize });
   }
   if (experience.energy_level) {
     items.push({
@@ -58,8 +69,16 @@ export function beforeYouBookItems(experience: ExperienceDetailsFields): BeforeY
   if (included.length) {
     items.push({ kind: "included", label: "What's included", description: included.join(", ") });
   }
+  const notIncluded = (experience.whats_not_included ?? []).filter((item) => item.trim());
+  if (notIncluded.length) {
+    items.push({ kind: "not_included", label: "Not included", description: notIncluded.join(", ") });
+  }
   if (experience.what_to_bring?.trim()) {
     items.push({ kind: "bring", label: "What to bring", description: experience.what_to_bring.trim() });
+  }
+  const safety = safetyDescription(experience.safety_info);
+  if (safety) {
+    items.push({ kind: "safety", label: "Safety", description: safety });
   }
   if (experience.cancellation_policy?.trim()) {
     items.push({

@@ -14,6 +14,20 @@ export function formatPriceOrFree(amount: number, currency: string): string {
   return amount === 0 ? "Free" : formatPrice(amount, currency);
 }
 
+/** "3–8 guests per booking", "At least 3 guests per booking", "Up to 8 guests
+ * per booking", or null when the experience sets no limits. A minimum of 1 is
+ * no limit. */
+export function groupSizeLabel(min?: number | null, max?: number | null): string | null {
+  const least = min && min > 1 ? min : null;
+  const most = max && max > 0 ? max : null;
+  if (least && most) {
+    return least === most ? `Exactly ${least} guests per booking` : `${least}–${most} guests per booking`;
+  }
+  if (least) return `At least ${least} guests per booking`;
+  if (most) return `Up to ${most} guest${most === 1 ? "" : "s"} per booking`;
+  return null;
+}
+
 export const UNIT_SUFFIX: Record<PricingUnit, string> = {
   per_person: "/ person",
   per_booking: "/ group",
