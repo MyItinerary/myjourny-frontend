@@ -17,6 +17,7 @@ import {
 } from "@/lib/queries/bookings";
 import { formatSessionWhen } from "@/features/booking";
 import { ExperienceLocationView, meetingPointLocation } from "@/features/experience-details";
+import { BookingReviewView, useBookingReviewViewModel } from "@/features/reviews";
 import { useExperienceDetail } from "@/lib/queries/experiences";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   const { data: experience } = useExperienceDetail(booking?.experience_id ?? "");
   const { data: cancellation } = useCancellationRequest(bookingId);
   const requestCancellation = useRequestCancellation(bookingId);
+  const review = useBookingReviewViewModel(booking);
   const [showForm, setShowForm] = useState(false);
   const [reason, setReason] = useState("");
 
@@ -123,6 +125,8 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           <span className="font-medium">What to bring:</span> {booking.what_to_bring}
         </p>
       )}
+
+      <BookingReviewView {...review} />
 
       <section className="mt-8 rounded-2xl border border-border p-6">
         <h2 className="font-sans text-lg font-bold text-[#130404]">Receipt</h2>
