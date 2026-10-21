@@ -6,4 +6,3 @@ export { useExperienceDetailsViewModel } from "./view-model/use-experience-detai
 export { ExperienceBeforeYouBookView } from "./view/experience-before-you-book-view";
 export { ExperienceItineraryView } from "./view/experience-itinerary-view";
 export { ExperienceLocationView } from "./view/experience-location-view";
-export { ExperienceRatingView } from "./view/experience-rating-view";

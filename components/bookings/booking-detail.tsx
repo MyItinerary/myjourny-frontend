@@ -18,6 +18,7 @@ import {
 import { formatSessionWhen } from "@/features/booking";
 import { BookingDayDetailsView, useBookingDayDetailsViewModel } from "@/features/booking-day-details";
 import { ExperienceLocationView, meetingPointLocation } from "@/features/experience-details";
+import { BookingReviewView, useBookingReviewViewModel } from "@/features/reviews";
 import { useExperienceDetail } from "@/lib/queries/experiences";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +52,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   const { data: experience } = useExperienceDetail(booking?.experience_id ?? "");
   const { data: cancellation } = useCancellationRequest(bookingId);
   const requestCancellation = useRequestCancellation(bookingId);
+  const review = useBookingReviewViewModel(booking);
   const [showForm, setShowForm] = useState(false);
   const [reason, setReason] = useState("");
   const dayDetails = useBookingDayDetailsViewModel(booking ?? EMPTY_BOOKING_DETAILS);
@@ -128,6 +130,8 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         </div>
       )}
       <BookingDayDetailsView {...dayDetails} />
+
+      <BookingReviewView {...review} />
 
       <section className="mt-8 rounded-2xl border border-border p-6">
         <h2 className="font-sans text-lg font-bold text-[#130404]">Receipt</h2>
