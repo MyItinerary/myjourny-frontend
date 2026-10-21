@@ -17,6 +17,7 @@ import {
 } from "@/lib/queries/bookings";
 import { formatSessionWhen } from "@/features/booking";
 import { BookingDayDetailsView, useBookingDayDetailsViewModel } from "@/features/booking-day-details";
+import { ExperienceLocationView, meetingPointLocation } from "@/features/experience-details";
 import { useExperienceDetail } from "@/lib/queries/experiences";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +87,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   const status = STATUS_LABEL[booking.status] ?? STATUS_LABEL.confirmed;
   const openRequest = cancellation?.status === "open" ? cancellation : null;
   const refunded = Number(booking.refunded_amount ?? 0);
+  const meetingLocation = meetingPointLocation(booking.meeting_point);
   // In the zone the session runs in (not the browser's), as a date range for
   // sessions over several days.
   const sessionDate = booking.requested_datetime
@@ -119,6 +121,12 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         )}
       </div>
 
+      {/* The map; "On the day" below has the instructions, directions and what to bring. */}
+      {meetingLocation && (
+        <div className="mt-8">
+          <ExperienceLocationView location={meetingLocation} heading="Where to meet" mapOnly />
+        </div>
+      )}
       <BookingDayDetailsView {...dayDetails} />
 
       <section className="mt-8 rounded-2xl border border-border p-6">

@@ -370,5 +370,36 @@ describe("useBookingPanelViewModel", () => {
     expect(result.current.lengthNote).toBe("Each booking covers all 3 days.");
     expect(result.current.scheduleLabel).toBe("Every Saturday · 3 days");
   });
-});
 
+  it("shows the experience's own cancellation policy, and none without one", async () => {
+    stubApi();
+    const withPolicy = renderHookWithProviders(() =>
+      useBookingPanelViewModel({ ...props, cancellationPolicy: "  Free cancellation up to 48 hours before  " }),
+    );
+    await waitFor(() => expect(withPolicy.result.current.quote).not.toBeNull());
+    expect(withPolicy.result.current.cancellationPolicy).toBe("Free cancellation up to 48 hours before");
+
+    const without = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    expect(without.result.current.cancellationPolicy).toBeNull();
+  });
+
+  it("only points at time slots when the experience has them", async () => {
+    stubApi();
+    const scheduled = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(scheduled.result.current.hasTimeSlots).toBe(true));
+
+    stubApi({ scheduled: false });
+    const unscheduled = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(unscheduled.result.current.quote).not.toBeNull());
+    expect(unscheduled.result.current.hasTimeSlots).toBe(false);
+  });
+
+  it("shows only the day for an unscheduled experience, not the server's noon", async () => {
+    stubApi({
+      scheduled: false,
+      quoteBody: quote({ session_starts_at: "2030-10-19T11:00:00Z", timezone: "Africa/Lagos" }),
+    });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.quote?.when).toBe("Saturday, October 19"));
+  });
+});

@@ -33,6 +33,8 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
 function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): BookingPanelViewModel {
   return {
     durationLabel: "3 hours",
+    cancellationPolicy: null,
+    hasTimeSlots: false,
     scheduleLabel: "Every Saturday · 3 days",
     lengthNote: "Each booking covers all 3 days.",
     priceFrom: { amount: "₦5,000.00", unit: "/ person", showFrom: true },

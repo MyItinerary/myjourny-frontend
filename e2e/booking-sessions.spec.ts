@@ -225,7 +225,7 @@ test.describe("booking sessions", () => {
         });
       },
     });
-    const sidebar = page.locator("div.sticky").filter({ hasText: "Free cancellation" });
+    const sidebar = page.locator("div.sticky").filter({ hasText: "Duration -" });
 
     await expect(sidebar.getByText("Your booking qualifies for 10% off (3+ guests)")).toBeVisible();
     await expect(sidebar.getByText("Discounts don't combine: you get the biggest one you qualify for.")).toBeVisible();
