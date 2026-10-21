@@ -10,13 +10,17 @@ describe("ExperienceBeforeYouBookView", () => {
     renderWithProviders(
       <ExperienceBeforeYouBookView
         items={[
-          { kind: "guests", label: "Group size", description: "Up to 6 guests in total" },
+          { kind: "guests", label: "Group size", description: "3–6 guests per booking" },
+          { kind: "not_included", label: "Not included", description: "Transport" },
+          { kind: "safety", label: "Safety", description: "Life jackets provided" },
           { kind: "cancellation", label: "Cancellation policy", description: "Free cancellation up to 24 hours before" },
         ]}
       />,
     );
     expect(screen.getByRole("heading", { name: "Before you book" })).toBeInTheDocument();
-    expect(screen.getByText("Up to 6 guests in total")).toBeInTheDocument();
+    expect(screen.getByText("3–6 guests per booking")).toBeInTheDocument();
+    expect(screen.getByText("Transport")).toBeInTheDocument();
+    expect(screen.getByText("Life jackets provided")).toBeInTheDocument();
     expect(screen.getByText("Free cancellation up to 24 hours before")).toBeInTheDocument();
   });
 

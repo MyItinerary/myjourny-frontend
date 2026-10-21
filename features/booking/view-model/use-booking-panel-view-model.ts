@@ -6,7 +6,14 @@ import { apiErrorMessage } from "@/lib/api-error";
 
 import type { PricingSelection, Quote } from "../model/booking.types";
 import { useCreateBooking } from "../model/bookings";
-import { formatPrice, formatSessionDay, formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
+import {
+  formatPrice,
+  formatSessionDay,
+  formatSessionWhen,
+  groupSizeLabel,
+  type ScheduleSummary,
+  scheduleLabel,
+} from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
 import { useExperienceSessions } from "../model/sessions";
 import { type SessionChoice, useSessionChoice } from "./use-session-choice";
@@ -55,6 +62,9 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
   durationLabel: string;
   /** The experience's cancellation policy, or null when it has none. */
   cancellationPolicy: string | null;
+  /** "3–8 guests per booking", shown by the guest picker before anyone is
+   * below the minimum; null without limits or while the warning shows. */
+  groupSizeNote: string | null;
   /** "See time slots above" only makes sense when there are slots. */
   hasTimeSlots: boolean;
   /** "Every Saturday · 3 days"; null without a schedule. */
@@ -293,6 +303,7 @@ export function useBookingPanelViewModel({
     ...ticketSelection,
     durationLabel,
     cancellationPolicy: cancellationPolicy?.trim() || null,
+    groupSizeNote: ticketSelection.minGuestsWarning ? null : groupSizeLabel(minGuests, availableSpots),
     hasTimeSlots: sessions.scheduled && !sessions.noSessions,
     scheduleLabel: schedule ? scheduleLabel(schedule) : null,
     lengthNote:

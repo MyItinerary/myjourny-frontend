@@ -1,11 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRule, describeRules, formatPrice, formatSessionDay, formatSessionWhen, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
+import { describeRule, describeRules, formatPrice, formatSessionDay, groupSizeLabel, formatSessionWhen, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
 
 describe("formatPrice", () => {
   it("formats money in the given currency", () => {
     expect(formatPrice(5000, "NGN")).toBe("₦5,000.00");
     expect(formatPrice(12.5, "USD")).toContain("12.50");
+  });
+});
+
+describe("groupSizeLabel", () => {
+  it("words the guest limits, treating a minimum of 1 as none", () => {
+    expect(groupSizeLabel(3, 8)).toBe("3–8 guests per booking");
+    expect(groupSizeLabel(4, 4)).toBe("Exactly 4 guests per booking");
+    expect(groupSizeLabel(3, null)).toBe("At least 3 guests per booking");
+    expect(groupSizeLabel(1, 1)).toBe("Up to 1 guest per booking");
+    expect(groupSizeLabel(1, 6)).toBe("Up to 6 guests per booking");
+    expect(groupSizeLabel(1, undefined)).toBeNull();
+    expect(groupSizeLabel(null, null)).toBeNull();
   });
 });
 

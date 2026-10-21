@@ -150,3 +150,48 @@ test("the booking page shows where to meet and what to bring", async ({ page }) 
   await expect(page.getByText(MEETING_POINT.instructions)).toBeVisible();
   await expect(page.getByText("Sunscreen and a hat")).toBeVisible();
 });
+
+test("guest limits, exclusions and safety notes show before booking", async ({ page }) => {
+  await mockApi(
+    page,
+    experienceApi({
+      ...EXPERIENCE,
+      title: "Lagos Trivia Night",
+      group_size_min: 3,
+      group_size_max: 8,
+      whats_not_included: ["Drinks"],
+      safety_info: { riskLevel: "LOW", notes: ["Venue has step-free access"], mobilityAccessibility: "FULL" },
+    }),
+  );
+  await page.goto("/experiences/exp-1");
+  await expect(page.getByRole("heading", { name: "Lagos Trivia Night" }).first()).toBeVisible();
+
+  const beforeYouBook = page.locator("section").filter({ has: page.getByRole("heading", { name: "Before you book" }) });
+  await expect(beforeYouBook.getByText("3–8 guests per booking")).toBeVisible();
+  await expect(beforeYouBook.getByText("Drinks")).toBeVisible();
+  await expect(beforeYouBook.getByText("Venue has step-free access")).toBeVisible();
+
+  // The booking panel says it too, before anyone drops below the minimum.
+  const panel = page.locator("div.sticky").filter({ hasText: "Participants" });
+  await expect(panel.getByText("3–8 guests per booking")).toBeVisible();
+  await expect(panel.getByText("This experience needs at least 3 guests.")).toHaveCount(0);
+});
+
+test("itin's placeholder safety info isn't shown", async ({ page }) => {
+  await mockApi(
+    page,
+    experienceApi({
+      ...EXPERIENCE,
+      safety_info: {
+        riskLevel: "UNKNOWN",
+        notes: ["Safety info not available"],
+        mobilityAccessibility: "UNKNOWN",
+        emergencyGuidance: "Follow general travel safety disclaimer.",
+      },
+    }),
+  );
+  await page.goto("/experiences/exp-1");
+  await expect(page.getByRole("heading", { name: "Makoko Floating Village Boat Tour" }).first()).toBeVisible();
+  await expect(page.getByText("Safety info not available")).toHaveCount(0);
+  await expect(page.getByText("Follow general travel safety disclaimer.")).toHaveCount(0);
+});

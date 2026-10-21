@@ -4,6 +4,7 @@ export { useBookingPanelViewModel } from "./view-model/use-booking-panel-view-mo
 export { BookingPanelView } from "./view/booking-panel-view";
 export { BookingBarView } from "./view/booking-bar-view";
 export { formatPrice, formatSessionWhen, guestLoginHref } from "./model/format";
+export { groupSizeLabel } from "./model/format";
 export { useCreateBooking } from "./model/bookings";
 export { useBookingQuote } from "./model/pricing";
 export type { PricingSelection, Quote } from "./model/booking.types";

@@ -34,6 +34,7 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
   return {
     durationLabel: "3 hours",
     cancellationPolicy: null,
+    groupSizeNote: null,
     hasTimeSlots: false,
     scheduleLabel: "Every Saturday · 3 days",
     lengthNote: "Each booking covers all 3 days.",
@@ -128,6 +129,11 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("OLD has expired")).toHaveClass("text-[#F5032D]");
     expect(screen.getByText("We couldn't price this selection.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Starting checkout…" })).toBeDisabled();
+  });
+
+  it("shows the guest limits under the tickets", () => {
+    renderWithProviders(<BookingPanelView {...panelViewModel({ groupSizeNote: "3–8 guests per booking" })} />);
+    expect(screen.getByText("3–8 guests per booking")).toBeInTheDocument();
   });
 
   it("says when the experience can't be booked, and closes as a sheet", async () => {

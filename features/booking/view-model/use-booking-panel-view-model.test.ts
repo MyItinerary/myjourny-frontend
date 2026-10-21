@@ -139,6 +139,17 @@ describe("useBookingPanelViewModel", () => {
     expect(quotes).toHaveLength(0);
   });
 
+  it("states the guest limits up front, and swaps them for the warning below the minimum", async () => {
+    stubApi();
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, minSpots: 3, availableSpots: 8 }));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+    expect(result.current.groupSizeNote).toBe("3–8 guests per booking");
+
+    act(() => result.current.tickets[0].onChange(1));
+    expect(result.current.groupSizeNote).toBeNull();
+    expect(result.current.minGuestsWarning).toBe("This experience needs at least 3 guests.");
+  });
+
   it("doesn't price a selection below the minimum group size", async () => {
     const quotes = stubApi();
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
