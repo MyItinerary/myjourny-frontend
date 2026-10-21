@@ -72,6 +72,26 @@ describe("ChangePasswordDialogView", () => {
     expect(screen.getByText("We couldn't change your password. Try again.")).toBeInTheDocument();
   });
 
+  it("hides every password by default and lets each one be shown and hidden again", async () => {
+    const { user } = renderWithProviders(<ChangePasswordDialogView {...viewModel()} />);
+
+    const fields = ["Current password", "New password", "Confirm new password"].map((label) =>
+      screen.getByLabelText(label),
+    );
+    for (const field of fields) expect(field).toHaveAttribute("type", "password");
+
+    const toggles = screen.getAllByRole("button", { name: "Show password" });
+    expect(toggles).toHaveLength(3);
+
+    await user.click(toggles[1]);
+    expect(fields[1]).toHaveAttribute("type", "text");
+    expect(fields[0]).toHaveAttribute("type", "password");
+    expect(fields[2]).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(fields[1]).toHaveAttribute("type", "password");
+  });
+
   it("locks Save while saving or incomplete", () => {
     renderWithProviders(<ChangePasswordDialogView {...viewModel({ canSave: false, saving: true })} />);
     expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();

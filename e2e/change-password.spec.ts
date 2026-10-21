@@ -73,6 +73,22 @@ test.describe("change password", () => {
     await expect(page.getByLabel("Current password")).toBeHidden();
   });
 
+  test("passwords are hidden until the eye button is pressed", async ({ page }) => {
+    await openLoginAndSecurity(page);
+    await page.getByRole("button", { name: "Edit" }).first().click();
+
+    const current = page.getByLabel("Current password");
+    await current.fill("OldPassword123!");
+    await expect(current).toHaveAttribute("type", "password");
+
+    await page.getByRole("button", { name: "Show password" }).first().click();
+    await expect(current).toHaveAttribute("type", "text");
+    await expect(current).toHaveValue("OldPassword123!");
+
+    await page.getByRole("button", { name: "Hide password" }).click();
+    await expect(current).toHaveAttribute("type", "password");
+  });
+
   test("two factor setup says any authenticator app works", async ({ page }) => {
     await openLoginAndSecurity(page, {
       "POST /auth/2fa/setup": (r) =>

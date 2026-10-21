@@ -477,7 +477,7 @@ export function LoginSecuritySection() {
           <div className="mt-4 flex flex-col gap-4">
             <TextField
               label="Password"
-              type="password"
+              revealable
               autoComplete="current-password"
               value={offPassword}
               onChange={(e) => setOffPassword(e.target.value)}

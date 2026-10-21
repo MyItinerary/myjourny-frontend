@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useRef } from "react";
-import { CircleCheck, X } from "lucide-react";
+import { useId, useRef, useState } from "react";
+import { CircleCheck, EyeIcon, X } from "lucide-react";
+import { EyeOffIcon } from "@/components/icons/auth-icons";
 import { cn } from "@/lib/utils";
 
 export function Row({
@@ -115,30 +116,54 @@ export function ModalShell({
   );
 }
 
+/** A labelled input. `revealable` makes it a password field that starts hidden, with a show/hide button. */
 export function TextField({
   label,
   error,
+  revealable,
+  type,
   className,
   ...props
-}: { label: string; error?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+}: { label: string; error?: string; revealable?: boolean } & React.InputHTMLAttributes<HTMLInputElement>) {
   const id = useId();
   const errorId = `${id}-error`;
+  const [visible, setVisible] = useState(false);
+  const input = (
+    <input
+      {...props}
+      id={id}
+      type={revealable ? (visible ? "text" : "password") : type}
+      aria-invalid={error ? true : undefined}
+      aria-describedby={error ? errorId : undefined}
+      className={cn(
+        "mt-2 h-12 w-full rounded-xl border border-border px-4 font-sans text-base text-foreground outline-none focus-visible:border-brand focus-visible:ring-4 focus-visible:ring-brand/16",
+        error && "border-destructive",
+        revealable && "pr-12",
+        className,
+      )}
+    />
+  );
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
-      <input
-        {...props}
-        id={id}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-        className={cn(
-          "mt-2 h-12 w-full rounded-xl border border-border px-4 font-sans text-base text-foreground outline-none focus-visible:border-brand focus-visible:ring-4 focus-visible:ring-brand/16",
-          error && "border-destructive",
-          className,
-        )}
-      />
+      {revealable ? (
+        <div className="relative">
+          {input}
+          <button
+            type="button"
+            onClick={() => setVisible((v) => !v)}
+            aria-label={visible ? "Hide password" : "Show password"}
+            aria-controls={id}
+            className="absolute top-1/2 right-4 mt-1 -translate-y-1/2 text-muted-foreground"
+          >
+            {visible ? <EyeIcon className="size-5" /> : <EyeOffIcon className="size-5" />}
+          </button>
+        </div>
+      ) : (
+        input
+      )}
       {error && (
         <div id={errorId} role="alert" className="mt-1.5 text-sm text-destructive">
           {error}

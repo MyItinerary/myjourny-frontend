@@ -12,7 +12,7 @@ export function ChangePasswordDialogView(vm: ChangePasswordViewModel) {
       <div className="flex flex-col gap-4">
         <TextField
           label="Current password"
-          type="password"
+          revealable
           autoComplete="current-password"
           value={vm.values.current}
           error={vm.errors.current}
@@ -21,7 +21,7 @@ export function ChangePasswordDialogView(vm: ChangePasswordViewModel) {
         />
         <TextField
           label="New password"
-          type="password"
+          revealable
           autoComplete="new-password"
           placeholder={`At least ${vm.minLength} characters`}
           value={vm.values.next}
@@ -31,7 +31,7 @@ export function ChangePasswordDialogView(vm: ChangePasswordViewModel) {
         />
         <TextField
           label="Confirm new password"
-          type="password"
+          revealable
           autoComplete="new-password"
           value={vm.values.confirm}
           error={vm.errors.confirm}
