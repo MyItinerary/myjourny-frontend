@@ -56,6 +56,9 @@ export type Booking = {
   cancelled_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  // Signed downloads: the PDF receipt once paid, the calendar file once confirmed.
+  receipt_url?: string | null;
+  calendar_url?: string | null;
 };
 
 // A cancellation request (itin's RefundRequestOut). Support decides the

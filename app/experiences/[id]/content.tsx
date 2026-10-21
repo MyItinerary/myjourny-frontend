@@ -24,9 +24,9 @@ import {
   ExperienceBeforeYouBookView,
   ExperienceItineraryView,
   ExperienceLocationView,
-  ExperienceRatingView,
   useExperienceDetailsViewModel,
 } from "@/features/experience-details";
+import { ExperienceReviewsView, useExperienceReviewsViewModel } from "@/features/reviews";
 import { ExperienceGalleryView, useExperienceGalleryViewModel } from "@/features/experience-gallery";
 import {
   experienceListItemToCardProps,
@@ -85,6 +85,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
   const gallery = useExperienceGalleryViewModel(experience);
   const experienceDetails = useExperienceDetailsViewModel(id, experience);
+  const reviews = useExperienceReviewsViewModel(id, experience);
   const { data: prices } = useExperiencePrices(id);
   const minPrice = (prices ?? []).reduce(
     (min, p) => (min === null || Number(p.amount) < min ? Number(p.amount) : min),
@@ -327,7 +328,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             <ExperienceBeforeYouBookView items={experienceDetails.beforeYouBook} />
             <ExperienceItineraryView steps={experienceDetails.itinerary} />
             <ExperienceLocationView location={experienceDetails.location} />
-            <ExperienceRatingView rating={experienceDetails.rating} />
+            <ExperienceReviewsView {...reviews} />
           </div>
 
           {hydrated ? (

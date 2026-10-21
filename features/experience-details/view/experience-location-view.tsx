@@ -6,10 +6,12 @@ type Props = {
   location: ExperienceLocation | null;
   /** Section heading; the booking page says "Where to meet". */
   heading?: string;
+  /** Just the map: the booking page lists the instructions and directions itself. */
+  mapOnly?: boolean;
 };
 
 /** A real map: the exact meeting point once booked, the area otherwise. */
-export function ExperienceLocationView({ location, heading = "Where you'll be" }: Props) {
+export function ExperienceLocationView({ location, heading = "Where you'll be", mapOnly = false }: Props) {
   if (!location) return null;
   return (
     <section>
@@ -30,7 +32,7 @@ export function ExperienceLocationView({ location, heading = "Where you'll be" }
         </div>
       )}
 
-      {location.mode === "exact" || location.mode === "exact-text" ? (
+      {mapOnly ? null : location.mode === "exact" || location.mode === "exact-text" ? (
         <div className="mt-3 flex flex-col gap-2">
           <p className="text-sm font-medium text-foreground">You&apos;re booked. Here&apos;s where to meet.</p>
           {location.instructions && <p className="text-sm text-muted-foreground">{location.instructions}</p>}
