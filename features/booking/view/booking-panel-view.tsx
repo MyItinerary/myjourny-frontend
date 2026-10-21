@@ -192,17 +192,14 @@ function CheckoutSummary({ promo, quote, quoteError, booking, total }: BookingPa
       {!booking.available ? (
         <p className="text-center text-xs text-muted-foreground">This experience isn&apos;t available for booking yet.</p>
       ) : (
-        <div className="flex flex-col gap-2">
-          <Button
-            size="cta"
-            disabled={booking.disabled}
-            onClick={booking.onBook}
-            className="w-full bg-[#F5032D] text-white hover:bg-[#d90328] font-sans text-base font-semibold shadow-sm transition-all"
-          >
-            {booking.label}
-          </Button>
-          <p className="text-center text-xs text-[#6F6B72]">You won&apos;t be charged yet. A payment processing fee is added at checkout.</p>
-        </div>
+        <Button
+          size="cta"
+          disabled={booking.disabled}
+          onClick={booking.onBook}
+          className="w-full bg-[#F5032D] text-white hover:bg-[#d90328] font-sans text-base font-semibold shadow-sm transition-all"
+        >
+          {booking.label}
+        </Button>
       )}
 
       {total && (
