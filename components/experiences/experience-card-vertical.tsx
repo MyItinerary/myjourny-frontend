@@ -6,6 +6,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 import { HeartRoundedIcon, StarIcon } from "@/components/icons/shared-icons";
+import { formatPriceOrFree } from "@/features/booking";
 import { useMyWishlistedIds } from "@/lib/queries/wishlists";
 import { useWishlistSave } from "@/components/wishlists/wishlist-save-provider";
 
@@ -13,14 +14,6 @@ import { useWishlistSave } from "@/components/wishlists/wishlist-save-provider";
 // different card shape from the horizontal `ExperienceCard` used in the
 // rails ("Popular experiences near you" / "Based on your browsing
 // history"): full-width photo, a save button, and a two-line price.
-function formatPrice(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
-
 export function ExperienceCardVertical({
   imageSrc,
   imageAlt,
@@ -93,10 +86,12 @@ export function ExperienceCardVertical({
           </div>
         </div>
 
-        <p className="font-heading text-foreground">
-          <span className="block text-base font-normal text-muted-foreground">from</span>
-          <span className="text-xl font-medium">{formatPrice(priceFrom, currency)}</span>
-        </p>
+        {priceFrom !== null && (
+          <p className="font-heading text-foreground">
+            {priceFrom > 0 && <span className="block text-base font-normal text-muted-foreground">from</span>}
+            <span className="text-xl font-medium">{formatPriceOrFree(priceFrom, currency)}</span>
+          </p>
+        )}
       </div>
     </article>
   );

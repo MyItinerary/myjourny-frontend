@@ -140,6 +140,20 @@ describe("useCheckoutViewModel: the page", () => {
     expect(result.current.steps.account).toBe("juliet@example.com");
     expect(result.current.steps.canPay).toBe(true);
     await waitFor(() => expect(result.current.summary?.total).toBe("₦15,000.00"));
+    expect(result.current.steps.free).toBe(false);
+  });
+
+  it("calls a booking that costs nothing Free, with nothing to pay", async () => {
+    session.value = juliet;
+    server.use(
+      http.post(apiUrl("/bookings/quote"), () =>
+        HttpResponse.json({ currency: "NGN", lines: [], subtotal: "0", discount: "0", checkout_fee: "0", total: "0", guests: 1, days: 1, promo_applied: false }),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+
+    await waitFor(() => expect(result.current.summary?.total).toBe("Free"));
+    expect(result.current.steps.free).toBe(true);
   });
 });
 

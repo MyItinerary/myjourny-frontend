@@ -110,6 +110,46 @@ describe("useBookingPanelViewModel", () => {
     expect(result.current.booking).toMatchObject({ available: true, disabled: false, label: "Book now - ₦9,000.00" });
   });
 
+  it("calls a free booking Free and offers to book it for free", async () => {
+    stubApi({
+      quoteBody: quote({
+        lines: [{ kind: "ticket", label: "Adult", quantity: 2, unit_amount: "0", amount: "0" }],
+        subtotal: "0",
+        discount: "0",
+        total: "0",
+      }),
+    });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+    expect(result.current.quote!.lines.map((l) => [l.label, l.amount])).toEqual([["Adult × 2", "Free"]]);
+    expect(result.current.total).toBe("Free");
+    expect(result.current.booking.label).toBe("Book for free");
+  });
+
+  it("keeps the discount's amount when a promo code covers the whole price", async () => {
+    stubApi({
+      quoteBody: quote({
+        lines: [
+          { kind: "ticket", label: "Adult", quantity: 2, unit_amount: "5000", amount: "10000" },
+          { kind: "discount", label: "ALLFREE", quantity: 1, unit_amount: "-10000", amount: "-10000" },
+        ],
+        discount: "10000",
+        total: "0",
+      }),
+    });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+    expect(result.current.quote!.lines.map((l) => [l.label, l.amount])).toEqual([
+      ["Adult × 2", "₦10,000.00"],
+      ["Subtotal", "₦10,000.00"],
+      ["ALLFREE", "-₦10,000.00"],
+    ]);
+    expect(result.current.total).toBe("Free");
+    expect(result.current.booking.label).toBe("Book for free");
+  });
+
   it("applies a promo code and reports why it didn't apply", async () => {
     const quotes = stubApi({ quoteBody: quote({ promo_code: "OLD", promo_message: "OLD has expired" }) });
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));

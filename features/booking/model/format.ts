@@ -8,6 +8,12 @@ export function formatPrice(amount: number, currency: string): string {
   }).format(amount);
 }
 
+/** A price people pay: "Free" when it's nothing, otherwise as formatPrice.
+ * Not for discounts, fees or refunds, where ₦0.00 is the right answer. */
+export function formatPriceOrFree(amount: number, currency: string): string {
+  return amount === 0 ? "Free" : formatPrice(amount, currency);
+}
+
 /** "3–8 guests per booking", "At least 3 guests per booking", "Up to 8 guests
  * per booking", or null when the experience sets no limits. A minimum of 1 is
  * no limit. */

@@ -1,11 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRule, describeRules, formatPrice, formatSessionDay, groupSizeLabel, formatSessionWhen, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
+import { describeRule, describeRules, formatPrice, formatPriceOrFree, formatSessionDay, formatSessionWhen, groupSizeLabel, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
 
 describe("formatPrice", () => {
   it("formats money in the given currency", () => {
     expect(formatPrice(5000, "NGN")).toBe("₦5,000.00");
     expect(formatPrice(12.5, "USD")).toContain("12.50");
+  });
+
+  it("keeps ₦0.00 for amounts that aren't a price to pay", () => {
+    expect(formatPrice(0, "NGN")).toBe("₦0.00");
+  });
+});
+
+describe("formatPriceOrFree", () => {
+  it("says Free for a price of nothing, and the amount otherwise", () => {
+    expect(formatPriceOrFree(0, "NGN")).toBe("Free");
+    expect(formatPriceOrFree(5000, "NGN")).toBe("₦5,000.00");
   });
 });
 

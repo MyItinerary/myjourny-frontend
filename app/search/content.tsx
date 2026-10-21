@@ -161,7 +161,7 @@ export function SearchContent() {
                   duration={formatDuration(exp.duration)}
                   rating={exp.rating ?? 0}
                   reviewCount={0}
-                  priceFrom={Number(exp.price_from ?? exp.price ?? 0)}
+                  priceFrom={exp.price_from != null ? Number(exp.price_from) : null}
                   currency={exp.currency ?? "NGN"}
                 />
 

@@ -26,8 +26,8 @@ function Card({ confirmation, className }: { confirmation: BookingConfirmation; 
         </div>
         <div>
           <p className="text-[23px] leading-[35px] text-[#6F6B72]">{confirmation.guestsLabel}</p>
-          {confirmation.totalLabel && (
-            <p className="text-[32px] font-medium leading-[44px] text-[#333134]">{confirmation.totalLabel} total</p>
+          {confirmation.totalHeadline && (
+            <p className="text-[32px] font-medium leading-[44px] text-[#333134]">{confirmation.totalHeadline}</p>
           )}
         </div>
       </div>

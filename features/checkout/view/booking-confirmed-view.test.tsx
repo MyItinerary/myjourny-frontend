@@ -12,6 +12,7 @@ const confirmation: BookingConfirmation = {
   dateLabel: "July 16th, 2026",
   guestsLabel: "1 guest",
   totalLabel: "₦10,000.00",
+  totalHeadline: "₦10,000.00 total",
   viewHref: "/bookings/b-1",
   calendarHref: "https://calendar.google.com/calendar/render?action=TEMPLATE",
 };
@@ -29,7 +30,7 @@ describe("BookingConfirmedView", () => {
 
   it("leaves out the calendar and total when unknown", () => {
     renderWithProviders(
-      <BookingConfirmedView confirmation={{ ...confirmation, calendarHref: null, totalLabel: null, imageUrl: null }} />,
+      <BookingConfirmedView confirmation={{ ...confirmation, calendarHref: null, totalLabel: null, totalHeadline: null, imageUrl: null }} />,
     );
     expect(screen.queryByText("Add to calendar")).not.toBeInTheDocument();
     expect(screen.queryByText(/total/)).not.toBeInTheDocument();
