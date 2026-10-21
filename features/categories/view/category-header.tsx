@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { FilterChip } from "@/components/categories/filter-chip";
+import { FilterChip } from "./filter-chip";
 
 const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
 
@@ -8,7 +8,35 @@ const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
 // breadcrumb (desktop only), heading, filter-chip row.
 // `total` is an exact count from the backend; `count` is what's loaded so far
 // (shown as "N+").
-export function CategoryHeader({ label, count, total }: { label: string; count?: number; total?: number }) {
+export function CategoryHeader({
+  label,
+  count,
+  total,
+  isLoading = false,
+  isError = false,
+  loadingText = "(Loading experiences…)",
+  errorText = "(Failed to load)",
+}: {
+  label: string;
+  count?: number;
+  total?: number;
+  isLoading?: boolean;
+  isError?: boolean;
+  loadingText?: string;
+  errorText?: string;
+}) {
+  const countText = isLoading
+    ? loadingText
+    : isError && (count === 0 || count === undefined)
+      ? errorText
+      : total !== undefined
+        ? `(${total} ${total === 1 ? "result" : "results"})`
+        : count === 0
+          ? "(0 results)"
+          : count !== undefined
+            ? `(${count}+ results)`
+            : "(50+ results)";
+
   return (
     <div className="flex flex-col gap-4 lg:gap-[18px]">
       <nav aria-label="Breadcrumb" className="hidden items-center gap-1.5 lg:flex">
@@ -22,16 +50,7 @@ export function CategoryHeader({ label, count, total }: { label: string; count?:
       </nav>
 
       <p className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[40px]">
-        {label}{" "}
-        <span className="text-muted-foreground">
-          {total !== undefined
-            ? `(${total} ${total === 1 ? "result" : "results"})`
-            : count === 0
-              ? "(0 results)"
-              : count !== undefined
-                ? `(${count}+ results)`
-                : "(50+ results)"}
-        </span>
+        {label} <span className="text-muted-foreground">{countText}</span>
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
