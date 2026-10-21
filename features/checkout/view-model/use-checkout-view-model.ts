@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { formatPrice, useBookingQuote, useCreateBooking } from "@/features/booking";
+import { formatPriceOrFree, useBookingQuote, useCreateBooking } from "@/features/booking";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 
@@ -79,6 +79,8 @@ export type CheckoutViewModel = {
     onStartAuth: () => void;
     /** Step 2: book, then on to Paystack or Stripe. */
     canPay: boolean;
+    /** The total is nothing, so step 2 books without a payment page. */
+    free: boolean;
     paying: boolean;
     onConfirm: () => void;
   };
@@ -127,7 +129,9 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     if (hydrated && !draft) router.replace("/");
   }, [hydrated, draft, router]);
 
-  const total = draft ? (quote ? formatPrice(Number(quote.total), draft.currency) : draft.total) : "";
+  const total = draft ? (quote ? formatPriceOrFree(Number(quote.total), draft.currency) : draft.total) : "";
+  // Nothing to pay: the booking is confirmed without a payment page.
+  const free = total === "Free";
   const summary: OrderSummary | null = draft
     ? {
         title: draft.title,
@@ -269,6 +273,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       account: signedIn ? (user?.email ?? null) : null,
       onStartAuth: () => setOpen(true),
       canPay: signedIn && !paying,
+      free,
       paying,
       onConfirm,
     },

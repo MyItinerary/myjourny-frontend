@@ -40,6 +40,22 @@ describe("useTicketSelection", () => {
     });
   });
 
+  it("calls a ₦0 ticket or add-on Free, without a unit or \"from\"", () => {
+    const { result } = render({
+      pricing: {
+        ...pricing,
+        prices: [
+          { id: "free", label: "Community", amount: "0.00", pricing_unit: "per_person" },
+          { id: "adult", label: "Adult", amount: "5000.00", pricing_unit: "per_person" },
+        ],
+        addons: [{ id: "tea", label: "Tea", amount: "0.00", pricing_unit: "per_person" }],
+      },
+    });
+    expect(result.current.priceFrom).toEqual({ amount: "Free", unit: "", showFrom: false });
+    expect(result.current.tickets.map((t) => t.priceLabel)).toEqual(["Free", "₦5,000.00 / person"]);
+    expect(result.current.addons[0].priceLabel).toBe("Free");
+  });
+
   it("changes quantities, days and add-ons", () => {
     const { result } = render();
     act(() => result.current.tickets[0].onChange(1));

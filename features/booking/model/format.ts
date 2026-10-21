@@ -8,6 +8,12 @@ export function formatPrice(amount: number, currency: string): string {
   }).format(amount);
 }
 
+/** A price people pay: "Free" when it's nothing, otherwise as formatPrice.
+ * Not for discounts, fees or refunds, where ₦0.00 is the right answer. */
+export function formatPriceOrFree(amount: number, currency: string): string {
+  return amount === 0 ? "Free" : formatPrice(amount, currency);
+}
+
 export const UNIT_SUFFIX: Record<PricingUnit, string> = {
   per_person: "/ person",
   per_booking: "/ group",

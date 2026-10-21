@@ -88,7 +88,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const reviews = useExperienceReviewsViewModel(id, experience);
   const { data: prices } = useExperiencePrices(id);
   const minPrice = (prices ?? []).reduce(
-    (min, p) => (min === null || p.amount < min ? p.amount : min),
+    (min, p) => (min === null || Number(p.amount) < min ? Number(p.amount) : min),
     null as number | null
   );
   // Recommendations need a profile; guests get the best-rated experiences.
@@ -368,7 +368,9 @@ export function ExperienceDetailContent({ id }: { id: string }) {
       <Footer />
 
       <BookingBarView
-        priceFrom={formatPrice(minPrice ?? 0, experience.currency ?? "NGN")}
+        priceLabel={
+          minPrice === null ? null : minPrice === 0 ? "Free" : `from ${formatPrice(minPrice, experience.currency ?? "NGN")}`
+        }
         onBookNow={() => setMobileBookingOpen(true)}
       />
 

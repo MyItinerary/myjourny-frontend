@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { StarIcon } from "@/components/icons/shared-icons";
+import { formatPriceOrFree } from "@/features/booking";
 
 // Figma: "Experience card" component, node 2001:9145.
 export interface ExperienceCardProps {
@@ -13,19 +14,12 @@ export interface ExperienceCardProps {
   duration: string;
   rating: number;
   reviewCount: number;
-  priceFrom: number;
+  /** The cheapest ticket; 0 shows "Free", null (nothing on sale) shows no price. */
+  priceFrom: number | null;
   currency?: string;
   className?: string;
   /** Links to /experiences/{id} when present — mock/placeholder cards can omit it. */
   id?: string;
-}
-
-function formatPrice(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
 }
 
 export function ExperienceCard({
@@ -70,12 +64,14 @@ export function ExperienceCard({
           </div>
         </div>
 
-        <p className="whitespace-nowrap pt-1">
-          <span className="font-sans text-sm font-normal text-[#6F6B72]">from </span>
-          <span className="font-sans text-base font-bold text-[#130404]">
-            {formatPrice(priceFrom, currency)}
-          </span>
-        </p>
+        {priceFrom !== null && (
+          <p className="whitespace-nowrap pt-1">
+            {priceFrom > 0 && <span className="font-sans text-sm font-normal text-[#6F6B72]">from </span>}
+            <span className="font-sans text-base font-bold text-[#130404]">
+              {formatPriceOrFree(priceFrom, currency)}
+            </span>
+          </p>
+        )}
       </div>
     </>
   );
