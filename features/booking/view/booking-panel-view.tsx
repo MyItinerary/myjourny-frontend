@@ -113,18 +113,20 @@ export function BookingPanelView(props: Props) {
       <CheckoutSummary {...props} />
 
       <div className="flex flex-col gap-3 border-t border-border pt-4">
-        <div className="flex items-start gap-2">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          <div>
-            <p className="text-sm text-foreground">Free cancellation</p>
-            <p className="text-xs text-muted-foreground">Up to 24 hours before, full refund</p>
+        {props.cancellationPolicy && (
+          <div className="flex items-start gap-2">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-foreground">Cancellation policy</p>
+              <p className="text-xs text-muted-foreground">{props.cancellationPolicy}</p>
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex items-start gap-2">
           <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <div>
             <p className="text-sm text-foreground">Duration - {props.durationLabel}</p>
-            <p className="text-xs text-muted-foreground">See time slots above</p>
+            {props.hasTimeSlots && <p className="text-xs text-muted-foreground">See time slots above</p>}
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ import { apiErrorMessage } from "@/lib/api-error";
 
 import type { PricingSelection, Quote } from "../model/booking.types";
 import { useCreateBooking } from "../model/bookings";
-import { formatPrice, formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
+import { formatPrice, formatSessionDay, formatSessionWhen, type ScheduleSummary, scheduleLabel } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
 import { useExperienceSessions } from "../model/sessions";
 import { type SessionChoice, useSessionChoice } from "./use-session-choice";
@@ -27,6 +27,8 @@ export type BookingPanelProps = {
   minSpots?: number;
   /** The experience's schedule, for a label like "Every Saturday · 3 days". */
   schedule?: ScheduleSummary;
+  /** The experience's own cancellation policy; the panel shows none without it. */
+  cancellationPolicy?: string | null;
   /** Set for guests: they pick tickets and a date like anyone else, and
    * "Book now" hands what they picked to this callback (to collect their
    * details) instead of creating a booking. */
@@ -51,6 +53,10 @@ export type GuestBookingDetails = {
 
 export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> & {
   durationLabel: string;
+  /** The experience's cancellation policy, or null when it has none. */
+  cancellationPolicy: string | null;
+  /** "See time slots above" only makes sense when there are slots. */
+  hasTimeSlots: boolean;
   /** "Every Saturday · 3 days"; null without a schedule. */
   scheduleLabel: string | null;
   /** "Each booking covers all 3 days." when the schedule fixes the length. */
@@ -139,6 +145,7 @@ export function useBookingPanelViewModel({
   eventStartDate,
   availableSpots,
   minSpots = 1,
+  cancellationPolicy,
   schedule,
   onGuestBook,
 }: BookingPanelProps): BookingPanelViewModel {
@@ -212,11 +219,17 @@ export function useBookingPanelViewModel({
     return total ? `Book now - ${total}` : "Book now";
   };
 
+  // Unscheduled experiences have no real start time yet: the host confirms it.
+  const quoteWhen = (q: { session_starts_at?: string | null; session_ends_at?: string | null; timezone?: string | null }) => {
+    if (!q.session_starts_at) return null;
+    return sessions.scheduled
+      ? formatSessionWhen(q.session_starts_at, q.session_ends_at, q.timezone ?? undefined)
+      : formatSessionDay(q.session_starts_at, q.timezone ?? undefined);
+  };
   const guestWhen = () => {
     const session = sessions.session;
-    if (quote?.session_starts_at) {
-      return formatSessionWhen(quote.session_starts_at, quote.session_ends_at, quote.timezone ?? undefined);
-    }
+    const fromQuote = quote ? quoteWhen(quote) : null;
+    if (fromQuote) return fromQuote;
     if (session) return formatSessionWhen(session.starts_at, session.ends_at, sessionsQuery.data?.timezone);
     return sessions.dateLabel;
   };
@@ -279,6 +292,8 @@ export function useBookingPanelViewModel({
   return {
     ...ticketSelection,
     durationLabel,
+    cancellationPolicy: cancellationPolicy?.trim() || null,
+    hasTimeSlots: sessions.scheduled && !sessions.noSessions,
     scheduleLabel: schedule ? scheduleLabel(schedule) : null,
     lengthNote:
       sessions.scheduled && sessions.lengthDays > 1
@@ -299,9 +314,7 @@ export function useBookingPanelViewModel({
     quote: quote
       ? {
           updating: quoting,
-          when: quote.session_starts_at
-            ? formatSessionWhen(quote.session_starts_at, quote.session_ends_at, quote.timezone ?? undefined)
-            : null,
+          when: quoteWhen(quote),
           lines: summaryLines(quote, currency),
           savings: savedAmount > 0 ? `You save ${formatPrice(savedAmount, currency)}` : null,
         }

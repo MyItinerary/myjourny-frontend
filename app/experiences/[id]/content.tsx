@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Heart, MapPin, Share2 } from "lucide-react";
+import { ChevronLeft, Heart, Share2 } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
 import { Footer } from "@/components/home/footer";
@@ -11,9 +11,6 @@ import { ExperienceRailSection } from "@/components/home/experience-rail-section
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StarIcon } from "@/components/icons/shared-icons";
-import { ExperienceBeforeYouBook } from "@/components/experiences/experience-before-you-book";
-import { ExperienceItinerary } from "@/components/experiences/experience-itinerary";
-import { ExperienceReviews } from "@/components/experiences/experience-reviews";
 import {
   BookingBarView,
   BookingPanelView,
@@ -23,6 +20,13 @@ import {
   useBookingPanelViewModel,
 } from "@/features/booking";
 import { saveCheckoutDraft } from "@/features/checkout";
+import {
+  ExperienceBeforeYouBookView,
+  ExperienceItineraryView,
+  ExperienceLocationView,
+  ExperienceRatingView,
+  useExperienceDetailsViewModel,
+} from "@/features/experience-details";
 import { ExperienceGalleryView, useExperienceGalleryViewModel } from "@/features/experience-gallery";
 import {
   experienceListItemToCardProps,
@@ -80,6 +84,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
   const gallery = useExperienceGalleryViewModel(experience);
+  const experienceDetails = useExperienceDetailsViewModel(id, experience);
   const { data: prices } = useExperiencePrices(id);
   const minPrice = (prices ?? []).reduce(
     (min, p) => (min === null || p.amount < min ? p.amount : min),
@@ -210,11 +215,15 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
         <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
           <span>{durationLabel}</span>
-          <span aria-hidden>•</span>
-          <span className="inline-flex items-center gap-1">
-            <StarIcon className="size-[14px] fill-brand text-brand" />
-            {(experience.rating ?? 0).toFixed(1)}
-          </span>
+          {experienceDetails.rating && (
+            <>
+              <span aria-hidden>•</span>
+              <span className="inline-flex items-center gap-1">
+                <StarIcon className="size-[14px] fill-brand text-brand" />
+                {experienceDetails.rating}
+              </span>
+            </>
+          )}
           {location && (
             <>
               <span aria-hidden>·</span>
@@ -315,36 +324,10 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               </div>
             </div>
 
-            <section>
-              <h2 className="font-heading text-xl font-bold text-foreground">Before you book</h2>
-              <div className="mt-4">
-                <ExperienceBeforeYouBook experience={experience} />
-              </div>
-            </section>
-
-            <section>
-              <h2 className="font-heading text-xl font-bold text-foreground">Itinerary</h2>
-              <div className="mt-4">
-                <ExperienceItinerary />
-              </div>
-            </section>
-
-            {location && (
-              <section>
-                <h2 className="font-heading text-xl font-bold text-foreground">Where you&apos;ll be</h2>
-                <div className="relative mt-4 flex h-[280px] w-full items-center justify-center rounded-2xl bg-muted">
-                  <div className="flex flex-col items-center gap-1 text-foreground">
-                    <MapPin className="size-6 fill-brand text-brand" />
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium shadow-sm">{location}</span>
-                  </div>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">ⓘ Exact meeting point shared after booking.</p>
-              </section>
-            )}
-
-            <section>
-              <ExperienceReviews rating={experience.rating} />
-            </section>
+            <ExperienceBeforeYouBookView items={experienceDetails.beforeYouBook} />
+            <ExperienceItineraryView steps={experienceDetails.itinerary} />
+            <ExperienceLocationView location={experienceDetails.location} />
+            <ExperienceRatingView rating={experienceDetails.rating} />
           </div>
 
           {hydrated ? (
@@ -359,6 +342,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               schedule={experience}
+              cancellationPolicy={experience.cancellation_policy}
               onGuestBook={onGuestBook}
             />
           ) : null}
@@ -409,6 +393,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               schedule={experience}
+              cancellationPolicy={experience.cancellation_policy}
               onGuestBook={onGuestBook}
               onClose={() => setMobileBookingOpen(false)}
             />
