@@ -206,6 +206,7 @@ export type ExperienceDetail = {
   energy_level?: string | null;
   safety_badge_count?: number | null;
   rating?: number | null;
+  review_count?: number | null;
   cover_image_url?: string | null;
   cancellation_policy?: string | null;
   requirements?: { fitness_level?: string | null; age?: string | null; accessibility?: string | null } | null;
