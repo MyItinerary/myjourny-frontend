@@ -48,12 +48,12 @@ export function ExperienceCardVertical({
       )}
     >
       {id && (
-        <Link href={`/experiences/${id}`} className="absolute inset-0 z-0" aria-label={title} />
+        <Link href={`/experiences/${id}`} className="absolute inset-0 z-0 cursor-pointer" aria-label={title} />
       )}
 
       {/* Figma keeps the photo a fixed 212px tall in every desktop context
           (345px rail cards and 277.5px category-grid cards alike). */}
-      <div className="relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-lg lg:aspect-auto lg:h-[212px]">
+      <div className="pointer-events-none relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-lg lg:aspect-auto lg:h-[212px]">
         <Image
           src={imageSrc}
           alt={imageAlt}
@@ -65,10 +65,13 @@ export function ExperienceCardVertical({
         <button
           type="button"
           aria-label={isSaved ? "Edit wishlists" : "Save to wishlist"}
-          onClick={() => id && openSave(id, title)}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (id) openSave(id, title);
+          }}
           disabled={!id}
           className={cn(
-            "absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors",
+            "pointer-events-auto absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors cursor-pointer",
             isSaved ? "text-brand" : "text-foreground hover:text-brand"
           )}
         >
