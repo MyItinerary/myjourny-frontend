@@ -8,8 +8,7 @@ import { HomeNav } from "@/components/home/home-nav";
 import { CitiesSection } from "@/components/home/cities-section";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
-import { CategoryHeader } from "@/components/categories/category-header";
-import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
+import { CategoryHeader, CategoryResultsGrid } from "@/features/categories";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
 import { cities } from "@/lib/mock-data/home";
 import { experienceListItemToCardProps, useFilteredExperiences } from "@/lib/queries/experiences";
@@ -23,6 +22,9 @@ export function CategoryContent({
   label,
   items,
   isLoading = false,
+  isError = false,
+  errorMessage,
+  onRetry,
   moreLabel,
   loadMore,
   total,
@@ -30,6 +32,9 @@ export function CategoryContent({
   label: string;
   items: ExperienceItem[];
   isLoading?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
   moreLabel?: string;
   loadMore?: ComponentProps<typeof CategoryResultsGrid>["loadMore"];
   /** Exact result count, when the source knows it. */
@@ -56,9 +61,24 @@ export function CategoryContent({
       </div>
 
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-9">
-        <CategoryHeader label={label} count={items.length} total={total} />
+        <CategoryHeader
+          label={label}
+          count={items.length}
+          total={total}
+          isLoading={isLoading}
+          isError={isError}
+        />
         <div className="mt-6 lg:mt-9">
-          <CategoryResultsGrid items={items} categoryLabel={label} isLoading={isLoading} moreLabel={moreLabel} loadMore={loadMore} />
+          <CategoryResultsGrid
+            items={items}
+            categoryLabel={label}
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage={errorMessage}
+            onRetry={onRetry}
+            moreLabel={moreLabel}
+            loadMore={loadMore}
+          />
         </div>
       </div>
 

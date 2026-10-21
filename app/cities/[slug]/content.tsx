@@ -8,8 +8,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { HomeNav } from "@/components/home/home-nav";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
-import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
-import { FilterChip } from "@/components/categories/filter-chip";
+import { CategoryResultsGrid, FilterChip } from "@/features/categories";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
 import { useSession } from "@/lib/auth/session-store";
 import { useInterestCategories } from "@/lib/queries/categories";
@@ -59,8 +58,15 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
 
   const categoryChips = (categoriesQuery.data ?? []).filter((c) => c.parent_id === null);
 
-  const countLabel =
-    total === undefined ? "" : `(${total} ${total === 1 ? "result" : "results"})`;
+  const countLabel = cityQuery.isPending
+    ? "(Loading experiences…)"
+    : cityQuery.isError && items.length === 0
+      ? "(Failed to load)"
+      : total !== undefined
+        ? `(${total} ${total === 1 ? "result" : "results"})`
+        : items.length === 0
+          ? "(0 results)"
+          : `(${items.length}+ results)`;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -136,10 +142,13 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
             items={items}
             categoryLabel={cityName}
             isLoading={cityQuery.isPending}
+            isError={cityQuery.isError}
+            onRetry={() => cityQuery.refetch()}
             moreLabel="Show more"
             loadMore={{
               hasMore: cityQuery.hasNextPage,
               isLoading: cityQuery.isFetchingNextPage,
+              isError: cityQuery.isFetchNextPageError,
               onLoadMore: () => cityQuery.fetchNextPage(),
             }}
           />

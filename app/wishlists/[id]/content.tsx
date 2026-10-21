@@ -30,7 +30,7 @@ export function WishlistDetailContent({ id }: { id: string }) {
   const { data: collections = [] } = useWishlists();
   const currentCollection = collections.find((c) => c.id === id);
 
-  const { data: experiences = [], isLoading } = useWishlistExperiences(id);
+  const { data: experiences = [], isLoading, isError, refetch } = useWishlistExperiences(id);
   const { mutate: removeFromCollection } = useRemoveFromWishlist();
   const { mutate: deleteCollection, isPending: isDeleting } = useDeleteWishlist();
   const { mutate: renameCollection, isPending: isRenaming } = useRenameWishlist();
@@ -61,7 +61,13 @@ export function WishlistDetailContent({ id }: { id: string }) {
             </h1>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-base text-[#6F6B72] sm:text-2xl">
-                {count} {count === 1 ? "experience" : "experiences"} saved
+                {isLoading ? (
+                  "Loading experiences…"
+                ) : isError && experiences.length === 0 ? (
+                  "Failed to load experiences"
+                ) : (
+                  `${count} ${count === 1 ? "experience" : "experiences"} saved`
+                )}
                 {currentCollection ? ` · Updated ${formatUpdated(currentCollection.updated_at)}` : ""}
               </p>
               <div className="flex items-center gap-6 text-sm font-medium text-[#212121]">
@@ -91,6 +97,20 @@ export function WishlistDetailContent({ id }: { id: string }) {
             <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
               <div className="size-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
               <p className="mt-3 text-sm">Loading saved experiences...</p>
+            </div>
+          ) : isError && experiences.length === 0 ? (
+            <div className="flex flex-col items-center gap-4 px-4 py-20 text-center">
+              <h2 className="font-heading text-2xl font-bold text-[#130404]">Failed to load experiences</h2>
+              <p className="max-w-sm text-base text-[#6F6B72]">
+                We couldn&apos;t load the experiences in this wishlist. Please try again.
+              </p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="mt-2 inline-flex items-center justify-center rounded-full bg-[#F5032D] px-4 py-3 text-base font-medium text-white transition-colors hover:bg-[#d90227] cursor-pointer"
+              >
+                Try again
+              </button>
             </div>
           ) : experiences.length === 0 ? (
             <div className="flex flex-col items-center gap-4 px-4 py-20 text-center">
