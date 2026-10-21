@@ -142,11 +142,11 @@ export function CategoryResultsGrid({
           >
             {loadMore?.isLoading
               ? "Loading..."
-              : isError || loadMore?.isError
+              : loadMore?.isError
                 ? "Retry loading more"
                 : moreLabel}
           </Button>
-          {(isError || loadMore?.isError) && (
+          {loadMore?.isError && (
             <p className="text-xs text-muted-foreground">
               Couldn&apos;t load more experiences. Tap to retry.
             </p>

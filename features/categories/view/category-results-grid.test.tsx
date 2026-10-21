@@ -125,4 +125,32 @@ describe("CategoryResultsGrid", () => {
     await user.click(retryButton);
     expect(handleLoadMore).toHaveBeenCalledOnce();
   });
+
+  it("does not show load-more error when background refetch fails but load-more has not failed", () => {
+    const handleLoadMore = vi.fn();
+    renderWithProviders(
+      <CategoryResultsGrid
+        items={mockItems}
+        categoryLabel="Beaches"
+        isLoading={false}
+        isError={true}
+        moreLabel="Show more"
+        loadMore={{
+          hasMore: true,
+          isLoading: false,
+          isError: false,
+          onLoadMore: handleLoadMore,
+        }}
+      />
+    );
+
+    // Existing cards are preserved
+    expect(screen.getByText("Surfing in Tarkwa Bay")).toBeInTheDocument();
+    expect(screen.queryByText("Failed to load experiences")).not.toBeInTheDocument();
+
+    // Regular "Show more" button is shown, not "Retry loading more"
+    expect(screen.getByRole("button", { name: "Show more" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry loading more" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Couldn't load more experiences. Tap to retry.")).not.toBeInTheDocument();
+  });
 });
