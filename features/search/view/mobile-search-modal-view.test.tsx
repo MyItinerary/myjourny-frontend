@@ -14,6 +14,7 @@ describe("MobileSearchModalView", () => {
     debouncedWhere: "",
     selectedWhen: "",
     selectedDate: new Date(2030, 5, 1),
+    minDate: new Date(2030, 5, 1),
     whoText: "",
     guests: { adults: 0, children: 0, infants: 0 },
     totalGuests: 0,
