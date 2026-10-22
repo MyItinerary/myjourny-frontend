@@ -72,4 +72,15 @@ describe("MobileSearchModalView", () => {
     await user.type(input, "{enter}");
     expect(onSearch).toHaveBeenCalled();
   });
+
+  it("has a Search button, off until something is typed", async () => {
+    const onSearch = vi.fn();
+    const { user, rerender } = renderWithProviders(<MobileSearchModalView {...defaultVm} onSearch={onSearch} />);
+
+    expect(screen.getByRole("button", { name: "Search" })).toBeDisabled();
+    rerender(<MobileSearchModalView {...defaultVm} selectedWhere="Lagos" onSearch={onSearch} />);
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    expect(onSearch).toHaveBeenCalled();
+    expect(screen.getByRole("searchbox", { name: /Search destinations/ })).toHaveAttribute("enterkeyhint", "search");
+  });
 });

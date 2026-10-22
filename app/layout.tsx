@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@fontsource/tiktok-sans/400.css";
 import "@fontsource/tiktok-sans/500.css";
 import "@fontsource/tiktok-sans/600.css";
@@ -6,6 +6,11 @@ import "@fontsource/tiktok-sans/700.css";
 import "@fontsource/tiktok-sans/800.css";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { MobileTabBar } from "./mobile-tab-bar";
+
+// viewportFit "cover" lets the phone bottom bar sit under the iPhone home
+// indicator, padded by env(safe-area-inset-bottom).
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export const metadata: Metadata = {
   title: "MyJourny",
@@ -23,7 +28,10 @@ export default function RootLayout({
       className="h-full antialiased overflow-x-clip"
     >
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-clip">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <MobileTabBar />
+        </Providers>
       </body>
     </html>
   );

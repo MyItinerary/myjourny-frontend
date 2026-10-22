@@ -14,6 +14,7 @@ import { useLogout } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { SearchBarView, useSearchBarViewModel } from "@/features/search";
+import { openMobileSearch } from "@/features/mobile-nav";
 
 // Illustrated nav/menu icons (Figma "image 16"): the 44px artwork is cropped
 // to a 32px window, so it's shifted by -6px inside an overflow-clip box.
@@ -174,7 +175,6 @@ export function HomeNav({ className }: { className?: string }) {
         setIsSearchExpanded(false);
         setActiveSearchTab(null);
       }
-      setProfileMenuOpen(false);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
@@ -392,7 +392,10 @@ export function HomeNav({ className }: { className?: string }) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.92 }}
                 transition={{ duration: 0.2 }}
-                onClick={() => handleOpenSearch("where")}
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  openMobileSearch();
+                }}
                 className="mx-2 flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-full border border-[#E0DFDD] bg-[#F4F2EE] py-1.5 pl-3 pr-1.5 shadow-xs transition-all hover:border-[#c7c1ba] sm:mx-3 lg:hidden cursor-pointer"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
@@ -409,6 +412,16 @@ export function HomeNav({ className }: { className?: string }) {
 
             {/* Right Nav: Notifications + Profile Icon Trigger + Dropdown Menu */}
             <div className="relative flex items-center gap-2 sm:gap-3 shrink-0">
+              {!isScrolled && (
+                <button
+                  type="button"
+                  aria-label="Search"
+                  onClick={() => openMobileSearch()}
+                  className="flex size-11 shrink-0 items-center justify-center rounded-[12px] bg-white text-[#333134] shadow-[0_1px_4px_rgba(0,0,0,0.04)] lg:hidden cursor-pointer"
+                >
+                  <Search className="size-5" />
+                </button>
+              )}
               <Link
                 href="#"
                 className="hidden text-base font-medium text-foreground transition-colors hover:text-brand lg:inline-block mr-1"
@@ -450,7 +463,7 @@ export function HomeNav({ className }: { className?: string }) {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -6 }}
                         transition={{ duration: 0.16, ease: "easeOut" }}
-                        className="absolute right-0 top-[calc(100%+12px)] z-50"
+                        className="fixed inset-x-4 top-[76px] z-50 sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+12px)]"
                       >
                         <NotificationsDropdown
                           onClose={() => setNotificationsOpen(false)}
@@ -502,8 +515,22 @@ export function HomeNav({ className }: { className?: string }) {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -6 }}
                       transition={{ duration: 0.18, ease: "easeOut" }}
-                      className="absolute right-0 top-[calc(100%+12px)] z-50 w-[401px] max-w-[calc(100vw-32px)] rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
+                      className="absolute right-0 top-[calc(100%+12px)] z-50 max-h-[calc(100dvh-96px)] w-[401px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
                     >
+                      <div className="lg:hidden">
+                        <MenuRow
+                          href="/"
+                          onClick={() => setProfileMenuOpen(false)}
+                          icon="/icons/nav/home.png"
+                          label="Home"
+                        />
+                        <MenuRow
+                          href={user ? "/wishlists" : "/login"}
+                          onClick={() => setProfileMenuOpen(false)}
+                          icon="/icons/nav/wishlist.png"
+                          label="Wishlists"
+                        />
+                      </div>
                       <MenuRow
                         href="/my-experiences"
                         onClick={() => setProfileMenuOpen(false)}
@@ -571,7 +598,7 @@ export function HomeNav({ className }: { className?: string }) {
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.24, ease: "easeOut" }}
-                className="overflow-visible pb-4 pt-1 px-4 lg:px-20"
+                className="hidden overflow-visible pb-4 pt-1 px-4 lg:block lg:px-20"
               >
                 <div className="mx-auto flex w-full max-w-[860px] justify-center">
                   <NavSearchBar
