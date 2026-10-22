@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Heart, Share2 } from "lucide-react";
@@ -99,6 +100,24 @@ export function ExperienceDetailContent({ id }: { id: string }) {
     : (guestSimilarQuery.data?.items ?? []).filter((item) => item.id !== id).map(experienceListItemToCardProps);
 
   const [saveModalOpen, setSaveModalOpen] = useState(false);
+  // The phone's share sheet where there is one; otherwise copy the link.
+  const onShare = async () => {
+    const url = window.location.href;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: experience?.title, url });
+      } catch {
+        // Closing the share sheet isn't an error.
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Couldn't copy the link");
+    }
+  };
   const { data: wishlistIds } = useMyWishlistedIds();
   const isSaved = wishlistIds?.has(id) ?? false;
 
@@ -176,7 +195,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           >
             <Heart className={cn("size-[18px]", isSaved ? "fill-brand text-brand" : "text-foreground")} />
           </button>
-          <button type="button" aria-label="Share" className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm">
+          <button type="button" aria-label="Share" onClick={onShare} className="flex size-10 items-center justify-center rounded-full bg-white shadow-sm cursor-pointer">
             <Share2 className="size-[18px] text-foreground" />
           </button>
         </div>
@@ -202,7 +221,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               <Heart className={cn("size-4", isSaved && "fill-brand text-brand")} />
               {isSaved ? "Saved" : "Add to wishlist"}
             </button>
-            <button type="button" className="flex items-center gap-1.5">
+            <button type="button" onClick={onShare} className="flex items-center gap-1.5 cursor-pointer">
               <Share2 className="size-4" />
               Share
             </button>
@@ -384,7 +403,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             onClick={() => setMobileBookingOpen(false)}
             className="absolute inset-0 bg-black/40"
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl">
+          <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
             <BookingPanel
               className="rounded-t-2xl rounded-b-none border-b-0"
               experienceId={experience.id}

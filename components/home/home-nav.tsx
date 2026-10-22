@@ -411,7 +411,7 @@ export function HomeNav({ className }: { className?: string }) {
             <div className="relative flex items-center gap-2 sm:gap-3 shrink-0">
               <Link
                 href="#"
-                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand lg:inline-block mr-1"
+                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand xl:inline-block mr-1"
               >
                 Become a guide
               </Link>

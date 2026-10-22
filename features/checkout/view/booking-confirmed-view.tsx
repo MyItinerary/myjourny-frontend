@@ -14,7 +14,7 @@ import type { BookingConfirmation } from "../model/booking-confirmation.types";
 function Card({ confirmation, className }: { confirmation: BookingConfirmation; className?: string }) {
   return (
     <div className={cn("flex flex-col gap-[17px] rounded-[17px] border border-[#E6E6E6] bg-white p-6", className)}>
-      <div className="relative h-[309px] w-full overflow-hidden rounded-3xl bg-muted">
+      <div className="relative h-[200px] w-full overflow-hidden rounded-3xl bg-muted lg:h-[309px]">
         {confirmation.imageUrl && (
           <Image src={confirmation.imageUrl} alt="" fill sizes="503px" unoptimized className="object-cover" />
         )}
@@ -75,7 +75,7 @@ export function BookingConfirmedView({ confirmation }: { confirmation: BookingCo
 
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
         {open && <button type="button" aria-label="Close" onClick={() => setOpen(false)} className="fixed inset-0 -z-10 bg-black/40" />}
-        <div className="rounded-t-2xl border-t border-[#E6E6E6] bg-white">
+        <div className="max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t border-[#E6E6E6] bg-white pb-[env(safe-area-inset-bottom)]">
           {open && <Card confirmation={confirmation} className="m-4 border-0 p-0" />}
           <div className="flex items-center gap-3 p-4">
             <div className="relative size-[60px] shrink-0 overflow-hidden rounded-lg bg-muted">

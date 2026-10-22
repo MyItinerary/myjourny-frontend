@@ -223,7 +223,7 @@ export function NotificationsDropdown({
                   e.stopPropagation();
                   deleteNotification(notification.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-[#EAE8E3] hover:text-destructive transition-all shrink-0 cursor-pointer"
+                className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 flex size-10 lg:size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-[#EAE8E3] hover:text-destructive transition-all shrink-0 cursor-pointer"
                 title="Delete"
               >
                 <Trash2 className="size-3.5" />

@@ -127,7 +127,7 @@ export function ExperienceRailSection({
                 /* basis includes the pl gap: 345px card + 24px (mobile) / 34px (lg) */
                 <CarouselContent className="-ml-6 lg:-ml-[34px]">
                   {items.map((item) => (
-                    <CarouselItem key={item.id} className="basis-[369px] pl-6 lg:basis-[379px] lg:pl-[34px]">
+                    <CarouselItem key={item.id} className="basis-[85%] pl-6 sm:basis-[369px] lg:basis-[379px] lg:pl-[34px]">
                       <ExperienceCardVertical {...item} />
                     </CarouselItem>
                   ))}
@@ -163,14 +163,14 @@ export function ExperienceRailSection({
           ? chunk(Array.from({ length: 3 }), 2).map((row, index) => (
               <div key={index} className="-mr-6 flex gap-3 overflow-hidden pr-6">
                 {row.map((_, itemIndex) => (
-                  <ExperienceCardSkeleton key={itemIndex} className="w-[360px] shrink-0 p-0" />
+                  <ExperienceCardSkeleton key={itemIndex} className="w-[85vw] max-w-[360px] shrink-0 p-0" />
                 ))}
               </div>
             ))
           : chunk(items.slice(0, 3), 2).map((row, index) => (
               <div key={index} className="-mr-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pr-6">
                 {row.map((item) => (
-                  <ExperienceCard key={item.id} {...item} className="w-[360px] shrink-0 snap-start p-0" />
+                  <ExperienceCard key={item.id} {...item} className="w-[85vw] max-w-[360px] shrink-0 snap-start p-0" />
                 ))}
               </div>
             ))}

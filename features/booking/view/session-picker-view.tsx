@@ -88,7 +88,7 @@ export function SessionDateView({ selectedDate, dateLabel, minDate, isDateSelect
         <ChevronDown className="size-4 text-[#130404]" />
       </button>
       {open && (
-        <div className="absolute top-[calc(100%+8px)] left-0 z-50 w-full min-w-[320px] rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="absolute top-[calc(100%+8px)] left-0 z-50 w-full min-w-0 rounded-[28px] sm:min-w-[320px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <DatePickerCalendar
             selectedDate={selectedDate}
             minDate={minDate}

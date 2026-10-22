@@ -60,7 +60,7 @@ export function CategoryContent({
         </div>
       </div>
 
-      <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-9">
+      <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-10 xl:px-[150px] lg:pt-9 lg:pb-9">
         <CategoryHeader
           label={label}
           count={items.length}

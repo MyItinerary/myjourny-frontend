@@ -1,5 +1,5 @@
 const BUTTON_CLASS =
-  "flex size-6 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer disabled:cursor-not-allowed";
+  "flex size-10 items-center justify-center rounded-full border border-[#F5032D] text-[#F5032D] transition-colors hover:bg-[#F5032D]/10 disabled:opacity-40 disabled:border-[#CDCDCD] disabled:text-[#CDCDCD] cursor-pointer disabled:cursor-not-allowed lg:size-6";
 
 export function Stepper({
   label,

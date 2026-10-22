@@ -96,7 +96,7 @@ export function ModalShell({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(44,1,1,0.38)] p-4">
       <div
-        className="max-h-[85vh] w-full overflow-auto rounded-2xl bg-white shadow-sm"
+        className="max-h-[85dvh] w-full overflow-auto rounded-2xl bg-white shadow-sm"
         style={{ maxWidth: width }}
       >
         <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-5">
@@ -104,7 +104,7 @@ export function ModalShell({
           <button
             type="button"
             onClick={onClose}
-            className="cursor-pointer text-muted-foreground hover:text-foreground"
+            className="-mr-2 flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Close"
           >
             <X size={20} />

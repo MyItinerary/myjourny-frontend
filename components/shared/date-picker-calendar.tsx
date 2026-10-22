@@ -102,7 +102,7 @@ export function DatePickerCalendar({
             type="button"
             onClick={() => setViewDate(new Date(year, month - 1, 1))}
             aria-label="Previous month"
-            className="flex size-7 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE] cursor-pointer"
+            className="flex size-10 items-center justify-center rounded-full text-[#130404] sm:size-7 transition-colors hover:bg-[#F4F2EE] cursor-pointer"
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -111,7 +111,7 @@ export function DatePickerCalendar({
             type="button"
             onClick={() => setViewDate(new Date(year, month + 1, 1))}
             aria-label="Next month"
-            className="flex size-7 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE] cursor-pointer"
+            className="flex size-10 items-center justify-center rounded-full text-[#130404] sm:size-7 transition-colors hover:bg-[#F4F2EE] cursor-pointer"
           >
             <ChevronRight className="size-4" />
           </button>
@@ -136,7 +136,7 @@ export function DatePickerCalendar({
                   disabled={isDisabled}
                   onClick={() => onSelect(date)}
                   className={cn(
-                    "flex h-8 w-8 items-center justify-center text-center font-sans text-xs font-normal transition-colors cursor-pointer",
+                    "flex size-10 items-center justify-center text-center font-sans text-sm sm:size-8 sm:text-xs font-normal transition-colors cursor-pointer",
                     isSelected
                       ? "rounded-[8px] bg-[#F5032D] font-medium text-white shadow-sm"
                       : isDisabled
