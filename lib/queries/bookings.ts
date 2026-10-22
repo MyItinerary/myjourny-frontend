@@ -4,7 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { apiErrorMessage } from "@/lib/api-error";
-import { useSession } from "@/lib/auth/session-store";
+import { getTokens, useSession } from "@/lib/auth/session-store";
 
 export type Booking = {
   id: string;
@@ -101,14 +101,14 @@ export const PROCESSING_TIMEOUT_MS = 90_000;
 // GET /bookings/{id}. While the payment is still processing, polls until the
 // provider's webhook confirms it or `pollUntil` (a timestamp) passes.
 export function useBooking(bookingId: string, { pollUntil }: { pollUntil?: number } = {}) {
-  const { user } = useSession();
+  const { user, hydrated } = useSession();
   return useQuery({
     queryKey: ["bookings", bookingId],
     queryFn: async () => {
       const { data } = await apiClient.get<Booking>(`/bookings/${bookingId}`);
       return data;
     },
-    enabled: !!user && !!bookingId,
+    enabled: !!bookingId && (!hydrated || !!user || !!getTokens().accessToken),
     refetchInterval: (query) => {
       const booking = query.state.data;
       if (!pollUntil || !booking || bookingPaymentState(booking) !== "processing") return false;
@@ -138,7 +138,7 @@ export function useRetryBookingPayment() {
 
 // GET /bookings/{id}/cancellation — the latest cancellation request, if any.
 export function useCancellationRequest(bookingId: string) {
-  const { user } = useSession();
+  const { user, hydrated } = useSession();
   return useQuery({
     queryKey: ["bookings", bookingId, "cancellation"],
     queryFn: async () => {
@@ -147,7 +147,7 @@ export function useCancellationRequest(bookingId: string) {
       );
       return data;
     },
-    enabled: !!user && !!bookingId,
+    enabled: !!bookingId && (!hydrated || !!user || !!getTokens().accessToken),
   });
 }
 
