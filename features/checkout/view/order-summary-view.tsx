@@ -113,7 +113,7 @@ export function OrderSummaryView({ summary, className }: { summary: OrderSummary
         {open && (
           <button type="button" aria-label="Close order details" onClick={() => setOpen(false)} className="fixed inset-0 -z-10 bg-black/40" />
         )}
-        <div className="flex max-h-[85vh] flex-col overflow-y-auto rounded-t-2xl bg-white">
+        <div className="flex max-h-[85dvh] flex-col overflow-y-auto rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)]">
           {open && (
             <div className="flex flex-col gap-4 pt-4 pb-4">
               <Details summary={summary} />

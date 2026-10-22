@@ -95,7 +95,7 @@ export function SearchBarView({
             onKeyDown={(e) => {
               if (e.key === "Enter") onSearch();
             }}
-            className="w-full border-0 bg-transparent p-0 font-sans text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-0 leading-tight"
+            className="w-full border-0 bg-transparent p-0 font-sans text-base text-foreground placeholder:text-muted-foreground lg:text-sm outline-none focus:ring-0 leading-tight"
           />
         </div>
 
@@ -121,7 +121,7 @@ export function SearchBarView({
             placeholder="Add dates"
             readOnly
             onFocus={() => setActiveTab("when")}
-            className="w-full border-0 bg-transparent p-0 font-sans text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-0 leading-tight cursor-pointer"
+            className="w-full border-0 bg-transparent p-0 font-sans text-base text-foreground placeholder:text-muted-foreground lg:text-sm outline-none focus:ring-0 leading-tight cursor-pointer"
           />
         </div>
 
@@ -147,7 +147,7 @@ export function SearchBarView({
             placeholder="Add guests"
             onFocus={() => setActiveTab("who")}
             onChange={(e) => setWhoInput(e.target.value)}
-            className="w-full border-0 bg-transparent p-0 font-sans text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-0 leading-tight"
+            className="w-full border-0 bg-transparent p-0 font-sans text-base text-foreground placeholder:text-muted-foreground lg:text-sm outline-none focus:ring-0 leading-tight"
           />
         </div>
       </div>

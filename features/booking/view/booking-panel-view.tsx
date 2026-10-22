@@ -26,7 +26,7 @@ export function BookingPanelView(props: Props) {
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full bg-muted text-foreground"
+          className="absolute top-3 right-3 flex size-10 items-center justify-center rounded-full bg-muted text-foreground"
         >
           <X className="size-4" />
         </button>
@@ -152,7 +152,7 @@ function CheckoutSummary({ promo, quote, quoteError, booking, total }: BookingPa
             onChange={(e) => promo.onInputChange(e.target.value)}
             placeholder="Promo code"
             aria-label="Promo code"
-            className="flex-1 rounded-[24px] border border-[#E0DFDD] bg-white px-4 py-2 text-sm uppercase placeholder:normal-case"
+            className="min-w-0 flex-1 rounded-[24px] border border-[#E0DFDD] bg-white px-4 py-2 text-base uppercase placeholder:normal-case lg:text-sm"
           />
           <Button type="submit" variant="outline" className="rounded-[24px]">
             Apply

@@ -52,7 +52,7 @@ export function WhoGuestsDropdownView({
                 type="button"
                 disabled={guests[type.key] <= 0}
                 onClick={() => decrementGuest(type.key)}
-                className="flex size-9 items-center justify-center rounded-full border border-[#e0dfdd] text-lg font-light text-[#130404] transition-colors hover:border-[#130404] disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
+                className="flex size-10 items-center justify-center rounded-full border border-[#e0dfdd] text-lg font-light text-[#130404] transition-colors hover:border-[#130404] disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
               >
                 -
               </button>
@@ -62,7 +62,7 @@ export function WhoGuestsDropdownView({
               <button
                 type="button"
                 onClick={() => incrementGuest(type.key)}
-                className="flex size-9 items-center justify-center rounded-full border border-[#e0dfdd] text-lg font-light text-[#130404] transition-colors hover:border-[#130404] cursor-pointer"
+                className="flex size-10 items-center justify-center rounded-full border border-[#e0dfdd] text-lg font-light text-[#130404] transition-colors hover:border-[#130404] cursor-pointer"
               >
                 +
               </button>
