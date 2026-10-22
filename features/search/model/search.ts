@@ -13,6 +13,22 @@ import type {
 
 export { FALLBACK_IMAGE };
 
+/** Midnight today, local time: the earliest day a search can be for. */
+export function startOfToday(now: Date = new Date()): Date {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+/** A local date as YYYY-MM-DD, the form the API's `date` filter takes. */
+export function toIsoDay(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** A results page link, carrying the searched day when there is one. */
+export function withDate(path: string, isoDay: string | null): string {
+  return isoDay ? `${path}?date=${isoDay}` : path;
+}
+
 export const DEFAULT_DESTINATIONS: DestinationSuggestion[] = [
   ...suggestedDestinations,
   { id: "abeokuta", city: "Abeokuta, Nigeria", description: "For its iconic rocks and heritage" },

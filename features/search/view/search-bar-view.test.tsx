@@ -14,6 +14,7 @@ describe("SearchBarView", () => {
     debouncedWhere: "",
     selectedWhen: "",
     selectedDate: new Date(2030, 5, 1),
+    minDate: new Date(2030, 5, 1),
     whoText: "",
     guests: { adults: 0, children: 0, infants: 0 },
     totalGuests: 0,
@@ -65,6 +66,15 @@ describe("SearchBarView", () => {
 
     expect(screen.getByText("Sun")).toBeInTheDocument();
     expect(screen.getByText("Mon")).toBeInTheDocument();
+  });
+
+  it("greys out days before the earliest date that can be searched", () => {
+    renderWithProviders(
+      <SearchBarView {...defaultVm} activeTab="when" selectedDate={new Date(2030, 5, 10)} minDate={new Date(2030, 5, 10)} />,
+    );
+
+    expect(screen.getByRole("button", { name: "9" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "10" })).toBeEnabled();
   });
 
   it("renders guest selectors when activeTab is 'who'", async () => {

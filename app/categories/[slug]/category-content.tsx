@@ -1,6 +1,9 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
 import { CategoryContent } from "./content";
+import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 import { experienceListItemToCardProps, useInfiniteFilteredExperiences } from "@/lib/queries/experiences";
 import { findCategoryBySlug, useInterestCategories } from "@/lib/queries/categories";
@@ -18,7 +21,9 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
   const matchedCategory = categoriesQuery.data ? findCategoryBySlug(categoriesQuery.data, slug) : undefined;
   const resolvedLabel = matchedCategory ? matchedCategory.text : label;
 
-  const query = useInfiniteFilteredExperiences({ interest: slug, pageSize: PAGE_SIZE, enabled: hydrated });
+  // A day picked in the search bar narrows the results to that day.
+  const date = useSearchParams().get("date") ?? undefined;
+  const query = useInfiniteFilteredExperiences({ interest: slug, date, pageSize: PAGE_SIZE, enabled: hydrated });
 
   return (
     <CategoryContent
@@ -27,6 +32,7 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
       total={query.data?.pages[0]?.total}
       isLoading={!hydrated || query.isPending}
       isError={query.isError}
+      errorMessage={query.isError ? apiErrorMessage(query.error, "Couldn't load experiences.") : undefined}
       onRetry={() => query.refetch()}
       loadMore={{
         hasMore: query.hasNextPage,
