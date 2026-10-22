@@ -13,7 +13,11 @@ const cityQueryState = vi.hoisted(() => ({
   isFetchNextPageError: false,
   refetch: vi.fn(),
   fetchNextPage: vi.fn(),
+  lastFilters: undefined as Record<string, unknown> | undefined,
 }));
+
+const searchParams = vi.hoisted(() => ({ current: new URLSearchParams() }));
+vi.mock("next/navigation", () => ({ useSearchParams: () => searchParams.current }));
 
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav data-testid="home-nav" /> }));
 vi.mock("@/components/home/footer", () => ({ Footer: () => <footer data-testid="footer" /> }));
@@ -38,16 +42,19 @@ vi.mock("@/lib/queries/categories", () => ({
 }));
 
 vi.mock("@/lib/queries/experiences", () => ({
-  useInfiniteFilteredExperiences: () => ({
-    data: cityQueryState.data,
-    isPending: cityQueryState.isPending,
-    isError: cityQueryState.isError,
-    hasNextPage: cityQueryState.hasNextPage,
-    isFetchingNextPage: cityQueryState.isFetchingNextPage,
-    isFetchNextPageError: cityQueryState.isFetchNextPageError,
-    refetch: cityQueryState.refetch,
-    fetchNextPage: cityQueryState.fetchNextPage,
-  }),
+  useInfiniteFilteredExperiences: (filters: Record<string, unknown>) => {
+    cityQueryState.lastFilters = filters;
+    return {
+      data: cityQueryState.data,
+      isPending: cityQueryState.isPending,
+      isError: cityQueryState.isError,
+      hasNextPage: cityQueryState.hasNextPage,
+      isFetchingNextPage: cityQueryState.isFetchingNextPage,
+      isFetchNextPageError: cityQueryState.isFetchNextPageError,
+      refetch: cityQueryState.refetch,
+      fetchNextPage: cityQueryState.fetchNextPage,
+    };
+  },
   useRecommendedExperiences: () => ({ data: [], isPending: false }),
   useFilteredExperiences: () => ({ data: { items: [] }, isPending: false }),
   experienceListItemToCardProps: (item: {
@@ -76,6 +83,13 @@ vi.mock("@/lib/queries/experiences", () => ({
 }));
 
 describe("CityContent", () => {
+  it("asks for the day picked in the search bar", () => {
+    searchParams.current = new URLSearchParams("date=2030-06-01");
+    renderWithProviders(<CityContent cityName="Abuja" />);
+    expect(cityQueryState.lastFilters).toMatchObject({ city: "Abuja", date: "2030-06-01" });
+    searchParams.current = new URLSearchParams();
+  });
+
   it("displays loading placeholder in title and skeletons in grid while pending", () => {
     cityQueryState.isPending = true;
     cityQueryState.isError = false;

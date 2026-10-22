@@ -7,6 +7,9 @@ import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
 import {
+  startOfToday,
+  toIsoDay,
+  withDate,
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
   FALLBACK_IMAGE,
@@ -34,6 +37,13 @@ describe("search model constants & mappers", () => {
       "events-live-shows", "concerts-festivals", "comedy-theatre", "sports-watch-parties",
     ]);
     expect(DEFAULT_ACTIVITIES.filter((a) => !interestSlugs.has(a.id)).map((a) => a.id)).toEqual([]);
+  });
+
+  it("formats the searched day for links and the API", () => {
+    expect(toIsoDay(new Date(2030, 0, 5))).toBe("2030-01-05");
+    expect(withDate("/cities/lagos", "2030-01-05")).toBe("/cities/lagos?date=2030-01-05");
+    expect(withDate("/cities/lagos", null)).toBe("/cities/lagos");
+    expect(startOfToday(new Date(2030, 0, 5, 17, 30))).toEqual(new Date(2030, 0, 5));
   });
 
   it("builds consistent query keys", () => {

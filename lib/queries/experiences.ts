@@ -376,6 +376,8 @@ export type ExperienceFilters = {
   duration_max?: number;
   time_of_day?: string;
   rating_min?: number;
+  /** YYYY-MM-DD: only experiences someone can start that day (today or later). */
+  date?: string;
   sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
 };
 
