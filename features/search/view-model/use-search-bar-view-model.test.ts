@@ -109,6 +109,29 @@ describe("useSearchBarViewModel", () => {
     expect(mockPush).toHaveBeenCalledWith("/experiences/exp-123");
   });
 
+  it("suggests the cities that have experiences, and finds a typed one", async () => {
+    server.use(
+      http.get(apiUrl("/experiences/cities"), () =>
+        HttpResponse.json([
+          { slug: "lagos", name: "Lagos", country: "Nigeria", count: 25, image_url: null },
+          { slug: "umuahia", name: "Umuahia", country: "Nigeria", count: 1, image_url: null },
+        ]),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    await waitFor(() =>
+      expect(result.current.filteredDestinations).toEqual([
+        { id: "lagos", city: "Lagos, Nigeria", description: "25 experiences" },
+        { id: "umuahia", city: "Umuahia, Nigeria", description: "1 experience" },
+      ]),
+    );
+
+    act(() => result.current.setWhereInput("umua"));
+    act(() => result.current.onSearch());
+    expect(mockPush).toHaveBeenCalledWith("/cities/umuahia");
+  });
+
   it("navigates to city route on destination selection", () => {
     mockPush.mockClear();
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());

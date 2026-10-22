@@ -19,7 +19,8 @@ import { CitiesSection } from "@/components/home/cities-section";
 import { NewsletterSection } from "@/components/home/newsletter-section";
 import { Footer } from "@/components/home/footer";
 import { TasteQuizSectionView, useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
-import { accountCategories, cities, guestCategories } from "@/lib/mock-data/home";
+import { accountCategories, guestCategories } from "@/lib/mock-data/home";
+import { useDiscoverCitiesViewModel } from "@/features/cities";
 
 // Figma "Home" (2001:9142 guest / 2001:9152 account, mobile 2001:9168 /
 // 2001:9462) — both states share the same 9 sections. Guests see
@@ -31,6 +32,7 @@ import { accountCategories, cities, guestCategories } from "@/lib/mock-data/home
 export function HomeContent() {
   const { user, hydrated } = useSession();
   const isAccount = user !== null;
+  const discoverCities = useDiscoverCitiesViewModel();
   // Wait for the stored session so signed-in users don't fire guest queries.
   const isGuest = hydrated && !isAccount;
 
@@ -168,9 +170,11 @@ export function HomeContent() {
         </Reveal>
       )}
 
-      <Reveal>
-        <CitiesSection cities={cities} />
-      </Reveal>
+      {discoverCities.show && (
+        <Reveal>
+          <CitiesSection cities={discoverCities.cities} />
+        </Reveal>
+      )}
 
       {isAccount ? (
         !browsingHistoryIsLoading && realBrowsingHistoryItems.length === 0 ? null : (
