@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { HomeNav } from "@/components/home/home-nav";
+import { openMobileSearch } from "@/features/mobile-nav";
 import { CitiesSection } from "@/components/home/cities-section";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
@@ -54,10 +55,14 @@ export function CategoryContent({
         >
           <ChevronLeftIcon className="size-[22px] text-foreground" />
         </Link>
-        <div className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5">
+        <button
+          type="button"
+          onClick={() => openMobileSearch()}
+          className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5 text-left cursor-pointer"
+        >
           <Image src="/icons/search-lg.svg" alt="" width={18} height={18} />
           <span className="text-sm text-muted-foreground">Discover locations</span>
-        </div>
+        </button>
       </div>
 
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-9">

@@ -31,17 +31,19 @@ export function MobileSearchModalView({
           type="button"
           aria-label="Close search"
           onClick={onClose}
-          className="flex size-9 items-center justify-center rounded-full bg-[#F4F2EE] text-[#130404] cursor-pointer"
+          className="flex size-10 items-center justify-center rounded-full bg-[#F4F2EE] text-[#130404] cursor-pointer"
         >
           <X className="size-5" />
         </button>
       </div>
 
-      <div className="mt-4 flex items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3 shadow-xs">
+      <div className="mt-4 flex items-center gap-2 rounded-full border border-[#c7c1ba] bg-white py-1.5 pr-1.5 pl-4 shadow-xs">
         <Image src="/icons/search-lg.svg" alt="" width={18} height={18} />
         <input
           autoFocus
-          type="text"
+          type="search"
+          enterKeyHint="search"
+          aria-label="Search destinations or activities"
           value={selectedWhere}
           onChange={(e) => setWhereInput(e.target.value)}
           onKeyDown={(e) => {
@@ -50,6 +52,14 @@ export function MobileSearchModalView({
           placeholder="Search destinations or activities"
           className="w-full border-0 bg-transparent font-sans text-base text-[#130404] placeholder:text-muted-foreground outline-none"
         />
+        <button
+          type="button"
+          onClick={() => onSearch()}
+          disabled={!selectedWhere.trim()}
+          className="shrink-0 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-40 cursor-pointer"
+        >
+          Search
+        </button>
       </div>
 
       <div className="mt-6 flex-1 overflow-y-auto pr-1">
