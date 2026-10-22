@@ -4,7 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { apiErrorMessage } from "@/lib/api-error";
-import { useSession } from "@/lib/auth/session-store";
+import { getTokens, useSession } from "@/lib/auth/session-store";
 
 export type Booking = {
   id: string;
@@ -108,7 +108,7 @@ export function useBooking(bookingId: string, { pollUntil }: { pollUntil?: numbe
       const { data } = await apiClient.get<Booking>(`/bookings/${bookingId}`);
       return data;
     },
-    enabled: !!user && !!bookingId,
+    enabled: !!bookingId && (!!user || !!getTokens().accessToken),
     refetchInterval: (query) => {
       const booking = query.state.data;
       if (!pollUntil || !booking || bookingPaymentState(booking) !== "processing") return false;
@@ -147,7 +147,7 @@ export function useCancellationRequest(bookingId: string) {
       );
       return data;
     },
-    enabled: !!user && !!bookingId,
+    enabled: !!bookingId && (!!user || !!getTokens().accessToken),
   });
 }
 

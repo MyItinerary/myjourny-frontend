@@ -126,8 +126,8 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   // Nothing to check out (a refresh in a new tab, or storage was blocked):
   // back to browsing.
   useEffect(() => {
-    if (hydrated && !draft) router.replace("/");
-  }, [hydrated, draft, router]);
+    if (hydrated && !draft && !paying) router.replace("/");
+  }, [hydrated, draft, paying, router]);
 
   const total = draft ? (quote ? formatPriceOrFree(Number(quote.total), draft.currency) : draft.total) : "";
   // Nothing to pay: the booking is confirmed without a payment page.
@@ -250,8 +250,8 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       clearCheckoutDraft();
       if (booking.url) window.location.href = booking.url;
       // Free experiences are confirmed straight away, with nothing to pay.
-      else if (booking.status === "confirmed") router.push(`/bookings/${booking.id}/success`);
-      else router.push(`/bookings/${booking.id}`);
+      else router.push(`/bookings/${booking.id}/success`);
+
     } catch (error) {
       attemptKey.current = null;
       toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again."));
