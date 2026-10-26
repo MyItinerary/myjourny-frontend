@@ -14,6 +14,7 @@ describe("MobileSearchModalView", () => {
     debouncedWhere: "",
     selectedWhen: "",
     selectedDate: new Date(2030, 5, 1),
+    minDate: new Date(2030, 5, 1),
     whoText: "",
     guests: { adults: 0, children: 0, infants: 0 },
     totalGuests: 0,
@@ -71,5 +72,16 @@ describe("MobileSearchModalView", () => {
     const input = screen.getByPlaceholderText(/Search destinations/i);
     await user.type(input, "{enter}");
     expect(onSearch).toHaveBeenCalled();
+  });
+
+  it("has a Search button, off until something is typed", async () => {
+    const onSearch = vi.fn();
+    const { user, rerender } = renderWithProviders(<MobileSearchModalView {...defaultVm} onSearch={onSearch} />);
+
+    expect(screen.getByRole("button", { name: "Search" })).toBeDisabled();
+    rerender(<MobileSearchModalView {...defaultVm} selectedWhere="Lagos" onSearch={onSearch} />);
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    expect(onSearch).toHaveBeenCalled();
+    expect(screen.getByRole("searchbox", { name: /Search destinations/ })).toHaveAttribute("enterkeyhint", "search");
   });
 });

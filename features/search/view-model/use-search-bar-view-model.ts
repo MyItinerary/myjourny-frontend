@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { toCityDestination, useExperienceCities } from "@/features/cities";
 import { categoriesBySlug } from "@/lib/mock-data/home";
 
 import {
@@ -54,9 +55,12 @@ export function useSearchBarViewModel({
   const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | null>(null);
 
   const [selectedWhen, setSelectedWhen] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date>(
-    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-  );
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const minDate = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   // What they typed into "Who"; null once the steppers take over and the text
   // comes from the counts.
@@ -105,15 +109,23 @@ export function useSearchBarViewModel({
 
   const trimmedQuery = selectedWhere.trim().toLowerCase();
 
+  // Cities that have experiences, from the API; the built-in list only until
+  // it loads (or if it can't).
+  const citiesQuery = useExperienceCities();
+  const destinations: DestinationSuggestion[] = useMemo(
+    () => (citiesQuery.data?.length ? citiesQuery.data.map(toCityDestination) : DEFAULT_DESTINATIONS),
+    [citiesQuery.data],
+  );
+
   const filteredDestinations = useMemo(() => {
-    if (!trimmedQuery) return DEFAULT_DESTINATIONS.slice(0, 5);
-    return DEFAULT_DESTINATIONS.filter(
+    if (!trimmedQuery) return destinations.slice(0, 5);
+    return destinations.filter(
       (dest) =>
         dest.city.toLowerCase().includes(trimmedQuery) ||
         dest.id.toLowerCase().includes(trimmedQuery) ||
         dest.description.toLowerCase().includes(trimmedQuery),
     );
-  }, [trimmedQuery]);
+  }, [destinations, trimmedQuery]);
 
   const filteredActivities = useMemo(() => {
     if (!trimmedQuery) return DEFAULT_ACTIVITIES.slice(0, 6);
@@ -181,6 +193,11 @@ export function useSearchBarViewModel({
   }, []);
 
   const onSelectDate = useCallback((date: Date, label?: string) => {
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (target < today) return;
     setSelectedDate(date);
     setSelectedWhen(label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }));
     setActiveTab("who");
@@ -214,7 +231,7 @@ export function useSearchBarViewModel({
         return;
       }
 
-      const matchedDest = DEFAULT_DESTINATIONS.find(
+      const matchedDest = destinations.find(
         (d) =>
           d.city.toLowerCase().includes(trimmed) ||
           d.id.toLowerCase().includes(trimmed) ||
@@ -251,7 +268,7 @@ export function useSearchBarViewModel({
 
       router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
     },
-    [handleClose, router, selectedType, selectedWhere, selectedWhereId],
+    [destinations, handleClose, router, selectedType, selectedWhere, selectedWhereId],
   );
 
   const onNavigateToDestination = useCallback(
@@ -285,6 +302,7 @@ export function useSearchBarViewModel({
     debouncedWhere,
     selectedWhen,
     selectedDate,
+    minDate,
     whoText,
     guests,
     totalGuests,

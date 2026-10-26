@@ -5,7 +5,7 @@ import { renderWithProviders } from "@/test/utils/render";
 import { CategoryHeader } from "./category-header";
 
 describe("CategoryHeader", () => {
-  it("displays loading placeholder instead of 0 results while loading", () => {
+  it("shows only the label, with no bracketed text, while loading", () => {
     renderWithProviders(
       <CategoryHeader
         label="Beaches & waterfronts"
@@ -14,22 +14,23 @@ describe("CategoryHeader", () => {
       />
     );
 
-    expect(screen.getByText("(Loading experiences…)")).toBeInTheDocument();
+    const heading = screen.getByText("Beaches & waterfronts", { selector: "p" });
+    expect(heading).toHaveTextContent(/^Beaches & waterfronts$/);
+    expect(screen.queryByText(/Loading experiences/i)).not.toBeInTheDocument();
     expect(screen.queryByText("(0 results)")).not.toBeInTheDocument();
   });
 
-  it("displays custom loading placeholder when loadingText is passed", () => {
-    renderWithProviders(
-      <CategoryHeader
-        label="Nightlife"
-        count={0}
-        isLoading={true}
-        loadingText="(Finding experiences…)"
-      />
+  it("reveals the bracketed result count once loading finishes", () => {
+    const { rerender } = renderWithProviders(
+      <CategoryHeader label="Nightlife" isLoading={true} />
     );
 
-    expect(screen.getByText("(Finding experiences…)")).toBeInTheDocument();
-    expect(screen.queryByText("(0 results)")).not.toBeInTheDocument();
+    expect(screen.queryByText(/results?\)/)).not.toBeInTheDocument();
+
+    rerender(<CategoryHeader label="Nightlife" count={8} total={8} isLoading={false} />);
+
+    expect(screen.getByText("(8 results)")).toBeInTheDocument();
+    expect(screen.getByText("Nightlife", { selector: "p" })).toHaveTextContent(/^Nightlife \(8 results\)$/);
   });
 
   it("displays error placeholder instead of 0 results when request fails on initial load", () => {
@@ -135,5 +136,11 @@ describe("CategoryHeader", () => {
 
     expect(screen.getByRole("link", { name: "Home page" })).toBeInTheDocument();
     expect(screen.getByText("Food & Drinks", { selector: "span" })).toBeInTheDocument();
+  });
+
+  it("shows the page's filter controls under the heading", () => {
+    renderWithProviders(<CategoryHeader label="Street life" count={3} filters={<button type="button">Price</button>} />);
+    expect(screen.getByRole("button", { name: "Price" })).toBeInTheDocument();
+    expect(screen.queryByText("Languages")).not.toBeInTheDocument();
   });
 });

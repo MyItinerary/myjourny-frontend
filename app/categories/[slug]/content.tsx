@@ -1,16 +1,17 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { HomeNav } from "@/components/home/home-nav";
+import { openMobileSearch } from "@/features/mobile-nav";
 import { CitiesSection } from "@/components/home/cities-section";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
 import { CategoryHeader, CategoryResultsGrid } from "@/features/categories";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
-import { cities } from "@/lib/mock-data/home";
+import { useDiscoverCitiesViewModel } from "@/features/cities";
 import { experienceListItemToCardProps, useFilteredExperiences } from "@/lib/queries/experiences";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 
@@ -28,6 +29,7 @@ export function CategoryContent({
   moreLabel,
   loadMore,
   total,
+  filters,
 }: {
   label: string;
   items: ExperienceItem[];
@@ -39,7 +41,10 @@ export function CategoryContent({
   loadMore?: ComponentProps<typeof CategoryResultsGrid>["loadMore"];
   /** Exact result count, when the source knows it. */
   total?: number;
+  /** Filter controls shown under the heading. */
+  filters?: ReactNode;
 }) {
+  const discoverCities = useDiscoverCitiesViewModel();
   return (
     <div className="flex flex-1 flex-col">
       <div className="hidden lg:block">
@@ -54,10 +59,14 @@ export function CategoryContent({
         >
           <ChevronLeftIcon className="size-[22px] text-foreground" />
         </Link>
-        <div className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5">
+        <button
+          type="button"
+          onClick={() => openMobileSearch()}
+          className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5 text-left cursor-pointer"
+        >
           <Image src="/icons/search-lg.svg" alt="" width={18} height={18} />
           <span className="text-sm text-muted-foreground">Discover locations</span>
-        </div>
+        </button>
       </div>
 
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-10 xl:px-[150px] lg:pt-9 lg:pb-9">
@@ -67,6 +76,7 @@ export function CategoryContent({
           total={total}
           isLoading={isLoading}
           isError={isError}
+          filters={filters}
         />
         <div className="mt-6 lg:mt-9">
           <CategoryResultsGrid
@@ -82,7 +92,7 @@ export function CategoryContent({
         </div>
       </div>
 
-      <CitiesSection cities={cities} variant="category" />
+      {discoverCities.show && <CitiesSection cities={discoverCities.cities} variant="category" />}
 
       <OtherExperiencesRail exclude={items} />
 

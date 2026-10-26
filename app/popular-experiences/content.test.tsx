@@ -82,14 +82,15 @@ vi.mock("@/lib/queries/experiences", () => ({
 }));
 
 describe("PopularExperiencesContent", () => {
-  it("displays loading placeholder in header and skeletons in grid while pending", () => {
+  it("shows only the heading label (no bracketed count) and skeletons in grid while pending", () => {
     queryState.isPending = true;
     queryState.isError = false;
     queryState.data = undefined;
 
     const { container } = renderWithProviders(<PopularExperiencesContent />);
 
-    expect(screen.getByText("(Loading experiences…)")).toBeInTheDocument();
+    expect(screen.queryByText(/Loading experiences/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/results?\)/)).not.toBeInTheDocument();
     const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
     expect(screen.queryByText(/No experiences found/i)).not.toBeInTheDocument();

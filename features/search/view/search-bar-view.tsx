@@ -21,6 +21,7 @@ export function SearchBarView({
   selectedWhere,
   selectedWhen,
   selectedDate,
+  minDate,
   whoText,
   guests,
   totalGuests,
@@ -213,6 +214,7 @@ export function SearchBarView({
         >
           <DatePickerCalendar
             selectedDate={selectedDate}
+            minDate={minDate}
             presets={computeDatePresets()}
             onSelect={(date) => {
               const preset = computeDatePresets().find(
