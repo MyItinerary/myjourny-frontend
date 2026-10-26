@@ -90,14 +90,15 @@ describe("CityContent", () => {
     searchParams.current = new URLSearchParams();
   });
 
-  it("displays loading placeholder in title and skeletons in grid while pending", () => {
+  it("shows just the city in the title, and skeletons in the grid, while pending", () => {
     cityQueryState.isPending = true;
     cityQueryState.isError = false;
     cityQueryState.data = undefined;
 
     const { container } = renderWithProviders(<CityContent cityName="Lagos" country="Nigeria" />);
 
-    expect(screen.getByText("(Loading experiences…)")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/^Experiences in Lagos$/);
+    expect(screen.queryByText(/Loading experiences/i)).not.toBeInTheDocument();
     const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
     expect(screen.queryByText(/No experiences found/i)).not.toBeInTheDocument();
