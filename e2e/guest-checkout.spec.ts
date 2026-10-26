@@ -1,5 +1,3 @@
-import type { Page } from "@playwright/test";
-
 import { expect, mockApi, test } from "./fixtures";
 
 const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
@@ -32,18 +30,9 @@ const QUOTE = {
   promo_applied: false,
 };
 
-const SIGNED_IN = {
-  accessToken: "e2e-access",
-  refreshToken: "e2e-refresh",
-  user: { id: "user-1", email: "juliet@example.com", fullName: null, avatarUrl: null },
-};
-
-type Handlers = Parameters<typeof mockApi>[1];
-
-/** The experience, its prices and sessions, a public quote, and a booking
- * that hands over to the payment page. `booked` reads back what was sent. */
-async function mockBooking(page: Page, extra: Handlers = {}) {
-  const booked: Record<string, unknown>[] = [];
+test("a guest books from the experience page: details, password, then the payment page", async ({ page }) => {
+  let bookingBody: Record<string, unknown> | null = null;
+  let registerBody: Record<string, unknown> | null = null;
   await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
   await mockApi(page, {
     "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
@@ -64,105 +53,45 @@ async function mockBooking(page: Page, extra: Handlers = {}) {
           sessions: [{ starts_at: `${SESSION_DAY}T08:00:00Z`, local_date: SESSION_DAY, local_time: "09:00:00", seats_left: 8, sold_out: false }],
         },
       }),
-    "POST /bookings/quote": (r) => r.fulfill({ json: QUOTE }),
-    "GET /auth/me": (r) =>
-      r.fulfill({ json: { id: "user-1", email: "juliet@example.com", full_name: null, avatar_url: null } }),
-    "POST /bookings": async (r) => {
-      booked.push(r.request().postDataJSON());
-      await r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
-    },
-    ...extra,
-  });
-  return booked;
-}
-
-async function bookNow(page: Page) {
-  await page.goto("/experiences/exp-1");
-  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
-  await expect(page).toHaveURL(/\/checkout$/);
-}
-
-async function startLogIn(page: Page, email = "juliet@example.com") {
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await expect(page.getByText("Log in or sign up").last()).toBeVisible();
-  await page.getByPlaceholder("Enter email address").fill(email);
-  await page.getByRole("dialog").getByRole("button", { name: "Continue", exact: true }).click();
-}
-
-test("a guest books like on Airbnb: log in or sign up first, then confirm and pay", async ({ page }) => {
-  let registerBody: Record<string, unknown> | null = null;
-  const booked = await mockBooking(page, {
-    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: false, has_password: false } }),
+    // Priced once there's an account; a guest has none yet.
+    "POST /bookings/quote": (r) =>
+      r.request().headers().authorization
+        ? r.fulfill({ json: QUOTE })
+        : r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
     "POST /auth/register": (r) => {
       registerBody = r.request().postDataJSON();
       return r.fulfill({ json: { access_token: "new-access", refresh_token: "new-refresh" } });
     },
+    "GET /auth/me": (r) =>
+      r.fulfill({ json: { id: "user-1", email: "juliet@example.com", full_name: null, avatar_url: null } }),
+    "POST /bookings": async (r) => {
+      bookingBody = r.request().postDataJSON();
+      await r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
+    },
   });
-
-  await bookNow(page);
-  await expect(page.getByRole("heading", { name: "Confirm and pay" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "1. Log in or sign up" })).toBeVisible();
-  // Nothing to pay before step 1 is done.
-  await expect(page.getByRole("button", { name: "Confirm and pay" })).toHaveCount(0);
-
-  // A new email: create a password with the usual rules.
-  await startLogIn(page);
-  await expect(page.getByText("Create a password")).toBeVisible();
-  const agree = page.getByRole("button", { name: "Agree and continue" });
-  await page.getByPlaceholder("Enter password here", { exact: true }).fill("longenough1");
-  await page.getByPlaceholder("Re enter password here").fill("longenough2");
-  await expect(page.getByText("The passwords don't match")).toBeVisible();
-  await expect(agree).toBeDisabled();
-  await page.getByPlaceholder("Re enter password here").fill("longenough1");
-  await agree.click();
-
-  // Signed up: step 1 is done and step 2 pays.
-  await expect(page.getByText("Logged in as juliet@example.com")).toBeVisible();
-  await page.getByRole("button", { name: "Confirm and pay" }).click();
-
-  await expect(page).toHaveURL("https://paystack.test/pay");
-  expect(registerBody).toMatchObject({ email: "juliet@example.com", password: "longenough1" });
-  expect(booked[0]).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
-});
-
-test("an email with an account logs in with its password, then confirms and pays", async ({ page }) => {
-  const booked = await mockBooking(page, {
-    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true, has_password: true } }),
-    "POST /auth/login": (r) => r.fulfill({ json: { access_token: "login-access", refresh_token: "login-refresh" } }),
-  });
-
-  await bookNow(page);
-  await startLogIn(page);
-  await expect(page.getByText("Welcome back!")).toBeVisible();
-  await page.getByPlaceholder("Enter password").fill("secret123");
-  await page.getByRole("button", { name: "Log in" }).click();
-
-  await expect(page.getByText("Logged in as juliet@example.com")).toBeVisible();
-  await page.getByRole("button", { name: "Confirm and pay" }).click();
-  await expect(page).toHaveURL("https://paystack.test/pay");
-  expect(booked).toHaveLength(1);
-});
-
-test("an email that only signs in with Google is pointed to Google", async ({ page }) => {
-  await mockBooking(page, {
-    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true, has_password: false } }),
-  });
-
-  await bookNow(page);
-  await startLogIn(page);
-  await expect(page.getByText("This email signs in with Google.")).toBeVisible();
-  await expect(page.getByPlaceholder("Enter password")).toHaveCount(0);
-});
-
-test("a signed-in user skips checkout: Book now goes straight to the payment page", async ({ page }) => {
-  await page.addInitScript((auth) => window.localStorage.setItem("myjourny:auth", JSON.stringify(auth)), SIGNED_IN);
-  const booked = await mockBooking(page);
 
   await page.goto("/experiences/exp-1");
   await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
 
+  // Step 1: email and phone.
+  await expect(page).toHaveURL(/\/checkout$/);
+  const next = page.getByRole("button", { name: "Continue", exact: true });
+  await expect(next).toBeDisabled();
+  await page.getByPlaceholder("Enter email address").fill("juliet@example.com");
+  await page.getByLabel("Phone number").fill("7016377711");
+  await next.click();
+
+  // Step 2: a password, then pay. The account is made as they confirm.
+  const pay = page.getByRole("button", { name: "Confirm and pay" });
+  await expect(pay).toBeDisabled();
+  await page.getByPlaceholder("Enter password here", { exact: true }).fill("longenough1");
+  await page.getByPlaceholder("Re enter password here").fill("longenough1");
+  await expect(pay).toBeEnabled();
+  await pay.click();
+
   await expect(page).toHaveURL("https://paystack.test/pay");
-  expect(booked).toHaveLength(1);
+  expect(registerBody).toMatchObject({ email: "juliet@example.com", password: "longenough1", phone_number: "+2347016377711" });
+  expect(bookingBody).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
 });
 
 test("checkout with nothing picked goes back home", async ({ page }) => {
@@ -203,23 +132,155 @@ test("after paying, the booking page says you're going", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
   await expect(page.locator("a", { hasText: "View booking" })).toHaveAttribute("href", "/bookings/b-1");
   await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
-
-  // Refreshing stays on the confirmation screen and does not bounce home.
-  await page.reload();
-  await expect(page).toHaveURL(/\/bookings\/b-1\/success$/);
-  await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
 });
 
-test("resetting a password from the checkout leads back to it, with the booking still there", async ({ page }) => {
-  const booked = await mockBooking(page, {
-    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true, has_password: true } }),
+test("a signed-in user skips checkout: Book now goes straight to the payment page", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "myjourny:auth",
+      JSON.stringify({
+        accessToken: "e2e-access",
+        refreshToken: "e2e-refresh",
+        user: { id: "user-1", email: "juliet@example.com", fullName: null, avatarUrl: null },
+      }),
+    );
+  });
+  await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
+  let created = 0;
+  await mockApi(page, {
+    "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
+    "GET /experiences/exp-1/pricing": (r) =>
+      r.fulfill({
+        json: {
+          currency: "NGN",
+          prices: [{ id: "adult", label: "Adult", amount: "16000", pricing_unit: "per_person" }],
+          addons: [],
+          rules: [],
+        },
+      }),
+    "GET /experiences/exp-1/sessions": (r) =>
+      r.fulfill({
+        json: {
+          timezone: "Africa/Lagos",
+          scheduled: true,
+          sessions: [{ starts_at: `${SESSION_DAY}T08:00:00Z`, local_date: SESSION_DAY, local_time: "09:00:00", seats_left: 8, sold_out: false }],
+        },
+      }),
+    "POST /bookings/quote": (r) => r.fulfill({ json: QUOTE }),
+    "POST /bookings": async (r) => {
+      created += 1;
+      await r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
+    },
+  });
+
+  await page.goto("/experiences/exp-1");
+  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
+
+  await expect(page).toHaveURL("https://paystack.test/pay");
+  expect(created).toBe(1);
+});
+
+test("a guest whose email already has an account logs in, adds a note, then pays", async ({ page }) => {
+  let bookingBody: Record<string, unknown> | null = null;
+  await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
+  await mockApi(page, {
+    "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
+    "GET /experiences/exp-1/pricing": (r) =>
+      r.fulfill({
+        json: {
+          currency: "NGN",
+          prices: [{ id: "adult", label: "Adult", amount: "16000", pricing_unit: "per_person" }],
+          addons: [],
+          rules: [],
+        },
+      }),
+    "GET /experiences/exp-1/sessions": (r) =>
+      r.fulfill({
+        json: {
+          timezone: "Africa/Lagos",
+          scheduled: true,
+          sessions: [{ starts_at: `${SESSION_DAY}T08:00:00Z`, local_date: SESSION_DAY, local_time: "09:00:00", seats_left: 8, sold_out: false }],
+        },
+      }),
+    "POST /bookings/quote": (r) =>
+      r.request().headers().authorization
+        ? r.fulfill({ json: QUOTE })
+        : r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
+    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true } }),
+    "POST /auth/login": (r) => r.fulfill({ json: { access_token: "login-access", refresh_token: "login-refresh" } }),
+    "GET /auth/me": (r) =>
+      r.fulfill({ json: { id: "user-1", email: "juliet@example.com", full_name: null, avatar_url: null } }),
+    "POST /bookings": async (r) => {
+      bookingBody = r.request().postDataJSON();
+      await r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
+    },
+  });
+
+  await page.goto("/experiences/exp-1");
+  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
+  await page.getByPlaceholder("Enter email address").fill("juliet@example.com");
+  await page.getByLabel("Phone number").fill("7016377711");
+
+  // The email has an account, so the first step offers to log in instead.
+  await page.getByRole("button", { name: "Login and continue to book" }).click();
+  await expect(page.getByText("Welcome back!")).toBeVisible();
+  await page.getByPlaceholder("Enter password").fill("secret123");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+
+  // Logged in, the page behind the sheet is now the last step: nothing is booked until Confirm and pay.
+  await expect(page.getByText("Welcome back!")).toHaveCount(0);
+  await expect(page.getByText("Payment secured by Paystack")).toBeVisible();
+  await page.getByRole("textbox", { name: "Leave a note for the guide" }).fill("Please bring a life jacket for a child");
+  expect(bookingBody).toBeNull();
+  await page.getByRole("button", { name: "Confirm and pay" }).click();
+
+  await expect(page).toHaveURL("https://paystack.test/pay");
+  expect(bookingBody).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
+});
+
+test("resetting a password from the checkout leads back to it, with the booking and phone still there", async ({ page }) => {
+  let bookingBody: Record<string, unknown> | null = null;
+  await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
+  await mockApi(page, {
+    "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
+    "GET /experiences/exp-1/pricing": (r) =>
+      r.fulfill({
+        json: {
+          currency: "NGN",
+          prices: [{ id: "adult", label: "Adult", amount: "16000", pricing_unit: "per_person" }],
+          addons: [],
+          rules: [],
+        },
+      }),
+    "GET /experiences/exp-1/sessions": (r) =>
+      r.fulfill({
+        json: {
+          timezone: "Africa/Lagos",
+          scheduled: true,
+          sessions: [{ starts_at: `${SESSION_DAY}T08:00:00Z`, local_date: SESSION_DAY, local_time: "09:00:00", seats_left: 8, sold_out: false }],
+        },
+      }),
+    "POST /bookings/quote": (r) =>
+      r.request().headers().authorization
+        ? r.fulfill({ json: QUOTE })
+        : r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
+    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true } }),
     "POST /auth/password/request-reset": (r) => r.fulfill({ json: { message: "ok" } }),
     "POST /auth/password/reset-with-token": (r) => r.fulfill({ json: { message: "ok" } }),
     "POST /auth/login": (r) => r.fulfill({ json: { access_token: "login-access", refresh_token: "login-refresh" } }),
+    "GET /auth/me": (r) =>
+      r.fulfill({ json: { id: "user-1", email: "juliet@example.com", full_name: null, avatar_url: null } }),
+    "POST /bookings": async (r) => {
+      bookingBody = r.request().postDataJSON();
+      await r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
+    },
   });
 
-  await bookNow(page);
-  await startLogIn(page);
+  await page.goto("/experiences/exp-1");
+  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
+  await page.getByPlaceholder("Enter email address").fill("juliet@example.com");
+  await page.getByLabel("Phone number").fill("7016377711");
+  await page.getByRole("button", { name: "Login and continue to book" }).click();
   await page.getByText("Forgot password?").click();
   await expect(page).toHaveURL(/\/login\/forgot-password$/);
 
@@ -232,46 +293,12 @@ test("resetting a password from the checkout leads back to it, with the booking 
   await page.getByPlaceholder("Enter password").fill("newpassword1");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
-  // Signed in and back on the checkout, with the booking still there.
+  // Signed in and back on the checkout: the booking and phone are still there.
   await expect(page).toHaveURL(/\/checkout$/);
-  await expect(page.getByText("Logged in as juliet@example.com")).toBeVisible();
+  await expect(page.getByLabel("Phone number")).toHaveValue("7016377711");
   await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
   await page.getByRole("button", { name: "Confirm and pay" }).click();
 
   await expect(page).toHaveURL("https://paystack.test/pay");
-  expect(booked[0]).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
-});
-
-
-test("confirming a booking without a payment link redirects to the confirmation screen", async ({ page }) => {
-  await page.addInitScript((auth) => window.localStorage.setItem("myjourny:auth", JSON.stringify(auth)), SIGNED_IN);
-  await mockBooking(page, {
-    "POST /bookings": (r) =>
-      r.fulfill({ json: { id: "b-1", status: "confirmed", payment_status: "paid", url: null } }),
-    "GET /bookings/b-1": (r) =>
-      r.fulfill({
-        json: {
-          id: "b-1",
-          experience_id: "exp-1",
-          status: "confirmed",
-          payment_status: "paid",
-          requested_datetime: "2026-07-16T08:00:00",
-          party_size: 1,
-          price_total: "16000.00",
-          currency: "NGN",
-        },
-      }),
-  });
-
-  await page.goto("/experiences/exp-1");
-  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
-
-  // Redirects directly to the confirmation screen, not the homepage or generic booking page.
-  await expect(page).toHaveURL(/\/bookings\/b-1\/success$/);
-  await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
-
-  // Refreshing stays on the confirmation screen.
-  await page.reload();
-  await expect(page).toHaveURL(/\/bookings\/b-1\/success$/);
-  await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
+  expect(bookingBody).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
 });

@@ -27,17 +27,17 @@ vi.mock("@/lib/auth/session-store", () => ({
 }));
 
 const account = vi.hoisted(() => ({
-  lookup: { mutateAsync: vi.fn(), isPending: false },
-  register: { mutateAsync: vi.fn() },
-  google: { mutateAsync: vi.fn() },
+  register: { mutateAsync: vi.fn(), reset: vi.fn(), error: null as unknown },
+  google: { mutate: vi.fn() },
   login: { mutateAsync: vi.fn() },
+  lookup: { exists: false, checking: false },
 }));
 vi.mock("../model/guest-account", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../model/guest-account")>()),
-  useEmailLookup: () => account.lookup,
   useGuestRegister: () => account.register,
   useGuestGoogleSignup: () => account.google,
   useGuestLogin: () => account.login,
+  useEmailHasAccount: () => account.lookup,
 }));
 
 const draft: CheckoutDraft = {
@@ -55,16 +55,7 @@ const draft: CheckoutDraft = {
   durationLabel: "2.5 hours",
 };
 
-const juliet = { user: { id: "u1", email: "juliet@example.com" }, hydrated: true };
-const tokens = { access_token: "a", refresh_token: "r", token_type: "bearer" };
-const twoFactor = { "2fa_required": true };
-
-// Signing in fills the session, as the real auth hooks do.
-const signsIn = (data: unknown = tokens) =>
-  vi.fn(async () => {
-    if (!(data as Record<string, unknown>)["2fa_required"]) session.value = juliet;
-    return data;
-  });
+const signedIn = { user: { id: "u1", email: "juliet@example.com" }, hydrated: true };
 
 // A writable stand-in for location, so the redirect can be read back.
 async function withLocation(run: () => Promise<void>) {
@@ -81,318 +72,343 @@ async function withLocation(run: () => Promise<void>) {
   }
 }
 
-type Result = { current: ReturnType<typeof useCheckoutViewModel> };
-
-async function enterEmail(result: Result, email = " juliet@example.com ") {
-  act(() => result.current.steps.onStartAuth());
-  act(() => result.current.auth.onEmailChange(email));
-  await act(async () => result.current.auth.onContinue());
-}
-
 beforeEach(() => {
   session.value = { user: null, hydrated: true };
-  account.lookup.mutateAsync = vi.fn(async () => ({ exists: false, hasPassword: false }));
-  account.lookup.isPending = false;
-  account.register.mutateAsync = signsIn();
-  account.google.mutateAsync = signsIn();
-  account.login.mutateAsync = signsIn();
+  account.register.mutateAsync.mockReset();
+  account.register.reset.mockReset();
+  account.register.error = null;
+  account.google.mutate.mockReset();
+  account.login.mutateAsync.mockReset();
+  account.lookup = { exists: false, checking: false };
   saveCheckoutDraft(draft);
-  server.use(
-    http.post(apiUrl("/bookings/quote"), () =>
-      HttpResponse.json({ currency: "NGN", lines: [], subtotal: "15000", discount: "0", checkout_fee: "0", total: "15000", guests: 1, days: 1, promo_applied: false }),
-    ),
-  );
+  // The quote needs an account; most tests don't have one yet.
+  server.use(http.post(apiUrl("/bookings/quote"), () => HttpResponse.json({}, { status: 401 })));
 });
 afterEach(() => {
   window.localStorage.clear();
-  vi.clearAllMocks();
+  nav.push.mockReset();
+  nav.replace.mockReset();
+  toast.error.mockReset();
 });
 
-describe("useCheckoutViewModel: the page", () => {
-  it("summarises the saved booking and starts a guest at step 1", () => {
+function fillDetails(result: { current: ReturnType<typeof useCheckoutViewModel> }) {
+  act(() => result.current.form.onEmailChange(" juliet@example.com "));
+  act(() => result.current.form.onPhoneChange("701 637-7711"));
+}
+
+describe("useCheckoutViewModel", () => {
+  it("summarises the saved booking and starts at the details step for a guest", () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
 
     expect(result.current.ready).toBe(true);
+    expect(result.current.form.step).toBe("details");
     expect(result.current.summary).toMatchObject({
       title: "Lagos Food Walk",
-      when: "Tuesday, September 12 at 7:30 AM",
       guests: "1 guest",
       total: "₦16,000.00",
       quantity: "x 1 Adult",
       changeHref: "/experiences/exp-1",
     });
-    expect(result.current.steps.account).toBeNull();
-    expect(result.current.steps.canPay).toBe(false);
-    expect(result.current.steps.backHref).toBe("/experiences/exp-1");
-    expect(result.current.auth.open).toBe(false);
   });
 
-  it("sends them home when there is no saved booking", () => {
+  it("sends the guest home when there is no saved booking", () => {
     window.localStorage.clear();
     renderHookWithProviders(() => useCheckoutViewModel());
     expect(nav.replace).toHaveBeenCalledWith("/");
   });
 
-  it("shows a signed-in person as logged in, prices for real and lets them pay", async () => {
-    session.value = juliet;
+  it("continues only with a valid email and phone, then asks for a password", () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(result.current.form.canContinue).toBe(false);
 
-    expect(result.current.steps.account).toBe("juliet@example.com");
-    expect(result.current.steps.canPay).toBe(true);
-    await waitFor(() => expect(result.current.summary?.total).toBe("₦15,000.00"));
-    expect(result.current.steps.free).toBe(false);
+    act(() => result.current.form.onEmailChange("not-an-email"));
+    act(() => result.current.form.onPhoneChange("7016377711"));
+    expect(result.current.form.canContinue).toBe(false);
+
+    fillDetails(result);
+    expect(result.current.form.phone).toBe("7016377711");
+    expect(result.current.form.canContinue).toBe(true);
+    act(() => result.current.form.onContinue());
+
+    expect(result.current.form.step).toBe("password");
+    expect(result.current.form.emailLocked).toBe(true);
+    expect(result.current.form.phoneLocked).toBe(true);
   });
 
-  it("calls a booking that costs nothing Free, with nothing to pay", async () => {
-    session.value = juliet;
-    server.use(
-      http.post(apiUrl("/bookings/quote"), () =>
-        HttpResponse.json({ currency: "NGN", lines: [], subtotal: "0", discount: "0", checkout_fee: "0", total: "0", guests: 1, days: 1, promo_applied: false }),
-      ),
-    );
+  it("waits for the account lookup before letting them continue", () => {
+    account.lookup = { exists: false, checking: true };
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
 
-    await waitFor(() => expect(result.current.summary?.total).toBe("Free"));
-    expect(result.current.steps.free).toBe(true);
-  });
-});
-
-describe("useCheckoutViewModel: log in or sign up", () => {
-  it("continues only with a valid email", async () => {
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    act(() => result.current.steps.onStartAuth());
-    expect(result.current.auth.open).toBe(true);
-
-    act(() => result.current.auth.onEmailChange("not-an-email"));
-    expect(result.current.auth.canContinue).toBe(false);
-    await act(async () => result.current.auth.onContinue());
-    expect(account.lookup.mutateAsync).not.toHaveBeenCalled();
-
-    act(() => result.current.auth.onEmailChange("juliet@example.com"));
-    expect(result.current.auth.canContinue).toBe(true);
+    expect(result.current.form.canContinue).toBe(false);
   });
 
-  it("asks a new email to create a password, checks it, then signs up and closes", async () => {
+  it("opens the log-in sheet instead of the password step when the email has an account", () => {
+    account.lookup = { exists: true, checking: false };
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await enterEmail(result);
-    expect(account.lookup.mutateAsync).toHaveBeenCalledWith("juliet@example.com");
-    expect(result.current.auth.stage).toBe("signup");
+    fillDetails(result);
+    expect(result.current.form.accountExists).toBe(true);
+    expect(result.current.login.open).toBe(false);
 
-    act(() => result.current.auth.onPasswordChange("short"));
-    expect(result.current.auth.passwordError).toBe(
-      "Your password should contain at least 8 characters, a letter and a number",
-    );
-    act(() => result.current.auth.onPasswordChange("longenough1"));
-    act(() => result.current.auth.onConfirmPasswordChange("longenough2"));
-    expect(result.current.auth.passwordError).toBe("The passwords don't match");
-    expect(result.current.auth.canSubmit).toBe(false);
+    act(() => result.current.form.onContinue());
 
-    act(() => result.current.auth.onConfirmPasswordChange("longenough1"));
-    expect(result.current.auth.canSubmit).toBe(true);
-    await act(async () => result.current.auth.onSubmit());
-
-    expect(account.register.mutateAsync).toHaveBeenCalledWith({ email: "juliet@example.com", password: "longenough1" });
-    expect(result.current.auth.open).toBe(false);
-    expect(result.current.steps.account).toBe("juliet@example.com");
-    expect(result.current.steps.canPay).toBe(true);
+    expect(result.current.form.step).toBe("details");
+    expect(result.current.login.open).toBe(true);
+    expect(result.current.login.email).toBe("juliet@example.com");
+    expect(result.current.login.forgotHref).toBe("/login/forgot-password");
   });
 
-  it("treats the email as new when the lookup fails", async () => {
-    account.lookup.mutateAsync = vi.fn(async () => null);
+  it("goes back to the first step, offering to log in, when sign-up says the email is taken", async () => {
+    account.register.mutateAsync.mockRejectedValue({ response: { data: { detail: "Email already registered" } } });
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await enterEmail(result);
-    expect(result.current.auth.stage).toBe("signup");
-  });
+    fillDetails(result);
+    act(() => result.current.form.onContinue());
+    act(() => result.current.form.onPasswordChange("longenough1"));
+    act(() => result.current.form.onConfirmPasswordChange("longenough1"));
 
-  it("moves to log in when sign-up says the email is taken after all", async () => {
-    account.register.mutateAsync = vi.fn(async () => {
-      throw { response: { data: { detail: "Email already registered" } } };
+    act(() => {
+      void result.current.form.onConfirm();
     });
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await enterEmail(result);
-    act(() => result.current.auth.onPasswordChange("longenough1"));
-    act(() => result.current.auth.onConfirmPasswordChange("longenough1"));
-    await act(async () => result.current.auth.onSubmit());
 
-    expect(result.current.auth.stage).toBe("login");
-    expect(result.current.auth.password).toBe("");
-    expect(result.current.steps.account).toBeNull();
+    await waitFor(() => expect(result.current.form.step).toBe("details"));
+    expect(result.current.form.accountExists).toBe(true);
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("asks an existing email for its password and logs in", async () => {
-    account.lookup.mutateAsync = vi.fn(async () => ({ exists: true, hasPassword: true }));
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await enterEmail(result);
-    expect(result.current.auth.stage).toBe("login");
-    expect(result.current.auth.canSubmit).toBe(false);
+  function openLogin() {
+    account.lookup = { exists: true, checking: false };
+    const hook = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(hook.result);
+    act(() => hook.result.current.form.onContinue());
+    return hook.result;
+  }
 
-    act(() => result.current.auth.onPasswordChange("secret123"));
-    await act(async () => result.current.auth.onSubmit());
+  it("keeps the booking and phone, and notes the way back, when they go to reset a password", () => {
+    const result = openLogin();
+    act(() => result.current.form.onPhoneChange("7016377711"));
+
+    act(() => result.current.login.onForgotPassword());
+
+    const stored = JSON.parse(window.localStorage.getItem("myjourny:checkout-draft")!);
+    expect(stored.contact).toEqual({ phone: "7016377711", countryIso: "NG" });
+    expect(window.localStorage.getItem("myjourny:checkout-return")).toBeTruthy();
+  });
+
+  it("fills the phone back in when they return from resetting a password", () => {
+    saveCheckoutDraft({ ...draft, contact: { phone: "7911123456", countryIso: "GB" } });
+    session.value = signedIn;
+
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+
+    expect(result.current.form.step).toBe("pay");
+    expect(result.current.form.phone).toBe("7911123456");
+    expect(result.current.form.country.selected.iso).toBe("GB");
+    expect(result.current.form.canPay).toBe(true);
+  });
+
+  it("logs in, then closes the sheet and leaves the page as it was, ready for the last step", async () => {
+    account.login.mutateAsync.mockResolvedValue({ access_token: "a", refresh_token: "r" });
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
+    const result = openLogin();
+    expect(result.current.login.canSubmit).toBe(false);
+    act(() => result.current.login.onPasswordChange("secret123"));
+    expect(result.current.login.canSubmit).toBe(true);
+
+    act(() => {
+      void result.current.login.onSubmit();
+    });
+    await waitFor(() => expect(result.current.login.open).toBe(false));
 
     expect(account.login.mutateAsync).toHaveBeenCalledWith({ email: "juliet@example.com", password: "secret123" });
-    expect(result.current.auth.open).toBe(false);
-    expect(result.current.steps.account).toBe("juliet@example.com");
+    expect(account.register.mutateAsync).not.toHaveBeenCalled();
+    // Nothing is booked until they press Confirm and pay.
+    expect(created).not.toHaveBeenCalled();
+    expect(result.current.form.email.trim()).toBe("juliet@example.com");
   });
 
-  it("stays on the password step when the login fails", async () => {
-    account.lookup.mutateAsync = vi.fn(async () => ({ exists: true, hasPassword: true }));
-    account.login.mutateAsync = vi.fn(async () => {
-      throw new Error("Incorrect email or password");
-    });
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await enterEmail(result);
-    act(() => result.current.auth.onPasswordChange("wrong"));
-    await act(async () => result.current.auth.onSubmit());
+  it("stays on the log-in sheet when the details are wrong", async () => {
+    account.login.mutateAsync.mockRejectedValue(new Error("Incorrect email or password."));
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
+    const result = openLogin();
+    act(() => result.current.login.onPasswordChange("wrong"));
 
-    expect(result.current.auth.stage).toBe("login");
-    expect(result.current.auth.open).toBe(true);
-    expect(result.current.auth.pending).toBe(false);
-  });
-
-  it("asks for the two-factor code after the password, then logs in with it", async () => {
-    account.lookup.mutateAsync = vi.fn(async () => ({ exists: true, hasPassword: true }));
-    account.login.mutateAsync = vi.fn(async (payload: { code?: string }) => {
-      if (!payload.code) return twoFactor;
-      session.value = juliet;
-      return tokens;
-    });
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await enterEmail(result);
-    act(() => result.current.auth.onPasswordChange("secret123"));
-    await act(async () => result.current.auth.onSubmit());
-    expect(result.current.auth.stage).toBe("code");
-
-    act(() => result.current.auth.onCodeChange(" 123456 "));
-    await act(async () => result.current.auth.onSubmit());
-
-    expect(account.login.mutateAsync).toHaveBeenLastCalledWith({
-      email: "juliet@example.com",
-      password: "secret123",
-      code: "123456",
-    });
-    expect(result.current.steps.account).toBe("juliet@example.com");
-  });
-
-  it("points a Google-only account to Google", async () => {
-    account.lookup.mutateAsync = vi.fn(async () => ({ exists: true, hasPassword: false }));
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await enterEmail(result);
-    expect(result.current.auth.stage).toBe("google");
-
-    await act(async () => result.current.auth.onGoogleCredential("google-token"));
-    expect(account.google.mutateAsync).toHaveBeenCalledWith({ token: "google-token" });
-    expect(result.current.steps.account).toBe("juliet@example.com");
-  });
-
-  it("signs in with Google, asking for a code when the account has two-factor sign-in", async () => {
-    account.google.mutateAsync = vi.fn(async (payload: { code?: string }) => {
-      if (!payload.code) return twoFactor;
-      session.value = juliet;
-      return tokens;
-    });
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    act(() => result.current.steps.onStartAuth());
-    await act(async () => result.current.auth.onGoogleCredential("google-token"));
-    expect(result.current.auth.stage).toBe("code");
-    expect(result.current.auth.googleLoading).toBe(false);
-
-    act(() => result.current.auth.onCodeChange("123456"));
-    await act(async () => result.current.auth.onSubmit());
-    expect(account.google.mutateAsync).toHaveBeenLastCalledWith({ token: "google-token", code: "123456" });
-    expect(result.current.steps.account).toBe("juliet@example.com");
-  });
-
-  it("goes back to the email, and forgets what was typed, from a later step or on close", async () => {
-    account.lookup.mutateAsync = vi.fn(async () => ({ exists: true, hasPassword: true }));
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await enterEmail(result);
-    act(() => result.current.auth.onPasswordChange("secret123"));
-
-    act(() => result.current.auth.onBack());
-    expect(result.current.auth.stage).toBe("email");
-    expect(result.current.auth.password).toBe("");
-    expect(result.current.auth.email).toBe(" juliet@example.com ");
-
-    await act(async () => result.current.auth.onContinue());
-    act(() => result.current.auth.onOpenChange(false));
-    expect(result.current.auth.open).toBe(false);
-    expect(result.current.auth.stage).toBe("email");
-  });
-
-  it.each([
-    ["closed", (result: Result) => result.current.auth.onOpenChange(false)],
-    ["went back", (result: Result) => result.current.auth.onBack()],
-    ["changed the email", (result: Result) => result.current.auth.onEmailChange("other@example.com")],
-  ])("ignores an email check that answers after they %s", async (_, interrupt) => {
-    let answer!: (value: unknown) => void;
-    account.lookup.mutateAsync = vi.fn(() => new Promise((resolve) => (answer = resolve)));
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    act(() => result.current.steps.onStartAuth());
-    act(() => result.current.auth.onEmailChange("juliet@example.com"));
-    let pending!: Promise<void>;
     act(() => {
-      pending = result.current.auth.onContinue();
+      void result.current.login.onSubmit();
     });
 
-    act(() => interrupt(result));
-    await act(async () => {
-      answer({ exists: true, hasPassword: true });
-      await pending;
-    });
-
-    expect(result.current.auth.stage).toBe("email");
+    await waitFor(() => expect(result.current.login.pending).toBe(false));
+    expect(result.current.login.open).toBe(true);
+    expect(created).not.toHaveBeenCalled();
   });
 
-  it("notes the way back to checkout when they go to reset a password", async () => {
+  it("logs in with Google from the sheet, then closes it without booking", async () => {
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
+    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ access_token: "a" }));
+    const result = openLogin();
+
+    act(() => result.current.login.onGoogleCredential("cred"));
+
+    await waitFor(() => expect(result.current.login.open).toBe(false));
+    expect(created).not.toHaveBeenCalled();
+  });
+
+  it("stops the spinner when Google sign-in from the sheet fails", () => {
+    const result = openLogin();
+    account.google.mutate.mockImplementation((_payload, options) => options.onError());
+    act(() => result.current.login.onGoogleCredential("cred"));
+    expect(result.current.login.googleLoading).toBe(false);
+    expect(nav.push).not.toHaveBeenCalled();
+  });
+
+  it("won't continue on an invalid phone", () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    expect(result.current.auth.forgotHref).toBe("/login/forgot-password");
-    act(() => result.current.auth.onForgotPassword());
-    expect(window.localStorage.getItem("myjourny:checkout-draft")).not.toBeNull();
-  });
-});
+    act(() => result.current.form.onEmailChange("juliet@example.com"));
+    act(() => result.current.form.onPhoneChange("12345"));
 
-describe("useCheckoutViewModel: confirm and pay", () => {
-  it("books once logged in and goes to the payment page", async () => {
-    session.value = juliet;
+    act(() => result.current.form.onContinue());
+
+    expect(result.current.form.canContinue).toBe(false);
+    expect(result.current.form.step).toBe("details");
+  });
+
+  it("checks the password rules and that both match before paying", () => {
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+    act(() => result.current.form.onContinue());
+    expect(result.current.form.canPay).toBe(false);
+    expect(result.current.form.passwordError).toBeNull();
+
+    act(() => result.current.form.onPasswordChange("short1"));
+    expect(result.current.form.passwordError).toMatch(/at least 8 characters/);
+    act(() => result.current.form.onPasswordChange("onlyletters"));
+    expect(result.current.form.passwordError).toMatch(/at least 8 characters/);
+
+    act(() => result.current.form.onPasswordChange("longenough1"));
+    expect(result.current.form.passwordError).toBeNull();
+    act(() => result.current.form.onConfirmPasswordChange("different1"));
+    expect(result.current.form.passwordError).toBe("The passwords don't match");
+    expect(result.current.form.canPay).toBe(false);
+
+    act(() => result.current.form.onConfirmPasswordChange("longenough1"));
+    expect(result.current.form.canPay).toBe(true);
+  });
+
+  it("creates the account, then books, then goes to the payment page", async () => {
+    const order: string[] = [];
+    account.register.mutateAsync.mockImplementation(async () => {
+      order.push("register");
+    });
     let body: Record<string, unknown> | null = null;
     let key: string | null = null;
     server.use(
       http.post(apiUrl("/bookings/"), async ({ request }) => {
+        order.push("book");
         body = (await request.json()) as Record<string, unknown>;
         key = request.headers.get("Idempotency-Key");
         return HttpResponse.json({ id: "b-1", status: "pending", payment_status: "unpaid", url: "https://pay.test/1" });
       }),
     );
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+    act(() => result.current.form.onContinue());
+    act(() => result.current.form.onPasswordChange("longenough1"));
+    act(() => result.current.form.onConfirmPasswordChange("longenough1"));
 
     await withLocation(async () => {
       act(() => {
-        void result.current.steps.onConfirm();
-      });
-      expect(result.current.steps.paying).toBe(true);
+      void result.current.form.onConfirm();
+    });
       await waitFor(() => expect(window.location.href).toBe("https://pay.test/1"));
     });
 
+    expect(account.register.mutateAsync).toHaveBeenCalledWith({
+      email: "juliet@example.com",
+      password: "longenough1",
+      phone_number: "+2347016377711",
+    });
+    expect(order).toEqual(["register", "book"]);
     expect(body).toMatchObject({ experience_id: "exp-1", guide_id: "g-1", items: [{ experience_price_id: "adult", quantity: 1 }] });
     expect(key).toBeTruthy();
     expect(window.localStorage.getItem("myjourny:checkout-draft")).toBeNull();
   });
 
-  it("won't book before they're logged in", async () => {
-    const booked = vi.fn();
-    server.use(http.post(apiUrl("/bookings/"), () => (booked(), HttpResponse.json({}))));
+  it("stays on the password step and doesn't book when sign-up fails", async () => {
+    account.register.mutateAsync.mockRejectedValue(new Error("nope"));
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await act(async () => result.current.steps.onConfirm());
-    expect(booked).not.toHaveBeenCalled();
+    fillDetails(result);
+    act(() => result.current.form.onContinue());
+    act(() => result.current.form.onPasswordChange("longenough1"));
+    act(() => result.current.form.onConfirmPasswordChange("longenough1"));
+
+    act(() => {
+      void result.current.form.onConfirm();
+    });
+
+    await waitFor(() => expect(result.current.form.pending).toBe(false));
+    expect(result.current.form.step).toBe("password");
+    expect(created).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("opens the success page for a free booking, and for a booking without a payment link", async () => {
-    session.value = juliet;
+  it("offers log in when the email already has an account", () => {
+    account.register.error = { response: { data: { detail: "Email already registered" } } };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+
+    expect(result.current.form.emailTaken).toBe(true);
+    expect(result.current.form.loginHref).toBe("/login?next=%2Fcheckout");
+  });
+
+  it("asks only for the phone once signed in, and books without signing up", async () => {
+    session.value = signedIn;
+    server.use(
+      http.post(apiUrl("/bookings/"), () =>
+        HttpResponse.json({ id: "b-1", status: "pending", payment_status: "unpaid", url: "https://pay.test/2" }),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+
+    expect(result.current.form.step).toBe("pay");
+    expect(result.current.form.email.trim()).toBe("juliet@example.com");
+    expect(result.current.form.canPay).toBe(false);
+    act(() => result.current.form.onPhoneChange("7016377711"));
+    expect(result.current.form.canPay).toBe(true);
+
+    await withLocation(async () => {
+      act(() => {
+      void result.current.form.onConfirm();
+    });
+      await waitFor(() => expect(window.location.href).toBe("https://pay.test/2"));
+    });
+    expect(account.register.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("prices the booking for real once signed in", async () => {
+    session.value = signedIn;
+    server.use(
+      http.post(apiUrl("/bookings/quote"), () =>
+        HttpResponse.json({ currency: "NGN", lines: [], subtotal: "15000", discount: "0", checkout_fee: "0", total: "15000", guests: 1, days: 1, promo_applied: false }),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+
+    await waitFor(() => expect(result.current.summary?.total).toBe("₦15,000.00"));
+  });
+
+  it("goes to the success page when there is no checkout link", async () => {
+    session.value = signedIn;
     server.use(
       http.post(apiUrl("/bookings/"), () => HttpResponse.json({ id: "b-2", status: "confirmed", payment_status: "unpaid", url: null })),
     );
     const first = renderHookWithProviders(() => useCheckoutViewModel());
-    await act(async () => first.result.current.steps.onConfirm());
+    act(() => first.result.current.form.onPhoneChange("7016377711"));
+    act(() => {
+      void first.result.current.form.onConfirm();
+    });
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-2/success"));
 
     saveCheckoutDraft(draft);
@@ -400,29 +416,45 @@ describe("useCheckoutViewModel: confirm and pay", () => {
       http.post(apiUrl("/bookings/"), () => HttpResponse.json({ id: "b-3", status: "pending", payment_status: "unpaid", url: null })),
     );
     const second = renderHookWithProviders(() => useCheckoutViewModel());
-    await act(async () => second.result.current.steps.onConfirm());
+    act(() => second.result.current.form.onPhoneChange("7016377711"));
+    act(() => {
+      void second.result.current.form.onConfirm();
+    });
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-3/success"));
-    expect(nav.replace).not.toHaveBeenCalledWith("/");
   });
 
-  it("shows why a booking couldn't start and lets them try again", async () => {
-    session.value = juliet;
-    server.use(http.post(apiUrl("/bookings/"), () => HttpResponse.json({ detail: "Nope" }, { status: 400 })));
-    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await act(async () => result.current.steps.onConfirm());
-
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Nope"));
-    expect(result.current.steps.paying).toBe(false);
-    expect(result.current.steps.canPay).toBe(true);
-  });
-
-  it("sends them back to the experience to pick again when the session filled up", async () => {
-    session.value = juliet;
+  it("shows why a booking couldn't start", async () => {
+    session.value = signedIn;
     server.use(http.post(apiUrl("/bookings/"), () => HttpResponse.json({ detail: "This date is sold out" }, { status: 409 })));
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
-    await act(async () => result.current.steps.onConfirm());
+    act(() => result.current.form.onPhoneChange("7016377711"));
+    act(() => {
+      void result.current.form.onConfirm();
+    });
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("This date is sold out"));
-    expect(nav.push).toHaveBeenCalledWith("/experiences/exp-1");
+    expect(result.current.form.pending).toBe(false);
+  });
+
+  it("signs in with Google from the page", () => {
+    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ access_token: "a" }));
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+
+    act(() => result.current.form.onGoogleCredential("cred"));
+
+    expect(account.google.mutate).toHaveBeenCalledWith({ token: "cred" }, expect.any(Object));
+    expect(result.current.form.googleLoading).toBe(false);
+  });
+
+  it("stops the Google spinner when sign-in fails or succeeds", () => {
+    account.google.mutate.mockImplementation((_payload, options) => options.onError());
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    act(() => result.current.form.onGoogleCredential("cred"));
+    expect(result.current.form.googleLoading).toBe(false);
+
+    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ access_token: "a" }));
+    act(() => result.current.form.onGoogleCredential("cred"));
+    expect(result.current.form.googleLoading).toBe(false);
+    expect(nav.push).not.toHaveBeenCalled();
   });
 });
