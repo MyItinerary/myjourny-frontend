@@ -27,7 +27,22 @@ vi.mock("@/lib/queries/bookings", async () => {
 });
 
 vi.mock("@/features/checkout", () => ({
-  BookingConfirmedView: () => <div data-testid="confirmed-booking">You’re going!</div>,
+  BookingConfirmedView: ({
+    confirmation,
+    heading = "You’re going!",
+    body,
+    confirmed = true,
+  }: {
+    confirmation: object | null;
+    heading?: string;
+    body?: string;
+    confirmed?: boolean;
+  }) => (
+    <div data-testid="confirmed-booking" data-has-booking={confirmation ? "yes" : "no"} data-confirmed={String(confirmed)}>
+      <h1>{heading}</h1>
+      {body && <p>{body}</p>}
+    </div>
+  ),
   useBookingConfirmation: () => ({}),
 }));
 
@@ -82,6 +97,9 @@ describe("BookingPaymentStatus", () => {
     renderWithProviders(<BookingPaymentStatus bookingId="b-1" landedFrom="success" />);
 
     expect(screen.getByText("Confirming your payment…")).toBeInTheDocument();
+    // The same page as "You're going!", with the booking, but not yet confirmed.
+    expect(screen.getByTestId("confirmed-booking")).toHaveAttribute("data-has-booking", "yes");
+    expect(screen.getByTestId("confirmed-booking")).toHaveAttribute("data-confirmed", "false");
   });
 
   it("renders payment not completed screen with retry option when not paid", () => {
@@ -100,6 +118,8 @@ describe("BookingPaymentStatus", () => {
     renderWithProviders(<BookingPaymentStatus bookingId="b-1" landedFrom="success" />);
 
     expect(screen.getByText("Thanks — we're confirming your payment")).toBeInTheDocument();
+    // No booking to show, so the same page with just the words.
+    expect(screen.getByTestId("confirmed-booking")).toHaveAttribute("data-has-booking", "no");
   });
 
   it("renders fallback not completed note when booking could not be loaded after landing from cancel", () => {

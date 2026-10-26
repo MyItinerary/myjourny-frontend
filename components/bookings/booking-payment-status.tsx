@@ -26,6 +26,23 @@ function ConfirmedBooking({ booking }: { booking: Booking }) {
   return <BookingConfirmedView confirmation={useBookingConfirmation(booking)} />;
 }
 
+// The same page while the payment is still being confirmed: the booking, in
+// words that don't promise more than we know.
+function ConfirmingBooking({ booking, timedOut }: { booking: Booking; timedOut: boolean }) {
+  return (
+    <BookingConfirmedView
+      confirmation={useBookingConfirmation(booking)}
+      confirmed={false}
+      heading={timedOut ? "Your payment is still processing" : "Confirming your payment…"}
+      body={
+        timedOut
+          ? "We'll email you as soon as it's confirmed. There's no need to pay again."
+          : "This usually takes a few seconds. Please don't close this page or pay again."
+      }
+    />
+  );
+}
+
 // Shown after checkout. itin's redirect only says where the customer came
 // back from; the booking's payment_status (set by the provider's webhook) is
 // what decides whether it's confirmed. Polls while the payment is processing.
@@ -70,23 +87,7 @@ export function BookingPaymentStatus({ bookingId, landedFrom }: Props) {
           />
         );
       case "processing":
-        return timedOut ? (
-          <InterstitialScreen
-            heading="Your payment is still processing"
-            subtitle="We'll email you as soon as it's confirmed. There's no need to pay again."
-            primaryLabel="Back to home"
-            primaryHref="/"
-            illustration={null}
-          />
-        ) : (
-          <InterstitialScreen
-            heading="Confirming your payment…"
-            subtitle="This usually takes a few seconds. Please don't close this page or pay again."
-            primaryLabel="Back to home"
-            primaryHref="/"
-            illustration={null}
-          />
-        );
+        return <ConfirmingBooking booking={booking} timedOut={timedOut} />;
       case "not_paid":
         return (
           <InterstitialScreen
@@ -124,12 +125,12 @@ export function BookingPaymentStatus({ bookingId, landedFrom }: Props) {
   }
 
   return landedFrom === "success" ? (
-    <InterstitialScreen
+    // The booking couldn't be read (signed out, say): the same page, words only.
+    <BookingConfirmedView
+      confirmation={null}
+      confirmed={false}
       heading="Thanks — we're confirming your payment"
-      subtitle="We'll email you as soon as your booking is confirmed. There's no need to pay again."
-      primaryLabel="Back to home"
-      primaryHref="/"
-      illustration={null}
+      body="We'll email you as soon as your booking is confirmed. There's no need to pay again."
     />
   ) : (
     <InterstitialScreen
