@@ -7,14 +7,14 @@ const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
 // Figma: "Frame 2147226772" (2001:11989 desktop / 2001:12383 mobile) —
 // breadcrumb (desktop only), heading, filter-chip row.
 // `total` is an exact count from the backend; `count` is what's loaded so far
-// (shown as "N+").
+// (shown as "N+"). While loading, only the label is shown; the bracketed count
+// appears once the data has arrived.
 export function CategoryHeader({
   label,
   count,
   total,
   isLoading = false,
   isError = false,
-  loadingText = "(Loading experiences…)",
   errorText = "(Failed to load)",
 }: {
   label: string;
@@ -22,11 +22,10 @@ export function CategoryHeader({
   total?: number;
   isLoading?: boolean;
   isError?: boolean;
-  loadingText?: string;
   errorText?: string;
 }) {
   const countText = isLoading
-    ? loadingText
+    ? null
     : isError && (count === 0 || count === undefined)
       ? errorText
       : total !== undefined
@@ -50,7 +49,13 @@ export function CategoryHeader({
       </nav>
 
       <p className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[40px]">
-        {label} <span className="text-muted-foreground">{countText}</span>
+        {label}
+        {countText && (
+          <>
+            {" "}
+            <span className="text-muted-foreground">{countText}</span>
+          </>
+        )}
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
