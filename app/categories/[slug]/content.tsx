@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -29,6 +29,7 @@ export function CategoryContent({
   moreLabel,
   loadMore,
   total,
+  filters,
 }: {
   label: string;
   items: ExperienceItem[];
@@ -40,6 +41,8 @@ export function CategoryContent({
   loadMore?: ComponentProps<typeof CategoryResultsGrid>["loadMore"];
   /** Exact result count, when the source knows it. */
   total?: number;
+  /** Filter controls shown under the heading. */
+  filters?: ReactNode;
 }) {
   const discoverCities = useDiscoverCitiesViewModel();
   return (
@@ -73,6 +76,7 @@ export function CategoryContent({
           total={total}
           isLoading={isLoading}
           isError={isError}
+          filters={filters}
         />
         <div className="mt-6 lg:mt-9">
           <CategoryResultsGrid

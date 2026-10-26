@@ -1,8 +1,5 @@
 import Link from "next/link";
-
-import { FilterChip } from "./filter-chip";
-
-const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
+import type { ReactNode } from "react";
 
 // Figma: "Frame 2147226772" (2001:11989 desktop / 2001:12383 mobile) —
 // breadcrumb (desktop only), heading, filter-chip row.
@@ -16,6 +13,7 @@ export function CategoryHeader({
   isLoading = false,
   isError = false,
   errorText = "(Failed to load)",
+  filters,
 }: {
   label: string;
   count?: number;
@@ -23,6 +21,8 @@ export function CategoryHeader({
   isLoading?: boolean;
   isError?: boolean;
   errorText?: string;
+  /** The page's filter controls, under the heading. */
+  filters?: ReactNode;
 }) {
   const countText = isLoading
     ? null
@@ -58,11 +58,7 @@ export function CategoryHeader({
         )}
       </p>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {FILTERS.map((filter) => (
-          <FilterChip key={filter} label={filter} />
-        ))}
-      </div>
+      {filters}
     </div>
   );
 }

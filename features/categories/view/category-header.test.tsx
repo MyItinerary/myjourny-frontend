@@ -137,4 +137,10 @@ describe("CategoryHeader", () => {
     expect(screen.getByRole("link", { name: "Home page" })).toBeInTheDocument();
     expect(screen.getByText("Food & Drinks", { selector: "span" })).toBeInTheDocument();
   });
+
+  it("shows the page's filter controls under the heading", () => {
+    renderWithProviders(<CategoryHeader label="Street life" count={3} filters={<button type="button">Price</button>} />);
+    expect(screen.getByRole("button", { name: "Price" })).toBeInTheDocument();
+    expect(screen.queryByText("Languages")).not.toBeInTheDocument();
+  });
 });
