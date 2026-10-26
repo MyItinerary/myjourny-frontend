@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { SlidersHorizontal } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
+import { openMobileSearch } from "@/features/mobile-nav";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
-import { CategoryResultsGrid, FilterChip } from "@/features/categories";
+import { CategoryResultsGrid } from "@/features/categories";
+import { ListingFiltersView, useListingFiltersViewModel } from "@/features/listing-filters";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
@@ -23,7 +24,6 @@ import {
 } from "@/lib/queries/experiences";
 import { cn } from "@/lib/utils";
 
-const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
 // One grid page: 4 rows of the 4-col layout.
 const PAGE_SIZE = 16;
 
@@ -41,10 +41,12 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
 
   // A day picked in the search bar narrows the results to that day.
   const date = useSearchParams().get("date") ?? undefined;
+  const filters = useListingFiltersViewModel();
   const cityQuery = useInfiniteFilteredExperiences({
     city: cityName,
     interest: interest ?? undefined,
     date,
+    ...filters.params,
     pageSize: PAGE_SIZE,
   });
   // Neither source can exclude a city, so over-fetch and drop this city's
@@ -85,10 +87,14 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
         >
           <ChevronLeftIcon className="size-[22px] text-foreground" />
         </Link>
-        <div className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5">
+        <button
+          type="button"
+          onClick={() => openMobileSearch()}
+          className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5 text-left cursor-pointer"
+        >
           <Image src="/icons/search-lg.svg" alt="" width={18} height={18} />
           <span className="text-sm text-muted-foreground">Discover locations</span>
-        </div>
+        </button>
       </div>
 
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-12">
@@ -109,17 +115,9 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
             Experiences in {cityName} <span className="text-muted-foreground">{countLabel}</span>
           </h1>
 
+          <ListingFiltersView {...filters} />
+
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            <button
-              type="button"
-              className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-[104px] bg-[#F4F2EE] px-4 py-1 text-sm text-foreground transition-colors hover:bg-[#eae7e1]"
-            >
-              <span>Filters</span>
-              <SlidersHorizontal className="size-3.5" />
-            </button>
-            {FILTERS.map((filter) => (
-              <FilterChip key={filter} label={filter} />
-            ))}
             {categoryChips.map((chip) => {
               const selected = interest === chip.slug;
               return (
@@ -129,7 +127,7 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
                   aria-pressed={selected}
                   onClick={() => setInterest(selected ? null : chip.slug)}
                   className={cn(
-                    "shrink-0 cursor-pointer whitespace-nowrap rounded-[104px] px-4 py-1 text-sm transition-colors",
+                    "h-10 shrink-0 cursor-pointer whitespace-nowrap rounded-[104px] px-4 text-sm transition-colors",
                     selected
                       ? "bg-foreground text-white"
                       : "bg-[#F4F2EE] text-foreground hover:bg-[#eae7e1]"

@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { toCityDestination, useExperienceCities } from "@/features/cities";
 import { categoriesBySlug } from "@/lib/mock-data/home";
 
 import {
@@ -57,10 +58,10 @@ export function useSearchBarViewModel({
   const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | null>(null);
 
   const [selectedWhen, setSelectedWhen] = useState("");
-  // Searches are for today or later: the calendar opens on today and greys
-  // out earlier days.
+  // Searches are for today or later: earlier days are greyed out, and no day
+  // is picked until the traveller chooses one.
   const [minDate] = useState(startOfToday);
-  const [selectedDate, setSelectedDate] = useState<Date>(minDate);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // What they typed into "Who"; null once the steppers take over and the text
   // comes from the counts.
@@ -109,15 +110,23 @@ export function useSearchBarViewModel({
 
   const trimmedQuery = selectedWhere.trim().toLowerCase();
 
+  // Cities that have experiences, from the API; the built-in list only until
+  // it loads (or if it can't).
+  const citiesQuery = useExperienceCities();
+  const destinations: DestinationSuggestion[] = useMemo(
+    () => (citiesQuery.data?.length ? citiesQuery.data.map(toCityDestination) : DEFAULT_DESTINATIONS),
+    [citiesQuery.data],
+  );
+
   const filteredDestinations = useMemo(() => {
-    if (!trimmedQuery) return DEFAULT_DESTINATIONS.slice(0, 5);
-    return DEFAULT_DESTINATIONS.filter(
+    if (!trimmedQuery) return destinations.slice(0, 5);
+    return destinations.filter(
       (dest) =>
         dest.city.toLowerCase().includes(trimmedQuery) ||
         dest.id.toLowerCase().includes(trimmedQuery) ||
         dest.description.toLowerCase().includes(trimmedQuery),
     );
-  }, [trimmedQuery]);
+  }, [destinations, trimmedQuery]);
 
   const filteredActivities = useMemo(() => {
     if (!trimmedQuery) return DEFAULT_ACTIVITIES.slice(0, 6);
@@ -185,6 +194,11 @@ export function useSearchBarViewModel({
   }, []);
 
   const onSelectDate = useCallback((date: Date, label?: string) => {
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (target < today) return;
     setSelectedDate(date);
     setSelectedWhen(label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }));
     setActiveTab("who");
@@ -203,7 +217,7 @@ export function useSearchBarViewModel({
 
       handleClose();
       // The day they picked goes to city and category results.
-      const day = selectedWhen && selectedDate >= minDate ? toIsoDay(selectedDate) : null;
+      const day = selectedWhen && selectedDate && selectedDate >= minDate ? toIsoDay(selectedDate) : null;
 
       if (selectedType === "experience" && selectedWhereId) {
         router.push(`/experiences/${selectedWhereId}`);
@@ -220,7 +234,7 @@ export function useSearchBarViewModel({
         return;
       }
 
-      const matchedDest = DEFAULT_DESTINATIONS.find(
+      const matchedDest = destinations.find(
         (d) =>
           d.city.toLowerCase().includes(trimmed) ||
           d.id.toLowerCase().includes(trimmed) ||
@@ -257,7 +271,7 @@ export function useSearchBarViewModel({
 
       router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
     },
-    [handleClose, minDate, router, selectedDate, selectedType, selectedWhen, selectedWhere, selectedWhereId],
+    [destinations, handleClose, minDate, router, selectedDate, selectedType, selectedWhen, selectedWhere, selectedWhereId],
   );
 
   const onNavigateToDestination = useCallback(

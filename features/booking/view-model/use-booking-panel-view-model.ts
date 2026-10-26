@@ -292,9 +292,9 @@ export function useBookingPanelViewModel({
         onSuccess: (booking) => {
           if (booking.url) window.location.href = booking.url;
           // Free experiences are confirmed straight away, with no checkout.
-          else if (booking.status === "confirmed") router.push(`/bookings/${booking.id}/success`);
-          // Anything else (e.g. awaiting payment with no link yet) has its page.
-          else router.push(`/bookings/${booking.id}`);
+          else router.push(`/bookings/${booking.id}/success`);
+
+
         },
         onError: (error) => {
           bookingAttemptKey.current = null;

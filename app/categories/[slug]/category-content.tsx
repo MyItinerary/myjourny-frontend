@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 
 import { CategoryContent } from "./content";
 import { apiErrorMessage } from "@/lib/api-error";
+import { ListingFiltersView, useListingFiltersViewModel } from "@/features/listing-filters";
 import { useSession } from "@/lib/auth/session-store";
 import { experienceListItemToCardProps, useInfiniteFilteredExperiences } from "@/lib/queries/experiences";
 import { findCategoryBySlug, useInterestCategories } from "@/lib/queries/categories";
@@ -23,11 +24,19 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
 
   // A day picked in the search bar narrows the results to that day.
   const date = useSearchParams().get("date") ?? undefined;
-  const query = useInfiniteFilteredExperiences({ interest: slug, date, pageSize: PAGE_SIZE, enabled: hydrated });
+  const filters = useListingFiltersViewModel();
+  const query = useInfiniteFilteredExperiences({
+    interest: slug,
+    date,
+    ...filters.params,
+    pageSize: PAGE_SIZE,
+    enabled: hydrated,
+  });
 
   return (
     <CategoryContent
       label={resolvedLabel}
+      filters={<ListingFiltersView {...filters} />}
       items={(query.data?.pages ?? []).flatMap((p) => p.items).map(experienceListItemToCardProps)}
       total={query.data?.pages[0]?.total}
       isLoading={!hydrated || query.isPending}

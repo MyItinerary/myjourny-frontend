@@ -15,7 +15,7 @@ export interface DatePickerCalendarProps {
   onSelect: (date: Date) => void;
   /** "Today" / "Tomorrow" / "This weekend"-style quick picks, shown above the grid when provided. */
   presets?: DatePickerPreset[];
-  /** Days before this are shown greyed-out and unclickable — both call sites want "no past dates". */
+  /** Days before this are shown greyed-out and unclickable — defaults to start of today. */
   minDate?: Date;
   /** Only days this returns true for can be picked (e.g. session dates). */
   isDateEnabled?: (date: Date) => boolean;
@@ -56,7 +56,7 @@ export function DatePickerCalendar({
   selectedDate,
   onSelect,
   presets,
-  minDate,
+  minDate = startOfDay(new Date()),
   isDateEnabled,
   className,
 }: DatePickerCalendarProps) {
@@ -68,21 +68,31 @@ export function DatePickerCalendar({
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const minDay = minDate ? startOfDay(minDate) : null;
+  const isPrevDisabled = !!minDay && new Date(year, month, 0) < minDay;
 
   return (
     <div className={cn("flex w-full flex-col gap-3", className)}>
       {presets && presets.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          {presets.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              onClick={() => onSelect(preset.date)}
-              className="rounded-full border border-[#E0E0E0] bg-white px-3 py-1 text-center font-sans text-xs font-normal text-[#130404] transition-colors hover:bg-[#F4F2EE] hover:border-brand/40 cursor-pointer"
-            >
-              {preset.label}
-            </button>
-          ))}
+          {presets.map((preset) => {
+            const isPresetDisabled = !!minDay && startOfDay(preset.date) < minDay;
+            return (
+              <button
+                key={preset.label}
+                type="button"
+                disabled={isPresetDisabled}
+                onClick={() => onSelect(preset.date)}
+                className={cn(
+                  "rounded-full border border-[#E0E0E0] bg-white px-3 py-1 text-center font-sans text-xs font-normal text-[#130404] transition-colors",
+                  isPresetDisabled
+                    ? "cursor-not-allowed opacity-40"
+                    : "cursor-pointer hover:bg-[#F4F2EE] hover:border-brand/40",
+                )}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -100,9 +110,13 @@ export function DatePickerCalendar({
         <div className="flex items-center justify-between py-0.5">
           <button
             type="button"
+            disabled={isPrevDisabled}
             onClick={() => setViewDate(new Date(year, month - 1, 1))}
             aria-label="Previous month"
-            className="flex size-7 items-center justify-center rounded-full text-[#130404] transition-colors hover:bg-[#F4F2EE] cursor-pointer"
+            className={cn(
+              "flex size-7 items-center justify-center rounded-full text-[#130404] transition-colors",
+              isPrevDisabled ? "cursor-not-allowed opacity-30" : "cursor-pointer hover:bg-[#F4F2EE]",
+            )}
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -136,12 +150,12 @@ export function DatePickerCalendar({
                   disabled={isDisabled}
                   onClick={() => onSelect(date)}
                   className={cn(
-                    "flex h-8 w-8 items-center justify-center text-center font-sans text-xs font-normal transition-colors cursor-pointer",
+                    "flex h-8 w-8 items-center justify-center text-center font-sans text-xs font-normal transition-colors",
                     isSelected
                       ? "rounded-[8px] bg-[#F5032D] font-medium text-white shadow-sm"
                       : isDisabled
                         ? "cursor-not-allowed rounded-[8px] text-[#CDCDCD]"
-                        : "rounded-[8px] text-[#333134] hover:bg-[#F4F2EE]"
+                        : "cursor-pointer rounded-[8px] text-[#333134] hover:bg-[#F4F2EE]",
                   )}
                 >
                   {day}

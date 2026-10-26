@@ -66,6 +66,11 @@ type RecommendationParams = {
   id?: number;
   /** Interest category or subcategory slug; the backend also matches its subcategories and older tags. */
   interest?: string;
+  price_min?: number;
+  price_max?: number;
+  duration_min?: number;
+  duration_max?: number;
+  time_of_day?: string;
 };
 
 async function fetchRecommendations(
@@ -77,6 +82,11 @@ async function fetchRecommendations(
     city: params.city,
     id: params.id,
     interest: params.interest,
+    price_min: params.price_min,
+    price_max: params.price_max,
+    duration_min: params.duration_min,
+    duration_max: params.duration_max,
+    time_of_day: params.time_of_day,
     offset: params.offset,
     limit: params.limit,
   };
