@@ -92,7 +92,7 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
         </button>
       </div>
 
-      <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-12">
+      <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-10 xl:px-[150px] lg:pt-9 lg:pb-12">
         <div className="flex flex-col gap-4 lg:gap-[18px]">
           <nav aria-label="Breadcrumb" className="hidden items-center gap-1.5 lg:flex">
             <Link href="/" className="text-base font-medium text-brand">

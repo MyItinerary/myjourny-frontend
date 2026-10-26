@@ -424,7 +424,7 @@ export function HomeNav({ className }: { className?: string }) {
               )}
               <Link
                 href="#"
-                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand lg:inline-block mr-1"
+                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand xl:inline-block mr-1"
               >
                 Become a guide
               </Link>

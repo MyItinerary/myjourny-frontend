@@ -17,7 +17,7 @@ const GRID_TILES = 3;
 export function ExperienceGalleryView({ alt, ...vm }: ExperienceGalleryViewModel & { alt: string }) {
   const { images } = vm;
   if (images.length === 0) {
-    return <div className="aspect-[4/3] w-full rounded-2xl bg-muted lg:aspect-auto lg:h-[352px]" />;
+    return <div className="aspect-[4/3] w-full rounded-2xl bg-muted md:aspect-[16/9] lg:aspect-auto lg:h-[352px]" />;
   }
   const total = images.length;
   const label = (index: number) => `View photo ${index + 1} of ${total}`;
@@ -39,7 +39,7 @@ export function ExperienceGalleryView({ alt, ...vm }: ExperienceGalleryViewModel
               type="button"
               aria-label={label(index)}
               onClick={() => vm.onOpenViewer(index)}
-              className="relative aspect-[4/3] w-full shrink-0 cursor-pointer snap-center bg-muted"
+              className="relative aspect-[4/3] w-full shrink-0 cursor-pointer snap-center bg-muted md:aspect-[16/9]"
             >
               <Image src={src} alt={alt} fill unoptimized sizes="100vw" className="object-cover" />
             </button>

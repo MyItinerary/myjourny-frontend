@@ -78,7 +78,7 @@ export function SearchContent() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="e.g. quiet dinner with sunset view, adrenaline water sports..."
-                  className="w-full h-12 rounded-full border border-[#E0DFDD] bg-white pl-11 pr-4 text-sm font-medium text-[#333134] placeholder:text-[#A09C96] focus:border-brand focus:outline-none shadow-xs"
+                  className="w-full h-12 rounded-full border border-[#E0DFDD] bg-white pl-11 pr-4 text-base font-medium text-[#333134] lg:text-sm placeholder:text-[#A09C96] focus:border-brand focus:outline-none shadow-xs"
                 />
               </div>
               <Button
