@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -11,6 +12,7 @@ import { Footer } from "@/components/home/footer";
 import { CategoryResultsGrid } from "@/features/categories";
 import { ListingFiltersView, useListingFiltersViewModel } from "@/features/listing-filters";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
+import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 import { useInterestCategories } from "@/lib/queries/categories";
 import {
@@ -37,10 +39,13 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
   const isGuest = hydrated && !isAccount;
   const [interest, setInterest] = useState<string | null>(null);
 
+  // A day picked in the search bar narrows the results to that day.
+  const date = useSearchParams().get("date") ?? undefined;
   const filters = useListingFiltersViewModel();
   const cityQuery = useInfiniteFilteredExperiences({
     city: cityName,
     interest: interest ?? undefined,
+    date,
     ...filters.params,
     pageSize: PAGE_SIZE,
   });
@@ -141,6 +146,7 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
             categoryLabel={cityName}
             isLoading={cityQuery.isPending}
             isError={cityQuery.isError}
+            errorMessage={cityQuery.isError ? apiErrorMessage(cityQuery.error, "Couldn't load experiences.") : undefined}
             onRetry={() => cityQuery.refetch()}
             moreLabel="Show more"
             loadMore={{

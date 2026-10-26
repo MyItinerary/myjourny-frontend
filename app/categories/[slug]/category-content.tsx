@@ -1,6 +1,9 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
 import { CategoryContent } from "./content";
+import { apiErrorMessage } from "@/lib/api-error";
 import { ListingFiltersView, useListingFiltersViewModel } from "@/features/listing-filters";
 import { useSession } from "@/lib/auth/session-store";
 import { experienceListItemToCardProps, useInfiniteFilteredExperiences } from "@/lib/queries/experiences";
@@ -19,9 +22,12 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
   const matchedCategory = categoriesQuery.data ? findCategoryBySlug(categoriesQuery.data, slug) : undefined;
   const resolvedLabel = matchedCategory ? matchedCategory.text : label;
 
+  // A day picked in the search bar narrows the results to that day.
+  const date = useSearchParams().get("date") ?? undefined;
   const filters = useListingFiltersViewModel();
   const query = useInfiniteFilteredExperiences({
     interest: slug,
+    date,
     ...filters.params,
     pageSize: PAGE_SIZE,
     enabled: hydrated,
@@ -35,6 +41,7 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
       total={query.data?.pages[0]?.total}
       isLoading={!hydrated || query.isPending}
       isError={query.isError}
+      errorMessage={query.isError ? apiErrorMessage(query.error, "Couldn't load experiences.") : undefined}
       onRetry={() => query.refetch()}
       loadMore={{
         hasMore: query.hasNextPage,

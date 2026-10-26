@@ -156,6 +156,16 @@ describe("useSearchBarViewModel", () => {
     expect(mockPush).toHaveBeenCalledWith("/cities/umuahia");
   });
 
+  it("takes the picked day to the city's results", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "" }));
+    act(() => result.current.onSelectDate(new Date(2030, 5, 1), "June 1"));
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01");
+  });
+
   it("navigates to city route on destination selection", () => {
     mockPush.mockClear();
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());

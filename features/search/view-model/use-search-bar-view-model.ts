@@ -9,7 +9,10 @@ import {
   DEFAULT_DESTINATIONS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
+  startOfToday,
+  toIsoDay,
   useSearchExperiences,
+  withDate,
 } from "../model/search";
 import type {
   ActivitySuggestion,
@@ -55,12 +58,10 @@ export function useSearchBarViewModel({
   const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | null>(null);
 
   const [selectedWhen, setSelectedWhen] = useState("");
+  // Searches are for today or later: earlier days are greyed out, and no day
+  // is picked until the traveller chooses one.
+  const [minDate] = useState(startOfToday);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const minDate = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
 
   // What they typed into "Who"; null once the steppers take over and the text
   // comes from the counts.
@@ -215,6 +216,8 @@ export function useSearchBarViewModel({
       if (!trimmed) return;
 
       handleClose();
+      // The day they picked goes to city and category results.
+      const day = selectedWhen && selectedDate && selectedDate >= minDate ? toIsoDay(selectedDate) : null;
 
       if (selectedType === "experience" && selectedWhereId) {
         router.push(`/experiences/${selectedWhereId}`);
@@ -222,12 +225,12 @@ export function useSearchBarViewModel({
       }
 
       if (selectedType === "activity" && selectedWhereId) {
-        router.push(`/categories/${selectedWhereId}`);
+        router.push(withDate(`/categories/${selectedWhereId}`, day));
         return;
       }
 
       if (selectedType === "destination" && selectedWhereId) {
-        router.push(`/cities/${selectedWhereId}`);
+        router.push(withDate(`/cities/${selectedWhereId}`, day));
         return;
       }
 
@@ -247,28 +250,28 @@ export function useSearchBarViewModel({
       );
 
       if (matchedDest && !matchedAct) {
-        router.push(`/cities/${matchedDest.id}`);
+        router.push(withDate(`/cities/${matchedDest.id}`, day));
         return;
       }
 
       if (matchedAct) {
-        router.push(`/categories/${matchedAct.id}`);
+        router.push(withDate(`/categories/${matchedAct.id}`, day));
         return;
       }
 
       if (matchedDest) {
-        router.push(`/cities/${matchedDest.id}`);
+        router.push(withDate(`/cities/${matchedDest.id}`, day));
         return;
       }
 
       if (categoriesBySlug.has(trimmed)) {
-        router.push(`/categories/${trimmed}`);
+        router.push(withDate(`/categories/${trimmed}`, day));
         return;
       }
 
       router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
     },
-    [destinations, handleClose, router, selectedType, selectedWhere, selectedWhereId],
+    [destinations, handleClose, minDate, router, selectedDate, selectedType, selectedWhen, selectedWhere, selectedWhereId],
   );
 
   const onNavigateToDestination = useCallback(
