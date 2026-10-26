@@ -1,216 +1,229 @@
 "use client";
 
-import { Calendar, Clock, ShieldCheck, User, X } from "lucide-react";
+import { Check, User, X } from "lucide-react";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import type { BookingPanelViewModel } from "../view-model/use-booking-panel-view-model";
+import { BookButton, InfoRow, Notice, PillRow, UrgencyBadge } from "./booking-card-parts";
 import { SessionDateView, SessionTimesView } from "./session-picker-view";
 import { Stepper } from "./stepper";
 
 type Props = BookingPanelViewModel & {
   className?: string;
-  /** Shows a close button, for the mobile bottom sheet. */
+  /** Turns the card into the mobile bottom sheet, with its handle, title and close button. */
   onClose?: () => void;
+  /** The sheet's title: the experience. */
+  title?: string;
 };
 
-/** The booking form: a sticky sidebar on desktop and a bottom sheet on mobile.
+/** The booking card: a sticky 400px card on desktop and a bottom sheet on mobile.
+ * Order is date, time, guests, total, button. Red is the button's alone; amber is urgency's alone.
  * Prices shown are always the server's quote. */
 export function BookingPanelView(props: Props) {
-  const { className, onClose, priceFrom, ruleNotes, sessions, tickets, minGuestsWarning, days, addons } = props;
+  const { className, onClose, title, card, sessions, tickets, days, addons } = props;
+  const [datesOpen, setDatesOpen] = useState(false);
+  const urgent = sessions.urgency;
+  const several = tickets.length > 1;
+
   return (
-    <div className={cn("relative flex flex-col gap-5 rounded-2xl border border-border bg-card p-6", className)}>
-      {onClose && (
-        <button
-          type="button"
-          aria-label="Close"
-          onClick={onClose}
-          className="absolute top-3 right-3 flex size-10 items-center justify-center rounded-full bg-muted text-foreground"
-        >
-          <X className="size-4" />
-        </button>
+    <div
+      className={cn(
+        "relative flex w-full flex-col gap-5 border border-[#E7E7E7] bg-white px-7 py-8",
+        onClose ? "rounded-t-[32px] border-b-0 px-5 pt-3 pb-8" : "rounded-[32px]",
+        className,
       )}
-
-      <div className="flex flex-col items-start">
-        <p className="flex items-baseline gap-1">
-          {priceFrom.showFrom && <span className="font-sans text-base font-normal text-[#6F6B72]">from</span>}
-          <span className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#130404]">{priceFrom.amount}</span>
-          <span className="font-sans text-base font-normal text-[#6F6B72]">{priceFrom.unit}</span>
-        </p>
-        {props.scheduleLabel && (
-          <p className="mt-1 font-sans text-sm font-medium text-[#130404]">{props.scheduleLabel}</p>
-        )}
-        {ruleNotes.length > 0 && (
-          <ul className="mt-3 flex flex-col gap-1">
-            {ruleNotes.map((note) => (
-              <li key={note} className="text-xs font-medium text-[#FF5400]">
-                {note}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <SessionTimesView {...sessions} />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {tickets.length > 1 && <span className="font-sans text-sm font-normal text-[#130404]">Tickets</span>}
-        {tickets.map((ticket) => (
-          <div key={ticket.id} className="flex items-center justify-between rounded-[24px] bg-[#F4F2EE] px-4 py-3">
-            <span className="flex flex-col">
-              <span className="flex items-center gap-2 font-sans text-sm font-medium text-[#130404]">
-                <User className="size-4 text-[#130404]" />
-                {ticket.label}
-              </span>
-              {ticket.priceLabel && <span className="pl-6 text-xs text-[#6F6B72]">{ticket.priceLabel}</span>}
-            </span>
-            <Stepper label={ticket.label} value={ticket.quantity} min={0} max={ticket.max} onChange={ticket.onChange} />
+    >
+      {onClose && (
+        <div className="-mb-2 flex flex-col items-center gap-1.5">
+          <span aria-hidden className="h-1 w-9 rounded-sm bg-[#E0E0E0]" />
+          <div className="flex w-full items-center justify-between">
+            <p className="truncate text-lg font-medium text-[#333134]">{title}</p>
+            <button type="button" aria-label="Close" onClick={onClose} className="flex size-11 shrink-0 cursor-pointer items-center justify-center">
+              <X className="size-6 text-[#333134]" />
+            </button>
           </div>
-        ))}
-        {props.groupSizeNote && <p className="text-xs text-[#6F6B72]">{props.groupSizeNote}</p>}
-        {minGuestsWarning && <p className="text-xs text-[#F5032D]">{minGuestsWarning}</p>}
-        {props.seatsWarning && <p className="text-xs text-[#F5032D]">{props.seatsWarning}</p>}
-        {props.lengthNote && <p className="text-xs text-[#6F6B72]">{props.lengthNote}</p>}
-      </div>
-
-      {days.show && (
-        <div className="flex items-center justify-between rounded-[24px] bg-[#F4F2EE] px-4 py-3">
-          <span className="flex items-center gap-2 font-sans text-sm font-medium text-[#130404]">
-            <Calendar className="size-4 text-[#130404]" />
-            Days
-          </span>
-          <Stepper label="days" value={days.value} min={1} max={60} onChange={days.onChange} />
         </div>
       )}
 
-      {addons.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <span className="font-sans text-sm font-normal text-[#130404]">Add extras</span>
-          {addons.map((addon) => (
-            <label
-              key={addon.id}
-              className="flex cursor-pointer items-center justify-between rounded-xl border border-border px-4 py-3 text-sm"
-            >
-              <span className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={addon.checked}
-                  onChange={(e) => addon.onToggle(e.target.checked)}
-                  className="size-4 accent-[#2C0101]"
-                />
-                <span className="font-medium text-foreground">{addon.label}</span>
+      <div className="flex flex-col gap-2">
+        <p className="flex flex-wrap items-baseline gap-x-2">
+          {card.headline.showFrom && <span className="text-2xl font-semibold text-[#333134]">From</span>}
+          <span className="text-2xl leading-8 font-semibold text-[#333134]">{card.headline.amount}</span>
+          {card.headline.was && (
+            <s className="text-sm text-[#6F6B72]" aria-label={`was ${card.headline.was}`}>
+              {card.headline.was}
+            </s>
+          )}
+          <span className="text-base text-[#6F6B72]">{card.headline.unit}</span>
+        </p>
+        {card.headline.pill && (
+          <span className="w-fit rounded-full bg-[#F4F2EE] px-2 py-0.5 text-xs text-[#333134]">{card.headline.pill}</span>
+        )}
+        {card.notes.map((note) => (
+          <p key={note} className="text-sm leading-5 text-[#6F6B72]">
+            {note}
+          </p>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <SessionDateView sessions={sessions} label={card.dateField} locked={card.locked} open={datesOpen} onOpenChange={setDatesOpen} />
+        {!datesOpen && <SessionTimesView sessions={sessions} locked={card.locked} />}
+        {urgent && <UrgencyBadge {...urgent} />}
+
+        <div className={cn("flex flex-col gap-2 pt-1", card.locked && "opacity-60")}>
+          {tickets.map((ticket) => (
+            <PillRow key={ticket.id} className="py-2 pr-2 pl-4">
+              <span className="flex min-w-0 items-center gap-2">
+                <User aria-hidden className="size-6 shrink-0 text-[#333134]" />
+                <span className="flex flex-col">
+                  <span className="text-base leading-[22px] text-[#333134]">{several ? ticket.label : "Guests"}</span>
+                  {ticket.priceLabel && <span className="text-[13px] leading-[18px] text-[#6F6B72]">{ticket.priceLabel}</span>}
+                </span>
               </span>
-              <span className="text-muted-foreground">{addon.priceLabel}</span>
-            </label>
+              <Stepper label={several ? ticket.label : "guests"} value={ticket.quantity} min={0} max={ticket.max} onChange={ticket.onChange} disabled={card.locked} />
+            </PillRow>
           ))}
         </div>
+
+        {days.show && (
+          <PillRow className="py-2 pr-2 pl-4">
+            <span className="text-base leading-[22px] text-[#333134]">Days</span>
+            <Stepper label="days" value={days.value} min={1} max={60} onChange={days.onChange} disabled={card.locked} />
+          </PillRow>
+        )}
+
+        {addons.length > 0 && (
+          <fieldset className="flex flex-col">
+            <legend className="text-sm font-medium text-[#333134]">Add extras</legend>
+            {addons.map((addon) => (
+              <label key={addon.id} className="flex cursor-pointer items-center gap-3 py-2.5">
+                <input type="checkbox" className="peer sr-only" checked={addon.checked} onChange={(e) => addon.onToggle(e.target.checked)} />
+                <span
+                  aria-hidden
+                  className={cn(
+                    "flex size-[22px] shrink-0 items-center justify-center rounded-md peer-focus-visible:ring-2 peer-focus-visible:ring-[#333134]",
+                    addon.checked ? "bg-[#32070F]" : "border-[1.5px] border-[#BDBDBD]",
+                  )}
+                >
+                  {addon.checked && <Check className="size-3.5 text-white" />}
+                </span>
+                <span className="min-w-0 flex-1 text-[15px] font-medium text-[#333134]">{addon.label}</span>
+                <span className="text-sm text-[#333134]">{addon.priceLabel}</span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+      </div>
+
+      {card.notice && (
+        <Notice
+          tone={card.notice.tone}
+          title={card.notice.title}
+          body={card.notice.body}
+          action={card.notice.action?.label}
+          onAction={card.notice.action?.kind === "retry" ? card.onRetry : () => setDatesOpen(true)}
+        />
       )}
 
-      <SessionDateView {...sessions} />
+      <PromoCode {...props} />
+      <Summary {...props} />
 
-      <CheckoutSummary {...props} />
-
-      <div className="flex flex-col gap-3 border-t border-border pt-4">
-        {props.cancellationPolicy && (
-          <div className="flex items-start gap-2">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <div>
-              <p className="text-sm text-foreground">Cancellation policy</p>
-              <p className="text-xs text-muted-foreground">{props.cancellationPolicy}</p>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
+          <div className="h-px bg-[#E7E7E7]" />
+          <div className="flex flex-col gap-0.5">
+            <div className="flex min-h-9 items-center justify-between gap-3">
+              <span className="text-xl font-medium text-[#333134]">Total</span>
+              {card.total.amount ? (
+                <span aria-live="polite" className={cn("text-2xl font-semibold text-[#333134]", props.quote?.updating && "opacity-60")}>
+                  {card.total.amount}
+                </span>
+              ) : (
+                <span className="text-base text-[#6F6B72]">{card.total.muted}</span>
+              )}
             </div>
-          </div>
-        )}
-        <div className="flex items-start gap-2">
-          <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          <div>
-            <p className="text-sm text-foreground">Duration - {props.durationLabel}</p>
-            {props.hasTimeSlots && <p className="text-xs text-muted-foreground">See time slots above</p>}
+            <p className="text-right text-[13px] leading-[18px] text-[#6F6B72]">{card.total.fees}</p>
           </div>
         </div>
+
+        {props.booking.available ? (
+          <BookButton {...card.button} />
+        ) : (
+          <p className="text-center text-sm text-[#6F6B72]">This experience isn&apos;t available for booking yet.</p>
+        )}
       </div>
+
+      {card.cancellation && (
+        <div className="flex flex-col gap-4">
+          <div className="h-px bg-[#E7E7E7]" />
+          <InfoRow {...card.cancellation} />
+        </div>
+      )}
     </div>
   );
 }
 
-/** Promo code, the quote's lines, the book button and the total. */
-function CheckoutSummary({ promo, quote, quoteError, booking, total }: BookingPanelViewModel) {
+/** "Have a promo code?" opens a small field; its message sits under it. */
+function PromoCode({ promo }: BookingPanelViewModel) {
+  const [open, setOpen] = useState(false);
+  if (!open && !promo.input && !promo.message) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="w-fit cursor-pointer text-sm font-medium text-[#333134] underline">
+        Have a promo code?
+      </button>
+    );
+  }
   return (
-    <>
-      <form
-        className="flex flex-col gap-1"
-        onSubmit={(e) => {
-          e.preventDefault();
-          promo.onApply();
-        }}
-      >
-        <div className="flex gap-2">
-          <input
-            value={promo.input}
-            onChange={(e) => promo.onInputChange(e.target.value)}
-            placeholder="Promo code"
-            aria-label="Promo code"
-            className="min-w-0 flex-1 rounded-[24px] border border-[#E0DFDD] bg-white px-4 py-2 text-base uppercase placeholder:normal-case lg:text-sm"
-          />
-          <Button type="submit" variant="outline" className="rounded-[24px]">
-            Apply
-          </Button>
-        </div>
-        {promo.message && (
-          <p className={cn("text-xs", promo.message.ok ? "text-green-700" : "text-[#F5032D]")}>{promo.message.text}</p>
-        )}
-      </form>
-
-      {quote && (
-        <div className={cn("flex flex-col gap-1 text-sm", quote.updating && "opacity-60")}>
-          {quote.when && <p className="pb-1 font-medium text-[#130404]">{quote.when}</p>}
-          {quote.lines.map((line) => (
-            <div
-              key={line.key}
-              className={cn(
-                "flex items-center justify-between",
-                line.kind === "subtotal" && "mt-1 border-t border-border pt-1",
-              )}
-            >
-              <span className={cn(line.kind === "subtotal" ? "font-medium text-[#130404]" : "text-[#6F6B72]")}>
-                {line.label}
-              </span>
-              <span className="flex items-baseline gap-2">
-                {line.listAmount && (
-                  <s className="text-xs text-[#6F6B72]" aria-label={`was ${line.listAmount}`}>
-                    {line.listAmount}
-                  </s>
-                )}
-                <span className={cn(line.kind === "discount" ? "text-green-700" : "text-[#130404]")}>{line.amount}</span>
-              </span>
-            </div>
-          ))}
-          {quote.savings && <p className="pt-1 text-right text-xs font-medium text-green-700">{quote.savings}</p>}
-        </div>
+    <form
+      className="flex flex-col gap-1"
+      onSubmit={(e) => {
+        e.preventDefault();
+        promo.onApply();
+      }}
+    >
+      <div className="flex gap-2">
+        <input
+          value={promo.input}
+          onChange={(e) => promo.onInputChange(e.target.value)}
+          placeholder="Promo code"
+          aria-label="Promo code"
+          className="h-11 min-w-0 flex-1 rounded-full border border-[#E0DFDD] bg-white px-4 text-base uppercase placeholder:normal-case lg:text-sm"
+        />
+        <button type="submit" className="h-11 cursor-pointer rounded-full border border-[#E0DFDD] bg-white px-4 text-sm font-medium text-[#333134] hover:bg-[#F4F2EE]">
+          Apply
+        </button>
+      </div>
+      {promo.message && (
+        <p className={cn("text-[13px]", promo.message.ok ? "text-[#0B7A47]" : "text-[#6F6B72]")}>{promo.message.text}</p>
       )}
-      {quoteError && <p className="text-xs text-[#F5032D]">{quoteError}</p>}
+    </form>
+  );
+}
 
-      {!booking.available ? (
-        <p className="text-center text-xs text-muted-foreground">This experience isn&apos;t available for booking yet.</p>
-      ) : (
-        <Button
-          size="cta"
-          disabled={booking.disabled}
-          onClick={booking.onBook}
-          className="w-full bg-[#F5032D] text-white hover:bg-[#d90328] font-sans text-base font-semibold shadow-sm transition-all"
-        >
-          {booking.label}
-        </Button>
-      )}
-
-      {total && (
-        <div className="flex items-center justify-between pt-1">
-          <span className="font-sans text-lg font-bold text-[#130404]">Total</span>
-          <span className="font-sans text-xl font-bold text-[#130404]">{total}</span>
+/** The quote's lines above the total, when there is more than the one price. */
+function Summary({ quote }: BookingPanelViewModel) {
+  // One ticket line just repeats the total; itemise once there is an extra, a discount or a fee.
+  if (!quote || (quote.lines.length <= 1 && !quote.savings)) return null;
+  return (
+    <div className={cn("flex flex-col gap-1 text-[13px]", quote.updating && "opacity-60")}>
+      {quote.when && <p className="pb-1 text-sm font-medium text-[#333134]">{quote.when}</p>}
+      {quote.lines.map((line) => (
+        <div key={line.key} className={cn("flex items-center justify-between", line.kind === "subtotal" && "mt-1 border-t border-[#E7E7E7] pt-1")}>
+          <span className={line.kind === "subtotal" ? "font-medium text-[#333134]" : "text-[#6F6B72]"}>{line.label}</span>
+          <span className="flex items-baseline gap-2">
+            {line.listAmount && (
+              <s className="text-xs text-[#6F6B72]" aria-label={`was ${line.listAmount}`}>
+                {line.listAmount}
+              </s>
+            )}
+            <span className={line.kind === "discount" ? "text-[#0B7A47]" : "text-[#333134]"}>{line.amount}</span>
+          </span>
         </div>
-      )}
-    </>
+      ))}
+      {quote.savings && <p className="pt-1 text-right text-xs font-medium text-[#0B7A47]">{quote.savings}</p>}
+    </div>
   );
 }

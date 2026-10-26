@@ -171,10 +171,9 @@ test("guest limits, exclusions and safety notes show before booking", async ({ p
   await expect(beforeYouBook.getByText("Drinks")).toBeVisible();
   await expect(beforeYouBook.getByText("Venue has step-free access")).toBeVisible();
 
-  // The booking panel says it too, before anyone drops below the minimum.
-  const panel = page.locator("div.sticky").filter({ hasText: "Participants" });
-  await expect(panel.getByText("3–8 guests per booking")).toBeVisible();
-  await expect(panel.getByText("This experience needs at least 3 guests.")).toHaveCount(0);
+  // The booking card keeps to what it needs: the limits are on the page, not under the guests.
+  const panel = page.locator("div.sticky").filter({ hasText: "Guests" });
+  await expect(panel.getByText("3–8 guests per booking")).toHaveCount(0);
 });
 
 test("itin's placeholder safety info isn't shown", async ({ page }) => {

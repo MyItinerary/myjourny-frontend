@@ -95,7 +95,7 @@ test("the booking sheet fits the phone and its guest buttons are easy to tap", a
   await page.goto("/experiences/exp-1");
 
   await page.getByRole("button", { name: "Book now" }).last().click();
-  const plus = page.getByRole("button", { name: "Increase Participants" }).last();
+  const plus = page.getByRole("button", { name: "Increase guests" }).last();
   const box = await plus.boundingBox();
   expect(box!.width).toBeGreaterThanOrEqual(40);
   expect(box!.height).toBeGreaterThanOrEqual(40);
