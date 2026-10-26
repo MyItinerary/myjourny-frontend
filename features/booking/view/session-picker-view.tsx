@@ -72,9 +72,11 @@ export function SessionDateView({
 
 /** "Choose a time" and the chips for the chosen day: loading, empty, or the times. */
 export function SessionTimesView({ sessions, locked = false }: { sessions: SessionChoice; locked?: boolean }) {
-  const { scheduled, noSessions, allSoldOut, options, loading, dayStatus, nextOpen, onJumpToNext } = sessions;
+  const { scheduled, noSessions, allSoldOut, options, loading, dayStatus, nextOpen, onJumpToNext, singleTime } = sessions;
   // Without a schedule only the date is picked; the host sets the time.
   if (!scheduled && !loading) return null;
+  // One time on the day: nothing to pick. The date field names it.
+  if (singleTime && !loading) return null;
   if (noSessions && !loading) return <p className="text-sm text-[#6F6B72]">No upcoming sessions yet. Check back soon.</p>;
   if (allSoldOut && options.length === 0 && !loading) return <p className="text-sm text-[#6F6B72]">All upcoming sessions are sold out.</p>;
 

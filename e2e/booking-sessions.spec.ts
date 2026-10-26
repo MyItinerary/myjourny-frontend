@@ -92,7 +92,9 @@ test.describe("booking sessions", () => {
   test("shows Lagos session times in a Los Angeles browser, with no preview link", async ({ page }) => {
     await openExperience(page);
 
-    await expect(panel(page).getByRole("button", { name: /9:00 AM/ })).toBeVisible();
+    // One time on the day: no picker, the date field says it, in Lagos time.
+    await expect(panel(page).getByRole("button", { name: /^Date: .*9:00 AM/ })).toBeVisible();
+    await expect(panel(page).getByText("Choose a time")).toHaveCount(0);
     await expect(page.getByRole("link", { name: /Preview/ })).toHaveCount(0);
   });
 
@@ -195,8 +197,8 @@ test.describe("booking sessions", () => {
       },
     });
 
-    await expect(panel(page).getByText("Every Saturday · 3 days")).toBeVisible();
-    await expect(panel(page).getByText("Each booking covers all 3 days.")).toBeVisible();
+    await expect(panel(page).getByText("Every Saturday · 3 days")).toHaveCount(0);
+    await expect(panel(page).getByText("per person, per day")).toBeVisible();
     await expect(panel(page).getByRole("button", { name: "Increase days" })).toHaveCount(0);
     // The date field names the whole run, e.g. "Sat 24 to Mon 26 October · 3 hours".
     await expect(panel(page).getByRole("button", { name: /^Date: .+ to .+/ })).toBeVisible();
@@ -261,12 +263,15 @@ test.describe("booking sessions", () => {
     });
     const sidebar = page.locator("div.sticky").filter({ hasText: "Book now" });
 
-    await expect(sidebar.getByText("Your booking qualifies for 10% off (3+ guests)")).toBeVisible();
-    await expect(sidebar.getByText("Discounts don't combine: you get the biggest one you qualify for.")).toBeVisible();
-    await expect(sidebar.getByText("₦15,000", { exact: true }).first()).toBeVisible();
+    // The long "qualifies for 10% off" lines, the subtotal and "You save" are gone. The group price says it instead.
+    await expect(sidebar.getByText("Your booking qualifies for 10% off (3+ guests)")).toHaveCount(0);
+    await expect(sidebar.getByText("Subtotal")).toHaveCount(0);
+    await expect(sidebar.getByText("You save ₦1,500")).toHaveCount(0);
+    await expect(sidebar.getByText("Group of 3+")).toBeVisible();
+    await expect(sidebar.getByLabel("was ₦5,000")).toBeVisible();
+    await expect(sidebar.getByText("₦4,500", { exact: true }).first()).toBeVisible();
+    await expect(sidebar.getByText("Group saving")).toBeVisible();
     await expect(sidebar.getByText("Early-bird discount (1% off)")).toHaveCount(0);
-    await expect(sidebar.getByText("−₦1,500")).toBeVisible();
-    await expect(sidebar.getByText("You save ₦1,500")).toBeVisible();
     // The processing fee is added at checkout, not shown on the experience.
     await expect(sidebar.getByText("₦13,500", { exact: true })).toBeVisible();
     await expect(sidebar.getByRole("button", { name: "Book now" })).toBeEnabled();

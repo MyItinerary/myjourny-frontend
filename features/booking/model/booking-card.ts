@@ -1,4 +1,4 @@
-import type { PricingUnit } from "./booking.types";
+import type { PriceRule, PricingUnit, QuoteLine, QuoteSaving } from "./booking.types";
 import { parseDateKey } from "./sessions";
 
 /** "₦16,000": whole naira without decimals, "₦16,000.50" when there are kobo. */
@@ -49,3 +49,56 @@ export function urgencyFor(seatsLeft: number | null, timeLabel: string, dayLabel
 }
 
 export type DayState = "open" | "few" | "soldout" | "off";
+
+export type BreakdownRow = { key: string; label: string; amount: string };
+
+/** The few rows above the total: each ticket and add-on once there are add-ons, then a "Group saving" or
+ * "Promo saving" row. An early-bird price is shown struck through in the headline, so it has no row, and
+ * a plain booking with nothing extra has none at all: the total says it. */
+export function breakdownRows(lines: QuoteLine[], savings: QuoteSaving[] | undefined, currency: string): BreakdownRow[] {
+  const priced = lines.filter((line) => line.kind === "ticket" || line.kind === "addon");
+  const withAddons = lines.some((line) => line.kind === "addon");
+  const items = withAddons
+    ? priced.map((line, i) => ({
+        key: `${line.kind}-${i}`,
+        label: line.label + (line.quantity > 1 ? ` × ${line.quantity}` : ""),
+        amount: shortPriceOrFree(Number(line.amount), currency),
+      }))
+    : [];
+  const saved = (savings ?? [])
+    .filter((saving) => saving.kind !== "early_bird")
+    .map((saving, i) => ({
+      key: `saving-${i}`,
+      label: saving.kind === "group" ? "Group saving" : "Promo saving",
+      amount: shortPrice(Number(saving.amount), currency),
+    }));
+  // Older servers don't list savings; their discount lines say it.
+  const older =
+    savings === undefined
+      ? lines
+          .filter((line) => line.kind === "discount")
+          .map((line, i) => ({ key: `discount-${i}`, label: "Discount", amount: shortPrice(Math.abs(Number(line.amount)), currency) }))
+      : [];
+  return [...items, ...saved, ...older];
+}
+
+/** With a group discount alone on one ticket type, the per-person price after it, the list price to strike through,
+ * and the pill that says why: "Group of 4+". Null otherwise. */
+export function groupHeadline(
+  lines: QuoteLine[],
+  savings: QuoteSaving[] | undefined,
+  rules: PriceRule[],
+  currency: string,
+): { amount: string; was: string; pill: string } | null {
+  const tickets = lines.filter((line) => line.kind === "ticket");
+  const kinds = (savings ?? []).map((saving) => saving.kind);
+  const group = (savings ?? []).find((saving) => saving.kind === "group");
+  if (tickets.length !== 1 || !group || kinds.some((kind) => kind !== "group") || tickets[0].quantity < 1) return null;
+  const [ticket] = tickets;
+  const min = rules.find((rule) => rule.kind === "group")?.min_guests;
+  return {
+    amount: shortPrice((Number(ticket.amount) - Number(group.amount)) / ticket.quantity, currency),
+    was: shortPrice(Number(ticket.unit_amount), currency),
+    pill: min ? `Group of ${min}+` : "Group discount",
+  };
+}

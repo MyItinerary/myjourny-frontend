@@ -33,6 +33,7 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
     nextOpen: { label: "Sat 8 June", shortLabel: "8 June" },
     onJumpToNext: vi.fn(),
     urgency: null,
+    singleTime: false,
     ...overrides,
   };
 }
@@ -41,8 +42,6 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
   return {
     durationLabel: "3 hours",
     cancellationPolicy: null,
-    scheduleLabel: "Every Saturday · 3 days",
-    lengthNote: null,
     priceFrom: { amount: "₦5,000", unit: "/ person", unitWords: "per person", showFrom: true },
     ruleNotes: [],
     sessions: sessionChoice(),
@@ -54,30 +53,26 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
     days: { show: false, value: 1, onChange: vi.fn() },
     addons: [{ id: "lunch", label: "Lunch", priceLabel: "₦1,500", checked: false, onToggle: vi.fn() }],
     promo: { input: "", onInputChange: vi.fn(), onApply: vi.fn(), message: null },
-    quote: {
-      updating: false,
-      when: "Saturday, June 1, 9:00 AM",
-      lines: [
-        { key: "t", label: "Adult × 2", amount: "₦10,000", kind: "item" },
-        { key: "s", label: "Subtotal", amount: "₦10,000", kind: "subtotal" },
-        { key: "d", label: "Promo code SAVE10", amount: "−₦1,000", kind: "discount" },
-      ],
-      savings: "You save ₦1,000",
-    },
+    quote: { updating: false },
     quoteError: null,
     seatsWarning: null,
     total: "₦9,000",
     booking: { available: true, disabled: false, pending: false, label: "Book now - ₦9,000", onBook: vi.fn() },
     card: {
       headline: { showFrom: true, amount: "₦5,000", unit: "per person", was: null, pill: null },
-      notes: ["Every Saturday · 3 days", "10% off for 4+ guests"],
+      notes: ["10% off if you book before 4 September"],
+      breakdown: [],
       dateField: "Sat 1 June · 3 hours",
       locked: false,
       notice: null,
       onRetry: vi.fn(),
       total: { amount: "₦9,000", muted: null, fees: "Fees and taxes included" },
       button: { label: "Book now", loading: false, disabled: false, onClick: vi.fn() },
-      cancellation: { title: "Cancellation policy", body: "Full refund up to 24 hours before." },
+      cancellation: {
+        title: "Cancellation",
+        body: "You can only cancel up to 24 hours before the experience.",
+        hint: "Tickets are non-refundable and valid only for this edition of Lagos Trivia Night. Capacity is limited, and tickets may not be available at the door. Please confirm your availability before purchasing.",
+      },
     },
     ...overrides,
   };
@@ -95,8 +90,9 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("From")).toBeInTheDocument();
     expect(screen.getAllByText("₦5,000").length).toBeGreaterThan(0);
     expect(screen.getByText("per person")).toBeInTheDocument();
-    expect(screen.getByText("Every Saturday · 3 days")).toBeInTheDocument();
-    expect(screen.getByText("10% off for 4+ guests")).toBeInTheDocument();
+    expect(screen.getByText("10% off if you book before 4 September")).toBeInTheDocument();
+    // The schedule, the long "qualifies for 10% off" line and the date line are gone: the date field and the total say it.
+    expect(screen.queryByText(/Every Saturday|qualifies for|Subtotal|You save/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Date: Sat 1 June · 3 hours" })).toBeInTheDocument();
     expect(screen.getByText("Choose a time")).toBeInTheDocument();
     expect(screen.getByText("Adult")).toBeInTheDocument();
@@ -108,8 +104,8 @@ describe("BookingPanelView", () => {
     // No hint under the button: that the fee comes at checkout is expected.
     expect(screen.queryByText(/won.t be charged yet/)).not.toBeInTheDocument();
     expect(screen.queryByText(/processing fee/i)).not.toBeInTheDocument();
-    expect(screen.getByText("Cancellation policy")).toBeInTheDocument();
-    expect(screen.getByText("Full refund up to 24 hours before.")).toBeInTheDocument();
+    expect(screen.getByText("Cancellation")).toBeInTheDocument();
+    expect(screen.getByText("You can only cancel up to 24 hours before the experience.")).toBeInTheDocument();
     // Not a sheet: no handle, no close button.
     expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
   });
@@ -207,29 +203,38 @@ describe("BookingPanelView", () => {
     expect(screen.getByLabelText("Starting your booking")).toBeInTheDocument();
   });
 
-  it("shows promo results, the quote lines, and strikes through the price before early-bird", () => {
+  it("shows promo results", () => {
     renderWithProviders(
       <BookingPanelView
         {...panelViewModel({
           promo: { input: "OLD", onInputChange: vi.fn(), onApply: vi.fn(), message: { text: "OLD has expired", ok: false } },
-          quote: {
-            updating: false,
-            when: null,
-            lines: [
-              { key: "t", label: "Standard", amount: "₦9,900", listAmount: "₦10,000", kind: "item" },
-              { key: "s", label: "Subtotal", amount: "₦10,000", kind: "subtotal" },
-              { key: "e", label: "Early-bird discount (1% off)", amount: "−₦100", kind: "discount" },
-            ],
-            savings: "You save ₦100",
-          },
         })}
       />,
     );
-
     expect(screen.getByText("OLD has expired")).toBeInTheDocument();
-    expect(screen.getByLabelText("was ₦10,000").tagName).toBe("S");
-    expect(screen.getByText("Early-bird discount (1% off)")).toBeInTheDocument();
-    expect(screen.getByText("You save ₦100")).toBeInTheDocument();
+  });
+
+  it("lists add-ons and what a group or promo code saved, above the total", () => {
+    renderWithProviders(
+      <BookingPanelView
+        {...withCard({
+          breakdown: [
+            { key: "t", label: "Adult × 2", amount: "₦10,000" },
+            { key: "a", label: "GoPro footage", amount: "₦5,000" },
+            { key: "s", label: "Group saving", amount: "₦1,200" },
+          ],
+        })}
+      />,
+    );
+    expect(screen.getByText("GoPro footage")).toBeInTheDocument();
+    expect(screen.getByText("Group saving")).toBeInTheDocument();
+    expect(screen.getByText("₦1,200")).toBeInTheDocument();
+  });
+
+  it("shows a group price with a pill that says why", () => {
+    const vm = withCard({ headline: { showFrom: false, amount: "₦14,500", unit: "per person", was: "₦16,000", pill: "Group of 4+" } });
+    renderWithProviders(<BookingPanelView {...vm} />);
+    expect(screen.getByText("Group of 4+")).toBeInTheDocument();
   });
 
   it("shows the early-bird price with its list price struck through and a pill", () => {
@@ -240,15 +245,22 @@ describe("BookingPanelView", () => {
     expect(screen.queryByText("From")).not.toBeInTheDocument();
   });
 
-  it("doesn't itemise a single ticket line, which just repeats the total", () => {
-    renderWithProviders(
-      <BookingPanelView
-        {...panelViewModel({
-          quote: { updating: false, when: null, lines: [{ key: "t", label: "Adult × 2", amount: "₦10,000", kind: "item" }], savings: null },
-        })}
-      />,
-    );
-    expect(screen.queryByText("Adult × 2")).not.toBeInTheDocument();
+  it("explains the experience's own policy in a tooltip next to the cancellation line", async () => {
+    const { user } = renderWithProviders(<BookingPanelView {...panelViewModel()} />);
+    await user.hover(screen.getByRole("button", { name: "About the cancellation policy" }));
+    expect(await screen.findByText(/Tickets are non-refundable and valid only for this edition of Lagos Trivia Night/)).toBeInTheDocument();
+  });
+
+  it("has no tooltip when the experience has no policy of its own", () => {
+    const base = panelViewModel();
+    renderWithProviders(<BookingPanelView {...panelViewModel({ card: { ...base.card, cancellation: { ...base.card.cancellation, hint: null } } })} />);
+    expect(screen.queryByRole("button", { name: "About the cancellation policy" })).not.toBeInTheDocument();
+    expect(screen.getByText("You can only cancel up to 24 hours before the experience.")).toBeInTheDocument();
+  });
+
+  it("shows no rows when there is nothing extra to say", () => {
+    renderWithProviders(<BookingPanelView {...panelViewModel()} />);
+    expect(screen.queryByRole("term")).not.toBeInTheDocument();
   });
 
   it("shows a green promo result", () => {

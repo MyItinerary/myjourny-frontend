@@ -1,6 +1,7 @@
-import { AlertCircle, CalendarCheck, CalendarDays, Clock, type LucideIcon } from "lucide-react";
+import { AlertCircle, CalendarCheck, CalendarDays, Clock, Info, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 /** A 40px rounded tile holding an icon: cream on white, white on cream. */
@@ -12,13 +13,30 @@ export function IconTile({ icon: Icon = CalendarCheck, surface = "cream" }: { ic
   );
 }
 
-/** A policy row under the button: cancellation and the like. */
-export function InfoRow({ title, body }: { title: string; body: string }) {
+/** A policy row under the button: cancellation and the like. `hint`, when there is one, is explained in a tooltip. */
+export function InfoRow({ title, body, hint }: { title: string; body: string; hint?: string | null }) {
   return (
     <div className="flex items-start gap-3">
       <IconTile />
       <div className="min-w-0 flex-1">
-        <p className="text-base font-medium text-[#333134]">{title}</p>
+        <p className="flex items-center gap-1.5 text-base font-medium text-[#333134]">
+          {title}
+          {hint && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger
+                  aria-label={`About the ${title.toLowerCase()} policy`}
+                  className="flex size-5 cursor-pointer items-center justify-center rounded-full text-[#6F6B72] hover:text-[#333134]"
+                >
+                  <Info aria-hidden className="size-4" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[300px] items-start px-3 py-2 text-[13px] leading-[18px] whitespace-pre-line">
+                  {hint}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </p>
         <p className="text-sm leading-[22px] text-[#6F6B72]">{body}</p>
       </div>
     </div>

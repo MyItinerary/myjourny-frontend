@@ -36,6 +36,8 @@ export type SessionChoice = {
   isDateSelectable: (date: Date) => boolean;
   onSelectDate: (date: Date) => void;
   onPickSession: (startsAt: string) => void;
+  /** The day has exactly one time and it's open: there is nothing to choose, so no time picker. */
+  singleTime: boolean;
   /** "Sat 12 September", or "Fri 11 to Sun 13 September"; "Select a date" before one is chosen. */
   fieldLabel: string;
   /** Last day of a multi-day session, for the range in the calendar. */
@@ -135,6 +137,7 @@ export function useSessionChoice(
       setPickedSessionAt(null);
     },
     onPickSession: setPickedSessionAt,
+    singleTime: daySessions.length === 1 && !daySessions[0].sold_out,
     fieldLabel: selectedDay ? dateFieldLabel(selectedDay, session?.end_local_date) : "Select a date",
     endDate: session?.end_local_date && session.end_local_date !== selectedDay ? parseDateKey(session.end_local_date) : null,
     dayState: (date) => {

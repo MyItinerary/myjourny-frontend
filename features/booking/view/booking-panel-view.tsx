@@ -129,7 +129,7 @@ export function BookingPanelView(props: Props) {
       )}
 
       <PromoCode {...props} />
-      <Summary {...props} />
+      <Breakdown {...props} />
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3">
@@ -156,12 +156,10 @@ export function BookingPanelView(props: Props) {
         )}
       </div>
 
-      {card.cancellation && (
-        <div className="flex flex-col gap-4">
-          <div className="h-px bg-[#E7E7E7]" />
-          <InfoRow {...card.cancellation} />
-        </div>
-      )}
+      <div className="flex flex-col gap-4">
+        <div className="h-px bg-[#E7E7E7]" />
+        <InfoRow {...card.cancellation} />
+      </div>
     </div>
   );
 }
@@ -203,27 +201,17 @@ function PromoCode({ promo }: BookingPanelViewModel) {
   );
 }
 
-/** The quote's lines above the total, when there is more than the one price. */
-function Summary({ quote }: BookingPanelViewModel) {
-  // One ticket line just repeats the total; itemise once there is an extra, a discount or a fee.
-  if (!quote || (quote.lines.length <= 1 && !quote.savings)) return null;
+/** The few rows above the total: add-ons, and what a group or promo code saved. */
+function Breakdown({ card, quote }: BookingPanelViewModel) {
+  if (card.breakdown.length === 0) return null;
   return (
-    <div className={cn("flex flex-col gap-1 text-[13px]", quote.updating && "opacity-60")}>
-      {quote.when && <p className="pb-1 text-sm font-medium text-[#333134]">{quote.when}</p>}
-      {quote.lines.map((line) => (
-        <div key={line.key} className={cn("flex items-center justify-between", line.kind === "subtotal" && "mt-1 border-t border-[#E7E7E7] pt-1")}>
-          <span className={line.kind === "subtotal" ? "font-medium text-[#333134]" : "text-[#6F6B72]"}>{line.label}</span>
-          <span className="flex items-baseline gap-2">
-            {line.listAmount && (
-              <s className="text-xs text-[#6F6B72]" aria-label={`was ${line.listAmount}`}>
-                {line.listAmount}
-              </s>
-            )}
-            <span className={line.kind === "discount" ? "text-[#0B7A47]" : "text-[#333134]"}>{line.amount}</span>
-          </span>
+    <dl className={cn("flex flex-col gap-1.5 text-[13px] leading-[18px]", quote?.updating && "opacity-60")}>
+      {card.breakdown.map((row) => (
+        <div key={row.key} className="flex items-center justify-between gap-3">
+          <dt className="text-[#6F6B72]">{row.label}</dt>
+          <dd className="text-[#6F6B72]">{row.amount}</dd>
         </div>
       ))}
-      {quote.savings && <p className="pt-1 text-right text-xs font-medium text-[#0B7A47]">{quote.savings}</p>}
-    </div>
+    </dl>
   );
 }

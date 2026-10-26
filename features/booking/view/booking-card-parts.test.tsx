@@ -12,6 +12,12 @@ describe("booking card parts", () => {
     expect(screen.getByText("Until Friday.")).toBeInTheDocument();
   });
 
+  it("explains a policy in a tooltip, when it has one", async () => {
+    const { user } = renderWithProviders(<InfoRow title="Cancellation" body="Cancel up to 24 hours before." hint="Tickets are non-refundable." />);
+    await user.hover(screen.getByRole("button", { name: "About the cancellation policy" }));
+    expect(await screen.findByText("Tickets are non-refundable.")).toBeInTheDocument();
+  });
+
   it("draws an icon tile and a pill row", () => {
     const { container } = renderWithProviders(
       <PillRow>

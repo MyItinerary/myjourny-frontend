@@ -175,6 +175,18 @@ describe("useSessionChoice", () => {
     const empty = renderHookWithProviders(() => useSessionChoice(scheduled([])));
     expect(empty.result.current.fieldLabel).toBe("Select a date");
   });
+
+  it("has nothing to pick when the day has one open time, and says the time in the date field's place", () => {
+    const one = renderHookWithProviders(() => useSessionChoice(scheduled([session(day(2), "07:00")])));
+    expect(one.result.current.singleTime).toBe(true);
+
+    const two = renderHookWithProviders(() => useSessionChoice(scheduled([session(day(2), "07:00"), session(day(2), "13:00")])));
+    expect(two.result.current.singleTime).toBe(false);
+
+    // A single time that is full still shows, so the guest sees why they can't book it.
+    const full = renderHookWithProviders(() => useSessionChoice(scheduled([session(day(2), "07:00", { sold_out: true, seats_left: 0 })])));
+    expect(full.result.current.singleTime).toBe(false);
+  });
 });
 
 afterEach(() => {

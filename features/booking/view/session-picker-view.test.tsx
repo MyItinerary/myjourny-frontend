@@ -32,6 +32,7 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
     nextOpen: { label: "Sat 8 June", shortLabel: "8 June" },
     onJumpToNext: vi.fn(),
     urgency: null,
+    singleTime: false,
     ...overrides,
   };
 }
@@ -47,6 +48,14 @@ describe("SessionTimesView", () => {
     await user.click(screen.getByRole("button", { name: "9:00 AM" }));
 
     expect(choice.onPickSession).toHaveBeenCalledWith("a");
+  });
+
+  it("shows no time picker when the day has just the one time", () => {
+    renderWithProviders(
+      <SessionTimesView sessions={sessionChoice({ singleTime: true, options: [{ startsAt: "a", label: "9:00 AM", note: null, disabled: false, selected: true }] })} />,
+    );
+    expect(screen.queryByText("Choose a time")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "9:00 AM" })).not.toBeInTheDocument();
   });
 
   it("holds the space with skeleton chips while times load", () => {
