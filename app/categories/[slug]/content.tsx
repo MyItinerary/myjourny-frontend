@@ -10,7 +10,7 @@ import { ExperienceRailSection } from "@/components/home/experience-rail-section
 import { Footer } from "@/components/home/footer";
 import { CategoryHeader, CategoryResultsGrid } from "@/features/categories";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
-import { cities } from "@/lib/mock-data/home";
+import { useDiscoverCitiesViewModel } from "@/features/cities";
 import { experienceListItemToCardProps, useFilteredExperiences } from "@/lib/queries/experiences";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 
@@ -40,6 +40,7 @@ export function CategoryContent({
   /** Exact result count, when the source knows it. */
   total?: number;
 }) {
+  const discoverCities = useDiscoverCitiesViewModel();
   return (
     <div className="flex flex-1 flex-col">
       <div className="hidden lg:block">
@@ -82,7 +83,7 @@ export function CategoryContent({
         </div>
       </div>
 
-      <CitiesSection cities={cities} variant="category" />
+      {discoverCities.show && <CitiesSection cities={discoverCities.cities} variant="category" />}
 
       <OtherExperiencesRail exclude={items} />
 
