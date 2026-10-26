@@ -295,7 +295,7 @@ describe("useBookingPanelViewModel", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/bookings/b-2/success"));
   });
 
-  it("opens the booking's page when it awaits payment without a link", async () => {
+  it("opens the confirmation page when it awaits payment without a link", async () => {
     stubApi();
     server.use(
       http.post(apiUrl("/bookings/"), () =>
@@ -307,7 +307,7 @@ describe("useBookingPanelViewModel", () => {
 
     act(() => result.current.booking.onBook());
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/bookings/b-3"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/bookings/b-3/success"));
   });
 
   it("shows the server's reason and fresh seats when the session filled up", async () => {

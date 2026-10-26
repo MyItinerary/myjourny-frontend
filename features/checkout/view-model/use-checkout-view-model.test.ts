@@ -386,7 +386,7 @@ describe("useCheckoutViewModel: confirm and pay", () => {
     expect(booked).not.toHaveBeenCalled();
   });
 
-  it("opens the success page for a free booking, and the booking's page without a payment link", async () => {
+  it("opens the success page for a free booking, and for a booking without a payment link", async () => {
     session.value = juliet;
     server.use(
       http.post(apiUrl("/bookings/"), () => HttpResponse.json({ id: "b-2", status: "confirmed", payment_status: "unpaid", url: null })),
@@ -401,7 +401,8 @@ describe("useCheckoutViewModel: confirm and pay", () => {
     );
     const second = renderHookWithProviders(() => useCheckoutViewModel());
     await act(async () => second.result.current.steps.onConfirm());
-    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-3"));
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-3/success"));
+    expect(nav.replace).not.toHaveBeenCalledWith("/");
   });
 
   it("shows why a booking couldn't start and lets them try again", async () => {

@@ -203,6 +203,11 @@ test("after paying, the booking page says you're going", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
   await expect(page.locator("a", { hasText: "View booking" })).toHaveAttribute("href", "/bookings/b-1");
   await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
+
+  // Refreshing stays on the confirmation screen and does not bounce home.
+  await page.reload();
+  await expect(page).toHaveURL(/\/bookings\/b-1\/success$/);
+  await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
 });
 
 test("resetting a password from the checkout leads back to it, with the booking still there", async ({ page }) => {
@@ -235,4 +240,38 @@ test("resetting a password from the checkout leads back to it, with the booking 
 
   await expect(page).toHaveURL("https://paystack.test/pay");
   expect(booked[0]).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
+});
+
+
+test("confirming a booking without a payment link redirects to the confirmation screen", async ({ page }) => {
+  await page.addInitScript((auth) => window.localStorage.setItem("myjourny:auth", JSON.stringify(auth)), SIGNED_IN);
+  await mockBooking(page, {
+    "POST /bookings": (r) =>
+      r.fulfill({ json: { id: "b-1", status: "confirmed", payment_status: "paid", url: null } }),
+    "GET /bookings/b-1": (r) =>
+      r.fulfill({
+        json: {
+          id: "b-1",
+          experience_id: "exp-1",
+          status: "confirmed",
+          payment_status: "paid",
+          requested_datetime: "2026-07-16T08:00:00",
+          party_size: 1,
+          price_total: "16000.00",
+          currency: "NGN",
+        },
+      }),
+  });
+
+  await page.goto("/experiences/exp-1");
+  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
+
+  // Redirects directly to the confirmation screen, not the homepage or generic booking page.
+  await expect(page).toHaveURL(/\/bookings\/b-1\/success$/);
+  await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
+
+  // Refreshing stays on the confirmation screen.
+  await page.reload();
+  await expect(page).toHaveURL(/\/bookings\/b-1\/success$/);
+  await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
 });
