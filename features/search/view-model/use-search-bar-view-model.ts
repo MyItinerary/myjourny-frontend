@@ -54,9 +54,12 @@ export function useSearchBarViewModel({
   const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | null>(null);
 
   const [selectedWhen, setSelectedWhen] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date>(
-    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-  );
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const minDate = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   // What they typed into "Who"; null once the steppers take over and the text
   // comes from the counts.
@@ -181,6 +184,11 @@ export function useSearchBarViewModel({
   }, []);
 
   const onSelectDate = useCallback((date: Date, label?: string) => {
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (target < today) return;
     setSelectedDate(date);
     setSelectedWhen(label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }));
     setActiveTab("who");
@@ -285,6 +293,7 @@ export function useSearchBarViewModel({
     debouncedWhere,
     selectedWhen,
     selectedDate,
+    minDate,
     whoText,
     guests,
     totalGuests,

@@ -79,4 +79,74 @@ describe("DatePickerCalendar", () => {
     const day15 = screen.getByRole("button", { name: "15" });
     expect(day15).not.toBeDisabled();
   });
+
+  it("disables past dates by default based on current day when minDate is omitted", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 5, 15));
+
+    renderWithProviders(
+      <DatePickerCalendar
+        selectedDate={null}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    const day5 = screen.getByRole("button", { name: "5" });
+    expect(day5).toBeDisabled();
+
+    const day15 = screen.getByRole("button", { name: "15" });
+    expect(day15).not.toBeDisabled();
+
+    vi.useRealTimers();
+  });
+
+  it("disables previous month navigation when previous month is entirely in the past", () => {
+    const minDate = new Date(2030, 5, 10);
+    renderWithProviders(
+      <DatePickerCalendar
+        selectedDate={new Date(2030, 5, 15)}
+        minDate={minDate}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    const prevButton = screen.getByRole("button", { name: "Previous month" });
+    expect(prevButton).toBeDisabled();
+  });
+
+  it("enables previous month navigation when in a future month and disables it once at min month", async () => {
+    const minDate = new Date(2030, 5, 10);
+    const { user } = renderWithProviders(
+      <DatePickerCalendar
+        selectedDate={new Date(2030, 6, 15)}
+        minDate={minDate}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    const prevButton = screen.getByRole("button", { name: "Previous month" });
+    expect(prevButton).not.toBeDisabled();
+
+    await user.click(prevButton);
+    expect(screen.getByText(/June 2030/)).toBeInTheDocument();
+    expect(prevButton).toBeDisabled();
+  });
+
+  it("disables preset buttons that fall before minDate", () => {
+    const presets = [
+      { label: "Yesterday", date: new Date(2030, 5, 9) },
+      { label: "Future", date: new Date(2030, 5, 12) },
+    ];
+    renderWithProviders(
+      <DatePickerCalendar
+        selectedDate={new Date(2030, 5, 15)}
+        minDate={new Date(2030, 5, 10)}
+        presets={presets}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Yesterday" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Future" })).not.toBeDisabled();
+  });
 });

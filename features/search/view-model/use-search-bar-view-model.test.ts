@@ -54,6 +54,29 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.activeTab).toBe("when");
   });
 
+  it("initializes selectedDate as null and exposes minDate", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+    expect(result.current.selectedDate).toBeNull();
+    expect(result.current.minDate).toBeInstanceOf(Date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    expect(result.current.minDate.getTime()).toBe(today.getTime());
+  });
+
+  it("prevents selecting past dates", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - 2);
+
+    act(() => {
+      result.current.onSelectDate(pastDate, "Past date");
+    });
+
+    expect(result.current.selectedDate).toBeNull();
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.activeTab).toBeNull();
+  });
+
   it("advances from When to Who on date selection", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 
@@ -62,6 +85,7 @@ describe("useSearchBarViewModel", () => {
       result.current.onSelectDate(pickedDate, "June 15");
     });
 
+    expect(result.current.selectedDate).toEqual(pickedDate);
     expect(result.current.selectedWhen).toBe("June 15");
     expect(result.current.activeTab).toBe("who");
   });
