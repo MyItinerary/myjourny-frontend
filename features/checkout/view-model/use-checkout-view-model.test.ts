@@ -108,7 +108,15 @@ describe("useCheckoutViewModel", () => {
       total: "₦16,000.00",
       quantity: "x 1 Adult",
       changeHref: "/experiences/exp-1",
+      hasTimeSlots: false,
+      free: false,
     });
+  });
+
+  it("knows when there were time slots to see, and when the booking is free", () => {
+    saveCheckoutDraft({ ...draft, hasTimeSlots: true, total: "Free" });
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(result.current.summary).toMatchObject({ hasTimeSlots: true, free: true, total: "Free" });
   });
 
   it("sends the guest home when there is no saved booking", () => {

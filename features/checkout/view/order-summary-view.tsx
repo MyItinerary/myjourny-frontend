@@ -20,7 +20,7 @@ function Row({ icon: Icon, children }: { icon: typeof Clock; children: React.Rea
   );
 }
 
-function Policy({ icon: Icon, title, note }: { icon: typeof Clock; title: string; note: string }) {
+function Policy({ icon: Icon, title, note }: { icon: typeof Clock; title: string; note?: string }) {
   return (
     <div className="flex items-start gap-2.5">
       <span className="flex shrink-0 items-center rounded-md bg-[#F4F2EE] p-[7px]">
@@ -28,7 +28,7 @@ function Policy({ icon: Icon, title, note }: { icon: typeof Clock; title: string
       </span>
       <div className="flex flex-col gap-0.5 font-sans">
         <p className="text-lg font-medium leading-[27px] text-[#333134]">{title}</p>
-        <p className="text-sm leading-[22px] text-[#6F6B72]">{note}</p>
+        {note && <p className="text-sm leading-[22px] text-[#6F6B72]">{note}</p>}
       </div>
     </div>
   );
@@ -39,10 +39,10 @@ function Total({ summary }: { summary: OrderSummary }) {
     <div className="flex flex-col gap-1">
       <p className="font-sans text-sm font-medium leading-[21px] text-[#00100C]">Total price</p>
       <p className="font-sans">
-        <span className="text-[32px] font-medium leading-9 text-[#333134]">{summary.total} </span>
-        <span className="text-base leading-6 text-[#6F6B72]">{summary.quantity}</span>
+        <span className="text-[32px] font-medium leading-9 text-[#333134]">{summary.total}</span>
+        {!summary.free && <span className="text-base leading-6 text-[#6F6B72]"> {summary.quantity}</span>}
       </p>
-      <p className="font-sans text-sm leading-[22px] text-[#FF5400]">Taxes and fees included</p>
+      {!summary.free && <p className="font-sans text-sm leading-[22px] text-[#FF5400]">Taxes and fees included</p>}
     </div>
   );
 }
@@ -84,7 +84,7 @@ function Details({ summary }: { summary: OrderSummary }) {
 
       <div className="flex flex-col gap-4 px-4">
         <Policy icon={Ban} title="Free cancellation" note="Up to 24 hours before, full refund" />
-        <Policy icon={Clock} title={`Duration — ${summary.durationLabel}`} note="See time slots above" />
+        <Policy icon={Clock} title={`Duration — ${summary.durationLabel}`} note={summary.hasTimeSlots ? "See time slots above" : undefined} />
       </div>
     </>
   );

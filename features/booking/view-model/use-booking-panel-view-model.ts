@@ -50,6 +50,8 @@ export type GuestBookingDetails = {
   total: string;
   currency: string;
   durationLabel: string;
+  /** The guest chose from several times on that day, so the checkout can say "see the time slots". */
+  hasTimeSlots: boolean;
 };
 
 export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> & {
@@ -247,6 +249,7 @@ export function useBookingPanelViewModel({
         total: total ?? shortPriceOrFree(estimateTotal(), currency),
         currency,
         durationLabel,
+        hasTimeSlots: sessions.scheduled && sessions.options.length > 1,
       });
       return;
     }

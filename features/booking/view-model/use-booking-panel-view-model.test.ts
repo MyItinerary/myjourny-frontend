@@ -349,6 +349,8 @@ describe("useBookingPanelViewModel", () => {
       total: "₦10,000",
       currency: "NGN",
       durationLabel: "3 hours",
+      // One time on the day, so there are no slots to look at.
+      hasTimeSlots: false,
       selection: { experience_id: "exp-1", items: [{ experience_price_id: "adult", quantity: 2 }] },
     });
     expect(onGuestBook.mock.calls[0][0].when).toContain("9:00 AM");

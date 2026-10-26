@@ -26,6 +26,10 @@ export type OrderSummary = {
   when: string;
   guests: string;
   durationLabel: string;
+  /** "See time slots above" is only said when there were slots. */
+  hasTimeSlots: boolean;
+  /** Nothing to pay: no "x 1 Adult", no taxes and fees. */
+  free: boolean;
   /** "₦16,000.00" */
   total: string;
   /** "x 1 Adult" */
@@ -159,6 +163,8 @@ export function useCheckoutViewModel(): CheckoutViewModel {
         when: draft.when,
         guests: `${draft.guests} guest${draft.guests === 1 ? "" : "s"}`,
         durationLabel: draft.durationLabel,
+        hasTimeSlots: !!draft.hasTimeSlots,
+        free: total === "Free",
         total,
         quantity: `x ${draft.ticketsLabel}`,
         changeHref: `/experiences/${draft.experienceId}`,

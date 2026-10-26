@@ -15,6 +15,8 @@ export type CheckoutDraft = {
   total: string;
   currency: string;
   durationLabel: string;
+  /** The experience had several times to pick from, so "See time slots above" makes sense. */
+  hasTimeSlots?: boolean;
   /** What they'd typed, kept when they leave to reset a password. */
   contact?: { phone: string; countryIso: string };
 };

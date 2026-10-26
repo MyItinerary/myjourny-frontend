@@ -165,6 +165,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           total: details.total,
           currency: details.currency,
           durationLabel: details.durationLabel,
+          hasTimeSlots: details.hasTimeSlots,
         });
         router.push("/checkout");
       }
