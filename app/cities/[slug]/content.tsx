@@ -65,8 +65,9 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
 
   const categoryChips = (categoriesQuery.data ?? []).filter((c) => c.parent_id === null);
 
+  // While results load, the heading shows just the city; the count follows.
   const countLabel = cityQuery.isPending
-    ? "(Loading experiences…)"
+    ? null
     : cityQuery.isError && items.length === 0
       ? "(Failed to load)"
       : total !== undefined
@@ -112,7 +113,13 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
           </nav>
 
           <h1 className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[40px]">
-            Experiences in {cityName} <span className="text-muted-foreground">{countLabel}</span>
+            Experiences in {cityName}
+            {countLabel && (
+              <>
+                {" "}
+                <span className="text-muted-foreground">{countLabel}</span>
+              </>
+            )}
           </h1>
 
           <ListingFiltersView {...filters} />
