@@ -24,7 +24,7 @@ describe("isEmailTakenError", () => {
 });
 
 describe("useEmailHasAccount", () => {
-  it("looks up a valid email once typing settles", async () => {
+  it("looks up the email it is given, once", async () => {
     const asked: unknown[] = [];
     server.use(
       http.post(apiUrl(EMAIL_LOOKUP_PATH), async ({ request }) => {
@@ -34,7 +34,6 @@ describe("useEmailHasAccount", () => {
     );
     const { result } = renderHookWithProviders(() => useEmailHasAccount(" Juliet@Example.com "));
 
-    expect(result.current.exists).toBe(false);
     await waitFor(() => expect(result.current.exists).toBe(true));
     expect(result.current.checking).toBe(false);
     expect(asked).toEqual([{ email: "juliet@example.com" }]);
@@ -58,6 +57,6 @@ describe("useEmailHasAccount", () => {
 
   it("doesn't look up something that isn't an email", () => {
     const { result } = renderHookWithProviders(() => useEmailHasAccount("not-an-email"));
-    expect(result.current).toEqual({ exists: false, checking: false });
+    expect(result.current).toMatchObject({ exists: false, checking: false });
   });
 });

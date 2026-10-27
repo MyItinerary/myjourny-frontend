@@ -1,5 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
 import { useGoogleAuth, useLogin, useRegister } from "@/lib/queries/auth";
@@ -25,46 +24,46 @@ export function isEmailTakenError(error: unknown): boolean {
   return typeof detail === "string" && /already registered/i.test(detail);
 }
 
-// itin has no email lookup yet. This is the endpoint checkout will call once
-// it does: POST { email } -> { exists: boolean }. Until then (or if it fails)
-// checkout treats the email as new, and the "already registered" error at
-// sign-up still catches an existing account.
+// POST { email } -> { exists, has_password } (itin#98). Rate limited to 20
+// lookups per IP per 10 minutes, so it is called once per finished email, not
+// while typing. If it fails, checkout treats the email as new, and the
+// "already registered" error at sign-up still catches an existing account.
 export const EMAIL_LOOKUP_PATH = "/auth/email-exists";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** The value, once it has stopped changing for `delayMs`. */
-function useDebounced<T>(value: T, delayMs: number): T {
-  const [settled, setSettled] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setSettled(value), delayMs);
-    return () => clearTimeout(timer);
-  }, [value, delayMs]);
-  return settled;
-}
+const normalize = (email: string) => email.trim().toLowerCase();
 
-/** Whether an email already has an account, looked up shortly after they
- * stop typing it. `checking` is true while the answer is pending. */
-export function useEmailHasAccount(email: string): { exists: boolean; checking: boolean } {
-  const trimmed = email.trim().toLowerCase();
-  const settled = useDebounced(trimmed, 400);
-  const valid = EMAIL_PATTERN.test(settled);
+const emailLookup = (email: string) => ({
+  queryKey: ["auth", "email-exists", email],
+  queryFn: async () => {
+    try {
+      const { data } = await apiClient.post<{ exists?: boolean }>(EMAIL_LOOKUP_PATH, { email });
+      return data.exists === true;
+    } catch {
+      return false;
+    }
+  },
+  staleTime: 60_000,
+});
 
-  const { data, isFetching } = useQuery({
-    queryKey: ["auth", "email-exists", settled],
-    queryFn: async () => {
-      try {
-        const { data } = await apiClient.post<{ exists?: boolean }>(EMAIL_LOOKUP_PATH, { email: settled });
-        return data.exists === true;
-      } catch {
-        return false;
-      }
-    },
-    enabled: valid,
-    staleTime: 60_000,
-  });
+/** Whether an email already has an account. Pass the email once they have
+ * finished typing it; `checking` is true while the answer is pending.
+ * `check` asks about any email, reusing an answer already fetched. */
+export function useEmailHasAccount(email: string): {
+  exists: boolean;
+  checking: boolean;
+  check: (email: string) => Promise<boolean>;
+} {
+  const queryClient = useQueryClient();
+  const normalized = normalize(email);
+  const valid = EMAIL_PATTERN.test(normalized);
+  const { data, isFetching } = useQuery({ ...emailLookup(normalized), enabled: valid });
 
-  // Typed again since the last settled value: the answer isn't for this email yet.
-  const stale = EMAIL_PATTERN.test(trimmed) && trimmed !== settled;
-  return { exists: valid && !stale && data === true, checking: stale || (valid && isFetching) };
+  const check = (other: string) => {
+    const value = normalize(other);
+    return EMAIL_PATTERN.test(value) ? queryClient.fetchQuery(emailLookup(value)) : Promise.resolve(false);
+  };
+
+  return { exists: valid && data === true, checking: valid && isFetching, check };
 }

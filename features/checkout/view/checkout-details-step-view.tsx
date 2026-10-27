@@ -63,6 +63,7 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
             value={form.email}
             readOnly={form.emailLocked}
             onChange={(e) => form.onEmailChange(e.target.value)}
+            onBlur={form.onEmailBlur}
             className="pr-12 font-medium text-[#333134]"
           />
           {form.email && emailValid && (

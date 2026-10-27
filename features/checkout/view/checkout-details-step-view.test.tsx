@@ -16,6 +16,7 @@ const form = (overrides: Partial<CheckoutViewModel["form"]> = {}): CheckoutViewM
   step: "details",
   email: "",
   onEmailChange: vi.fn(),
+  onEmailBlur: vi.fn(),
   emailLocked: false,
   country: { selected: nigeria, options: [nigeria, { iso: "GB", name: "United Kingdom", dial: "44" }], onSelect: vi.fn() },
   phone: "",
@@ -69,6 +70,7 @@ describe("CheckoutDetailsStepView", () => {
     await user.type(screen.getByPlaceholderText("Enter email address"), "x");
     await user.type(screen.getByLabelText("Phone number"), "1");
     expect(props.onEmailChange).toHaveBeenCalled();
+    expect(props.onEmailBlur).toHaveBeenCalled();
     expect(props.onPhoneChange).toHaveBeenCalled();
     expect(screen.getByLabelText("Valid email")).toBeInTheDocument();
 

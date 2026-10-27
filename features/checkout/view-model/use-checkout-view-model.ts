@@ -68,6 +68,8 @@ export type CheckoutViewModel = {
     step: CheckoutStep;
     email: string;
     onEmailChange: (value: string) => void;
+    /** They left the email field: look up whether it has an account. */
+    onEmailBlur: () => void;
     /** Typed email is fine to use; the email is locked once signed in or past the first step. */
     emailLocked: boolean;
     country: {
@@ -89,7 +91,7 @@ export type CheckoutViewModel = {
     /** This email already has an account: "Continue" becomes "Login and continue to book". */
     accountExists: boolean;
     canContinue: boolean;
-    onContinue: () => void;
+    onContinue: () => Promise<void> | void;
     canPay: boolean;
     /** The total is nothing, so there is no payment page: "Confirm and book". */
     free: boolean;
@@ -138,7 +140,12 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginPending, setLoginPending] = useState(false);
   const [loginGoogleLoading, setLoginGoogleLoading] = useState(false);
-  const lookup = useEmailHasAccount(emailInput);
+  // The email last looked up: set when they leave the field or press Continue,
+  // so the lookup runs once per finished email, not on every pause in typing.
+  const [checkedEmail, setCheckedEmail] = useState("");
+  // Continue was pressed before the email was looked up: waiting for the answer.
+  const [continuePending, setContinuePending] = useState(false);
+  const lookup = useEmailHasAccount(checkedEmail);
 
   const country =
     pickedCountry ?? COUNTRIES.find((c) => c.iso === draft?.contact?.countryIso) ?? DEFAULT_COUNTRY;
@@ -176,7 +183,18 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   const phoneValid = isValidPhone(country, phone);
   const detailsValid = EMAIL_PATTERN.test(emailInput.trim()) && phoneValid;
 
-  const accountExists = step === "details" && (lookup.exists || takenEmail === emailInput.trim());
+  const emailChecked = checkedEmail === emailInput.trim();
+  const accountExists =
+    step === "details" && ((emailChecked && lookup.exists) || takenEmail === emailInput.trim());
+
+  const continueToNext = (hasAccount: boolean) => {
+    if (hasAccount) {
+      setLoginEmail(emailInput.trim());
+      setLoginOpen(true);
+    } else {
+      setStage("password");
+    }
+  };
 
   const confirmMismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const passwordError =
@@ -281,6 +299,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       step,
       email: step === "pay" ? email : emailInput,
       onEmailChange: setEmailInput,
+      onEmailBlur: () => setCheckedEmail(emailInput.trim()),
       emailLocked: step !== "details",
       country: { selected: country, options: COUNTRIES, onSelect: setCountry },
       phone,
@@ -294,15 +313,17 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       emailTaken: isEmailTakenError(register.error),
       loginHref: `/login?next=${encodeURIComponent("/checkout")}`,
       accountExists,
-      canContinue: detailsValid && !googleLoading && !lookup.checking,
-      onContinue: () => {
-        if (!detailsValid) return;
-        if (accountExists) {
-          setLoginEmail(emailInput.trim());
-          setLoginOpen(true);
-        } else {
-          setStage("password");
-        }
+      canContinue: detailsValid && !googleLoading && !lookup.checking && !continuePending,
+      onContinue: async () => {
+        if (!detailsValid || continuePending) return;
+        if (emailChecked) return continueToNext(accountExists);
+        // They pressed Continue (or Enter) without leaving the email field.
+        const typed = emailInput.trim();
+        setCheckedEmail(typed);
+        setContinuePending(true);
+        const hasAccount = await lookup.check(typed);
+        setContinuePending(false);
+        continueToNext(hasAccount || takenEmail === typed);
       },
       free: total === "Free",
       note,
