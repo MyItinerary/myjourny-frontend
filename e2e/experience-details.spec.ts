@@ -195,3 +195,38 @@ test("itin's placeholder safety info isn't shown", async ({ page }) => {
   await expect(page.getByText("Safety info not available")).toHaveCount(0);
   await expect(page.getByText("Follow general travel safety disclaimer.")).toHaveCount(0);
 });
+
+test("the sticky booking card clears the fixed navbar when scrolling", async ({ page }) => {
+  await mockApi(page, experienceApi(EXPERIENCE));
+  await page.goto("/experiences/exp-1");
+  await expect(page.getByRole("heading", { name: "Makoko Floating Village Boat Tour" }).first()).toBeVisible();
+
+  const panel = page.locator("div.sticky").filter({ hasText: "Participants" });
+  await expect(panel).toBeVisible();
+
+  // Scroll down to make the panel stick
+  await page.evaluate(() => window.scrollTo(0, 600));
+  await page.waitForTimeout(200);
+
+  const header = page.locator("header");
+  const headerBox = await header.boundingBox();
+  const panelBox = await panel.boundingBox();
+
+  expect(headerBox).not.toBeNull();
+  expect(panelBox).not.toBeNull();
+  expect(panelBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height);
+
+  // The pricing section inside the panel is visible and clears the header
+  const price = panel.getByText("₦7,500.00");
+  await expect(price).toBeVisible();
+  const priceBox = await price.boundingBox();
+  expect(priceBox).not.toBeNull();
+  expect(priceBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height);
+
+  // Scroll back up and verify the card maintains its intended position
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(200);
+  await expect(panel).toBeVisible();
+  await expect(price).toBeVisible();
+});
+

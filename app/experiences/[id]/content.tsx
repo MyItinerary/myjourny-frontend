@@ -352,7 +352,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
           {hydrated ? (
             <BookingPanel
-              className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
+              className="sticky top-[124px] mt-8 hidden lg:mt-0 lg:flex"
               experienceId={experience.id}
               guideId={experience.guide_id}
               prices={prices ?? []}
