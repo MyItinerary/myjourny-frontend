@@ -6,7 +6,15 @@ import { apiErrorMessage } from "@/lib/api-error";
 
 import type { PricingSelection, Quote } from "../model/booking.types";
 import { useCreateBooking } from "../model/bookings";
-import { breakdownRows, type BreakdownRow, groupHeadline, shortDay, shortPrice, shortPriceOrFree } from "../model/booking-card";
+import {
+  breakdownRows,
+  type BreakdownRow,
+  CANCEL_CUTOFF_HOURS,
+  groupHeadline,
+  shortDay,
+  shortPrice,
+  shortPriceOrFree,
+} from "../model/booking-card";
 import { describeRule, formatSessionDay, formatSessionWhen, type ScheduleSummary } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
 import { dateKey, useExperienceSessions } from "../model/sessions";
@@ -333,6 +341,7 @@ export function useBookingPanelViewModel({
               : liveTotal
                 ? null
                 : "Select a date",
+      // Always true for now; becomes `fees_included` / `tax_percent` (booking card spec 3.4).
       fees: "Fees and taxes included",
     },
     button:
@@ -341,7 +350,7 @@ export function useBookingPanelViewModel({
         : { label: free ? "Book for free" : "Book now", loading: createBooking.isPending, disabled: bookDisabled, onClick: onBook },
     cancellation: {
       title: "Cancellation",
-      body: "You can only cancel up to 24 hours before the experience.",
+      body: `You can only cancel up to ${CANCEL_CUTOFF_HOURS} hours before the experience.`,
       hint: cancellationPolicy?.trim() || null,
     },
   };

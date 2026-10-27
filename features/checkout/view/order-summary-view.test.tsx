@@ -15,6 +15,7 @@ const summary: OrderSummary = {
   durationLabel: "2.5 hours",
   total: "₦16,000.00",
   quantity: "x 1 Adult",
+  cancellationNote: "Up to 24 hours before, full refund",
   hasTimeSlots: true,
   free: false,
   changeHref: "/experiences/exp-1",
@@ -29,6 +30,7 @@ describe("OrderSummaryView", () => {
     expect(screen.getAllByText(/₦16,000\.00/).length).toBeGreaterThan(0);
     expect(screen.getAllByText("x 1 Adult").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Free cancellation").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Up to 24 hours before, full refund").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Make changes to this booking")[0].closest("a")).toHaveAttribute("href", "/experiences/exp-1");
   });
 

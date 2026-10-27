@@ -83,7 +83,7 @@ function Details({ summary }: { summary: OrderSummary }) {
       <div className="mx-4 border-t border-[#EEEEEE]" />
 
       <div className="flex flex-col gap-4 px-4">
-        <Policy icon={Ban} title="Free cancellation" note="Up to 24 hours before, full refund" />
+        <Policy icon={Ban} title="Free cancellation" note={summary.cancellationNote} />
         <Policy icon={Clock} title={`Duration — ${summary.durationLabel}`} note={summary.hasTimeSlots ? "See time slots above" : undefined} />
       </div>
     </>

@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { formatPriceOrFree, useBookingQuote, useCreateBooking } from "@/features/booking";
+import { CANCEL_CUTOFF_HOURS, formatPriceOrFree, useBookingQuote, useCreateBooking } from "@/features/booking";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 
@@ -27,6 +27,8 @@ export type OrderSummary = {
   when: string;
   guests: string;
   durationLabel: string;
+  /** "Up to 24 hours before, full refund" */
+  cancellationNote: string;
   /** "See time slots above" is only said when there were slots. */
   hasTimeSlots: boolean;
   /** Nothing to pay: no "x 1 Adult", no taxes and fees. */
@@ -169,6 +171,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
         when: draft.when,
         guests: `${draft.guests} guest${draft.guests === 1 ? "" : "s"}`,
         durationLabel: draft.durationLabel,
+        cancellationNote: `Up to ${CANCEL_CUTOFF_HOURS} hours before, full refund`,
         hasTimeSlots: !!draft.hasTimeSlots,
         free: total === "Free",
         total,

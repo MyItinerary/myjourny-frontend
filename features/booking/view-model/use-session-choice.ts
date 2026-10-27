@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type { ExperienceSession, ExperienceSessions } from "../model/booking.types";
-import { dateFieldLabel, shortDay, urgencyFor, weekdayDay, type DayState } from "../model/booking-card";
+import { dateFieldLabel, FEW_SEATS_LEFT, shortDay, urgencyFor, weekdayDay, type DayState } from "../model/booking-card";
 import { addDaysToKey, dateKey, formatSessionTime, parseDateKey, todayIn } from "../model/sessions";
 
 export type SessionOption = {
@@ -96,7 +96,7 @@ export function useSessionChoice(
     null;
 
   const nextOpenKey = selectedDay ? ([...byDate.keys()].sort().find((k) => k > selectedDay && hasOpenSession(k)) ?? null) : firstOpenDay;
-  const fewLeft = (day: string) => (byDate.get(day) ?? []).some((s) => !s.sold_out && s.seats_left !== null && s.seats_left <= 5);
+  const fewLeft = (day: string) => (byDate.get(day) ?? []).some((s) => !s.sold_out && s.seats_left !== null && s.seats_left <= FEW_SEATS_LEFT);
   const jumpTo = (key: string) => {
     setPickedDay(key);
     setPickedSessionAt(null);
@@ -112,7 +112,7 @@ export function useSessionChoice(
       label: formatSessionTime(s.local_time),
       note: s.sold_out
         ? "Sold out"
-        : s.seats_left !== null && s.seats_left <= 5
+        : s.seats_left !== null && s.seats_left <= FEW_SEATS_LEFT
           ? `${s.seats_left} left`
           : null,
       disabled: s.sold_out,

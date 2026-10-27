@@ -1,6 +1,12 @@
 import type { PriceRule, PricingUnit, QuoteLine, QuoteSaving } from "./booking.types";
 import { parseDateKey } from "./sessions";
 
+// Stand-ins until itin serves the per-experience values (booking card spec):
+/** Every experience can be cancelled up to this many hours before. Becomes `free_cancellation_hours`. */
+export const CANCEL_CUTOFF_HOURS = 24;
+/** A session with this many seats or fewer shows "N left". Becomes `low_stock_threshold`. */
+export const FEW_SEATS_LEFT = 5;
+
 /** "₦16,000": whole naira without decimals, "₦16,000.50" when there are kobo. */
 export function shortPrice(amount: number, currency: string): string {
   const digits = Number.isInteger(amount) ? 0 : 2;
@@ -42,7 +48,7 @@ export const shortDay = (key: string) => parseDateKey(key).toLocaleDateString("e
 
 /** At five spots or fewer, name the slot; the last spot reads heavier. */
 export function urgencyFor(seatsLeft: number | null, timeLabel: string, dayLabel: string) {
-  if (seatsLeft === null || seatsLeft > 5 || seatsLeft < 1) return null;
+  if (seatsLeft === null || seatsLeft > FEW_SEATS_LEFT || seatsLeft < 1) return null;
   return seatsLeft === 1
     ? { level: "one" as const, text: `Last spot at ${timeLabel} on ${dayLabel}` }
     : { level: "few" as const, text: `${seatsLeft} spots left at ${timeLabel} on ${dayLabel}` };

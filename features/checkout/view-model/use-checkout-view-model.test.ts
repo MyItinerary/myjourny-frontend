@@ -117,6 +117,7 @@ describe("useCheckoutViewModel", () => {
       total: "₦16,000.00",
       quantity: "x 1 Adult",
       changeHref: "/experiences/exp-1",
+      cancellationNote: "Up to 24 hours before, full refund",
       hasTimeSlots: false,
       free: false,
     });
