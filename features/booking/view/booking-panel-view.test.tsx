@@ -13,6 +13,7 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
     timezoneNote: "Times are Lagos time.",
     noSessions: false,
     allSoldOut: false,
+    openDayCount: 1,
     options: [
       { startsAt: "a", label: "9:00 AM", note: "2 left", disabled: false, selected: true },
       { startsAt: "b", label: "3:00 PM", note: "Sold out", disabled: true, selected: false },

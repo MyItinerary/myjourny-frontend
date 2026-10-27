@@ -32,6 +32,8 @@ export function ExperienceCardVertical({
   priceFrom,
   className,
   id,
+  href,
+  saveable = true,
 }: ExperienceCardProps) {
   const { data: wishlistIds } = useMyWishlistedIds();
   const { openSave } = useWishlistSave();
@@ -47,8 +49,8 @@ export function ExperienceCardVertical({
         className
       )}
     >
-      {id && (
-        <Link href={`/experiences/${id}`} className="absolute inset-0 z-0" aria-label={title} />
+      {(href ?? id) && (
+        <Link href={href ?? `/experiences/${id}`} className="absolute inset-0 z-0" aria-label={title} />
       )}
 
       {/* Figma keeps the photo a fixed 212px tall in every desktop context
@@ -62,18 +64,20 @@ export function ExperienceCardVertical({
           sizes="345px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <button
-          type="button"
-          aria-label={isSaved ? "Edit wishlists" : "Save to wishlist"}
-          onClick={() => id && openSave(id, title)}
-          disabled={!id}
-          className={cn(
-            "absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors",
-            isSaved ? "text-brand" : "text-foreground hover:text-brand"
-          )}
-        >
-          <HeartRoundedIcon className={cn("size-5", isSaved && "fill-brand")} />
-        </button>
+        {saveable && (
+          <button
+            type="button"
+            aria-label={isSaved ? "Edit wishlists" : "Save to wishlist"}
+            onClick={() => id && openSave(id, title)}
+            disabled={!id}
+            className={cn(
+              "absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors",
+              isSaved ? "text-brand" : "text-foreground hover:text-brand"
+            )}
+          >
+            <HeartRoundedIcon className={cn("size-5", isSaved && "fill-brand")} />
+          </button>
+        )}
       </div>
 
       <div className="pointer-events-none flex flex-col gap-3">

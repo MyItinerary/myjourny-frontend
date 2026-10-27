@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRule, describeRules, formatPrice, formatSessionWhen, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
+import { describeRule, describeRules, formatPrice, formatSessionWhen, guestLoginHref, scheduleLabel, UNIT_SUFFIX, formatMoneyCompact, trimWholeAmount } from "./format";
 
 describe("formatPrice", () => {
   it("formats money in the given currency", () => {
@@ -136,5 +136,20 @@ describe("describeRules", () => {
     expect(describeRules([group, early], "NGN", { now: new Date("2030-07-01T00:00:00Z") })).toEqual([
       "10% off for 3+ guests, any mix of tickets",
     ]);
+  });
+});
+
+describe("formatMoneyCompact", () => {
+  it("drops kobo from whole amounts and keeps real ones", () => {
+    expect(formatMoneyCompact(16000, "NGN")).toBe("₦16,000");
+    expect(formatMoneyCompact(16000.5, "NGN")).toBe("₦16,000.50");
+  });
+});
+
+describe("trimWholeAmount", () => {
+  it("drops empty kobo only", () => {
+    expect(trimWholeAmount("₦16,000.00")).toBe("₦16,000");
+    expect(trimWholeAmount("₦16,000.50")).toBe("₦16,000.50");
+    expect(trimWholeAmount("₦5,000.00 / person")).toBe("₦5,000 / person");
   });
 });

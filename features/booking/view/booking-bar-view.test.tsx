@@ -15,4 +15,13 @@ describe("BookingBarView", () => {
 
     expect(onBookNow).toHaveBeenCalled();
   });
+
+  it("can carry its own note and button label", () => {
+    renderWithProviders(
+      <BookingBarView priceFrom="₦7,500" onBookNow={vi.fn()} note="Sat, 14 Nov 2026" actionLabel="Get tickets" />,
+    );
+    expect(screen.getByText("Sat, 14 Nov 2026")).toBeInTheDocument();
+    expect(screen.queryByText(/Free cancellation/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Get tickets" })).toBeInTheDocument();
+  });
 });

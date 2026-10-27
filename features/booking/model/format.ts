@@ -146,3 +146,17 @@ export function scheduleLabel(s: ScheduleSummary): string | null {
   }
   return length > 1 ? `${pattern} · ${length} days` : pattern;
 }
+
+/** "₦16,000": whole amounts without kobo, as the booking cards show them. */
+export function formatMoneyCompact(amount: number, currency: string): string {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  }).format(amount);
+}
+
+/** "₦16,000.00" → "₦16,000": drops empty kobo, keeps real ones ("₦16,000.50"). */
+export function trimWholeAmount(formatted: string): string {
+  return formatted.replace(/\.00(?!\d)/, "");
+}

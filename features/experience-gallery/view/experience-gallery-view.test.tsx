@@ -33,11 +33,11 @@ describe("ExperienceGalleryView", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("puts three photos in the grid and the rest behind View all", async () => {
-    const vm = viewModel();
+  it("puts five photos in the grid and the rest behind View all", async () => {
+    const vm = viewModel({ images: photos(8) });
     const { user } = renderWithProviders(<ExperienceGalleryView {...vm} alt="Lagos Food Walk" />);
-    expect(grid().getAllByRole("img")).toHaveLength(3);
-    await user.click(grid().getByRole("button", { name: "View all 5 photos" }));
+    expect(grid().getAllByRole("img")).toHaveLength(5);
+    await user.click(grid().getByRole("button", { name: "View all 8 photos" }));
     expect(vm.onOpenViewer).toHaveBeenCalledWith(0);
   });
 
@@ -49,8 +49,8 @@ describe("ExperienceGalleryView", () => {
   });
 
   it("has no View all when every photo fits in the grid", () => {
-    renderWithProviders(<ExperienceGalleryView {...viewModel({ images: photos(3) })} alt="Lagos Food Walk" />);
-    expect(grid().getAllByRole("img")).toHaveLength(3);
+    renderWithProviders(<ExperienceGalleryView {...viewModel({ images: photos(5) })} alt="Lagos Food Walk" />);
+    expect(grid().getAllByRole("img")).toHaveLength(5);
     expect(screen.queryByRole("button", { name: /View all/ })).not.toBeInTheDocument();
   });
 
