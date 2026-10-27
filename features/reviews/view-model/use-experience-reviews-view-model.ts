@@ -33,7 +33,7 @@ export type ReviewCard = {
   /** "August 2026". */
   date: string;
   verified: boolean;
-  hostReply: HostReply | null;
+  hostReply: (HostReply & { initials: string }) | null;
   /** Long reviews are cut short behind "Read more". */
   long: boolean;
   /** Cut short right now. */
@@ -132,7 +132,10 @@ export function useExperienceReviewsViewModel(
     comment: review.comment ?? null,
     date: reviewMonth(review.created_at),
     verified: review.verified ?? true,
-    hostReply: review.host_reply ?? null,
+    // "Tunde, host" is shown in full, but its initials come from the name: "T".
+    hostReply: review.host_reply
+      ? { ...review.host_reply, initials: reviewInitials(review.host_reply.author.split(",")[0]) }
+      : null,
     long: isLongReview(review.comment),
     clamped: isLongReview(review.comment) && !expanded.includes(review.id),
     helpfulCount: (review.helpful_count ?? 0) + (voted.includes(review.id) ? 1 : 0),

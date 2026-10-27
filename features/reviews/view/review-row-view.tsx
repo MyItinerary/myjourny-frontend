@@ -43,12 +43,6 @@ export function ReviewRowView({
   onToggleHelpful: (id: string) => void;
   onToggleExpanded: (id: string) => void;
 }) {
-  const hostInitials = review.hostReply?.author
-    .split(/[\s,]+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-
   return (
     <li className="flex flex-col items-start gap-3 border-t border-[#E7E7E7] py-6">
       <div className="flex w-full items-center gap-3">
@@ -94,7 +88,7 @@ export function ReviewRowView({
             aria-hidden
             className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#E9E1D2] font-sans text-[11px] font-medium text-[#333134]"
           >
-            {hostInitials}
+            {review.hostReply.initials}
           </span>
           <div className="flex flex-col gap-0.5 text-sm text-[#333134]">
             <p className="font-sans font-medium leading-5">Reply from {review.hostReply.author}</p>

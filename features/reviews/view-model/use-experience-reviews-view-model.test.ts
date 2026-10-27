@@ -106,7 +106,14 @@ describe("useExperienceReviewsViewModel", () => {
         http.get(apiUrl("/experiences/exp-1/reviews"), () =>
           HttpResponse.json({
             items: [
-              { ...item("a", "Ngozi A."), rating: 5, comment: "Loved the kayak", created_at: "2026-08-01T00:00:00" },
+              {
+                ...item("a", "Ngozi A."),
+                rating: 5,
+                comment: "Loved the kayak",
+                created_at: "2026-08-01T00:00:00",
+                helpful_count: 0,
+                host_reply: { author: "Tunde, host", text: "Thank you!" },
+              },
               { ...item("b", "Bayo K."), rating: 3, comment: "Cold breakfast", created_at: "2026-09-01T00:00:00" },
               { ...item("c", "Hauwa M."), rating: 5, comment: "x".repeat(300), created_at: "2026-07-01T00:00:00" },
               { ...item("d", "Chidi O."), rating: 4, comment: "Good value", created_at: "2026-06-01T00:00:00" },
@@ -171,6 +178,11 @@ describe("useExperienceReviewsViewModel", () => {
       expect(result.current.reviews[0]).toMatchObject({ voted: false, helpfulCount: 0 });
     });
 
+
+    it("takes the host's initials from their name, not the 'host' label", async () => {
+      const result = await setup();
+      expect(result.current.reviews.find((r) => r.id === "a")?.hostReply?.initials).toBe("T");
+    });
 
 
     it("closes the sort menu", async () => {

@@ -173,7 +173,7 @@ describe("ExperienceReviewsView", () => {
     it("shows the host's reply and the verified badge", () => {
       renderWithProviders(
         <ExperienceReviewsView
-          {...vm({ reviews: [card({ hostReply: { author: "Tunde, host", text: "Thank you!" } })] })}
+          {...vm({ reviews: [card({ hostReply: { author: "Tunde, host", text: "Thank you!", initials: "T" } })] })}
         />,
       );
       expect(screen.getByText("Reply from Tunde, host")).toBeInTheDocument();

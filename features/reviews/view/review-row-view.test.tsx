@@ -56,9 +56,9 @@ describe("ReviewRowView", () => {
   });
 
   it("shows the host's reply with their initials", () => {
-    renderRow({ hostReply: { author: "Tunde, host", text: "Thank you!" } });
+    renderRow({ hostReply: { author: "Tunde, host", text: "Thank you!", initials: "T" } });
     expect(screen.getByText("Reply from Tunde, host")).toBeInTheDocument();
-    expect(screen.getByText("TH")).toBeInTheDocument();
+    expect(screen.getByText("T")).toBeInTheDocument();
   });
 
   it("votes helpful", async () => {
