@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
-import { useGoogleAuth, useLogin, useRegister } from "@/lib/queries/auth";
+import { isTwoFactorChallenge, useGoogleAuth, useLogin, useRegister } from "@/lib/queries/auth";
 
 /** Creates the guest's account (email and password) when they confirm and pay. */
 export function useGuestRegister() {
@@ -17,6 +17,9 @@ export function useGuestGoogleSignup() {
 export function useGuestLogin() {
   return useLogin();
 }
+
+/** Login and Google answer with this, not tokens, when the account has 2FA on. */
+export { isTwoFactorChallenge };
 
 /** Whether a failed sign-up was because the email already has an account. */
 export function isEmailTakenError(error: unknown): boolean {

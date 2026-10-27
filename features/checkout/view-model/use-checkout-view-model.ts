@@ -13,6 +13,7 @@ import type { Country } from "../model/country.types";
 import { useCheckoutDraft } from "../model/checkout-draft-store";
 import {
   isEmailTakenError,
+  isTwoFactorChallenge,
   useEmailHasAccount,
   useGuestGoogleSignup,
   useGuestLogin,
@@ -256,7 +257,10 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     googleSignup.mutate(
       { token: credential },
       {
-        onSuccess: () => setGoogleLoading(false),
+        onSuccess: (data) => {
+          setGoogleLoading(false);
+          if (isTwoFactorChallenge(data)) finishOnLoginPage();
+        },
         onError: () => setGoogleLoading(false),
       },
     );
@@ -266,18 +270,28 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   // the last step: a note for the guide, then Confirm and pay.
   const continueAfterLogin = () => setLoginOpen(false);
 
+  // The sheet has no code step: an account with 2FA finishes on the login
+  // page, which asks for the code and comes back here. The draft is kept,
+  // and the phone they typed goes with it.
+  const finishOnLoginPage = () => {
+    saveCheckoutContact({ phone, countryIso: country.iso });
+    router.push(`/login?next=${encodeURIComponent("/checkout")}`);
+  };
+
   const onLogin = async () => {
     if (loginPending || !loginEmail.trim() || !loginPassword) return;
     setLoginPending(true);
+    let data: unknown;
     try {
       // Email and password only. Wrong details are reported by the login itself.
-      await login.mutateAsync({ email: loginEmail.trim(), password: loginPassword });
+      data = await login.mutateAsync({ email: loginEmail.trim(), password: loginPassword });
     } catch {
       setLoginPending(false);
       return;
     }
     setLoginPending(false);
-    continueAfterLogin();
+    if (isTwoFactorChallenge(data)) finishOnLoginPage();
+    else continueAfterLogin();
   };
 
   const onLoginGoogle = (credential: string) => {
@@ -285,9 +299,10 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     googleSignup.mutate(
       { token: credential },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           setLoginGoogleLoading(false);
-          continueAfterLogin();
+          if (isTwoFactorChallenge(data)) finishOnLoginPage();
+          else continueAfterLogin();
         },
         onError: () => setLoginGoogleLoading(false),
       },

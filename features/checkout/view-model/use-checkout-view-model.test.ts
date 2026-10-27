@@ -305,6 +305,29 @@ describe("useCheckoutViewModel", () => {
     expect(created).not.toHaveBeenCalled();
   });
 
+  it("sends an account with 2FA to the login page for its code, keeping the phone", async () => {
+    account.login.mutateAsync.mockResolvedValue({ "2fa_required": true });
+    const result = openLogin();
+    act(() => result.current.login.onPasswordChange("secret123"));
+
+    act(() => {
+      void result.current.login.onSubmit();
+    });
+
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/login?next=%2Fcheckout"));
+    const stored = JSON.parse(window.localStorage.getItem("myjourny:checkout-draft")!);
+    expect(stored.contact).toEqual({ phone: "7016377711", countryIso: "NG" });
+  });
+
+  it("sends a Google account with 2FA to the login page too", () => {
+    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ "2fa_required": true }));
+    const result = openLogin();
+
+    act(() => result.current.login.onGoogleCredential("cred"));
+
+    expect(nav.push).toHaveBeenCalledWith("/login?next=%2Fcheckout");
+  });
+
   it("logs in with Google from the sheet, then closes it without booking", async () => {
     const created = vi.fn();
     server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
