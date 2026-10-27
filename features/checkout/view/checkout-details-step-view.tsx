@@ -160,14 +160,6 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
 
       {step === "pay" && (
         <>
-          <Field label="Leave a note for the guide">
-            <textarea
-              value={form.note}
-              onChange={(e) => form.onNoteChange(e.target.value)}
-              maxLength={500}
-              className="h-[120px] w-full resize-none rounded-lg bg-[#F4F2EE] px-4 py-3 font-sans text-base font-medium text-[#333134] outline-none placeholder:font-normal placeholder:text-[#A8A5AA] focus-visible:ring-2 focus-visible:ring-[#333134]/30"
-            />
-          </Field>
           {!form.free && (
             <div className="flex items-start gap-4 rounded-lg bg-[#F4F2EE] p-4">
               <Lock aria-hidden className="size-6 shrink-0 text-[#333134]" />

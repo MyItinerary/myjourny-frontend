@@ -35,8 +35,6 @@ const form = (overrides: Partial<CheckoutViewModel["form"]> = {}): CheckoutViewM
   canPay: false,
   free: false,
   payment: { provider: "Paystack", methods: "Payment methods like card, bank transfer, USSD and Pay with Zap all available" },
-  note: "",
-  onNoteChange: vi.fn(),
   pending: false,
   onConfirm: vi.fn(),
   onGoogleCredential: vi.fn(),
@@ -121,12 +119,11 @@ describe("CheckoutDetailsStepView", () => {
     expect(props.onConfirm).toHaveBeenCalled();
   });
 
-  it("asks for a note to the guide and says payment is secured by Paystack, before Confirm and pay", async () => {
-    const props = form({ step: "pay", emailLocked: true, email: "juliet@example.com", note: "", canPay: true });
-    const { user } = renderWithProviders(<CheckoutDetailsStepView form={props} />);
+  it("says payment is secured by Paystack before Confirm and pay, and asks for no note itin can't store", () => {
+    const props = form({ step: "pay", emailLocked: true, email: "juliet@example.com", canPay: true });
+    renderWithProviders(<CheckoutDetailsStepView form={props} />);
 
-    await user.type(screen.getByRole("textbox", { name: "Leave a note for the guide" }), "W");
-    expect(props.onNoteChange).toHaveBeenCalledWith("W");
+    expect(screen.queryByRole("textbox", { name: "Leave a note for the guide" })).not.toBeInTheDocument();
     expect(screen.getByText("Payment secured by Paystack")).toBeInTheDocument();
     expect(screen.getByText(/card, bank transfer, USSD/)).toBeInTheDocument();
   });

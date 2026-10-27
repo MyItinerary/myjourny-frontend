@@ -98,9 +98,6 @@ export type CheckoutViewModel = {
     free: boolean;
     /** Who takes the payment: itin sends NGN to Paystack and every other currency to Stripe. */
     payment: { provider: string; methods: string };
-    /** A message for the guide. Kept in the form only: itin has no field for it yet. */
-    note: string;
-    onNoteChange: (value: string) => void;
     pending: boolean;
     onConfirm: () => void;
     onGoogleCredential: (credential: string) => void;
@@ -137,7 +134,6 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   const [submitting, setSubmitting] = useState(false);
   // The email sign-up turned away as already taken, when the lookup didn't know.
   const [takenEmail, setTakenEmail] = useState<string | null>(null);
-  const [note, setNote] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -267,7 +263,8 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   };
 
   // Logged in: the sheet closes and the page behind it, kept as it was, is now
-  // the last step: a note for the guide, then Confirm and pay.
+  // the last step: Confirm and pay. (Figma also has a note for the guide; it
+  // comes back once itin stores it.)
   const continueAfterLogin = () => setLoginOpen(false);
 
   // The sheet has no code step: an account with 2FA finishes on the login
@@ -347,8 +344,6 @@ export function useCheckoutViewModel(): CheckoutViewModel {
         draft?.currency === "NGN"
           ? { provider: "Paystack", methods: "Payment methods like card, bank transfer, USSD and Pay with Zap all available" }
           : { provider: "Stripe", methods: "Pay securely by card" },
-      note,
-      onNoteChange: setNote,
       canPay: step === "password" ? passwordsReady && !submitting : phoneValid && !submitting,
       pending: submitting,
       onConfirm,

@@ -180,7 +180,7 @@ test("a signed-in user skips checkout: Book now goes straight to the payment pag
   expect(created).toBe(1);
 });
 
-test("a guest whose email already has an account logs in, adds a note, then pays", async ({ page }) => {
+test("a guest whose email already has an account logs in, then pays", async ({ page }) => {
   let bookingBody: Record<string, unknown> | null = null;
   await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
   await mockApi(page, {
@@ -230,7 +230,6 @@ test("a guest whose email already has an account logs in, adds a note, then pays
   // Logged in, the page behind the sheet is now the last step: nothing is booked until Confirm and pay.
   await expect(page.getByText("Welcome back!")).toHaveCount(0);
   await expect(page.getByText("Payment secured by Paystack")).toBeVisible();
-  await page.getByRole("textbox", { name: "Leave a note for the guide" }).fill("Please bring a life jacket for a child");
   expect(bookingBody).toBeNull();
   await page.getByRole("button", { name: "Confirm and pay" }).click();
 
