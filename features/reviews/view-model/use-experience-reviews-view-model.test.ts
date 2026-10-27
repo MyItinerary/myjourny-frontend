@@ -171,6 +171,14 @@ describe("useExperienceReviewsViewModel", () => {
       expect(result.current.reviews[0]).toMatchObject({ voted: false, helpfulCount: 0 });
     });
 
+
+
+    it("closes the sort menu", async () => {
+      const result = await setup();
+      act(() => result.current.onToggleSort());
+      act(() => result.current.onCloseSort());
+      expect(result.current.sortOpen).toBe(false);
+    });
     it("expands a long review", async () => {
       const result = await setup();
       const long = () => result.current.reviews.find((r) => r.id === "c");

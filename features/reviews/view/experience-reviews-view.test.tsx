@@ -44,6 +44,7 @@ function vm(overrides: Partial<ExperienceReviewsViewModel> = {}): ExperienceRevi
     ],
     sortOpen: false,
     onToggleSort: vi.fn(),
+    onCloseSort: vi.fn(),
     onSortChange: vi.fn(),
     filterOpen: false,
     onToggleFilter: vi.fn(),
@@ -132,7 +133,7 @@ describe("ExperienceReviewsView", () => {
       await userEvent.click(screen.getByRole("button", { name: /Most relevant/ }));
       expect(onToggleSort).toHaveBeenCalled();
       rerender(<ExperienceReviewsView {...vm({ sortOpen: true, onSortChange })} />);
-      await userEvent.click(within(screen.getByRole("listbox")).getByRole("button", { name: "Newest" }));
+      await userEvent.click(within(screen.getByRole("menu")).getByRole("menuitemradio", { name: "Newest" }));
       expect(onSortChange).toHaveBeenCalledWith("newest");
     });
 

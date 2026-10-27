@@ -67,6 +67,8 @@ export type ExperienceReviewsViewModel = {
   sortOptions: { value: ReviewSort; label: string }[];
   sortOpen: boolean;
   onToggleSort: () => void;
+  /** Escape or a click outside the menu. */
+  onCloseSort: () => void;
   onSortChange: (sort: ReviewSort) => void;
 
   filterOpen: boolean;
@@ -171,6 +173,7 @@ export function useExperienceReviewsViewModel(
       setSortOpen((open) => !open);
       setFilterOpen(false);
     },
+    onCloseSort: () => setSortOpen(false),
     onSortChange: (next) => {
       setSort(next);
       setSortOpen(false);

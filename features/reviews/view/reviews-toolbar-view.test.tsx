@@ -18,6 +18,7 @@ const base = () => ({
   ],
   sortOpen: false,
   onToggleSort: vi.fn(),
+  onCloseSort: vi.fn(),
   onSortChange: vi.fn(),
   filterOpen: false,
   onToggleFilter: vi.fn(),
@@ -48,8 +49,29 @@ describe("ReviewsToolbarView", () => {
     await userEvent.click(screen.getByRole("button", { name: /Most relevant/ }));
     expect(props.onToggleSort).toHaveBeenCalled();
     rerender(<ReviewsToolbarView {...props} sortOpen />);
-    await userEvent.click(within(screen.getByRole("listbox")).getByRole("button", { name: "Newest" }));
+    await userEvent.click(within(screen.getByRole("menu")).getByRole("menuitemradio", { name: "Newest" }));
     expect(props.onSortChange).toHaveBeenCalledWith("newest");
+  });
+
+  it("marks the current sort as checked", () => {
+    renderWithProviders(<ReviewsToolbarView {...base()} sortOpen />);
+    expect(screen.getByRole("menuitemradio", { name: "Most relevant" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("closes the sort menu on Escape and on a click outside it", async () => {
+    const props = { ...base(), sortOpen: true };
+    renderWithProviders(<ReviewsToolbarView {...props} />);
+    await userEvent.keyboard("{Escape}");
+    expect(props.onCloseSort).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByLabelText("Search reviews"));
+    expect(props.onCloseSort).toHaveBeenCalledTimes(2);
+  });
+
+  it("stays open for a click inside the menu", async () => {
+    const props = { ...base(), sortOpen: true };
+    renderWithProviders(<ReviewsToolbarView {...props} />);
+    await userEvent.click(screen.getByRole("menu"));
+    expect(props.onCloseSort).not.toHaveBeenCalled();
   });
 
   it("picks a star filter, shows it as active and removes it", async () => {

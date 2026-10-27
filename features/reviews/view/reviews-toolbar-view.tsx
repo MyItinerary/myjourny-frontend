@@ -1,4 +1,5 @@
 import { ChevronDown, ListFilter, Search, X } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ type ToolbarProps = Pick<
   | "sort"
   | "sortOpen"
   | "onToggleSort"
+  | "onCloseSort"
   | "onSortChange"
   | "filterOpen"
   | "onToggleFilter"
@@ -27,7 +29,23 @@ type ToolbarProps = Pick<
 
 /** Search, sort and filter above the review list. */
 export function ReviewsToolbarView(props: ToolbarProps) {
-  const { query, sortOpen, filterOpen, activeFilterCount, ratingFilter } = props;
+  const { query, sortOpen, filterOpen, activeFilterCount, ratingFilter, onCloseSort } = props;
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  // An open sort menu closes on Escape or a click anywhere outside it.
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && onCloseSort();
+    const onPointer = (event: MouseEvent) => {
+      if (!sortRef.current?.contains(event.target as Node)) onCloseSort();
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, [sortOpen, onCloseSort]);
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3 md:flex-nowrap">
@@ -53,10 +71,10 @@ export function ReviewsToolbarView(props: ToolbarProps) {
           )}
         </label>
 
-        <div className="relative flex-1 md:flex-none">
+        <div ref={sortRef} className="relative flex-1 md:flex-none">
           <button
             type="button"
-            aria-haspopup="listbox"
+            aria-haspopup="menu"
             aria-expanded={sortOpen}
             onClick={props.onToggleSort}
             className={cn(PILL, "w-full justify-center px-[18px] md:w-auto", sortOpen ? "border-2 border-[#333134]" : "border-[#E0DFDD]")}
@@ -66,14 +84,16 @@ export function ReviewsToolbarView(props: ToolbarProps) {
           </button>
           {sortOpen && (
             <ul
-              role="listbox"
+              role="menu"
               aria-label="Sort reviews"
               className="absolute right-0 top-14 z-10 w-60 rounded-2xl border border-[#E7E7E7] bg-white p-2 shadow-lg"
             >
               {props.sortOptions.map((option) => (
-                <li key={option.value} role="option" aria-selected={option.value === props.sort}>
+                <li key={option.value} role="none">
                   <button
                     type="button"
+                    role="menuitemradio"
+                    aria-checked={option.value === props.sort}
                     onClick={() => props.onSortChange(option.value)}
                     className={cn(
                       "w-full cursor-pointer rounded-xl px-3 py-2.5 text-left text-[15px] leading-[22px] text-[#333134] hover:bg-[#F4F2EE]",
