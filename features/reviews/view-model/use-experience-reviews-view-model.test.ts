@@ -178,12 +178,16 @@ describe("useExperienceReviewsViewModel", () => {
       expect(result.current.reviews[0]).toMatchObject({ voted: false, helpfulCount: 0 });
     });
 
+    it("offers a vote only on reviews the API counts votes for", async () => {
+      const result = await setup();
+      expect(result.current.reviews.find((r) => r.id === "a")?.canVote).toBe(true);
+      expect(result.current.reviews.find((r) => r.id === "b")?.canVote).toBe(false);
+    });
 
     it("takes the host's initials from their name, not the 'host' label", async () => {
       const result = await setup();
       expect(result.current.reviews.find((r) => r.id === "a")?.hostReply?.initials).toBe("T");
     });
-
 
     it("closes the sort menu", async () => {
       const result = await setup();
@@ -191,6 +195,7 @@ describe("useExperienceReviewsViewModel", () => {
       act(() => result.current.onCloseSort());
       expect(result.current.sortOpen).toBe(false);
     });
+
     it("expands a long review", async () => {
       const result = await setup();
       const long = () => result.current.reviews.find((r) => r.id === "c");

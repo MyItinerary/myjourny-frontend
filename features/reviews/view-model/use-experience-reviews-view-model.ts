@@ -40,6 +40,8 @@ export type ReviewCard = {
   clamped: boolean;
   helpfulCount: number;
   voted: boolean;
+  /** Only when the API counts helpful votes; until then a vote would vanish on reload. */
+  canVote: boolean;
 };
 
 /** Which version of the section to show. */
@@ -140,6 +142,7 @@ export function useExperienceReviewsViewModel(
     clamped: isLongReview(review.comment) && !expanded.includes(review.id),
     helpfulCount: (review.helpful_count ?? 0) + (voted.includes(review.id) ? 1 : 0),
     voted: voted.includes(review.id),
+    canVote: review.helpful_count != null,
   }));
 
   let display: ReviewsDisplay = "populated";

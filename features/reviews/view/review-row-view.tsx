@@ -97,22 +97,24 @@ export function ReviewRowView({
         </div>
       )}
 
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          aria-pressed={review.voted}
-          onClick={() => onToggleHelpful(review.id)}
-          className={cn(
-            "flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm leading-5",
-            review.voted
-              ? "bg-[#F4F2EE] font-medium text-[#333134]"
-              : "border border-[#E0DFDD] text-[#6F6B72] hover:bg-[#F4F2EE]",
+      {review.canVote && (
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            aria-pressed={review.voted}
+            onClick={() => onToggleHelpful(review.id)}
+            className={cn(
+              "flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm leading-5",
+              review.voted
+                ? "bg-[#F4F2EE] font-medium text-[#333134]"
+                : "border border-[#E0DFDD] text-[#6F6B72] hover:bg-[#F4F2EE]",
           )}
         >
           <ThumbsUp aria-hidden className="size-4" />
           {review.helpfulCount > 0 ? `Helpful · ${review.helpfulCount}` : "Was this helpful?"}
         </button>
       </div>
+      )}
     </li>
   );
 }

@@ -22,6 +22,7 @@ const review: ReviewCard = {
   clamped: false,
   helpfulCount: 0,
   voted: false,
+  canVote: true,
 };
 
 const renderRow = (overrides: Partial<ReviewCard> = {}, handlers = { vote: vi.fn(), expand: vi.fn() }) =>
@@ -66,6 +67,11 @@ describe("ReviewRowView", () => {
     renderRow({}, handlers);
     await userEvent.click(screen.getByRole("button", { name: "Was this helpful?" }));
     expect(handlers.vote).toHaveBeenCalledWith("a");
+  });
+
+  it("offers no vote while the API doesn't count them", () => {
+    renderRow({ canVote: false });
+    expect(screen.queryByRole("button", { name: "Was this helpful?" })).not.toBeInTheDocument();
   });
 
   it("expands a long review", async () => {

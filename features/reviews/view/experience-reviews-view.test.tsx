@@ -22,6 +22,7 @@ const card = (overrides: Partial<ReviewCard> = {}): ReviewCard => ({
   clamped: false,
   helpfulCount: 0,
   voted: false,
+  canVote: true,
   ...overrides,
 });
 
