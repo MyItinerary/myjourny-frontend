@@ -128,6 +128,16 @@ describe("useCheckoutViewModel", () => {
     expect(result.current.summary).toMatchObject({ hasTimeSlots: true, free: true, total: "Free" });
   });
 
+  it("says Paystack takes naira payments and Stripe takes the rest", () => {
+    const naira = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(naira.result.current.form.payment.provider).toBe("Paystack");
+    naira.unmount();
+
+    saveCheckoutDraft({ ...draft, currency: "USD" });
+    const dollars = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(dollars.result.current.form.payment).toEqual({ provider: "Stripe", methods: "Pay securely by card" });
+  });
+
   it("sends the guest home when there is no saved booking", () => {
     window.localStorage.clear();
     renderHookWithProviders(() => useCheckoutViewModel());

@@ -172,10 +172,10 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
             <div className="flex items-start gap-4 rounded-lg bg-[#F4F2EE] p-4">
               <Lock aria-hidden className="size-6 shrink-0 text-[#333134]" />
               <div className="flex flex-col gap-2">
-                <p className="font-sans text-lg leading-[27px] font-semibold text-[#333134]">Payment secured by Paystack</p>
-                <p className="font-sans text-sm leading-[22px] text-[#757575]">
-                  Payment methods like card, bank transfer, USSD and Pay with Zap all available
+                <p className="font-sans text-lg leading-[27px] font-semibold text-[#333134]">
+                  Payment secured by {form.payment.provider}
                 </p>
+                <p className="font-sans text-sm leading-[22px] text-[#757575]">{form.payment.methods}</p>
               </div>
             </div>
           )}

@@ -95,6 +95,8 @@ export type CheckoutViewModel = {
     canPay: boolean;
     /** The total is nothing, so there is no payment page: "Confirm and book". */
     free: boolean;
+    /** Who takes the payment: itin sends NGN to Paystack and every other currency to Stripe. */
+    payment: { provider: string; methods: string };
     /** A message for the guide. Kept in the form only: itin has no field for it yet. */
     note: string;
     onNoteChange: (value: string) => void;
@@ -326,6 +328,10 @@ export function useCheckoutViewModel(): CheckoutViewModel {
         continueToNext(hasAccount || takenEmail === typed);
       },
       free: total === "Free",
+      payment:
+        draft?.currency === "NGN"
+          ? { provider: "Paystack", methods: "Payment methods like card, bank transfer, USSD and Pay with Zap all available" }
+          : { provider: "Stripe", methods: "Pay securely by card" },
       note,
       onNoteChange: setNote,
       canPay: step === "password" ? passwordsReady && !submitting : phoneValid && !submitting,

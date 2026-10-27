@@ -34,6 +34,7 @@ const form = (overrides: Partial<CheckoutViewModel["form"]> = {}): CheckoutViewM
   onContinue: vi.fn(),
   canPay: false,
   free: false,
+  payment: { provider: "Paystack", methods: "Payment methods like card, bank transfer, USSD and Pay with Zap all available" },
   note: "",
   onNoteChange: vi.fn(),
   pending: false,
@@ -128,6 +129,14 @@ describe("CheckoutDetailsStepView", () => {
     expect(props.onNoteChange).toHaveBeenCalledWith("W");
     expect(screen.getByText("Payment secured by Paystack")).toBeInTheDocument();
     expect(screen.getByText(/card, bank transfer, USSD/)).toBeInTheDocument();
+  });
+
+  it("names the provider it is given, so a Stripe payment doesn't say Paystack", () => {
+    const payment = { provider: "Stripe", methods: "Pay securely by card" };
+    renderWithProviders(<CheckoutDetailsStepView form={form({ step: "pay", canPay: true, payment })} />);
+    expect(screen.getByText("Payment secured by Stripe")).toBeInTheDocument();
+    expect(screen.getByText("Pay securely by card")).toBeInTheDocument();
+    expect(screen.queryByText(/Paystack/)).not.toBeInTheDocument();
   });
 
   it("books without a payment page when it's free", () => {
