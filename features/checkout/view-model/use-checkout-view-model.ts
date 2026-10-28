@@ -48,6 +48,8 @@ export type CheckoutStep = "details" | "password" | "pay";
 /** The "Welcome back!" sheet for an email that already has an account. */
 export type CheckoutLogin = {
   open: boolean;
+  /** The account was made with Google and has no password: offer only Google. */
+  googleOnly: boolean;
   onOpenChange: (open: boolean) => void;
   email: string;
   onEmailChange: (value: string) => void;
@@ -137,6 +139,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   // The email sign-up turned away as already taken, when the lookup didn't know.
   const [takenEmail, setTakenEmail] = useState<string | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [googleOnly, setGoogleOnly] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginPending, setLoginPending] = useState(false);
@@ -189,9 +192,10 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   const accountExists =
     step === "details" && ((emailChecked && lookup.exists) || takenEmail === emailInput.trim());
 
-  const continueToNext = (hasAccount: boolean) => {
+  const continueToNext = (hasAccount: boolean, hasPassword = true) => {
     if (hasAccount) {
       setLoginEmail(emailInput.trim());
+      setGoogleOnly(!hasPassword);
       setLoginOpen(true);
     } else {
       setStage("password");
@@ -333,14 +337,16 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       canContinue: detailsValid && !googleLoading && !lookup.checking && !continuePending,
       onContinue: async () => {
         if (!detailsValid || continuePending) return;
-        if (emailChecked) return continueToNext(accountExists);
+        // An account found only by sign-up's "already registered" has a password.
+        if (emailChecked) return continueToNext(accountExists, !lookup.exists || lookup.hasPassword);
         // They pressed Continue (or Enter) without leaving the email field.
         const typed = emailInput.trim();
         setCheckedEmail(typed);
         setContinuePending(true);
-        const hasAccount = await lookup.check(typed);
+        const found = await lookup.check(typed);
         setContinuePending(false);
-        continueToNext(hasAccount || takenEmail === typed);
+        if (found.exists) continueToNext(true, found.hasPassword);
+        else continueToNext(takenEmail === typed);
       },
       free: total === "Free",
       payment:
@@ -355,6 +361,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     },
     login: {
       open: loginOpen,
+      googleOnly,
       onOpenChange: setLoginOpen,
       email: loginEmail,
       onEmailChange: setLoginEmail,

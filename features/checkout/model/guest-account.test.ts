@@ -35,6 +35,7 @@ describe("useEmailHasAccount", () => {
     const { result } = renderHookWithProviders(() => useEmailHasAccount(" Juliet@Example.com "));
 
     await waitFor(() => expect(result.current.exists).toBe(true));
+    expect(result.current.hasPassword).toBe(false);
     expect(result.current.checking).toBe(false);
     expect(asked).toEqual([{ email: "juliet@example.com" }]);
   });

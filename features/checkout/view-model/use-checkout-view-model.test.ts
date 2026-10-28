@@ -30,7 +30,7 @@ const account = vi.hoisted(() => ({
   register: { mutateAsync: vi.fn(), reset: vi.fn(), error: null as unknown },
   google: { mutate: vi.fn() },
   login: { mutateAsync: vi.fn() },
-  lookup: { exists: false, checking: false },
+  lookup: { exists: false, hasPassword: false, checking: false },
   lookedUp: [] as string[],
   check: vi.fn(),
 }));
@@ -85,10 +85,10 @@ beforeEach(() => {
   account.register.error = null;
   account.google.mutate.mockReset();
   account.login.mutateAsync.mockReset();
-  account.lookup = { exists: false, checking: false };
+  account.lookup = { exists: false, hasPassword: false, checking: false };
   account.lookedUp = [];
   account.check.mockReset();
-  account.check.mockImplementation(async () => account.lookup.exists);
+  account.check.mockImplementation(async () => ({ exists: account.lookup.exists, hasPassword: account.lookup.hasPassword }));
   saveCheckoutDraft(draft);
   // The quote needs an account; most tests don't have one yet.
   server.use(http.post(apiUrl("/bookings/quote"), () => HttpResponse.json({}, { status: 401 })));
@@ -166,7 +166,7 @@ describe("useCheckoutViewModel", () => {
   });
 
   it("waits for the account lookup before letting them continue", () => {
-    account.lookup = { exists: false, checking: true };
+    account.lookup = { exists: false, hasPassword: false, checking: true };
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
     act(() => result.current.form.onEmailBlur());
@@ -185,7 +185,7 @@ describe("useCheckoutViewModel", () => {
   });
 
   it("looks the email up on Continue when they never left the field, then carries on", async () => {
-    account.lookup = { exists: true, checking: false };
+    account.lookup = { exists: true, hasPassword: true, checking: false };
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
     expect(result.current.form.accountExists).toBe(false);
@@ -198,8 +198,34 @@ describe("useCheckoutViewModel", () => {
     expect(result.current.login.email).toBe("juliet@example.com");
   });
 
+  it("offers only Google when the account was made with Google", () => {
+    account.lookup = { exists: true, hasPassword: false, checking: false };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+    act(() => result.current.form.onEmailBlur());
+
+    act(() => {
+      void result.current.form.onContinue();
+    });
+
+    expect(result.current.login.open).toBe(true);
+    expect(result.current.login.googleOnly).toBe(true);
+  });
+
+  it("offers only Google on Continue too, when they never left the email field", async () => {
+    account.lookup = { exists: true, hasPassword: false, checking: false };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
+
+    expect(result.current.login.googleOnly).toBe(true);
+  });
+
   it("opens the log-in sheet instead of the password step when the email has an account", async () => {
-    account.lookup = { exists: true, checking: false };
+    account.lookup = { exists: true, hasPassword: true, checking: false };
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
     act(() => result.current.form.onEmailBlur());
@@ -236,7 +262,7 @@ describe("useCheckoutViewModel", () => {
   });
 
   function openLogin() {
-    account.lookup = { exists: true, checking: false };
+    account.lookup = { exists: true, hasPassword: true, checking: false };
     const hook = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(hook.result);
     act(() => hook.result.current.form.onEmailBlur());

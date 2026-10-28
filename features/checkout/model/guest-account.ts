@@ -37,14 +37,20 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const normalize = (email: string) => email.trim().toLowerCase();
 
+/** Whether the email has an account, and whether it has a password (an
+ * account made with Google has none). */
+export type EmailAccount = { exists: boolean; hasPassword: boolean };
+
+const NO_ACCOUNT: EmailAccount = { exists: false, hasPassword: false };
+
 const emailLookup = (email: string) => ({
   queryKey: ["auth", "email-exists", email],
-  queryFn: async () => {
+  queryFn: async (): Promise<EmailAccount> => {
     try {
-      const { data } = await apiClient.post<{ exists?: boolean }>(EMAIL_LOOKUP_PATH, { email });
-      return data.exists === true;
+      const { data } = await apiClient.post<{ exists?: boolean; has_password?: boolean }>(EMAIL_LOOKUP_PATH, { email });
+      return { exists: data.exists === true, hasPassword: data.has_password === true };
     } catch {
-      return false;
+      return NO_ACCOUNT;
     }
   },
   staleTime: 60_000,
@@ -53,10 +59,9 @@ const emailLookup = (email: string) => ({
 /** Whether an email already has an account. Pass the email once they have
  * finished typing it; `checking` is true while the answer is pending.
  * `check` asks about any email, reusing an answer already fetched. */
-export function useEmailHasAccount(email: string): {
-  exists: boolean;
+export function useEmailHasAccount(email: string): EmailAccount & {
   checking: boolean;
-  check: (email: string) => Promise<boolean>;
+  check: (email: string) => Promise<EmailAccount>;
 } {
   const queryClient = useQueryClient();
   const normalized = normalize(email);
@@ -65,8 +70,9 @@ export function useEmailHasAccount(email: string): {
 
   const check = (other: string) => {
     const value = normalize(other);
-    return EMAIL_PATTERN.test(value) ? queryClient.fetchQuery(emailLookup(value)) : Promise.resolve(false);
+    return EMAIL_PATTERN.test(value) ? queryClient.fetchQuery(emailLookup(value)) : Promise.resolve(NO_ACCOUNT);
   };
 
-  return { exists: valid && data === true, checking: valid && isFetching, check };
+  const account = valid && data ? data : NO_ACCOUNT;
+  return { ...account, checking: valid && isFetching, check };
 }
