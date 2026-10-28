@@ -19,7 +19,7 @@ import { formatSessionWhen } from "@/features/booking";
 import { BookingDayDetailsView, useBookingDayDetailsViewModel } from "@/features/booking-day-details";
 import { ExperienceLocationView, meetingPointLocation } from "@/features/experience-details";
 import { BookingReviewView, useBookingReviewViewModel } from "@/features/reviews";
-import { useExperienceDetail } from "@/lib/queries/experiences";
+import { useExperienceDetail } from "@/features/experience-details";
 import { cn } from "@/lib/utils";
 
 function money(amount: string | number | null | undefined, currency: string) {

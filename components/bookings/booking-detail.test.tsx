@@ -10,7 +10,10 @@ const booking = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => null }));
 vi.mock("@/components/home/footer", () => ({ Footer: () => null }));
 vi.mock("@/lib/auth/session-store", () => ({ useSession: () => ({ user: { id: "u-1" } }) }));
-vi.mock("@/lib/queries/experiences", () => ({ useExperienceDetail: () => ({ data: { title: "Lagos Food Walk" } }) }));
+vi.mock("@/features/experience-details", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/experience-details")>()),
+  useExperienceDetail: () => ({ data: { title: "Lagos Food Walk" } }),
+}));
 vi.mock("@/lib/queries/bookings", () => ({
   useBooking: () => ({ data: booking.current, isLoading: false, isError: false }),
   useCancellationRequest: () => ({ data: null }),
