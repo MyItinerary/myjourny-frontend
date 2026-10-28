@@ -91,7 +91,6 @@ export function describeRules(rules: PriceRule[], currency: string, context: Rul
   return notes;
 }
 
-/** Log in, then come back to this experience. */
 /** A host-supplied link that is safe to open: http(s) only, so a
  * `javascript:` or `data:` value can never run on our site. */
 export function safeExternalUrl(url?: string | null): string | null {
@@ -104,6 +103,7 @@ export function safeExternalUrl(url?: string | null): string | null {
   }
 }
 
+/** Log in, then come back to this experience. */
 export function guestLoginHref(experienceId: string): string {
   return `/login?next=${encodeURIComponent(`/experiences/${experienceId}`)}`;
 }
