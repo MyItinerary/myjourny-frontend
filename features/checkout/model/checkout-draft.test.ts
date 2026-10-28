@@ -7,6 +7,7 @@ import {
   clearCheckoutDraft,
   loadCheckoutDraft,
   parseCheckoutDraft,
+  saveCheckoutContact,
   saveCheckoutDraft,
 } from "./checkout-draft";
 
@@ -50,5 +51,14 @@ describe("checkout draft", () => {
     expect(parseCheckoutDraft(raw, 1_000 + CHECKOUT_DRAFT_TTL_MS)).toEqual(draft);
     expect(parseCheckoutDraft(raw, 1_001 + CHECKOUT_DRAFT_TTL_MS)).toBeNull();
     expect(parseCheckoutDraft(JSON.stringify(draft), 1_000)).toBeNull();
+  });
+
+  it("keeps the contact details added to it", () => {
+    saveCheckoutContact({ phone: "7016377711", countryIso: "NG" });
+    expect(loadCheckoutDraft()).toBeNull();
+
+    saveCheckoutDraft(draft);
+    saveCheckoutContact({ phone: "7016377711", countryIso: "NG" });
+    expect(loadCheckoutDraft()).toEqual({ ...draft, contact: { phone: "7016377711", countryIso: "NG" } });
   });
 });

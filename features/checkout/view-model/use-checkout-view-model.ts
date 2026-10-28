@@ -2,17 +2,19 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { formatPriceOrFree, useBookingQuote, useCreateBooking } from "@/features/booking";
+import { CANCEL_CUTOFF_HOURS, formatPriceOrFree, useBookingQuote, useCreateBooking } from "@/features/booking";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 
-import { clearCheckoutDraft } from "../model/checkout-draft";
-import { useCheckoutDraft } from "../model/checkout-draft-store";
+import { clearCheckoutDraft, saveCheckoutContact } from "../model/checkout-draft";
 import { rememberCheckoutReturn } from "../model/checkout-return";
+import { COUNTRIES, DEFAULT_COUNTRY, isValidPhone, toE164 } from "../model/countries";
+import type { Country } from "../model/country.types";
+import { useCheckoutDraft } from "../model/checkout-draft-store";
 import {
   isEmailTakenError,
   isTwoFactorChallenge,
-  useEmailLookup,
+  useEmailHasAccount,
   useGuestGoogleSignup,
   useGuestLogin,
   useGuestRegister,
@@ -25,6 +27,12 @@ export type OrderSummary = {
   when: string;
   guests: string;
   durationLabel: string;
+  /** "Up to 24 hours before, full refund" */
+  cancellationNote: string;
+  /** "See time slots above" is only said when there were slots. */
+  hasTimeSlots: boolean;
+  /** Nothing to pay: no "x 1 Adult", no taxes and fees. */
+  free: boolean;
   /** "₦16,000.00" */
   total: string;
   /** "x 1 Adult" */
@@ -33,33 +41,22 @@ export type OrderSummary = {
   changeHref: string;
 };
 
-/** Where the "Log in or sign up" dialog is.
- * email: type it (or use Google). login: it has an account, enter the password.
- * signup: it's new, create a password. google: the account only signs in with
- * Google. code: the account has two-factor sign-in, enter the code. */
-export type AuthStage = "email" | "login" | "signup" | "google" | "code";
+/** details: email and phone, then Continue. password: choose one, then pay.
+ * pay: already signed in (Google, or an account), so just the phone. */
+export type CheckoutStep = "details" | "password" | "pay";
 
-export type CheckoutAuth = {
+/** The "Welcome back!" sheet for an email that already has an account. */
+export type CheckoutLogin = {
   open: boolean;
+  /** The account was made with Google and has no password: offer only Google. */
+  googleOnly: boolean;
   onOpenChange: (open: boolean) => void;
-  stage: AuthStage;
-  /** From a later step back to the email. */
-  onBack: () => void;
   email: string;
   onEmailChange: (value: string) => void;
-  canContinue: boolean;
-  checking: boolean;
-  onContinue: () => Promise<void>;
   password: string;
   onPasswordChange: (value: string) => void;
-  confirmPassword: string;
-  onConfirmPasswordChange: (value: string) => void;
-  passwordError: string | null;
-  code: string;
-  onCodeChange: (value: string) => void;
   canSubmit: boolean;
   pending: boolean;
-  /** Log in, create the account, or send the 2FA code, depending on the stage. */
   onSubmit: () => void;
   onGoogleCredential: (credential: string) => void;
   googleLoading: boolean;
@@ -69,69 +66,106 @@ export type CheckoutAuth = {
 };
 
 export type CheckoutViewModel = {
-  /** False until the saved booking is read; a missing one sends them back. */
+  /** False until the saved booking is read; a missing one sends the guest back. */
   ready: boolean;
   summary: OrderSummary | null;
-  steps: {
-    backHref: string;
-    /** Step 1. Null until they're logged in. */
-    account: string | null;
-    onStartAuth: () => void;
-    /** Step 2: book, then on to Paystack or Stripe. */
+  form: {
+    step: CheckoutStep;
+    email: string;
+    onEmailChange: (value: string) => void;
+    /** They left the email field: look up whether it has an account. */
+    onEmailBlur: () => void;
+    /** Typed email is fine to use; the email is locked once signed in or past the first step. */
+    emailLocked: boolean;
+    country: {
+      selected: Country;
+      options: Country[];
+      onSelect: (country: Country) => void;
+    };
+    phone: string;
+    onPhoneChange: (value: string) => void;
+    phoneLocked: boolean;
+    password: string;
+    onPasswordChange: (value: string) => void;
+    confirmPassword: string;
+    onConfirmPasswordChange: (value: string) => void;
+    passwordError: string | null;
+    /** Sign-up failed because the email already has an account. */
+    emailTaken: boolean;
+    loginHref: string;
+    /** This email already has an account: "Continue" becomes "Login and continue to book". */
+    accountExists: boolean;
+    canContinue: boolean;
+    onContinue: () => Promise<void> | void;
     canPay: boolean;
-    /** The total is nothing, so step 2 books without a payment page. */
+    /** The total is nothing, so there is no payment page: "Confirm and book". */
     free: boolean;
-    paying: boolean;
+    /** Who takes the payment: itin sends NGN to Paystack and every other currency to Stripe. */
+    payment: { provider: string; methods: string };
+    pending: boolean;
     onConfirm: () => void;
+    onGoogleCredential: (credential: string) => void;
+    googleLoading: boolean;
   };
-  auth: CheckoutAuth;
+  login: CheckoutLogin;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// The same rule sign-up states everywhere: 8+ characters, a letter and a number.
+// Matches the rule the form states: 8+ characters, a letter and a number.
 const passwordValid = (password: string) => password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
-
-type Challenge = { via: "password" } | { via: "google"; token: string };
 
 export function useCheckoutViewModel(): CheckoutViewModel {
   const router = useRouter();
   const { user, hydrated } = useSession();
   const draft = useCheckoutDraft();
-  const lookup = useEmailLookup();
   const register = useGuestRegister();
-  const google = useGuestGoogleSignup();
+  const googleSignup = useGuestGoogleSignup();
   const login = useGuestLogin();
   const createBooking = useCreateBooking();
   const attemptKey = useRef<string | null>(null);
-  // Bumped when the dialog closes, goes back or the email changes, so an
-  // email check still running from before can't move the dialog.
-  const lookupRun = useRef(0);
 
-  const [open, setOpen] = useState(false);
-  const [stage, setStage] = useState<AuthStage>("email");
-  const [email, setEmail] = useState("");
+  const [stage, setStage] = useState<"details" | "password">("details");
+  const [emailInput, setEmailInput] = useState("");
+  // Until they type, what was typed before leaving to reset a password.
+  const [pickedCountry, setCountry] = useState<Country | null>(null);
+  const [typedPhone, setPhone] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [code, setCode] = useState("");
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [pending, setPending] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [paying, setPaying] = useState(false);
+  // Held from "Confirm and pay" until the page leaves: signing up makes the
+  // guest signed in, which must not flip the form to its signed-in layout mid-way.
+  const [submitting, setSubmitting] = useState(false);
+  // The email sign-up turned away as already taken, when the lookup didn't know.
+  const [takenEmail, setTakenEmail] = useState<string | null>(null);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [googleOnly, setGoogleOnly] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginPending, setLoginPending] = useState(false);
+  const [loginGoogleLoading, setLoginGoogleLoading] = useState(false);
+  // The email last looked up: set when they leave the field or press Continue,
+  // so the lookup runs once per finished email, not on every pause in typing.
+  const [checkedEmail, setCheckedEmail] = useState("");
+  // Continue was pressed before the email was looked up: waiting for the answer.
+  const [continuePending, setContinuePending] = useState(false);
+  const lookup = useEmailHasAccount(checkedEmail);
+
+  const country =
+    pickedCountry ?? COUNTRIES.find((c) => c.iso === draft?.contact?.countryIso) ?? DEFAULT_COUNTRY;
+  const phone = typedPhone ?? draft?.contact?.phone ?? "";
 
   const signedIn = !!user?.email;
-  // Signed in, the server prices the booking for this account.
+  // Once they have an account the server can price the booking for real.
   const { data: quote } = useBookingQuote(signedIn && draft ? draft.selection : null);
 
   // Nothing to check out (a refresh in a new tab, or storage was blocked):
   // back to browsing.
   useEffect(() => {
-    if (hydrated && !draft && !paying) router.replace("/");
-  }, [hydrated, draft, paying, router]);
+    if (hydrated && !draft && !submitting) router.replace("/");
+  }, [hydrated, draft, submitting, router]);
 
   const total = draft ? (quote ? formatPriceOrFree(Number(quote.total), draft.currency) : draft.total) : "";
-  // Nothing to pay: the booking is confirmed without a payment page.
-  const free = total === "Free";
   const summary: OrderSummary | null = draft
     ? {
         title: draft.title,
@@ -140,185 +174,213 @@ export function useCheckoutViewModel(): CheckoutViewModel {
         when: draft.when,
         guests: `${draft.guests} guest${draft.guests === 1 ? "" : "s"}`,
         durationLabel: draft.durationLabel,
+        cancellationNote: `Up to ${CANCEL_CUTOFF_HOURS} hours before, full refund`,
+        hasTimeSlots: !!draft.hasTimeSlots,
+        free: total === "Free",
         total,
         quantity: `x ${draft.ticketsLabel}`,
         changeHref: `/experiences/${draft.experienceId}`,
       }
     : null;
 
-  const trimmedEmail = email.trim();
+  const step: CheckoutStep = signedIn && !submitting ? "pay" : stage;
+  const email = step === "pay" ? (user?.email ?? "") : emailInput.trim();
+  const phoneValid = isValidPhone(country, phone);
+  const detailsValid = EMAIL_PATTERN.test(emailInput.trim()) && phoneValid;
+
+  const emailChecked = checkedEmail === emailInput.trim();
+  const accountExists =
+    step === "details" && ((emailChecked && lookup.exists) || takenEmail === emailInput.trim());
+
+  const continueToNext = (hasAccount: boolean, hasPassword = true) => {
+    if (hasAccount) {
+      setLoginEmail(emailInput.trim());
+      setGoogleOnly(!hasPassword);
+      setLoginOpen(true);
+    } else {
+      setStage("password");
+    }
+  };
+
+  const confirmMismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const passwordError =
-    stage !== "signup"
-      ? null
-      : password.length > 0 && !passwordValid(password)
-        ? "Your password should contain at least 8 characters, a letter and a number"
-        : confirmPassword.length > 0 && password !== confirmPassword
-          ? "The passwords don't match"
-          : null;
+    password.length > 0 && !passwordValid(password)
+      ? "Your password should contain at least 8 characters, a letter and a number"
+      : confirmMismatch
+        ? "The passwords don't match"
+        : null;
+  const passwordsReady = passwordValid(password) && password === confirmPassword;
 
-  const resetSecrets = () => {
-    setPassword("");
-    setConfirmPassword("");
-    setCode("");
-    setChallenge(null);
-  };
-
-  // Signed in: the dialog's job is done and step 1 shows who they are.
-  const finish = () => {
-    setOpen(false);
-    setStage("email");
-    resetSecrets();
-  };
-
-  const onContinue = async () => {
-    if (!EMAIL_PATTERN.test(trimmedEmail) || lookup.isPending) return;
-    resetSecrets();
-    const run = ++lookupRun.current;
-    const found = await lookup.mutateAsync(trimmedEmail);
-    if (run !== lookupRun.current) return;
-    if (!found?.exists) setStage("signup");
-    else setStage(found.hasPassword ? "login" : "google");
-  };
-
-  const submit = async () => {
-    setPending(true);
-    try {
-      if (stage === "signup") {
-        await register.mutateAsync({ email: trimmedEmail, password });
-        finish();
-      } else if (stage === "login") {
-        const data = await login.mutateAsync({ email: trimmedEmail, password });
-        if (isTwoFactorChallenge(data)) {
-          setChallenge({ via: "password" });
-          setStage("code");
-        } else finish();
-      } else if (stage === "code" && challenge) {
-        const data =
-          challenge.via === "password"
-            ? await login.mutateAsync({ email: trimmedEmail, password, code: code.trim() })
-            : await google.mutateAsync({ token: challenge.token, code: code.trim() });
-        if (!isTwoFactorChallenge(data)) finish();
-      }
-    } catch (error) {
-      // The auth hooks report the failure. An email that turned out to have an
-      // account after all goes to the password step.
-      if (stage === "signup" && isEmailTakenError(error)) {
-        resetSecrets();
-        setStage("login");
-      }
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const canSubmit =
-    !pending &&
-    (stage === "signup"
-      ? passwordValid(password) && password === confirmPassword
-      : stage === "login"
-        ? password.length > 0
-        : stage === "code"
-          ? code.trim().length > 0
-          : false);
-
-  const onGoogleCredential = async (credential: string) => {
-    setGoogleLoading(true);
-    try {
-      const data = await google.mutateAsync({ token: credential });
-      if (isTwoFactorChallenge(data)) {
-        setChallenge({ via: "google", token: credential });
-        setStage("code");
-      } else finish();
-    } catch {
-      // Reported by the Google hook.
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  const onConfirm = async () => {
-    if (!draft || !signedIn || paying) return;
-    setPaying(true);
+  const bookAndPay = async () => {
+    if (!draft) return;
     // One key per attempt, so a retry can't book twice.
     attemptKey.current ??= crypto.randomUUID();
-    try {
-      const booking = await createBooking.mutateAsync({
-        ...draft.selection,
-        idempotencyKey: attemptKey.current,
-        guide_id: draft.guideId,
-      });
-      clearCheckoutDraft();
-      if (booking.url) window.location.href = booking.url;
-      // Free experiences are confirmed straight away, with nothing to pay.
-      else router.push(`/bookings/${booking.id}/success`);
+    const booking = await createBooking.mutateAsync({
+      ...draft.selection,
+      idempotencyKey: attemptKey.current,
+      guide_id: draft.guideId,
+    });
+    clearCheckoutDraft();
+    if (booking.url) window.location.href = booking.url;
+    // Free experiences are confirmed straight away, with nothing to pay.
+    else router.push(`/bookings/${booking.id}/success`);
+  };
 
+  // A new account is created with the phone as well as the email, so it lands
+  // on their profile. (Someone already signed in, e.g. with Google, has no
+  // sign-up to attach it to; saving theirs needs itin's verified phone-change flow.)
+  const onConfirm = async () => {
+    // The phone is saved with a new account; a signed-in guest has no sign-up to
+    // attach it to, so it isn't asked of them.
+    if (submitting || !draft || (step === "password" && !phoneValid)) return;
+    if (step === "password" && !passwordsReady) return;
+    setSubmitting(true);
+    register.reset();
+    // Sign-up reports its own failure; once it worked, anything that fails is the booking.
+    let accountReady = step !== "password";
+    try {
+      // Create the account first, then book with it, then on to the payment page.
+      if (step === "password") {
+        await register.mutateAsync({ email, password, phone_number: toE164(country, phone) });
+        accountReady = true;
+      }
+      await bookAndPay();
     } catch (error) {
       attemptKey.current = null;
-      toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again."));
-      // 409: the session filled up or stopped running. The experience page
-      // shows the seats left now.
-      if ((error as { response?: { status?: number } })?.response?.status === 409) {
-        router.push(`/experiences/${draft.experienceId}`);
-        return;
+      if (accountReady) toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again."));
+      else if (isEmailTakenError(error)) {
+        // Taken after all: back to the first step, now offering to log in.
+        setTakenEmail(email);
+        setStage("details");
       }
-      setPaying(false);
+      setSubmitting(false);
     }
+  };
+
+  const onGoogleCredential = (credential: string) => {
+    setGoogleLoading(true);
+    googleSignup.mutate(
+      { token: credential },
+      {
+        onSuccess: (data) => {
+          setGoogleLoading(false);
+          if (isTwoFactorChallenge(data)) finishOnLoginPage();
+        },
+        onError: () => setGoogleLoading(false),
+      },
+    );
+  };
+
+  // Logged in: the sheet closes and the page behind it, kept as it was, is now
+  // the last step: Confirm and pay. (Figma also has a note for the guide; it
+  // comes back once itin stores it.)
+  const continueAfterLogin = () => setLoginOpen(false);
+
+  // The sheet has no code step: an account with 2FA finishes on the login
+  // page, which asks for the code and comes back here. The draft is kept,
+  // and the phone they typed goes with it.
+  const finishOnLoginPage = () => {
+    saveCheckoutContact({ phone, countryIso: country.iso });
+    router.push(`/login?next=${encodeURIComponent("/checkout")}`);
+  };
+
+  const onLogin = async () => {
+    if (loginPending || !loginEmail.trim() || !loginPassword) return;
+    setLoginPending(true);
+    let data: unknown;
+    try {
+      // Email and password only. Wrong details are reported by the login itself.
+      data = await login.mutateAsync({ email: loginEmail.trim(), password: loginPassword });
+    } catch {
+      setLoginPending(false);
+      return;
+    }
+    setLoginPending(false);
+    if (isTwoFactorChallenge(data)) finishOnLoginPage();
+    else continueAfterLogin();
+  };
+
+  const onLoginGoogle = (credential: string) => {
+    setLoginGoogleLoading(true);
+    googleSignup.mutate(
+      { token: credential },
+      {
+        onSuccess: (data) => {
+          setLoginGoogleLoading(false);
+          if (isTwoFactorChallenge(data)) finishOnLoginPage();
+          else continueAfterLogin();
+        },
+        onError: () => setLoginGoogleLoading(false),
+      },
+    );
   };
 
   return {
     ready: hydrated && !!draft,
     summary,
-    steps: {
-      backHref: summary?.changeHref ?? "/",
-      account: signedIn ? (user?.email ?? null) : null,
-      onStartAuth: () => setOpen(true),
-      canPay: signedIn && !paying,
-      free,
-      paying,
-      onConfirm,
-    },
-    auth: {
-      open: open && !signedIn,
-      onOpenChange: (next) => {
-        setOpen(next);
-        if (!next) {
-          lookupRun.current += 1;
-          setStage("email");
-          resetSecrets();
-        }
-      },
-      stage,
-      onBack: () => {
-        lookupRun.current += 1;
-        setStage("email");
-        resetSecrets();
-      },
-      email,
-      onEmailChange: (value) => {
-        lookupRun.current += 1;
-        setEmail(value);
-      },
-      canContinue: EMAIL_PATTERN.test(trimmedEmail) && !lookup.isPending && !googleLoading,
-      checking: lookup.isPending,
-      onContinue,
+    form: {
+      step,
+      email: step === "pay" ? email : emailInput,
+      onEmailChange: setEmailInput,
+      onEmailBlur: () => setCheckedEmail(emailInput.trim()),
+      emailLocked: step !== "details",
+      country: { selected: country, options: COUNTRIES, onSelect: setCountry },
+      phone,
+      onPhoneChange: (value) => setPhone(value.replace(/\D/g, "")),
+      phoneLocked: step === "password",
       password,
       onPasswordChange: setPassword,
       confirmPassword,
       onConfirmPasswordChange: setConfirmPassword,
       passwordError,
-      code,
-      onCodeChange: setCode,
-      canSubmit,
-      pending,
-      onSubmit: () => {
-        if (canSubmit) void submit();
+      emailTaken: isEmailTakenError(register.error),
+      loginHref: `/login?next=${encodeURIComponent("/checkout")}`,
+      accountExists,
+      canContinue: detailsValid && !googleLoading && !lookup.checking && !continuePending,
+      onContinue: async () => {
+        if (!detailsValid || continuePending) return;
+        // An account found only by sign-up's "already registered" has a password.
+        if (emailChecked) return continueToNext(accountExists, !lookup.exists || lookup.hasPassword);
+        // They pressed Continue (or Enter) without leaving the email field.
+        const typed = emailInput.trim();
+        setCheckedEmail(typed);
+        setContinuePending(true);
+        const found = await lookup.check(typed);
+        setContinuePending(false);
+        if (found.exists) continueToNext(true, found.hasPassword);
+        else continueToNext(takenEmail === typed);
       },
+      free: total === "Free",
+      payment:
+        draft?.currency === "NGN"
+          ? { provider: "Paystack", methods: "Payment methods like card, bank transfer, USSD and Pay with Zap all available" }
+          : { provider: "Stripe", methods: "Pay securely by card" },
+      canPay: step === "password" ? passwordsReady && phoneValid && !submitting : !submitting,
+      pending: submitting,
+      onConfirm,
       onGoogleCredential,
       googleLoading,
+    },
+    login: {
+      open: loginOpen,
+      googleOnly,
+      onOpenChange: setLoginOpen,
+      email: loginEmail,
+      onEmailChange: setLoginEmail,
+      password: loginPassword,
+      onPasswordChange: setLoginPassword,
+      canSubmit: !!loginEmail.trim() && !!loginPassword && !loginPending && !loginGoogleLoading,
+      pending: loginPending,
+      onSubmit: onLogin,
+      onGoogleCredential: onLoginGoogle,
+      googleLoading: loginGoogleLoading,
       forgotHref: "/login/forgot-password",
-      // The reset email link opens elsewhere; the booking is already saved,
-      // so only note that the end of the flow should come back here.
-      onForgotPassword: rememberCheckoutReturn,
+      onForgotPassword: () => {
+        // The reset email link opens elsewhere: keep the booking and the
+        // phone, and note that the end of the flow should come back here.
+        saveCheckoutContact({ phone, countryIso: country.iso });
+        rememberCheckoutReturn();
+      },
     },
   };
 }

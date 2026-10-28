@@ -80,13 +80,6 @@ export function beforeYouBookItems(experience: ExperienceDetailsFields): BeforeY
   if (safety) {
     items.push({ kind: "safety", label: "Safety", description: safety });
   }
-  if (experience.cancellation_policy?.trim()) {
-    items.push({
-      kind: "cancellation",
-      label: "Cancellation policy",
-      description: experience.cancellation_policy.trim(),
-    });
-  }
   return items;
 }
 
