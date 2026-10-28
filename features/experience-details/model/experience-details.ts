@@ -130,10 +130,14 @@ const note = (text?: string | null) => text?.trim() || null;
 /** "Fit and logistics": only what the host set. "Not applicable" fitness is left out. */
 export function fitAndLogistics(experience: ExperienceDetailsFields): FitItem[] {
   const items: FitItem[] = [];
-  const fitness = experience.fitness_level && FITNESS[experience.fitness_level];
-  if (fitness) items.push({ kind: "fitness", label: "Fitness", value: fitness, note: note(experience.fitness_note) });
-  const age = experience.age_policy && ageValue(experience.age_policy, experience.min_age);
-  if (age) items.push({ kind: "age", label: "Age", value: age, note: note(experience.age_note) });
+  // Older listings may have only the host's note (moved from the old free
+  // text) until a level is chosen: the note then stands on its own.
+  const fitness = experience.fitness_level ? FITNESS[experience.fitness_level] : note(experience.fitness_note);
+  if (fitness) {
+    items.push({ kind: "fitness", label: "Fitness", value: fitness, note: experience.fitness_level ? note(experience.fitness_note) : null });
+  }
+  const age = experience.age_policy ? ageValue(experience.age_policy, experience.min_age) : note(experience.age_note);
+  if (age) items.push({ kind: "age", label: "Age", value: age, note: experience.age_policy ? note(experience.age_note) : null });
   const access = experience.accessibility && ACCESSIBILITY[experience.accessibility];
   if (access) {
     items.push({ kind: "accessibility", label: "Accessibility", value: access, note: note(experience.accessibility_note) });

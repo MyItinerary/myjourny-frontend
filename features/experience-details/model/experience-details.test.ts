@@ -216,6 +216,14 @@ describe("fitAndLogistics", () => {
     expect(age("minimum_age")).toBeUndefined();
   });
 
+  it("shows an older listing's note on its own until a level is chosen", () => {
+    const items = fitAndLogistics({ ...base, fitness_note: "Long walks on sand", age_note: "12 and over" });
+    expect(items.map((item) => [item.label, item.value, item.note])).toEqual([
+      ["Fitness", "Long walks on sand", null],
+      ["Age", "12 and over", null],
+    ]);
+  });
+
   it("leaves out fitness that doesn't apply, and anything unset", () => {
     expect(fitAndLogistics({ ...base, fitness_level: "not_applicable", weather_dependent: false })).toEqual([]);
   });
