@@ -23,7 +23,10 @@ import {
 import { saveCheckoutDraft } from "@/features/checkout";
 import {
   ExperienceBeforeYouBookView,
+  ExperienceDescriptionView,
+  ExperienceFitView,
   ExperienceItineraryView,
+  ExperienceListsView,
   ExperienceLocationView,
   useExperienceDetail,
   useExperienceDetailsViewModel,
@@ -49,29 +52,6 @@ import { cn } from "@/lib/utils";
 function parseIsoDateLocal(value: string): Date {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(year, month - 1, day);
-}
-
-function ExperienceDescription({ description }: { description: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const isLong = description.length > 200;
-
-  return (
-    <section>
-      <h2 className="font-heading text-2xl font-bold text-[#130404]">About this experience</h2>
-      <p className="mt-3 font-sans text-base leading-[26px] text-[#6F6B72]">
-        {isLong && !expanded ? `${description.slice(0, 200)}... ` : description}{" "}
-        {isLong && (
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="font-medium text-[#F5032D] underline underline-offset-2 hover:opacity-85 cursor-pointer"
-          >
-            {expanded ? "Show less" : "Show more"}
-          </button>
-        )}
-      </p>
-    </section>
-  );
 }
 
 export function ExperienceDetailContent({ id }: { id: string }) {
@@ -260,9 +240,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           <div className="flex flex-col gap-10">
             <ExperienceGalleryView {...gallery} alt={experience.title} />
 
-            {experience.description && (
-              <ExperienceDescription description={experience.description} />
-            )}
+            <ExperienceDescriptionView description={experienceDetails.description} />
 
             <div className="flex flex-col gap-4 rounded-[16px] border border-[#E7E7E7] bg-white p-[20px] sm:flex-row sm:items-center sm:gap-[20px] self-stretch">
               <div className="flex flex-1 items-center gap-3.5">
@@ -348,9 +326,11 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               </div>
             </div>
 
+            <ExperienceFitView items={experienceDetails.fit} />
             <ExperienceBeforeYouBookView items={experienceDetails.beforeYouBook} />
             <ExperienceItineraryView steps={experienceDetails.itinerary} />
-            <ExperienceLocationView location={experienceDetails.location} />
+            <ExperienceListsView sections={experienceDetails.lists} />
+            <ExperienceLocationView location={experienceDetails.location} landmark={experienceDetails.landmark} />
             <ExperienceReviewsView {...reviews} />
           </div>
 

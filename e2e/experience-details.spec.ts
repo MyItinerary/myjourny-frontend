@@ -198,3 +198,45 @@ test("itin's placeholder safety info isn't shown", async ({ page }) => {
   await expect(page.getByText("Safety info not available")).toHaveCount(0);
   await expect(page.getByText("Follow general travel safety disclaimer.")).toHaveCount(0);
 });
+
+test("the page shows the host's fit details, lists, paragraphs and meeting landmark", async ({ page }) => {
+  await page.route("https://img.example/**", (route) => route.fulfill({ contentType: "image/svg+xml", body: "<svg xmlns='http://www.w3.org/2000/svg'/>" }));
+  await mockApi(
+    page,
+    experienceApi({
+      ...EXPERIENCE,
+      description: "Paddle through the stilt village at sunrise.\n\nBreakfast is on the jetty.",
+      fitness_level: "moderate",
+      fitness_note: "Two hours in a canoe",
+      age_policy: "minimum_age",
+      min_age: 12,
+      accessibility: "not_confirmed",
+      languages: ["en", "yo"],
+      weather_dependent: true,
+      highlights: ["See the floating school"],
+      what_to_bring_items: ["Sunscreen", "A light layer"],
+      not_suitable_for: ["Guests who can't swim"],
+      meeting_landmark: "The blue gate at the Third Mainland jetty",
+      meeting_photo_url: "https://img.example/gate.jpg",
+    }),
+  );
+  await page.goto("/experiences/exp-1");
+  await expect(page.getByRole("heading", { name: "Makoko Floating Village Boat Tour" }).first()).toBeVisible();
+
+  await expect(page.getByText("Breakfast is on the jetty.")).toBeVisible();
+  const fit = page.locator("section").filter({ has: page.getByRole("heading", { name: "Fit and logistics" }) });
+  await expect(fit.getByText("Moderate", { exact: true })).toBeVisible();
+  await expect(fit.getByText("Two hours in a canoe")).toBeVisible();
+  await expect(fit.getByText("Ages 12+")).toBeVisible();
+  await expect(fit.getByText("Not confirmed. Ask the host before you book.")).toBeVisible();
+  await expect(fit.getByText("English, Yoruba")).toBeVisible();
+  await expect(fit.getByText("If the weather stops it, you get a new date or a full refund.")).toBeVisible();
+
+  const bring = page.locator("section").filter({ has: page.getByRole("heading", { name: "What to bring" }) });
+  await expect(bring.getByRole("listitem")).toHaveText(["Sunscreen", "A light layer"]);
+  await expect(page.getByRole("heading", { name: "Highlights" })).toBeVisible();
+  await expect(page.getByText("Guests who can't swim")).toBeVisible();
+
+  await expect(page.getByText("The blue gate at the Third Mainland jetty")).toBeVisible();
+  await expect(page.getByAltText("The meeting point")).toBeVisible();
+});

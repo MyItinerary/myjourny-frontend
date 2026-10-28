@@ -35,7 +35,40 @@ export type ExperienceDetailsFields = {
   group_size_max?: number | null;
   energy_level?: string | null;
   rating?: number | null;
+  description?: string | null;
+  // Fit and logistics (itin#113).
+  fitness_level?: string | null;
+  fitness_note?: string | null;
+  age_policy?: string | null;
+  min_age?: number | null;
+  age_note?: string | null;
+  accessibility?: string | null;
+  accessibility_note?: string | null;
+  languages?: string[] | null;
+  weather_dependent?: boolean;
+  pickup_available?: boolean;
+  pickup_note?: string | null;
+  // Public, unlike the booking's meeting instructions.
+  meeting_landmark?: string | null;
+  meeting_photo_url?: string | null;
+  highlights?: string[] | null;
+  what_to_bring_items?: string[] | null;
+  not_suitable_for?: string[] | null;
+  know_before_you_go?: string[] | null;
 };
+
+export type FitKind = "fitness" | "age" | "accessibility" | "languages" | "weather" | "pickup";
+
+/** One tile of "Fit and logistics": "Fitness · Moderate", with the host's note. */
+export type FitItem = { kind: FitKind; label: string; value: string; note: string | null };
+
+export type ListKind = "highlights" | "bring" | "not_suitable" | "know";
+
+/** A titled list on the page, e.g. "What to bring". */
+export type ListSection = { kind: ListKind; title: string; items: string[] };
+
+/** The public meeting landmark and its photo. */
+export type MeetingLandmark = { text: string; photoUrl: string | null };
 
 /** Where to meet, from a confirmed booking (itin's BookingMeetingPoint). */
 export type MeetingPoint = {
