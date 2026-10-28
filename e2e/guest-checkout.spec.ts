@@ -18,6 +18,12 @@ const EXPERIENCE = {
   host: { id: "guide-1", display_name: "Kayan Thrille" },
 };
 
+const SIGNED_IN = {
+  accessToken: "e2e-access",
+  refreshToken: "e2e-refresh",
+  user: { id: "user-1", email: "juliet@example.com", fullName: null, avatarUrl: null },
+};
+
 const QUOTE = {
   currency: "NGN",
   lines: [{ kind: "ticket", label: "Adult", quantity: 1, unit_amount: "16000", amount: "16000" }],
@@ -132,6 +138,42 @@ test("after paying, the booking page says you're going", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "You’re going!" })).toBeVisible();
   await expect(page.locator("a", { hasText: "View booking" })).toHaveAttribute("href", "/bookings/b-1");
   await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
+});
+
+test("a declined card offers to try the payment again instead of waiting", async ({ page }) => {
+  await page.addInitScript((auth) => window.localStorage.setItem("myjourny:auth", JSON.stringify(auth)), SIGNED_IN);
+  await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
+  let retried: Record<string, unknown> | null = null;
+  await mockApi(page, {
+    // The backend releases the booking when Paystack reports the decline.
+    "GET /bookings/b-1": (r) =>
+      r.fulfill({
+        json: {
+          id: "b-1",
+          experience_id: "exp-1",
+          status: "cancelled",
+          payment_status: "unpaid",
+          requested_datetime: "2026-07-16T08:00:00",
+          party_size: 1,
+          price_total: "16000.00",
+          currency: "NGN",
+        },
+      }),
+    "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
+    "POST /bookings/b-1/retry-payment": (r) => {
+      retried = r.request().postDataJSON();
+      return r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
+    },
+  });
+
+  await page.goto("/bookings/b-1/cancel");
+
+  await expect(page.getByRole("heading", { name: "Payment not completed" })).toBeVisible();
+  await expect(page.getByText("Confirming your payment…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Try payment again" }).click();
+
+  await expect(page).toHaveURL("https://paystack.test/pay");
+  expect(retried).toMatchObject({ platform: "web" });
 });
 
 test("a signed-in user skips checkout: Book now goes straight to the payment page", async ({ page }) => {

@@ -91,8 +91,8 @@ describe("BookingPaymentStatus", () => {
     expect(screen.getByText("Booking cancelled")).toBeInTheDocument();
   });
 
-  it("renders confirming payment screen when booking payment is processing", () => {
-    bookingState.data = { ...baseBooking, status: "pending", payment_status: "processing" };
+  it("renders confirming payment screen while the booking is pending and unpaid", () => {
+    bookingState.data = { ...baseBooking, status: "pending", payment_status: "unpaid" };
 
     renderWithProviders(<BookingPaymentStatus bookingId="b-1" landedFrom="success" />);
 
@@ -102,8 +102,19 @@ describe("BookingPaymentStatus", () => {
     expect(screen.getByTestId("confirmed-booking")).toHaveAttribute("data-confirmed", "false");
   });
 
-  it("renders payment not completed screen with retry option when not paid", () => {
-    bookingState.data = { ...baseBooking, status: "failed", payment_status: "unpaid" };
+  it("offers a retry after a declined payment releases the booking", () => {
+    // itin cancels the pending, unpaid booking when the provider reports a decline.
+    bookingState.data = { ...baseBooking, status: "cancelled", payment_status: "unpaid" };
+
+    renderWithProviders(<BookingPaymentStatus bookingId="b-1" landedFrom="cancel" />);
+
+    expect(screen.getByText("Payment not completed")).toBeInTheDocument();
+    expect(screen.queryByText("Confirming your payment…")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try payment again" })).toBeInTheDocument();
+  });
+
+  it("offers a retry once the unpaid hold has expired", () => {
+    bookingState.data = { ...baseBooking, status: "expired", payment_status: "unpaid" };
 
     renderWithProviders(<BookingPaymentStatus bookingId="b-1" landedFrom="success" />);
 
