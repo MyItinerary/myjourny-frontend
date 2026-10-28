@@ -277,3 +277,18 @@ test("a listing that books on the host's site shows no booking card", async ({ p
   );
   await expect(page.getByRole("button", { name: /Book now/ })).toHaveCount(0);
 });
+
+test("a signed-in user gets the host's booking link, never the log-in prompt", async ({ page }) => {
+  await signIn(page);
+  await mockApi(
+    page,
+    experienceApi({ ...EXPERIENCE, has_external_booking: true, booking_url: "https://tickets.example.com/makoko" }),
+  );
+  await page.goto("/experiences/exp-1");
+
+  await expect(page.getByRole("link", { name: /Book on the host's site/ })).toHaveAttribute(
+    "href",
+    "https://tickets.example.com/makoko",
+  );
+  await expect(page.getByText("Log in to see the booking link")).toHaveCount(0);
+});

@@ -338,14 +338,15 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             <ExperienceReviewsView {...reviews} />
           </div>
 
-          {experience.has_external_booking ? (
+          {/* Both wait for the session: the external card words its link by whether the viewer is signed in. */}
+          {!hydrated ? null : experience.has_external_booking ? (
             <ExternalBookingView
               className="sticky top-6 mt-8 lg:top-[124px] lg:mt-0"
               url={safeExternalUrl(experience.booking_url)}
               signedIn={isAccount}
               loginHref={guestLoginHref(experience.id)}
             />
-          ) : hydrated ? (
+          ) : (
             <BookingPanel
               // The nav is fixed and 100px tall on desktop: sit below it.
               className="sticky top-6 mt-8 hidden lg:top-[124px] lg:mt-0 lg:flex"
@@ -362,7 +363,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               freeCancellationHours={experience.free_cancellation_hours}
               onGuestBook={onGuestBook}
             />
-          ) : null}
+          )}
         </div>
       </div>
 
