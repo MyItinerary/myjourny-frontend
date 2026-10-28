@@ -483,7 +483,7 @@ describe("useCheckoutViewModel", () => {
     expect(result.current.form.loginHref).toBe("/login?next=%2Fcheckout");
   });
 
-  it("asks only for the phone once signed in, and books without signing up", async () => {
+  it("asks nothing more once signed in, and books without signing up", async () => {
     session.value = signedIn;
     server.use(
       http.post(apiUrl("/bookings/"), () =>
@@ -494,8 +494,7 @@ describe("useCheckoutViewModel", () => {
 
     expect(result.current.form.step).toBe("pay");
     expect(result.current.form.email.trim()).toBe("juliet@example.com");
-    expect(result.current.form.canPay).toBe(false);
-    act(() => result.current.form.onPhoneChange("7016377711"));
+    // The phone isn't saved for a signed-in guest, so it isn't required.
     expect(result.current.form.canPay).toBe(true);
 
     await withLocation(async () => {

@@ -73,7 +73,9 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
       </Field>
 
       <div className="flex flex-col gap-2">
-        <span className="font-sans text-base font-medium leading-6 text-[#333134]">Phone number</span>
+        <span className="font-sans text-base font-medium leading-6 text-[#333134]">
+          {step === "pay" ? "Phone number (optional)" : "Phone number"}
+        </span>
         <div className="flex gap-2">
           <CountryCodePickerView
             selected={form.country.selected}

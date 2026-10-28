@@ -146,4 +146,9 @@ describe("CheckoutDetailsStepView", () => {
     renderWithProviders(<CheckoutDetailsStepView form={form({ step: "pay", pending: true })} />);
     expect(screen.getByRole("button", { name: "Starting checkout…" })).toBeInTheDocument();
   });
+
+  it("marks the phone optional once signed in", () => {
+    renderWithProviders(<CheckoutDetailsStepView form={form({ step: "pay", emailLocked: true, canPay: true })} />);
+    expect(screen.getByText("Phone number (optional)")).toBeInTheDocument();
+  });
 });

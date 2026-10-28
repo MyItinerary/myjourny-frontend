@@ -230,7 +230,9 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   // on their profile. (Someone already signed in, e.g. with Google, has no
   // sign-up to attach it to; saving theirs needs itin's verified phone-change flow.)
   const onConfirm = async () => {
-    if (submitting || !draft || !phoneValid) return;
+    // The phone is saved with a new account; a signed-in guest has no sign-up to
+    // attach it to, so it isn't asked of them.
+    if (submitting || !draft || (step === "password" && !phoneValid)) return;
     if (step === "password" && !passwordsReady) return;
     setSubmitting(true);
     register.reset();
@@ -353,7 +355,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
         draft?.currency === "NGN"
           ? { provider: "Paystack", methods: "Payment methods like card, bank transfer, USSD and Pay with Zap all available" }
           : { provider: "Stripe", methods: "Pay securely by card" },
-      canPay: step === "password" ? passwordsReady && !submitting : phoneValid && !submitting,
+      canPay: step === "password" ? passwordsReady && phoneValid && !submitting : !submitting,
       pending: submitting,
       onConfirm,
       onGoogleCredential,
