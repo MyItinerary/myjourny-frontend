@@ -25,6 +25,7 @@ import {
   ExperienceBeforeYouBookView,
   ExperienceItineraryView,
   ExperienceLocationView,
+  useExperienceDetail,
   useExperienceDetailsViewModel,
 } from "@/features/experience-details";
 import { ExperienceReviewsView, useExperienceReviewsViewModel } from "@/features/reviews";
@@ -33,7 +34,6 @@ import {
   experienceListItemToCardProps,
   experienceMatchToCardProps,
   formatDuration,
-  useExperienceDetail,
   useFilteredExperiences,
   useExperiencePrices,
   useRecommendedExperiences,
