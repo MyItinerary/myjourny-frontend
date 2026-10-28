@@ -363,7 +363,6 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               eventStartDate={eventStartDate}
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
-              schedule={experience}
               cancellationPolicy={experience.cancellation_policy}
               onGuestBook={onGuestBook}
             />
@@ -416,7 +415,6 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               eventStartDate={eventStartDate}
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
-              schedule={experience}
               cancellationPolicy={experience.cancellation_policy}
               onGuestBook={onGuestBook}
               onClose={() => setMobileBookingOpen(false)}

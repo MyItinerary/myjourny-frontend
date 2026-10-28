@@ -378,7 +378,7 @@ describe("useBookingPanelViewModel", () => {
 
   it("books an unscheduled experience by date and lets the server set the time", async () => {
     const quotes = stubApi({ scheduled: false });
-    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    renderHookWithProviders(() => useBookingPanelViewModel(props));
 
     await waitFor(() => expect(quotes.length).toBeGreaterThan(0));
     expect(quotes[0]).toHaveProperty("requested_date");
@@ -397,12 +397,7 @@ describe("useBookingPanelViewModel", () => {
         timezone: "Africa/Lagos",
       }),
     });
-    const { result } = renderHookWithProviders(() =>
-      useBookingPanelViewModel({
-        ...props,
-        schedule: { schedule_type: "recurring", recurrence_type: "weekly", recurrence_days: ["sat"], length_days: 3 },
-      }),
-    );
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
 
     await waitFor(() => expect(result.current.quote).not.toBeNull());
     expect(quotes[0]).not.toHaveProperty("days");

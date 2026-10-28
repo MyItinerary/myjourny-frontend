@@ -15,7 +15,7 @@ import {
   shortPrice,
   shortPriceOrFree,
 } from "../model/booking-card";
-import { describeRule, formatSessionDay, formatSessionWhen, type ScheduleSummary } from "../model/format";
+import { describeRule, formatSessionDay, formatSessionWhen } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
 import { dateKey, useExperienceSessions } from "../model/sessions";
 import { type SessionChoice, useSessionChoice } from "./use-session-choice";
@@ -34,8 +34,6 @@ export type BookingPanelProps = {
   availableSpots?: number;
   /** Fewest guests per booking. Defaults to 1. */
   minSpots?: number;
-  /** The experience's schedule, for a label like "Every Saturday · 3 days". */
-  schedule?: ScheduleSummary;
   /** The experience's own cancellation policy; the panel shows none without it. */
   cancellationPolicy?: string | null;
   /** Set for guests: they pick tickets and a date like anyone else, and
@@ -127,7 +125,6 @@ export function useBookingPanelViewModel({
   availableSpots,
   minSpots = 1,
   cancellationPolicy,
-  schedule,
   onGuestBook,
 }: BookingPanelProps): BookingPanelViewModel {
   const minGuests = Math.max(1, minSpots ?? 1);
@@ -194,8 +191,6 @@ export function useBookingPanelViewModel({
   const total = quote ? shortPriceOrFree(tripTotal(quote), currency) : null;
   const free = !!quote && tripTotal(quote) === 0;
   const allSavings = quote?.savings ?? [];
-  // Early-bird alone shows as the struck-through headline price, so there is nothing to "save" below.
-  const savedAmount = allSavings.every((saving) => saving.kind === "early_bird") ? 0 : allSavings.reduce((sum, saving) => sum + Number(saving.amount), 0);
   const soldOutDay = sessions.dayStatus === "soldout";
   // When early-bird is the only saving and one ticket type is picked, the headline shows its price struck through.
   const ticketLines = quote?.lines.filter((line) => line.kind === "ticket") ?? [];
