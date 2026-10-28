@@ -25,4 +25,10 @@ describe("Stepper", () => {
 
     expect(onChange).toHaveBeenCalledWith(2);
   });
+
+  it("locks both buttons while a booking starts", () => {
+    renderWithProviders(<Stepper label="guests" value={2} min={1} max={5} onChange={vi.fn()} disabled />);
+    expect(screen.getByRole("button", { name: "Decrease guests" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Increase guests" })).toBeDisabled();
+  });
 });

@@ -85,7 +85,11 @@ test("a guest sees the real itinerary, policy and rating, with no made-up detail
   await expect(page.getByText(/168 reviews/)).toHaveCount(0);
   await expect(page.getByText("Bank transfer and cash accepted")).toHaveCount(0);
   await expect(page.getByText("Up to 24 hours before, full refund")).toHaveCount(0);
-  await expect(page.getByText("Free cancellation up to 24 hours before").first()).toBeVisible();
+  // The policy is not in "Before you book": the booking card says 24 hours, and its tooltip carries the policy.
+  await expect(page.getByText("Free cancellation up to 24 hours before")).toHaveCount(0);
+  await expect(page.getByText("You can only cancel up to 24 hours before the experience.").first()).toBeVisible();
+  await page.getByRole("button", { name: "About the cancellation policy" }).first().hover();
+  await expect(page.getByText("Free cancellation up to 24 hours before")).toBeVisible();
 
   // Guests get no coordinates, so only the city and the promise of the exact spot.
   await expect(page.getByText("Exact meeting point shared after booking.")).toBeVisible();
@@ -171,10 +175,9 @@ test("guest limits, exclusions and safety notes show before booking", async ({ p
   await expect(beforeYouBook.getByText("Drinks")).toBeVisible();
   await expect(beforeYouBook.getByText("Venue has step-free access")).toBeVisible();
 
-  // The booking panel says it too, before anyone drops below the minimum.
-  const panel = page.locator("div.sticky").filter({ hasText: "Participants" });
-  await expect(panel.getByText("3–8 guests per booking")).toBeVisible();
-  await expect(panel.getByText("This experience needs at least 3 guests.")).toHaveCount(0);
+  // The booking card keeps to what it needs: the limits are on the page, not under the guests.
+  const panel = page.locator("div.sticky").filter({ hasText: "Guests" });
+  await expect(panel.getByText("3–8 guests per booking")).toHaveCount(0);
 });
 
 test("itin's placeholder safety info isn't shown", async ({ page }) => {

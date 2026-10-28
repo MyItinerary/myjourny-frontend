@@ -42,7 +42,7 @@ describe("itinerarySteps", () => {
 });
 
 describe("beforeYouBookItems", () => {
-  it("lists only what the experience says", () => {
+  it("lists only what the experience says, and leaves the cancellation policy to the booking card", () => {
     const items = beforeYouBookItems({
       ...base,
       group_size_max: 6,
@@ -58,7 +58,6 @@ describe("beforeYouBookItems", () => {
       ["Guest requirements", "Fitness: Moderate · Age: 12+"],
       ["What's included", "Life jacket, Water"],
       ["What to bring", "Sunscreen"],
-      ["Cancellation policy", "Free cancellation up to 24 hours before"],
     ]);
   });
 

@@ -4,6 +4,7 @@ export { useBookingPanelViewModel } from "./view-model/use-booking-panel-view-mo
 export { BookingPanelView } from "./view/booking-panel-view";
 export { BookingBarView } from "./view/booking-bar-view";
 export { formatPrice, formatPriceOrFree, formatSessionWhen, groupSizeLabel, guestLoginHref } from "./model/format";
+export { CANCEL_CUTOFF_HOURS } from "./model/booking-card";
 export { useCreateBooking } from "./model/bookings";
 export { useBookingQuote } from "./model/pricing";
 export type { PricingSelection, Quote } from "./model/booking.types";

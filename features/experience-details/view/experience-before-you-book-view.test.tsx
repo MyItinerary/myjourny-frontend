@@ -13,7 +13,7 @@ describe("ExperienceBeforeYouBookView", () => {
           { kind: "guests", label: "Group size", description: "3–6 guests per booking" },
           { kind: "not_included", label: "Not included", description: "Transport" },
           { kind: "safety", label: "Safety", description: "Life jackets provided" },
-          { kind: "cancellation", label: "Cancellation policy", description: "Free cancellation up to 24 hours before" },
+          { kind: "safety", label: "Safety", description: "Venue has step-free access" },
         ]}
       />,
     );
@@ -21,7 +21,7 @@ describe("ExperienceBeforeYouBookView", () => {
     expect(screen.getByText("3–6 guests per booking")).toBeInTheDocument();
     expect(screen.getByText("Transport")).toBeInTheDocument();
     expect(screen.getByText("Life jackets provided")).toBeInTheDocument();
-    expect(screen.getByText("Free cancellation up to 24 hours before")).toBeInTheDocument();
+    expect(screen.getByText("Venue has step-free access")).toBeInTheDocument();
   });
 
   it("renders nothing when the experience has no details", () => {

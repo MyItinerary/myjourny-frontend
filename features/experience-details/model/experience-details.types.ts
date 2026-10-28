@@ -62,8 +62,7 @@ export type BeforeYouBookKind =
   | "included"
   | "not_included"
   | "bring"
-  | "safety"
-  | "cancellation";
+  | "safety";
 
 export type BeforeYouBookItem = {
   kind: BeforeYouBookKind;

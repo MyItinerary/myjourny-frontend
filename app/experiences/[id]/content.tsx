@@ -165,6 +165,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           total: details.total,
           currency: details.currency,
           durationLabel: details.durationLabel,
+          hasTimeSlots: details.hasTimeSlots,
         });
         router.push("/checkout");
       }
@@ -352,7 +353,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
           {hydrated ? (
             <BookingPanel
-              className="sticky top-6 mt-8 hidden lg:mt-0 lg:flex"
+              // The nav is fixed and 100px tall on desktop: sit below it.
+              className="sticky top-6 mt-8 hidden lg:top-[124px] lg:mt-0 lg:flex"
               experienceId={experience.id}
               guideId={experience.guide_id}
               prices={prices ?? []}
@@ -361,7 +363,6 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               eventStartDate={eventStartDate}
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
-              schedule={experience}
               cancellationPolicy={experience.cancellation_policy}
               onGuestBook={onGuestBook}
             />
@@ -403,9 +404,9 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             onClick={() => setMobileBookingOpen(false)}
             className="absolute inset-0 bg-black/40"
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
+          <div className="absolute inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto overscroll-contain rounded-t-[32px] pb-[env(safe-area-inset-bottom)]">
             <BookingPanel
-              className="rounded-t-2xl rounded-b-none border-b-0"
+              title={experience.title}
               experienceId={experience.id}
               guideId={experience.guide_id}
               prices={prices ?? []}
@@ -414,7 +415,6 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               eventStartDate={eventStartDate}
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
-              schedule={experience}
               cancellationPolicy={experience.cancellation_policy}
               onGuestBook={onGuestBook}
               onClose={() => setMobileBookingOpen(false)}
@@ -439,8 +439,9 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 function BookingPanel({
   className,
   onClose,
+  title,
   ...props
-}: BookingPanelProps & { className?: string; onClose?: () => void }) {
+}: BookingPanelProps & { className?: string; onClose?: () => void; title?: string }) {
   const vm = useBookingPanelViewModel(props);
-  return <BookingPanelView {...vm} className={className} onClose={onClose} />;
+  return <BookingPanelView {...vm} className={className} onClose={onClose} title={title} />;
 }

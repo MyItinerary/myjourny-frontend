@@ -1,7 +1,8 @@
 import { useState } from "react";
 
 import type { ExperiencePricing, PricingSelection, PricingUnit, TicketType } from "../model/booking.types";
-import { describeRules, formatPriceOrFree, UNIT_SUFFIX } from "../model/format";
+import { shortPriceOrFree, UNIT_WORDS } from "../model/booking-card";
+import { describeRules, UNIT_SUFFIX } from "../model/format";
 
 export type TicketRow = {
   id: string;
@@ -22,7 +23,7 @@ export type AddonRow = {
 };
 
 export type TicketSelection = {
-  priceFrom: { amount: string; unit: string; showFrom: boolean };
+  priceFrom: { amount: string; unit: string; unitWords: string; showFrom: boolean };
   ruleNotes: string[];
   tickets: TicketRow[];
   addons: AddonRow[];
@@ -72,15 +73,16 @@ export function useTicketSelection({
   const several = tickets.length > 1;
   const cheapestFree = !!cheapest && Number(cheapest.amount) === 0;
   const ticketPrice = (t: TicketType) =>
-    Number(t.amount) === 0 ? "Free" : `${formatPriceOrFree(Number(t.amount), currency)} ${UNIT_SUFFIX[t.pricing_unit]}`;
+    Number(t.amount) === 0 ? "Free" : `${shortPriceOrFree(Number(t.amount), currency)} ${UNIT_SUFFIX[t.pricing_unit]}`;
 
   return {
     // A free cheapest ticket reads "Free", with no "from" or "/ person".
     priceFrom: cheapestFree
-      ? { amount: "Free", unit: "", showFrom: false }
+      ? { amount: "Free", unit: "", unitWords: "", showFrom: false }
       : {
-          amount: formatPriceOrFree(Number(cheapest?.amount ?? 0), currency),
+          amount: shortPriceOrFree(Number(cheapest?.amount ?? 0), currency),
           unit: UNIT_SUFFIX[cheapest?.pricing_unit ?? "per_person"],
+          unitWords: UNIT_WORDS[cheapest?.pricing_unit ?? "per_person"],
           showFrom: several,
         },
     ruleNotes: describeRules(pricing?.rules ?? [], currency, { guests, now: new Date() }),
@@ -98,7 +100,7 @@ export function useTicketSelection({
       priceLabel:
         Number(a.amount) === 0
           ? "Free"
-          : `${formatPriceOrFree(Number(a.amount), currency)}${a.pricing_unit === "per_person" ? " / person" : ""}`,
+          : `${shortPriceOrFree(Number(a.amount), currency)}${a.pricing_unit === "per_person" ? " / person" : ""}`,
       checked: !!selectedAddons[a.id],
       onToggle: (on) => setSelectedAddons((s) => ({ ...s, [a.id]: on })),
     })),

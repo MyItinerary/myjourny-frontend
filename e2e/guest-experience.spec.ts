@@ -70,11 +70,11 @@ test.describe("experience page for a guest", () => {
     await expect(page.locator("div.sticky").getByRole("button", { name: /Book now/ })).toBeVisible();
   });
 
-  test("Book now opens the checkout, which starts with log in or sign up", async ({ page }) => {
+  test("Book now opens the checkout, which starts with email and phone", async ({ page }) => {
     await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
 
     await expect(page).toHaveURL(/\/checkout$/);
-    await expect(page.getByRole("heading", { name: "1. Log in or sign up" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Confirm your details and pay" })).toBeVisible();
     await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
   });
 });

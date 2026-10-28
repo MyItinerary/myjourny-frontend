@@ -20,6 +20,11 @@ const soon = (() => {
   return dateKey(d);
 })();
 const startsAt = `${soon}T08:00:00Z`;
+const later = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() + 2);
+  return dateKey(d);
+})();
 
 const quote = (overrides = {}) => ({
   currency: "NGN",
@@ -44,6 +49,7 @@ function stubApi({
   scheduled = true,
   lengthDays = 1,
   perDay = false,
+  soldOutDay = false,
 } = {}) {
   const quotes: Record<string, unknown>[] = [];
   let sessionLoads = 0;
@@ -63,7 +69,12 @@ function stubApi({
         scheduled,
         length_days: lengthDays,
         sessions: scheduled
-          ? [{ starts_at: startsAt, local_date: soon, local_time: "09:00:00", seats_left: seatsLeft, sold_out: false }]
+          ? [
+              ...(soldOutDay
+                ? [{ starts_at: `${later}T08:00:00Z`, local_date: later, local_time: "09:00:00", seats_left: 0, sold_out: true }]
+                : []),
+              { starts_at: startsAt, local_date: soon, local_time: "09:00:00", seats_left: seatsLeft, sold_out: false },
+            ]
           : [],
       });
     }),
@@ -101,13 +112,10 @@ describe("useBookingPanelViewModel", () => {
       addons: [],
       requested_datetime: startsAt,
     });
-    expect(result.current.quote!.lines.map((l) => [l.label, l.amount, l.kind])).toEqual([
-      ["Adult × 2", "₦10,000.00", "item"],
-      ["Subtotal", "₦10,000.00", "subtotal"],
-      ["SAVE10", "-₦1,000.00", "discount"],
-    ]);
-    expect(result.current.total).toBe("₦9,000.00");
-    expect(result.current.booking).toMatchObject({ available: true, disabled: false, label: "Book now - ₦9,000.00" });
+    // A plain booking has no breakdown, only what it saved.
+    expect(result.current.card.breakdown).toEqual([{ key: "discount-0", label: "Discount", amount: "₦1,000" }]);
+    expect(result.current.total).toBe("₦9,000");
+    expect(result.current.booking).toMatchObject({ available: true, disabled: false, label: "Book now - ₦9,000" });
   });
 
   it("calls a free booking Free and offers to book it for free", async () => {
@@ -122,7 +130,7 @@ describe("useBookingPanelViewModel", () => {
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
 
     await waitFor(() => expect(result.current.quote).not.toBeNull());
-    expect(result.current.quote!.lines.map((l) => [l.label, l.amount])).toEqual([["Adult × 2", "Free"]]);
+    expect(result.current.card.breakdown).toEqual([]);
     expect(result.current.total).toBe("Free");
     expect(result.current.booking.label).toBe("Book for free");
   });
@@ -141,11 +149,7 @@ describe("useBookingPanelViewModel", () => {
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
 
     await waitFor(() => expect(result.current.quote).not.toBeNull());
-    expect(result.current.quote!.lines.map((l) => [l.label, l.amount])).toEqual([
-      ["Adult × 2", "₦10,000.00"],
-      ["Subtotal", "₦10,000.00"],
-      ["ALLFREE", "-₦10,000.00"],
-    ]);
+    expect(result.current.card.breakdown).toEqual([{ key: "discount-0", label: "Discount", amount: "₦10,000" }]);
     expect(result.current.total).toBe("Free");
     expect(result.current.booking.label).toBe("Book for free");
   });
@@ -179,25 +183,15 @@ describe("useBookingPanelViewModel", () => {
     expect(quotes).toHaveLength(0);
   });
 
-  it("states the guest limits up front, and swaps them for the warning below the minimum", async () => {
-    stubApi();
-    const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, minSpots: 3, availableSpots: 8 }));
-    await waitFor(() => expect(result.current.quote).not.toBeNull());
-    expect(result.current.groupSizeNote).toBe("3–8 guests per booking");
-
-    act(() => result.current.tickets[0].onChange(1));
-    expect(result.current.groupSizeNote).toBeNull();
-    expect(result.current.minGuestsWarning).toBe("This experience needs at least 3 guests.");
-  });
-
   it("doesn't price a selection below the minimum group size", async () => {
     const quotes = stubApi();
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
-    await waitFor(() => expect(result.current.total).toBe("₦9,000.00"));
+    await waitFor(() => expect(result.current.total).toBe("₦9,000"));
 
     act(() => result.current.tickets[0].onChange(1));
 
     expect(result.current.minGuestsWarning).toBe("This experience needs at least 2 guests.");
+    expect(result.current.card.total).toMatchObject({ amount: null, muted: "Needs 2 guests" });
     expect(result.current.quote).toBeNull();
     expect(result.current.total).toBeNull();
     expect(result.current.booking).toMatchObject({ disabled: true, label: "Select at least 2 guests" });
@@ -233,15 +227,9 @@ describe("useBookingPanelViewModel", () => {
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
     await waitFor(() => expect(result.current.quote).not.toBeNull());
 
-    expect(result.current.quote!.lines.map((l) => [l.label, l.amount, l.listAmount ?? null])).toEqual([
-      ["Adult × 2", "₦9,900.00", "₦10,000.00"],
-      ["Subtotal", "₦10,000.00", null],
-      ["Early-bird discount (1% off)", "−₦100.00", null],
-      ["Group discount (10% off 2+ guests)", "−₦990.00", null],
-    ]);
-    // The processing fee is added at checkout, not shown here.
-    expect(result.current.total).toBe("₦8,910.00");
-    expect(result.current.quote!.savings).toBe("You save ₦1,090.00");
+    // Only the group saving gets a row; early-bird is the struck-through price, and the fee is added at checkout.
+    expect(result.current.card.breakdown).toEqual([{ key: "saving-0", label: "Group saving", amount: "₦990" }]);
+    expect(result.current.total).toBe("₦8,910");
   });
 
   it("sends the customer to checkout", async () => {
@@ -358,9 +346,11 @@ describe("useBookingPanelViewModel", () => {
       guests: 2,
       ticketsLabel: "2 Adult",
       // No quote, so the price list: 2 x ₦5,000.
-      total: "₦10,000.00",
+      total: "₦10,000",
       currency: "NGN",
       durationLabel: "3 hours",
+      // One time on the day, so there are no slots to look at.
+      hasTimeSlots: false,
       selection: { experience_id: "exp-1", items: [{ experience_price_id: "adult", quantity: 2 }] },
     });
     expect(onGuestBook.mock.calls[0][0].when).toContain("9:00 AM");
@@ -371,11 +361,11 @@ describe("useBookingPanelViewModel", () => {
     stubApi();
     const onGuestBook = vi.fn();
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, onGuestBook }));
-    await waitFor(() => expect(result.current.total).toBe("₦9,000.00"));
+    await waitFor(() => expect(result.current.total).toBe("₦9,000"));
 
     act(() => result.current.booking.onBook());
 
-    expect(onGuestBook.mock.calls[0][0].total).toBe("₦9,000.00");
+    expect(onGuestBook.mock.calls[0][0].total).toBe("₦9,000");
   });
 
   it("can't be booked without a guide", async () => {
@@ -388,12 +378,11 @@ describe("useBookingPanelViewModel", () => {
 
   it("books an unscheduled experience by date and lets the server set the time", async () => {
     const quotes = stubApi({ scheduled: false });
-    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    renderHookWithProviders(() => useBookingPanelViewModel(props));
 
     await waitFor(() => expect(quotes.length).toBeGreaterThan(0));
     expect(quotes[0]).toHaveProperty("requested_date");
     expect(quotes[0]).not.toHaveProperty("requested_datetime");
-    expect(result.current.lengthNote).toBeNull();
   });
 
   it("fixes per-day tickets to the schedule's length and shows when the session runs", async () => {
@@ -408,21 +397,22 @@ describe("useBookingPanelViewModel", () => {
         timezone: "Africa/Lagos",
       }),
     });
-    const { result } = renderHookWithProviders(() =>
-      useBookingPanelViewModel({
-        ...props,
-        schedule: { schedule_type: "recurring", recurrence_type: "weekly", recurrence_days: ["sat"], length_days: 3 },
-      }),
-    );
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
 
-    await waitFor(() => expect(result.current.quote?.when).toBe("Sat, June 1 at 9:00 AM – Mon, June 3"));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
     expect(quotes[0]).not.toHaveProperty("days");
     expect(result.current.days.show).toBe(false);
-    expect(result.current.lengthNote).toBe("Each booking covers all 3 days.");
-    expect(result.current.scheduleLabel).toBe("Every Saturday · 3 days");
+    // Per day tickets keep their own unit; the date field names the run.
+    expect(result.current.card.headline.unit).toBe("per person, per day");
   });
 
-  it("shows the experience's own cancellation policy, and none without one", async () => {
+  it("says a per-person price covers every day of a multi-day session", async () => {
+    stubApi({ lengthDays: 3 });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.card.headline.unit).toBe("per person, all 3 days"));
+  });
+
+  it("says the same 24-hour line for every experience, and keeps its own policy for the tooltip", async () => {
     stubApi();
     const withPolicy = renderHookWithProviders(() =>
       useBookingPanelViewModel({ ...props, cancellationPolicy: "  Free cancellation up to 48 hours before  " }),
@@ -432,17 +422,17 @@ describe("useBookingPanelViewModel", () => {
 
     const without = renderHookWithProviders(() => useBookingPanelViewModel(props));
     expect(without.result.current.cancellationPolicy).toBeNull();
-  });
-
-  it("only points at time slots when the experience has them", async () => {
-    stubApi();
-    const scheduled = renderHookWithProviders(() => useBookingPanelViewModel(props));
-    await waitFor(() => expect(scheduled.result.current.hasTimeSlots).toBe(true));
-
-    stubApi({ scheduled: false });
-    const unscheduled = renderHookWithProviders(() => useBookingPanelViewModel(props));
-    await waitFor(() => expect(unscheduled.result.current.quote).not.toBeNull());
-    expect(unscheduled.result.current.hasTimeSlots).toBe(false);
+    // The card says nothing about cancelling unless the experience does.
+    expect(without.result.current.card.cancellation).toEqual({
+      title: "Cancellation",
+      body: "You can only cancel up to 24 hours before the experience.",
+      hint: null,
+    });
+    expect(withPolicy.result.current.card.cancellation).toEqual({
+      title: "Cancellation",
+      body: "You can only cancel up to 24 hours before the experience.",
+      hint: "Free cancellation up to 48 hours before",
+    });
   });
 
   it("shows only the day for an unscheduled experience, not the server's noon", async () => {
@@ -450,7 +440,131 @@ describe("useBookingPanelViewModel", () => {
       scheduled: false,
       quoteBody: quote({ session_starts_at: "2030-10-19T11:00:00Z", timezone: "Africa/Lagos" }),
     });
+    const onGuestBook = vi.fn();
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, onGuestBook }));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+    act(() => result.current.booking.onBook());
+    expect(onGuestBook.mock.calls[0][0].when).toBe("Saturday, October 19");
+  });
+});
+
+describe("the booking card", () => {
+  it("states the price, the date with its length, and the total", async () => {
+    stubApi();
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
-    await waitFor(() => expect(result.current.quote?.when).toBe("Saturday, October 19"));
+    await waitFor(() => expect(result.current.card.total.amount).toBe("₦9,000"));
+
+    const { card } = result.current;
+    expect(card.headline).toEqual({ showFrom: false, amount: "₦5,000", unit: "per person", was: null, pill: null });
+    // The stub has one time on the day, so there is no picker and the date field carries it.
+    expect(card.dateField).toMatch(/ · 9:00 AM · 3 hours$/);
+    expect(result.current.sessions.singleTime).toBe(true);
+    expect(card.total).toEqual({ amount: "₦9,000", muted: null, fees: "Fees and taxes included" });
+    expect(card.button).toMatchObject({ label: "Book now", loading: false, disabled: false });
+    expect(card.cancellation.hint).toBeNull();
+    expect(card.notice).toBeNull();
+    expect(card.locked).toBe(false);
+  });
+
+  it("says a day is sold out, shows no total, and the button jumps to the next open day", async () => {
+    stubApi({ soldOutDay: true });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.sessions.options.length).toBeGreaterThan(0));
+    // The sold-out day comes first; the card opens on the first day with room.
+    const nextOpen = result.current.sessions.selectedDate!;
+    act(() => result.current.sessions.onSelectDate(new Date(`${later}T00:00:00`)));
+
+    expect(result.current.card.notice).toMatchObject({ tone: "neutral", action: { kind: "dates" } });
+    expect(result.current.card.notice?.title).toMatch(/^Sold out on /);
+    expect(result.current.card.total).toMatchObject({ amount: null, muted: "Pick another date" });
+    expect(result.current.card.button.label).toMatch(/^Jump to /);
+    expect(result.current.card.button.disabled).toBe(false);
+
+    act(() => result.current.card.button.onClick());
+    expect(result.current.sessions.selectedDate).toEqual(nextOpen);
+  });
+
+  it("offers a retry when the selection can't be priced, and says nothing was charged", async () => {
+    const quotes = stubApi({ quoteBody: { detail: "Pricing is down" } as never, quoteStatus: 400 });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.card.notice).not.toBeNull());
+
+    expect(result.current.card.notice).toMatchObject({ tone: "error", action: { label: "Try again", kind: "retry" } });
+    expect(result.current.card.notice?.body).toContain("Nothing has been booked or charged.");
+    const before = quotes.length;
+    act(() => result.current.card.onRetry());
+    await waitFor(() => expect(quotes.length).toBeGreaterThan(before));
+  });
+
+  it("shows an early-bird price struck through with a pill, and no row or saving for it below", async () => {
+    stubApi({
+      quoteBody: quote({
+        lines: [{ kind: "ticket", label: "Adult", quantity: 2, unit_amount: "4000", amount: "8000", list_unit_amount: "5000", list_amount: "10000" }],
+        subtotal: "8000",
+        subtotal_before_discounts: "10000",
+        discount: "0",
+        total: "8000",
+        savings: [{ kind: "early_bird", label: "Early-bird discount (20% off)", amount: "2000" }],
+      }),
+    });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+
+    expect(result.current.card.headline).toEqual({ showFrom: false, amount: "₦4,000", unit: "per person", was: "₦5,000", pill: "Early bird" });
+    expect(result.current.card.breakdown).toEqual([]);
+  });
+
+  it("shows a group discount as a lower price struck through with a pill, and one saving row", async () => {
+    stubApi({
+      quoteBody: quote({
+        lines: [{ kind: "ticket", label: "Adult", quantity: 3, unit_amount: "5000", amount: "15000" }],
+        subtotal: "15000",
+        discount: "1500",
+        total: "13500",
+        savings: [{ kind: "group", label: "Group discount (10% off 3+ guests)", amount: "1500" }],
+      }),
+    });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, minSpots: 3 }));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+
+    expect(result.current.card.headline).toMatchObject({ amount: "₦4,500", was: "₦5,000", pill: "Group discount", showFrom: false });
+    expect(result.current.card.breakdown).toEqual([{ key: "saving-0", label: "Group saving", amount: "₦1,500" }]);
+    expect(result.current.card.notes).toEqual([]);
+  });
+
+  it("lists add-ons above the total once there are some", async () => {
+    stubApi({
+      quoteBody: quote({
+        lines: [
+          { kind: "ticket", label: "Adult", quantity: 2, unit_amount: "5000", amount: "10000" },
+          { kind: "addon", label: "GoPro footage", quantity: 1, unit_amount: "5000", amount: "5000" },
+        ],
+        subtotal: "15000",
+        discount: "0",
+        total: "15000",
+      }),
+    });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+    expect(result.current.card.breakdown.map((r) => [r.label, r.amount])).toEqual([["Adult × 2", "₦10,000"], ["GoPro footage", "₦5,000"]]);
+  });
+
+  it("says Free, and books for free, when the trip costs nothing", async () => {
+    stubApi({
+      quoteBody: quote({
+        lines: [
+          { kind: "ticket", label: "Adult", quantity: 2, unit_amount: "0", amount: "0" },
+          { kind: "fee", label: "Payment processing fee", quantity: 1, unit_amount: "100", amount: "100" },
+        ],
+        subtotal: "0",
+        discount: "0",
+        total: "100",
+      }),
+    });
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+
+    expect(result.current.card.total.amount).toBe("Free");
+    expect(result.current.card.button.label).toBe("Book for free");
   });
 });
