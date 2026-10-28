@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 
 import type { ExperienceSession, ExperienceSessions } from "../model/booking.types";
 import { dateFieldLabel, FEW_SEATS_LEFT, shortDay, urgencyFor, weekdayDay, type DayState } from "../model/booking-card";
-import { addDaysToKey, dateKey, formatSessionTime, parseDateKey, todayIn } from "../model/sessions";
+import { addDaysToKey, dateKey, formatSessionTime, parseDateKey, todayIn, zoneCity } from "../model/sessions";
 
 export type SessionOption = {
   startsAt: string;
@@ -36,6 +36,8 @@ export type SessionChoice = {
   isDateSelectable: (date: Date) => boolean;
   onSelectDate: (date: Date) => void;
   onPickSession: (startsAt: string) => void;
+  /** "Times are Lagos time.": session times are in the experience's zone, not the guest's. */
+  timezoneNote: string;
   /** The day has exactly one time and it's open: there is nothing to choose, so no time picker. */
   singleTime: boolean;
   /** "Sat 12 September", or "Fri 11 to Sun 13 September"; "Select a date" before one is chosen. */
@@ -138,6 +140,7 @@ export function useSessionChoice(
     },
     onPickSession: setPickedSessionAt,
     singleTime: daySessions.length === 1 && !daySessions[0].sold_out,
+    timezoneNote: timeZone ? `Times are ${zoneCity(timeZone)} time.` : "Times are local to the experience.",
     fieldLabel: selectedDay ? dateFieldLabel(selectedDay, session?.end_local_date) : "Select a date",
     endDate: session?.end_local_date && session.end_local_date !== selectedDay ? parseDateKey(session.end_local_date) : null,
     dayState: (date) => {

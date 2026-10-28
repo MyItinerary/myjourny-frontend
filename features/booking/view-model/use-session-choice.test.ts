@@ -90,6 +90,13 @@ describe("useSessionChoice", () => {
     expect(result.current.dateLabel).toBe("Select dates");
   });
 
+  it("says the times are in the experience's zone", () => {
+    const lagos = renderHookWithProviders(() => useSessionChoice(scheduled([])));
+    expect(lagos.result.current.timezoneNote).toBe("Times are Lagos time.");
+    const zoneless = renderHookWithProviders(() => useSessionChoice(undefined));
+    expect(zoneless.result.current.timezoneNote).toBe("Times are local to the experience.");
+  });
+
   it("books unscheduled experiences by date, from tomorrow or the event date", () => {
     const unscheduled = { timezone: "Africa/Lagos", scheduled: false, sessions: [] };
     const plain = renderHookWithProviders(() => useSessionChoice(unscheduled)).result.current;

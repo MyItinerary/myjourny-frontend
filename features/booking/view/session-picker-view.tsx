@@ -72,17 +72,20 @@ export function SessionDateView({
 
 /** "Choose a time" and the chips for the chosen day: loading, empty, or the times. */
 export function SessionTimesView({ sessions, locked = false }: { sessions: SessionChoice; locked?: boolean }) {
-  const { scheduled, noSessions, allSoldOut, options, loading, dayStatus, nextOpen, onJumpToNext, singleTime } = sessions;
+  const { scheduled, noSessions, allSoldOut, options, loading, dayStatus, nextOpen, onJumpToNext, singleTime, timezoneNote } = sessions;
   // Without a schedule only the date is picked; the host sets the time.
   if (!scheduled && !loading) return null;
-  // One time on the day: nothing to pick. The date field names it.
-  if (singleTime && !loading) return null;
+  // One time on the day: nothing to pick. The date field names it; say which zone it's in.
+  if (singleTime && !loading) return <p className="text-xs text-[#6F6B72]">{timezoneNote}</p>;
   if (noSessions && !loading) return <p className="text-sm text-[#6F6B72]">No upcoming sessions yet. Check back soon.</p>;
   if (allSoldOut && options.length === 0 && !loading) return <p className="text-sm text-[#6F6B72]">All upcoming sessions are sold out.</p>;
 
   return (
     <div className={cn("flex flex-col gap-2 pt-1", locked && "opacity-60")}>
-      <p className="text-sm font-medium text-[#333134]">Choose a time</p>
+      <p className="flex items-baseline justify-between gap-2 text-sm font-medium text-[#333134]">
+        Choose a time
+        <span className="text-xs font-normal text-[#6F6B72]">{timezoneNote}</span>
+      </p>
       {loading ? (
         <div className="flex gap-2" aria-busy="true" aria-label="Loading times">
           {[0, 1, 2].map((i) => (

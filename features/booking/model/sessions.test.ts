@@ -13,6 +13,7 @@ import {
   parseDateKey,
   todayIn,
   useExperienceSessions,
+  zoneCity,
 } from "./sessions";
 
 describe("date helpers", () => {
@@ -62,5 +63,13 @@ describe("useExperienceSessions", () => {
   it("waits for an experience id", () => {
     const { result } = renderHookWithProviders(() => useExperienceSessions(""));
     expect(result.current.fetchStatus).toBe("idle");
+  });
+});
+
+describe("zoneCity", () => {
+  it("names the city of a zone", () => {
+    expect(zoneCity("Africa/Lagos")).toBe("Lagos");
+    expect(zoneCity("America/New_York")).toBe("New York");
+    expect(zoneCity("UTC")).toBe("UTC");
   });
 });

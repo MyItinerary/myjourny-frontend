@@ -34,6 +34,7 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
     onJumpToNext: vi.fn(),
     urgency: null,
     singleTime: false,
+    timezoneNote: "Times are Lagos time.",
     ...overrides,
   };
 }

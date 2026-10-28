@@ -33,6 +33,7 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
     onJumpToNext: vi.fn(),
     urgency: null,
     singleTime: false,
+    timezoneNote: "Times are Lagos time.",
     ...overrides,
   };
 }
@@ -56,6 +57,13 @@ describe("SessionTimesView", () => {
     );
     expect(screen.queryByText("Choose a time")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "9:00 AM" })).not.toBeInTheDocument();
+    // The time is in the date field; the zone is still said.
+    expect(screen.getByText("Times are Lagos time.")).toBeInTheDocument();
+  });
+
+  it("says which zone the times are in", () => {
+    renderWithProviders(<SessionTimesView sessions={sessionChoice()} />);
+    expect(screen.getByText("Times are Lagos time.")).toBeInTheDocument();
   });
 
   it("holds the space with skeleton chips while times load", () => {
