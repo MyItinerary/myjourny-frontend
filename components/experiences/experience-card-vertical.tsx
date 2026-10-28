@@ -25,6 +25,7 @@ export function ExperienceCardVertical({
   priceFrom,
   className,
   id,
+  href,
 }: ExperienceCardProps) {
   const { data: wishlistIds } = useMyWishlistedIds();
   const { openSave } = useWishlistSave();
@@ -41,7 +42,7 @@ export function ExperienceCardVertical({
       )}
     >
       {id && (
-        <Link href={`/experiences/${id}`} className="absolute inset-0 z-0 cursor-pointer" aria-label={title} />
+        <Link href={href ?? `/experiences/${id}`} className="absolute inset-0 z-0 cursor-pointer" aria-label={title} />
       )}
 
       {/* Figma keeps the photo a fixed 212px tall in every desktop context
