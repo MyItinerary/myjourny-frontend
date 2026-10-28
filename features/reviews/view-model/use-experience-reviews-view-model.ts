@@ -53,6 +53,8 @@ export type ExperienceReviewsViewModel = {
   display: ReviewsDisplay;
   /** "4.8", or null before the first review. */
   rating: string | null;
+  /** The score block: shown whenever there is a rating. */
+  showScore: boolean;
   /** "12 reviews"; null when there are none. */
   countLabel: string | null;
   /** Host / Value / Organisation. Empty when there is no breakdown to show. */
@@ -133,6 +135,8 @@ export function useExperienceReviewsViewModel(
     rating: review.rating,
     comment: review.comment ?? null,
     date: reviewMonth(review.created_at),
+    // itin only takes reviews of completed bookings (itin#107), so every review
+    // it returns is from a verified booking even before it sends the flag.
     verified: review.verified ?? true,
     // "Tunde, host" is shown in full, but its initials come from the name: "T".
     hostReply: review.host_reply
@@ -154,17 +158,21 @@ export function useExperienceReviewsViewModel(
 
   const hasMore = usePreview ? false : !!query.hasNextPage;
   const remaining = Math.max(0, total - items.length);
-  const filtering = search.trim() !== "" || ratingFilter != null;
-  const showScore = display === "populated" || (display === "noResults" && total >= EARLY_REVIEWS_LIMIT);
+  const average1 = average != null && total > 0 ? average.toFixed(1) : null;
+  // The score shows whenever there's a rating to show; the breakdown and summary
+  // only once there are enough reviews for them to mean something.
+  const showScore = average1 != null && (display === "populated" || display === "early" || display === "noResults");
+  const showBreakdown = display === "populated" || (display === "noResults" && total >= EARLY_REVIEWS_LIMIT);
 
   return {
     display,
-    rating: average != null && total > 0 ? average.toFixed(1) : null,
+    rating: average1,
+    showScore,
     countLabel: total > 0 ? `${total} review${total === 1 ? "" : "s"}` : null,
-    breakdown: showScore && usePreview
+    breakdown: showBreakdown && usePreview
       ? MOCK_RATING_BREAKDOWN.map((row) => ({ label: row.label, value: row.value.toFixed(1), width: ratingBarWidth(row.value) }))
       : [],
-    summary: showScore && usePreview ? MOCK_REVIEW_SUMMARY : null,
+    summary: showBreakdown && usePreview ? MOCK_REVIEW_SUMMARY : null,
     reviews,
 
     query: search,
@@ -201,7 +209,9 @@ export function useExperienceReviewsViewModel(
     onToggleHelpful: (id) => setVoted((current) => toggle(current, id)),
     onToggleExpanded: (id) => setExpanded((current) => toggle(current, id)),
 
-    hasMore: hasMore && !filtering,
+    // Search and filter only see the loaded pages, so loading more stays possible
+    // while they're on: matches may be further down.
+    hasMore,
     loadingMore: query.isFetchingNextPage,
     moreLabel: `Show ${Math.min(remaining || REVIEWS_PAGE_SIZE, REVIEWS_PAGE_SIZE)} more reviews`,
     onShowMore: () => {

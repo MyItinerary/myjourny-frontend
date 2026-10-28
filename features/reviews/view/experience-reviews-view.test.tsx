@@ -30,6 +30,7 @@ function vm(overrides: Partial<ExperienceReviewsViewModel> = {}): ExperienceRevi
   return {
     display: "populated",
     rating: "4.5",
+    showScore: true,
     countLabel: "8 reviews",
     breakdown: [{ label: "Host", value: "4.9", width: "98%" }],
     summary: "Guests loved the breakfast.",
@@ -181,5 +182,13 @@ describe("ExperienceReviewsView", () => {
       expect(screen.getByText("Thank you!")).toBeInTheDocument();
       expect(screen.getByText("Verified booking")).toBeInTheDocument();
     });
+  });
+
+  it("shows the score only when the view model says so", () => {
+    const { unmount } = renderWithProviders(<ExperienceReviewsView {...vm()} />);
+    expect(screen.getByRole("img", { name: "4.5 out of 5 stars" })).toBeInTheDocument();
+    unmount();
+    renderWithProviders(<ExperienceReviewsView {...vm({ showScore: false })} />);
+    expect(screen.queryByRole("img", { name: "4.5 out of 5 stars" })).not.toBeInTheDocument();
   });
 });

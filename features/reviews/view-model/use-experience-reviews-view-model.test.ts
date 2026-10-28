@@ -47,6 +47,25 @@ describe("useExperienceReviewsViewModel", () => {
     expect(result.current.hasMore).toBe(false);
   });
 
+  it("keeps Show more while filtering, since matches may be on later pages", async () => {
+    server.use(
+      http.get(apiUrl("/experiences/exp-1/reviews"), ({ request }) => {
+        const page = Number(new URL(request.url).searchParams.get("page"));
+        const rating = page === 1 ? 4 : 1;
+        return HttpResponse.json({ items: [{ ...item(`r-${page}`), rating }], total: 2, page, limit: 1, rating: 2.5 });
+      }),
+    );
+    const { result } = renderHookWithProviders(() => useExperienceReviewsViewModel("exp-1"));
+    await waitFor(() => expect(result.current.hasMore).toBe(true));
+
+    act(() => result.current.onRatingFilter(1));
+    expect(result.current.display).toBe("noResults");
+    expect(result.current.hasMore).toBe(true);
+
+    act(() => result.current.onShowMore());
+    await waitFor(() => expect(result.current.reviews.map((r) => r.id)).toEqual(["r-2"]));
+  });
+
   it("has no rating or count before the first review", async () => {
     server.use(
       http.get(apiUrl("/experiences/exp-1/reviews"), () =>
@@ -212,6 +231,9 @@ describe("useExperienceReviewsViewModel", () => {
       );
       const { result } = renderHookWithProviders(() => useExperienceReviewsViewModel("exp-1"));
       await waitFor(() => expect(result.current.display).toBe("early"));
+      // The score shows for a few reviews; the breakdown waits for more.
+      expect(result.current.showScore).toBe(true);
+      expect(result.current.breakdown).toEqual([]);
     });
   });
 

@@ -8,8 +8,7 @@ import { ReviewsToolbarView } from "./reviews-toolbar-view";
 
 /** The score, what people say, search / sort / filter, and the written reviews. */
 export function ExperienceReviewsView(vm: ExperienceReviewsViewModel) {
-  const { display, rating, countLabel } = vm;
-  const showScore = rating != null && (display === "populated" || display === "noResults" || display === "early");
+  const { display, rating, countLabel, showScore } = vm;
   const showToolbar = display === "populated" || display === "noResults" || display === "early";
 
   return (
@@ -21,7 +20,7 @@ export function ExperienceReviewsView(vm: ExperienceReviewsViewModel) {
         {countLabel && <span className="text-base leading-6 text-[#6F6B72]">{countLabel}</span>}
       </div>
 
-      {showScore && (
+      {showScore && rating && (
         <div className="flex flex-col gap-5">
           <ReviewsScoreView rating={rating} countLabel={countLabel} breakdown={vm.breakdown} />
           {vm.summary && <ReviewsSummaryView summary={vm.summary} />}
