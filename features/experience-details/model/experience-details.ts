@@ -86,8 +86,16 @@ export function beforeYouBookItems(experience: ExperienceDetailsFields): BeforeY
   return items;
 }
 
+// Fit and logistics shows a note on its own, so a note alone counts too.
 const hasFitDetails = (experience: ExperienceDetailsFields) =>
-  !!(experience.fitness_level || experience.age_policy || experience.accessibility);
+  !!(
+    experience.fitness_level ||
+    experience.age_policy ||
+    experience.accessibility ||
+    experience.fitness_note?.trim() ||
+    experience.age_note?.trim() ||
+    experience.accessibility_note?.trim()
+  );
 
 const FITNESS: Record<string, string> = {
   easy: "Easy",
@@ -176,6 +184,23 @@ export function descriptionParagraphs(description?: string | null): string[] {
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
+}
+
+/** The paragraphs that fit in `limit` characters, the last one cut at a word with "…". */
+export function previewParagraphs(paragraphs: string[], limit: number): string[] {
+  const shown: string[] = [];
+  let left = limit;
+  for (const paragraph of paragraphs) {
+    if (paragraph.length <= left) {
+      shown.push(paragraph);
+      left -= paragraph.length;
+      continue;
+    }
+    const cut = paragraph.slice(0, left).replace(/\s+\S*$/, "");
+    if (cut) shown.push(`${cut}…`);
+    break;
+  }
+  return shown.length ? shown : paragraphs.slice(0, 1);
 }
 
 /** The public landmark and photo, shown above the map; null without a landmark. */

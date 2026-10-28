@@ -8,6 +8,7 @@ import {
   itinerarySteps,
   listSections,
   meetingLandmark,
+  previewParagraphs,
   useMyBookingForExperience,
 } from "../model/experience-details";
 import type {
@@ -24,6 +25,7 @@ import type {
 const DESCRIPTION_CLAMP_CHARS = 400;
 
 export type ExperienceDescription = {
+  /** The paragraphs to show now: all of them, or the start of a long one. */
   paragraphs: string[];
   /** Long enough to be cut short. */
   long: boolean;
@@ -55,10 +57,11 @@ export function useExperienceDetailsViewModel(
 ): ExperienceDetailsViewModel {
   const { data: booking } = useMyBookingForExperience(experienceId);
   const [expanded, setExpanded] = useState(false);
-  const paragraphs = descriptionParagraphs(experience?.description);
+  const all = descriptionParagraphs(experience?.description);
+  const long = all.join(" ").length > DESCRIPTION_CLAMP_CHARS;
   const description: ExperienceDescription = {
-    paragraphs,
-    long: paragraphs.join(" ").length > DESCRIPTION_CLAMP_CHARS,
+    paragraphs: long && !expanded ? previewParagraphs(all, DESCRIPTION_CLAMP_CHARS) : all,
+    long,
     expanded,
     onToggle: () => setExpanded((open) => !open),
   };

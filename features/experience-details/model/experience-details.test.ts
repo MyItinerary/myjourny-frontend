@@ -15,6 +15,7 @@ import {
   fitAndLogistics,
   listSections,
   meetingLandmark,
+  previewParagraphs,
   itinerarySteps,
   mapEmbedUrl,
   meetingPointLocation,
@@ -63,6 +64,11 @@ describe("beforeYouBookItems", () => {
       ["Guest requirements", "Fitness: Moderate · Age: 12+"],
       ["What's included", "Life jacket, Water"],
     ]);
+  });
+
+  it("doesn't repeat old requirements a backfilled note already shows", () => {
+    const items = beforeYouBookItems({ ...base, requirements: { age: "12 and over" }, age_note: "12 and over" });
+    expect(items.find((item) => item.kind === "requirements")).toBeUndefined();
   });
 
   it("leaves the old requirements to Fit and logistics once the listing has it", () => {
@@ -264,5 +270,15 @@ describe("meetingLandmark", () => {
       photoUrl: "https://img/gate.jpg",
     });
     expect(meetingLandmark({ ...base, meeting_photo_url: "https://img/gate.jpg" })).toBeNull();
+  });
+});
+
+describe("previewParagraphs", () => {
+  it("keeps whole paragraphs that fit and cuts the next at a word", () => {
+    expect(previewParagraphs(["Short one.", "A much longer second paragraph"], 22)).toEqual(["Short one.", "A much…"]);
+  });
+
+  it("keeps everything that fits", () => {
+    expect(previewParagraphs(["One.", "Two."], 100)).toEqual(["One.", "Two."]);
   });
 });

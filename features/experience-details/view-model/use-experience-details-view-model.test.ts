@@ -58,8 +58,10 @@ describe("useExperienceDetailsViewModel", () => {
       useExperienceDetailsViewModel("exp-1", { ...makoko, description: "word ".repeat(120) }),
     );
     expect(result.current.description).toMatchObject({ long: true, expanded: false });
+    expect(result.current.description.paragraphs[0].endsWith("…")).toBe(true);
     act(() => result.current.description.onToggle());
     expect(result.current.description.expanded).toBe(true);
+    expect(result.current.description.paragraphs[0].endsWith("…")).toBe(false);
   });
 
   it("says there's no rating rather than making one up", () => {
