@@ -156,7 +156,10 @@ test("the experience page lists real reviews with the rating and count", async (
   });
 
   await page.goto("/experiences/exp-1");
-  await expect(page.getByRole("heading", { name: /^4\.5/ })).toContainText("4.5 · 2 reviews");
+  await expect(page.getByRole("heading", { name: "Reviews" })).toBeVisible();
+  await expect(page.getByText("2 reviews", { exact: true })).toBeVisible();
+  await expect(page.getByText("From 2 reviews")).toBeVisible();
+  await expect(page.getByRole("img", { name: "4.5 out of 5 stars" })).toBeVisible();
   await expect(page.getByText("Unforgettable morning")).toBeVisible();
   await expect(page.getByText("Tunde O.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Show more reviews" })).toHaveCount(0);

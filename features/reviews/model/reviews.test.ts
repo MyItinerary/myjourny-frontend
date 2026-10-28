@@ -6,8 +6,21 @@ import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
-import { isEditable, reviewDate, useBookingReview, useExperienceReviews, useSaveReview } from "./reviews";
-import type { MyReview } from "./reviews.types";
+import {
+  avatarTone,
+  filterReviews,
+  isEditable,
+  isLongReview,
+  ratingBarWidth,
+  reviewDate,
+  reviewInitials,
+  reviewMonth,
+  sortReviews,
+  useBookingReview,
+  useExperienceReviews,
+  useSaveReview,
+} from "./reviews";
+import type { MyReview, PublicReview } from "./reviews.types";
 
 const review = (id: string) => ({
   id,
@@ -99,5 +112,59 @@ describe("helpers", () => {
   it("allows edits only until the edit window closes", () => {
     expect(isEditable(mine, new Date("2026-10-20T10:00:00"))).toBe(true);
     expect(isEditable(mine, new Date("2026-10-27T10:00:00"))).toBe(false);
+  });
+});
+
+const pub = (id: string, author: string, rating: number, created: string, comment = "Nice"): PublicReview => ({
+  id,
+  author_name: author,
+  rating,
+  comment,
+  created_at: created,
+});
+
+describe("review display helpers", () => {
+  const list = [
+    pub("a", "Ngozi A.", 5, "2026-08-01T00:00:00", "Loved the kayak"),
+    pub("b", "Bayo K.", 3, "2026-09-01T00:00:00", "Breakfast was cold"),
+    pub("c", "Hauwa M.", 4, "2026-07-01T00:00:00", "Great host"),
+  ];
+
+  it("formats the month and the initials", () => {
+    expect(reviewMonth("2026-08-14T10:00:00")).toBe("August 2026");
+    expect(reviewInitials("Ngozi A.")).toBe("NA");
+    expect(reviewInitials("Tunde")).toBe("T");
+  });
+
+  it("gives the same author the same avatar colour", () => {
+    expect(avatarTone("Ngozi A.")).toBe(avatarTone("Ngozi A."));
+    expect(["sand", "blue", "cream", "amber"]).toContain(avatarTone("Bayo K."));
+  });
+
+  it("searches author and comment, and filters by stars", () => {
+    expect(filterReviews(list, "kayak", null).map((r) => r.id)).toEqual(["a"]);
+    expect(filterReviews(list, "bayo", null).map((r) => r.id)).toEqual(["b"]);
+    expect(filterReviews(list, "", 4).map((r) => r.id)).toEqual(["c"]);
+    expect(filterReviews(list, "great", 5)).toEqual([]);
+  });
+
+  it("sorts without changing the original list", () => {
+    expect(sortReviews(list, "relevant").map((r) => r.id)).toEqual(["a", "b", "c"]);
+    expect(sortReviews(list, "newest").map((r) => r.id)).toEqual(["b", "a", "c"]);
+    expect(sortReviews(list, "highest").map((r) => r.id)).toEqual(["a", "c", "b"]);
+    expect(sortReviews(list, "lowest").map((r) => r.id)).toEqual(["b", "c", "a"]);
+    expect(list.map((r) => r.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("sizes a rating bar out of 5 and keeps it in range", () => {
+    expect(ratingBarWidth(4)).toBe("80%");
+    expect(ratingBarWidth(9)).toBe("100%");
+    expect(ratingBarWidth(-1)).toBe("0%");
+  });
+
+  it("clamps only long reviews", () => {
+    expect(isLongReview("short")).toBe(false);
+    expect(isLongReview(null)).toBe(false);
+    expect(isLongReview("x".repeat(241))).toBe(true);
   });
 });

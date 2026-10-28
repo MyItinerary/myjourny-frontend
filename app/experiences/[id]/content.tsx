@@ -86,7 +86,10 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
   const gallery = useExperienceGalleryViewModel(experience);
   const experienceDetails = useExperienceDetailsViewModel(id, experience);
-  const reviews = useExperienceReviewsViewModel(id, experience);
+  const reviews = useExperienceReviewsViewModel(id, experience, {
+    // Until the API serves the new review fields, dev builds show sample reviews on experiences that have none.
+    preview: process.env.NODE_ENV !== "production",
+  });
   const { data: prices } = useExperiencePrices(id);
   const minPrice = (prices ?? []).reduce(
     (min, p) => (min === null || Number(p.amount) < min ? Number(p.amount) : min),
