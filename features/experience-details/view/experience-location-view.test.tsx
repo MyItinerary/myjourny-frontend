@@ -92,4 +92,16 @@ describe("ExperienceLocationView", () => {
     expect(screen.getByText("The blue gate opposite the jetty")).toBeInTheDocument();
     expect(screen.getByAltText("The meeting point")).toHaveAttribute("src", "https://img.example/gate.jpg");
   });
+
+  it("still shows the landmark when there's no map to show", () => {
+    renderWithProviders(<ExperienceLocationView location={null} landmark={{ text: "The blue gate", photoUrl: null }} />);
+    expect(screen.getByRole("heading", { name: "Where you'll be" })).toBeInTheDocument();
+    expect(screen.getByText("The blue gate")).toBeInTheDocument();
+    expect(screen.queryByText(/Exact meeting point shared after booking/)).not.toBeInTheDocument();
+  });
+
+  it("shows nothing with neither a location nor a landmark", () => {
+    const { container } = renderWithProviders(<ExperienceLocationView location={null} />);
+    expect(container).toBeEmptyDOMElement();
+  });
 });

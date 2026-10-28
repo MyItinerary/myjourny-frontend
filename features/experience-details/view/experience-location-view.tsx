@@ -13,14 +13,15 @@ type Props = {
   landmark?: MeetingLandmark | null;
 };
 
-/** A real map: the exact meeting point once booked, the area otherwise. */
+/** A real map: the exact meeting point once booked, the area otherwise. The
+ * host's landmark and photo lead, even when there's no map to show. */
 export function ExperienceLocationView({
   location,
   heading = "Where you'll be",
   mapOnly = false,
   landmark = null,
 }: Props) {
-  if (!location) return null;
+  if (!location && !landmark) return null;
   return (
     <section>
       <h2 className="font-heading text-xl font-bold text-foreground">{heading}</h2>
@@ -44,6 +45,14 @@ export function ExperienceLocationView({
         </div>
       )}
 
+      {location && <LocationMap location={location} mapOnly={mapOnly} />}
+    </section>
+  );
+}
+
+function LocationMap({ location, mapOnly }: { location: ExperienceLocation; mapOnly: boolean }) {
+  return (
+    <>
       {(location.mode === "exact" || location.mode === "approximate") && (
         <iframe
           title={location.mode === "exact" ? "Meeting point map" : `Map of ${location.label}`}
@@ -80,6 +89,6 @@ export function ExperienceLocationView({
           after booking.
         </p>
       )}
-    </section>
+    </>
   );
 }
