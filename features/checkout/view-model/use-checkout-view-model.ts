@@ -174,7 +174,8 @@ export function useCheckoutViewModel(): CheckoutViewModel {
         when: draft.when,
         guests: `${draft.guests} guest${draft.guests === 1 ? "" : "s"}`,
         durationLabel: draft.durationLabel,
-        cancellationNote: `Up to ${CANCEL_CUTOFF_HOURS} hours before, full refund`,
+        // Drafts saved before the card sent its line fall back to the default cutoff.
+        cancellationNote: draft.cancellationNote ?? `Up to ${CANCEL_CUTOFF_HOURS} hours before, full refund`,
         hasTimeSlots: !!draft.hasTimeSlots,
         free: total === "Free",
         total,

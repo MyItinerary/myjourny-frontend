@@ -9,13 +9,13 @@ import { useCreateBooking } from "../model/bookings";
 import {
   breakdownRows,
   type BreakdownRow,
-  CANCEL_CUTOFF_HOURS,
+  cancellationTerms,
   groupHeadline,
   shortDay,
   shortPrice,
   shortPriceOrFree,
 } from "../model/booking-card";
-import { describeRule, formatSessionDay, formatSessionWhen } from "../model/format";
+import { formatSessionDay, formatSessionWhen } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
 import { dateKey, useExperienceSessions } from "../model/sessions";
 import { type SessionChoice, useSessionChoice } from "./use-session-choice";
@@ -34,8 +34,11 @@ export type BookingPanelProps = {
   availableSpots?: number;
   /** Fewest guests per booking. Defaults to 1. */
   minSpots?: number;
-  /** The experience's own cancellation policy; the panel shows none without it. */
+  /** The experience's own cancellation policy text, shown in the tooltip. */
   cancellationPolicy?: string | null;
+  /** The structured policy (itin#113): full_refund_until, non_refundable or custom. */
+  refundPolicy?: string | null;
+  freeCancellationHours?: number | null;
   /** Set for guests: they pick tickets and a date like anyone else, and
    * "Book now" hands what they picked to this callback (to collect their
    * details) instead of creating a booking. */
@@ -58,6 +61,8 @@ export type GuestBookingDetails = {
   durationLabel: string;
   /** The guest chose from several times on that day, so the checkout can say "see the time slots". */
   hasTimeSlots: boolean;
+  /** "Full refund until Fri 4 December, 9:00am", for the checkout summary. */
+  cancellationNote: string;
 };
 
 export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> & {
@@ -125,6 +130,8 @@ export function useBookingPanelViewModel({
   availableSpots,
   minSpots = 1,
   cancellationPolicy,
+  refundPolicy,
+  freeCancellationHours,
   onGuestBook,
 }: BookingPanelProps): BookingPanelViewModel {
   const minGuests = Math.max(1, minSpots ?? 1);
@@ -190,14 +197,13 @@ export function useBookingPanelViewModel({
     (!!onGuestBook || (!!quote && !quoteFailed));
   const total = quote ? shortPriceOrFree(tripTotal(quote), currency) : null;
   const free = !!quote && tripTotal(quote) === 0;
-  const allSavings = quote?.savings ?? [];
   const soldOutDay = sessions.dayStatus === "soldout";
-  // When early-bird is the only saving and one ticket type is picked, the headline shows its price struck through.
-  const ticketLines = quote?.lines.filter((line) => line.kind === "ticket") ?? [];
-  const earlyBird =
-    ticketLines.length === 1 && ticketLines[0].list_unit_amount != null && allSavings.every((saving) => saving.kind === "early_bird")
-      ? { unit_amount: ticketLines[0].unit_amount, list_unit_amount: ticketLines[0].list_unit_amount }
-      : null;
+  const terms = cancellationTerms({
+    refundPolicy,
+    freeCancellationHours,
+    sessionStartsAt: sessions.session?.starts_at ?? null,
+    timeZone: sessionsQuery.data?.timezone,
+  });
 
   const bookLabel = () => {
     if (createBooking.isPending) return "Starting checkout…";
@@ -253,6 +259,7 @@ export function useBookingPanelViewModel({
         currency,
         durationLabel,
         hasTimeSlots: sessions.scheduled && sessions.options.length > 1,
+        cancellationNote: terms.short,
       });
       return;
     }
@@ -296,9 +303,8 @@ export function useBookingPanelViewModel({
   const bookDisabled = !isReady || (quoting && !onGuestBook) || createBooking.isPending;
   const rules = pricing?.rules ?? [];
   const group = quote ? groupHeadline(quote.lines, quote.savings, rules, currency) : null;
-  const priceNow = earlyBird
-    ? { amount: shortPrice(Number(earlyBird.unit_amount), currency), was: shortPrice(Number(earlyBird.list_unit_amount), currency), pill: "Early bird" }
-    : group;
+  // Experiences have no early bird any more (events get it as a ticket phase).
+  const priceNow = group;
   // A multi-day session sold per person says so in the headline: "per person, all 3 days".
   const unit =
     sessions.scheduled && sessions.lengthDays > 1 && ticketSelection.priceFrom.unitWords === "per person"
@@ -312,10 +318,7 @@ export function useBookingPanelViewModel({
       was: priceNow?.was ?? null,
       pill: priceNow?.pill ?? null,
     },
-    notes: rules
-      .filter((rule) => rule.kind === "early_bird")
-      .map((rule) => describeRule(rule, currency, { guests, now: new Date() }))
-      .filter((note): note is string => !!note),
+    notes: [],
     breakdown: quote ? breakdownRows(quote.lines, quote.savings, currency) : [],
     // With one time on the day there is no picker, so the date field carries it: "Sat 12 September · 7:00 AM · 2.5 hours".
     dateField: [sessions.fieldLabel, sessions.singleTime ? sessions.options[0]?.label : null, sessions.selectedDate ? durationLabel : null]
@@ -345,7 +348,7 @@ export function useBookingPanelViewModel({
         : { label: free ? "Book for free" : "Book now", loading: createBooking.isPending, disabled: bookDisabled, onClick: onBook },
     cancellation: {
       title: "Cancellation",
-      body: `You can only cancel up to ${CANCEL_CUTOFF_HOURS} hours before the experience.`,
+      body: terms.body,
       hint: cancellationPolicy?.trim() || null,
     },
   };

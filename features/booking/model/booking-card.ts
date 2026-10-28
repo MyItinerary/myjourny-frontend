@@ -2,10 +2,72 @@ import type { PriceRule, PricingUnit, QuoteLine, QuoteSaving } from "./booking.t
 import { parseDateKey } from "./sessions";
 
 // Stand-ins until itin serves the per-experience values (booking card spec):
-/** Every experience can be cancelled up to this many hours before. Becomes `free_cancellation_hours`. */
+/** The cutoff for listings without a structured policy yet (`free_cancellation_hours`). */
 export const CANCEL_CUTOFF_HOURS = 24;
 /** A session with this many seats or fewer shows "N left". Becomes `low_stock_threshold`. */
 export const FEW_SEATS_LEFT = 5;
+
+export type CancellationTerms = {
+  /** The booking card's line, e.g. "Full refund if you cancel before Fri 4 December, 9:00am." */
+  body: string;
+  /** The checkout summary's line, e.g. "Full refund until Fri 4 December, 9:00am". */
+  short: string;
+};
+
+/** "Fri 4 December, 9:00am" in the experience's zone. */
+function cutoffLabel(date: Date, timeZone?: string): string {
+  const day = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", timeZone });
+  const time = date
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone })
+    .replace(/\s/g, "")
+    .toLowerCase();
+  return `${day}, ${time}`;
+}
+
+/** What the guest is told about cancelling, from the experience's structured
+ * policy and the session they picked. Refunds are still actioned by an admin;
+ * this is the promise the page makes. Without a policy, the 24-hour default. */
+export function cancellationTerms({
+  refundPolicy,
+  freeCancellationHours,
+  sessionStartsAt,
+  timeZone,
+  now = new Date(),
+}: {
+  refundPolicy?: string | null;
+  freeCancellationHours?: number | null;
+  sessionStartsAt?: string | null;
+  timeZone?: string;
+  now?: Date;
+}): CancellationTerms {
+  if (refundPolicy === "full_refund_until" && freeCancellationHours != null) {
+    if (!sessionStartsAt) {
+      return {
+        body: `Full refund if you cancel up to ${freeCancellationHours} hours before.`,
+        short: `Up to ${freeCancellationHours} hours before, full refund`,
+      };
+    }
+    const cutoff = new Date(new Date(sessionStartsAt).getTime() - freeCancellationHours * 3_600_000);
+    if (cutoff.getTime() <= now.getTime()) {
+      return {
+        body: "The free cancellation window for this session has passed, so there's no refund if you cancel.",
+        short: "No refund: the free cancellation window has passed",
+      };
+    }
+    const label = cutoffLabel(cutoff, timeZone);
+    return { body: `Full refund if you cancel before ${label}.`, short: `Full refund until ${label}` };
+  }
+  if (refundPolicy === "non_refundable") {
+    return { body: "Non-refundable: there's no refund if you cancel.", short: "Non-refundable" };
+  }
+  if (refundPolicy === "custom") {
+    return { body: "The host sets the cancellation terms. See the details.", short: "See the host's cancellation terms" };
+  }
+  return {
+    body: `You can only cancel up to ${CANCEL_CUTOFF_HOURS} hours before the experience.`,
+    short: `Up to ${CANCEL_CUTOFF_HOURS} hours before, full refund`,
+  };
+}
 
 /** "₦16,000": whole naira without decimals, "₦16,000.50" when there are kobo. */
 export function shortPrice(amount: number, currency: string): string {

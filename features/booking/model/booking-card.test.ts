@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { dateFieldLabel, shortDay, shortPrice, shortPriceOrFree, urgencyFor, weekdayDay } from "./booking-card";
+import { dateFieldLabel, shortDay, shortPrice, shortPriceOrFree, urgencyFor, weekdayDay, cancellationTerms } from "./booking-card";
 
 describe("shortPrice", () => {
   it("drops the decimals from whole naira and keeps kobo", () => {
@@ -51,5 +51,36 @@ describe("urgencyFor", () => {
   it("names the slot at five or fewer, and the last spot heavier", () => {
     expect(urgencyFor(3, "7:00am", "Sat 12 Sept")).toEqual({ level: "few", text: "3 spots left at 7:00am on Sat 12 Sept" });
     expect(urgencyFor(1, "7:00am", "Sat 12 Sept")).toEqual({ level: "one", text: "Last spot at 7:00am on Sat 12 Sept" });
+  });
+});
+
+describe("cancellationTerms", () => {
+  const now = new Date("2030-06-01T08:00:00Z");
+  const session = "2030-06-08T08:00:00Z"; // 9:00am in Lagos
+
+  it("gives the exact cutoff for the session, in the experience's zone", () => {
+    expect(
+      cancellationTerms({ refundPolicy: "full_refund_until", freeCancellationHours: 24, sessionStartsAt: session, timeZone: "Africa/Lagos", now }),
+    ).toEqual({
+      body: "Full refund if you cancel before Fri 7 June, 9:00am.",
+      short: "Full refund until Fri 7 June, 9:00am",
+    });
+  });
+
+  it("says the window has passed once the cutoff is behind", () => {
+    const late = cancellationTerms({ refundPolicy: "full_refund_until", freeCancellationHours: 200, sessionStartsAt: session, now });
+    expect(late.short).toBe("No refund: the free cancellation window has passed");
+  });
+
+  it("falls back to the hours before a session is picked", () => {
+    expect(cancellationTerms({ refundPolicy: "full_refund_until", freeCancellationHours: 48 }).short).toBe(
+      "Up to 48 hours before, full refund",
+    );
+  });
+
+  it("words non-refundable and custom policies, and keeps the default without one", () => {
+    expect(cancellationTerms({ refundPolicy: "non_refundable" }).short).toBe("Non-refundable");
+    expect(cancellationTerms({ refundPolicy: "custom" }).short).toBe("See the host's cancellation terms");
+    expect(cancellationTerms({}).body).toBe("You can only cancel up to 24 hours before the experience.");
   });
 });

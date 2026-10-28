@@ -3,6 +3,7 @@ export type { BookingPanelProps, BookingPanelViewModel, GuestBookingDetails } fr
 export { useBookingPanelViewModel } from "./view-model/use-booking-panel-view-model";
 export { BookingPanelView } from "./view/booking-panel-view";
 export { BookingBarView } from "./view/booking-bar-view";
+export { ExternalBookingView } from "./view/external-booking-view";
 export { formatPrice, formatPriceOrFree, formatSessionWhen, groupSizeLabel, guestLoginHref } from "./model/format";
 export { CANCEL_CUTOFF_HOURS } from "./model/booking-card";
 export { useCreateBooking } from "./model/bookings";
