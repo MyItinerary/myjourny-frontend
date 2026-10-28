@@ -139,6 +139,17 @@ describe("useCheckoutViewModel", () => {
     expect(dollars.result.current.form.payment).toEqual({ provider: "Stripe", methods: "Pay securely by card" });
   });
 
+  it("shows the booking card's cancellation line, or the default for an older draft", () => {
+    saveCheckoutDraft({ ...draft, cancellationNote: "Full refund until Fri 7 June, 9:00am" });
+    const carried = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(carried.result.current.summary?.cancellationNote).toBe("Full refund until Fri 7 June, 9:00am");
+    carried.unmount();
+
+    saveCheckoutDraft(draft);
+    const older = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(older.result.current.summary?.cancellationNote).toBe("Up to 24 hours before, full refund");
+  });
+
   it("sends the guest home when there is no saved booking", () => {
     window.localStorage.clear();
     renderHookWithProviders(() => useCheckoutViewModel());

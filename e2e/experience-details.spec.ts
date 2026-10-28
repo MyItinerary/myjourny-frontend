@@ -240,3 +240,40 @@ test("the page shows the host's fit details, lists, paragraphs and meeting landm
   await expect(page.getByText("The blue gate at the Third Mainland jetty")).toBeVisible();
   await expect(page.getByAltText("The meeting point")).toBeVisible();
 });
+
+test("the booking card states the cancellation cutoff from the host's policy", async ({ page }) => {
+  const day = new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10);
+  await mockApi(
+    page,
+    experienceApi(
+      { ...EXPERIENCE, refund_policy: "full_refund_until", free_cancellation_hours: 48 },
+      {
+        "GET /experiences/exp-1/sessions": (r: Route) =>
+          r.fulfill({
+            json: {
+              timezone: "Africa/Lagos",
+              scheduled: true,
+              sessions: [{ starts_at: `${day}T08:00:00Z`, local_date: day, local_time: "09:00:00", seats_left: 6, sold_out: false }],
+            },
+          }),
+      },
+    ),
+  );
+  await page.goto("/experiences/exp-1");
+
+  await expect(page.locator("div.sticky").getByText(/^Full refund if you cancel before \w{3} \d{1,2} \w+, 9:00am\.$/)).toBeVisible();
+  await expect(page.getByText("You can only cancel up to 24 hours before the experience.")).toHaveCount(0);
+});
+
+test("a listing that books on the host's site shows no booking card", async ({ page }) => {
+  await mockApi(page, experienceApi({ ...EXPERIENCE, has_external_booking: true, booking_url: null }));
+  await page.goto("/experiences/exp-1");
+  await expect(page.getByRole("heading", { name: "Makoko Floating Village Boat Tour" }).first()).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Booked on the host's site" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Log in to see the booking link" })).toHaveAttribute(
+    "href",
+    "/login?next=%2Fexperiences%2Fexp-1",
+  );
+  await expect(page.getByRole("button", { name: /Book now/ })).toHaveCount(0);
+});

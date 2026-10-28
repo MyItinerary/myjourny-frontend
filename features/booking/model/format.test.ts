@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRule, describeRules, formatPrice, formatPriceOrFree, formatSessionDay, formatSessionWhen, groupSizeLabel, guestLoginHref, scheduleLabel, UNIT_SUFFIX } from "./format";
+import { describeRule, describeRules, formatPrice, formatPriceOrFree, formatSessionDay, formatSessionWhen, groupSizeLabel, guestLoginHref, safeExternalUrl, scheduleLabel, UNIT_SUFFIX } from "./format";
 
 describe("formatPrice", () => {
   it("formats money in the given currency", () => {
@@ -90,6 +90,17 @@ describe("describeRule", () => {
   it("returns null for an incomplete rule", () => {
     expect(describeRule({ id: "r", kind: "group" }, "NGN")).toBeNull();
     expect(describeRule({ id: "r", kind: "day_of_week", days_of_week: [] }, "NGN")).toBeNull();
+  });
+});
+
+describe("safeExternalUrl", () => {
+  it("keeps http(s) links and drops anything that could run script", () => {
+    expect(safeExternalUrl("https://tickets.example.com/kayak")).toBe("https://tickets.example.com/kayak");
+    expect(safeExternalUrl("http://example.com")).toBe("http://example.com/");
+    expect(safeExternalUrl("javascript:alert(1)")).toBeNull();
+    expect(safeExternalUrl("data:text/html,<script>alert(1)</script>")).toBeNull();
+    expect(safeExternalUrl("not a url")).toBeNull();
+    expect(safeExternalUrl(null)).toBeNull();
   });
 });
 

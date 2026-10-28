@@ -15,7 +15,10 @@ import { StarIcon } from "@/components/icons/shared-icons";
 import {
   BookingBarView,
   BookingPanelView,
+  ExternalBookingView,
   formatPrice,
+  guestLoginHref,
+  safeExternalUrl,
   type BookingPanelProps,
   type GuestBookingDetails,
   useBookingPanelViewModel,
@@ -149,6 +152,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           currency: details.currency,
           durationLabel: details.durationLabel,
           hasTimeSlots: details.hasTimeSlots,
+          cancellationNote: details.cancellationNote,
         });
         router.push("/checkout");
       }
@@ -334,7 +338,14 @@ export function ExperienceDetailContent({ id }: { id: string }) {
             <ExperienceReviewsView {...reviews} />
           </div>
 
-          {hydrated ? (
+          {experience.has_external_booking ? (
+            <ExternalBookingView
+              className="sticky top-6 mt-8 lg:top-[124px] lg:mt-0"
+              url={safeExternalUrl(experience.booking_url)}
+              signedIn={isAccount}
+              loginHref={guestLoginHref(experience.id)}
+            />
+          ) : hydrated ? (
             <BookingPanel
               // The nav is fixed and 100px tall on desktop: sit below it.
               className="sticky top-6 mt-8 hidden lg:top-[124px] lg:mt-0 lg:flex"
@@ -347,6 +358,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               cancellationPolicy={experience.cancellation_policy}
+              refundPolicy={experience.refund_policy}
+              freeCancellationHours={experience.free_cancellation_hours}
               onGuestBook={onGuestBook}
             />
           ) : null}
@@ -370,16 +383,18 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
       <Footer />
 
-      <BookingBarView
-        priceLabel={
-          minPrice === null ? null : minPrice === 0 ? "Free" : `from ${formatPrice(minPrice, experience.currency ?? "NGN")}`
-        }
-        onBookNow={() => setMobileBookingOpen(true)}
-      />
+      {!experience.has_external_booking && (
+        <BookingBarView
+          priceLabel={
+            minPrice === null ? null : minPrice === 0 ? "Free" : `from ${formatPrice(minPrice, experience.currency ?? "NGN")}`
+          }
+          onBookNow={() => setMobileBookingOpen(true)}
+        />
+      )}
 
       {/* Mobile bottom sheet — reuses the same booking panel form
           shown in the desktop sidebar rather than duplicating it. */}
-      {mobileBookingOpen && (
+      {mobileBookingOpen && !experience.has_external_booking && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
@@ -399,6 +414,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               availableSpots={experience.group_size_max ?? undefined}
               minSpots={experience.group_size_min ?? 1}
               cancellationPolicy={experience.cancellation_policy}
+              refundPolicy={experience.refund_policy}
+              freeCancellationHours={experience.free_cancellation_hours}
               onGuestBook={onGuestBook}
               onClose={() => setMobileBookingOpen(false)}
             />

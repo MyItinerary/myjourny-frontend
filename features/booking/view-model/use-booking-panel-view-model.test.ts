@@ -496,7 +496,7 @@ describe("the booking card", () => {
     await waitFor(() => expect(quotes.length).toBeGreaterThan(before));
   });
 
-  it("shows an early-bird price struck through with a pill, and no row or saving for it below", async () => {
+  it("shows no early-bird pill on an experience: early bird is for events now", async () => {
     stubApi({
       quoteBody: quote({
         lines: [{ kind: "ticket", label: "Adult", quantity: 2, unit_amount: "4000", amount: "8000", list_unit_amount: "5000", list_amount: "10000" }],
@@ -510,8 +510,19 @@ describe("the booking card", () => {
     const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
     await waitFor(() => expect(result.current.quote).not.toBeNull());
 
-    expect(result.current.card.headline).toEqual({ showFrom: false, amount: "₦4,000", unit: "per person", was: "₦5,000", pill: "Early bird" });
-    expect(result.current.card.breakdown).toEqual([]);
+    expect(result.current.card.headline.pill).toBeNull();
+    expect(result.current.card.headline.was).toBeNull();
+    expect(result.current.card.notes).toEqual([]);
+  });
+
+  it("states the cancellation cutoff for the chosen session from the structured policy", async () => {
+    stubApi();
+    const { result } = renderHookWithProviders(() =>
+      useBookingPanelViewModel({ ...props, refundPolicy: "full_refund_until", freeCancellationHours: 48 }),
+    );
+    await waitFor(() => expect(result.current.sessions.session).not.toBeNull());
+
+    expect(result.current.card.cancellation.body).toMatch(/^Full refund if you cancel before \w{3} \d{1,2} \w+, \d{1,2}:\d{2}(am|pm)\.$/);
   });
 
   it("shows a group discount as a lower price struck through with a pill, and one saving row", async () => {
