@@ -18,6 +18,7 @@ import {
   ExternalBookingView,
   formatPrice,
   guestLoginHref,
+  safeExternalUrl,
   type BookingPanelProps,
   type GuestBookingDetails,
   useBookingPanelViewModel,
@@ -340,7 +341,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           {experience.has_external_booking ? (
             <ExternalBookingView
               className="sticky top-6 mt-8 lg:top-[124px] lg:mt-0"
-              url={experience.booking_url ?? null}
+              url={safeExternalUrl(experience.booking_url)}
+              signedIn={isAccount}
               loginHref={guestLoginHref(experience.id)}
             />
           ) : hydrated ? (

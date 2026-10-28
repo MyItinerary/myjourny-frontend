@@ -4,8 +4,9 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  /** The host's booking page; itin only sends it to signed-in users. */
+  /** The host's booking page, already checked to be http(s); itin only sends it to signed-in users. */
   url: string | null;
+  signedIn: boolean;
   /** Where a guest logs in to get the link. */
   loginHref: string;
   className?: string;
@@ -13,7 +14,7 @@ type Props = {
 
 /** In place of the booking card for a listing that books on the host's own
  * site: MyJourny doesn't take the payment, so there is nothing to hold. */
-export function ExternalBookingView({ url, loginHref, className }: Props) {
+export function ExternalBookingView({ url, signedIn, loginHref, className }: Props) {
   return (
     <aside className={cn("flex flex-col gap-3 rounded-[24px] border border-[#E7E7E7] bg-white p-6", className)}>
       <h2 className="font-sans text-lg font-semibold text-[#333134]">Booked on the host&apos;s site</h2>
@@ -31,6 +32,8 @@ export function ExternalBookingView({ url, loginHref, className }: Props) {
           Book on the host&apos;s site
           <ExternalLink aria-hidden className="size-4" />
         </a>
+      ) : signedIn ? (
+        <p className="text-sm font-medium text-[#333134]">The host hasn&apos;t shared a booking link yet.</p>
       ) : (
         <Link
           href={loginHref}
