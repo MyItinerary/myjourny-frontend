@@ -8,8 +8,13 @@ import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
 import {
+  WEATHER_LINE,
   beforeYouBookItems,
+  descriptionParagraphs,
   experienceLocation,
+  fitAndLogistics,
+  listSections,
+  meetingLandmark,
   itinerarySteps,
   mapEmbedUrl,
   meetingPointLocation,
@@ -57,8 +62,12 @@ describe("beforeYouBookItems", () => {
       ["Total time spent", "This experience runs about 1h 30m"],
       ["Guest requirements", "Fitness: Moderate · Age: 12+"],
       ["What's included", "Life jacket, Water"],
-      ["What to bring", "Sunscreen"],
     ]);
+  });
+
+  it("leaves the old requirements to Fit and logistics once the listing has it", () => {
+    const items = beforeYouBookItems({ ...base, requirements: { fitness_level: "Moderate" }, accessibility: "not_confirmed" });
+    expect(items.find((item) => item.kind === "requirements")).toBeUndefined();
   });
 
   it("states the minimum and maximum guests together", () => {
@@ -171,5 +180,81 @@ describe("useMyBookingForExperience", () => {
   it("doesn't ask for bookings as a guest", () => {
     const { result } = renderHookWithProviders(() => useMyBookingForExperience("exp-1"));
     expect(result.current.fetchStatus).toBe("idle");
+  });
+});
+
+describe("fitAndLogistics", () => {
+  it("shows what the host set, in plain words, with their notes", () => {
+    const items = fitAndLogistics({
+      ...base,
+      fitness_level: "moderate",
+      fitness_note: "Two hours of easy paddling",
+      age_policy: "minimum_age",
+      min_age: 12,
+      accessibility: "not_confirmed",
+      languages: ["en", "yo", "pcm"],
+      weather_dependent: true,
+      pickup_available: true,
+      pickup_note: "Free pickup on Victoria Island",
+    });
+    expect(items.map((item) => [item.label, item.value, item.note])).toEqual([
+      ["Fitness", "Moderate", "Two hours of easy paddling"],
+      ["Age", "Ages 12+", null],
+      ["Accessibility", "Not confirmed. Ask the host before you book.", null],
+      ["Languages", "English, Yoruba, Nigerian Pidgin", null],
+      ["Weather dependent", WEATHER_LINE, null],
+      ["Pickup available", "Free pickup on Victoria Island", null],
+    ]);
+  });
+
+  it("words each age policy", () => {
+    const age = (age_policy: string, min_age?: number) =>
+      fitAndLogistics({ ...base, age_policy, min_age }).find((item) => item.kind === "age")?.value;
+    expect(age("all_ages")).toBe("All ages");
+    expect(age("adults_only")).toBe("Adults only");
+    expect(age("adult_required_under", 16)).toBe("Under 16s come with an adult");
+    expect(age("minimum_age")).toBeUndefined();
+  });
+
+  it("leaves out fitness that doesn't apply, and anything unset", () => {
+    expect(fitAndLogistics({ ...base, fitness_level: "not_applicable", weather_dependent: false })).toEqual([]);
+  });
+});
+
+describe("listSections", () => {
+  it("lists the four sections in order, skipping empty ones and blank items", () => {
+    const sections = listSections({
+      ...base,
+      highlights: ["Sunrise paddle", " "],
+      what_to_bring_items: ["Sunscreen"],
+      know_before_you_go: ["The start is at 6:00am"],
+    });
+    expect(sections.map((s) => [s.title, s.items])).toEqual([
+      ["Highlights", ["Sunrise paddle"]],
+      ["What to bring", ["Sunscreen"]],
+      ["Know before you go", ["The start is at 6:00am"]],
+    ]);
+  });
+
+  it("splits an older what-to-bring text into one item per line", () => {
+    const [bring] = listSections({ ...base, what_to_bring: "A light layer\n\nSunscreen" });
+    expect(bring).toEqual({ kind: "bring", title: "What to bring", items: ["A light layer", "Sunscreen"] });
+  });
+});
+
+describe("descriptionParagraphs", () => {
+  it("splits on blank lines and drops empty ones", () => {
+    expect(descriptionParagraphs("First.\n\n  \nSecond,\nstill second.")).toEqual(["First.", "Second,\nstill second."]);
+    expect(descriptionParagraphs(null)).toEqual([]);
+  });
+});
+
+describe("meetingLandmark", () => {
+  it("is the landmark and its photo, or null without a landmark", () => {
+    expect(meetingLandmark({ ...base, meeting_landmark: " The blue gate ", meeting_photo_url: "https://img/gate.jpg" })).toEqual({
+      text: "The blue gate",
+      photoUrl: "https://img/gate.jpg",
+    });
+    expect(meetingLandmark({ ...base, meeting_photo_url: "https://img/gate.jpg" })).toBeNull();
   });
 });

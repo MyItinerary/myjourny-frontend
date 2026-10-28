@@ -1,4 +1,4 @@
-import { waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -34,6 +34,32 @@ describe("useExperienceDetailsViewModel", () => {
     expect(result.current.rating).toBe("4.8");
     expect(result.current.location?.mode).toBe("approximate");
     expect(result.current.isBooked).toBe(false);
+  });
+
+  it("gives the fit details, lists, landmark and description", () => {
+    const { result } = renderHookWithProviders(() =>
+      useExperienceDetailsViewModel("exp-1", {
+        ...makoko,
+        fitness_level: "easy",
+        highlights: ["Sunrise paddle"],
+        meeting_landmark: "The blue gate",
+        description: "One.\n\nTwo.",
+      }),
+    );
+    expect(result.current.fit.map((item) => item.value)).toEqual(["Easy"]);
+    expect(result.current.lists.map((section) => section.title)).toEqual(["Highlights"]);
+    expect(result.current.landmark).toEqual({ text: "The blue gate", photoUrl: null });
+    expect(result.current.description.paragraphs).toEqual(["One.", "Two."]);
+    expect(result.current.description.long).toBe(false);
+  });
+
+  it("cuts a long description short until Show more", () => {
+    const { result } = renderHookWithProviders(() =>
+      useExperienceDetailsViewModel("exp-1", { ...makoko, description: "word ".repeat(120) }),
+    );
+    expect(result.current.description).toMatchObject({ long: true, expanded: false });
+    act(() => result.current.description.onToggle());
+    expect(result.current.description.expanded).toBe(true);
   });
 
   it("says there's no rating rather than making one up", () => {

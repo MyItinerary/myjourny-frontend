@@ -81,4 +81,15 @@ describe("ExperienceLocationView", () => {
     const { container } = renderWithProviders(<ExperienceLocationView location={null} />);
     expect(container).toBeEmptyDOMElement();
   });
+
+  it("shows the landmark and its photo above the map", () => {
+    renderWithProviders(
+      <ExperienceLocationView
+        location={{ mode: "approximate", label: "Lagos, Nigeria", embedUrl: "https://www.openstreetmap.org/export/embed.html?bbox=1" }}
+        landmark={{ text: "The blue gate opposite the jetty", photoUrl: "https://img.example/gate.jpg" }}
+      />,
+    );
+    expect(screen.getByText("The blue gate opposite the jetty")).toBeInTheDocument();
+    expect(screen.getByAltText("The meeting point")).toHaveAttribute("src", "https://img.example/gate.jpg");
+  });
 });
