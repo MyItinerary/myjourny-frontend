@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Heart, Share2 } from "lucide-react";
@@ -24,6 +23,7 @@ import {
   useBookingPanelViewModel,
 } from "@/features/booking";
 import { saveCheckoutDraft } from "@/features/checkout";
+import { shareExperience } from "@/lib/share";
 import {
   ExperienceBeforeYouBookView,
   ExperienceDescriptionView,
@@ -87,35 +87,11 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   // The phone's share sheet where there is one; otherwise copy the link.
-  const onShare = async () => {
-    const url = window.location.href;
-    const title = experience?.title ?? "MyJourny";
-    const shareData: ShareData = {
-      title,
-      text: `Check out ${title} on MyJourny:`,
-      url,
-    };
-
-    if (typeof navigator.share === "function") {
-      try {
-        if (!navigator.canShare || navigator.canShare(shareData)) {
-          await navigator.share(shareData);
-          return;
-        }
-      } catch (err: unknown) {
-        // User cancelling the native share sheet throws an AbortError — do not treat as an error.
-        if (err instanceof Error && err.name === "AbortError") {
-          return;
-        }
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied");
-    } catch {
-      toast.error("Couldn't copy the link");
-    }
-  };
+  const onShare = () =>
+    shareExperience({
+      title: experience?.title ?? "MyJourny",
+      url: window.location.href,
+    });
   const { data: wishlistIds } = useMyWishlistedIds();
   const isSaved = wishlistIds?.has(id) ?? false;
 
