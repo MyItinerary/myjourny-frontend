@@ -139,7 +139,7 @@ export function ConfirmDetailsPanel({
                 <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-[#0CBA65]/20">
                   <ValidatedCheckmark />
                 </div>
-                <h3 className="mt-3 text-lg font-bold text-[#130404]">Details Confirmed!</h3>
+                <h3 className="mt-3 text-lg font-bold text-[#130404]">Details confirmed!</h3>
                 <p className="mt-1 text-sm text-[#6F6B72]">
                   We&apos;re preparing your booking for {email}. You will receive confirmation details shortly.
                 </p>
@@ -184,7 +184,7 @@ export function ConfirmDetailsPanel({
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
+                      placeholder="Enter email address"
                       className="min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-base text-[#333134] placeholder:text-[#8C888F] outline-none"
                     />
                     {isEmailValid && <ValidatedCheckmark />}
@@ -248,7 +248,7 @@ export function ConfirmDetailsPanel({
                   </div>
                 </div>
 
-                {/* 3. Leave a Note for the Guide */}
+                {/* 3. Leave a note for the guide */}
                 <div className="flex flex-col gap-2">
                   <label
                     htmlFor="checkout-note"
@@ -429,7 +429,7 @@ export function ConfirmDetailsPanel({
                     {booking.pricePerUnit?.toLocaleString()}
                   </span>
                   <span className="ml-1.5 font-sans text-sm text-[#6F6B72]">
-                    x {booking.guestsCount} Adult
+                    x {booking.guestsCount} {booking.guestsCount === 1 ? "adult" : "adults"}
                   </span>
                 </div>
                 <span className="mt-1 font-sans text-xs font-medium text-[#F25C05]">
