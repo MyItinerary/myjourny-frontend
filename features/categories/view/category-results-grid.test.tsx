@@ -153,4 +153,23 @@ describe("CategoryResultsGrid", () => {
     expect(screen.queryByRole("button", { name: "Retry loading more" })).not.toBeInTheDocument();
     expect(screen.queryByText("Couldn't load more experiences. Tap to retry.")).not.toBeInTheDocument();
   });
+
+  it("renders 'Loading…' when loading more items", () => {
+    renderWithProviders(
+      <CategoryResultsGrid
+        items={mockItems}
+        categoryLabel="Beaches"
+        isLoading={false}
+        isError={false}
+        loadMore={{
+          hasMore: true,
+          isLoading: true,
+          isError: false,
+          onLoadMore: vi.fn(),
+        }}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Loading…" })).toBeInTheDocument();
+  });
 });

@@ -20,7 +20,7 @@ export function ExperienceItineraryView({ steps }: { steps: ItineraryStep[] }) {
           </li>
         ))}
       </ol>
-      <p className="mt-5 text-xs text-muted-foreground">ⓘ Please note itinerary is subject to change</p>
+      <p className="mt-5 text-xs text-muted-foreground">ⓘ Please note that the itinerary is subject to change.</p>
     </section>
   );
 }
