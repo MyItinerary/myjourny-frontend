@@ -17,6 +17,17 @@ describe("ExperienceItineraryView", () => {
     expect(items[1]).toHaveTextContent("2Fish market stop");
   });
 
+  it("displays the standardized itinerary disclaimer note", () => {
+    renderWithProviders(
+      <ExperienceItineraryView
+        steps={[{ title: "Board the canoe", description: "Your guide is a Makoko resident." }]}
+      />,
+    );
+    expect(
+      screen.getByText("ⓘ Please note that the itinerary is subject to change.")
+    ).toBeInTheDocument();
+  });
+
   it("renders nothing without steps", () => {
     const { container } = renderWithProviders(<ExperienceItineraryView steps={[]} />);
     expect(container).toBeEmptyDOMElement();
