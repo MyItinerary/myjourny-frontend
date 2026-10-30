@@ -89,13 +89,25 @@ export function ExperienceDetailContent({ id }: { id: string }) {
   // The phone's share sheet where there is one; otherwise copy the link.
   const onShare = async () => {
     const url = window.location.href;
+    const title = experience?.title ?? "MyJourny";
+    const shareData: ShareData = {
+      title,
+      text: `Check out ${title} on MyJourny:`,
+      url,
+    };
+
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ title: experience?.title, url });
-      } catch {
-        // Closing the share sheet isn't an error.
+        if (!navigator.canShare || navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          return;
+        }
+      } catch (err: unknown) {
+        // User cancelling the native share sheet throws an AbortError — do not treat as an error.
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
       }
-      return;
     }
     try {
       await navigator.clipboard.writeText(url);
