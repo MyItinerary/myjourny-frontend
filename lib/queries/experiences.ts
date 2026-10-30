@@ -3,6 +3,7 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
+import { experienceHref } from "@/lib/experience-href";
 
 // Matches itin's ExperienceMatch DTO (app/core/dto/experience.py) — what
 // GET /experiences/recommendations and GET /experiences/browsing-history
@@ -24,6 +25,7 @@ export type ExperienceMatch = {
   safetyBadgeCount: number;
   city?: string | null;
   country?: string | null;
+  kind?: "experience" | "event";
 };
 
 export const FALLBACK_IMAGE = "/images/home/experiences/kayaking.jpg";
@@ -45,6 +47,7 @@ export function experienceMatchToCardProps(
 ): ExperienceCardProps & { id: string } {
   return {
     id: match.experience_id,
+    href: experienceHref(match.experience_id, match.kind),
     imageSrc: match.imageUrl || FALLBACK_IMAGE,
     imageAlt: match.title,
     category: match.city || "",
@@ -284,6 +287,10 @@ export type ExperienceListItem = {
   cover_image_url?: string | null;
   price_from?: number | null;
   price_unit?: string | null;
+  kind?: "experience" | "event";
+  /** Events: where and when, shown on the card instead of the city and duration. */
+  area?: string | null;
+  event_start_date?: string | null;
 };
 
 type ExperienceListPage = {
@@ -314,16 +321,24 @@ export type ExperienceFilters = {
   sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
 };
 
+/** "Sat 14 Nov", for an event card in place of the duration. */
+function eventCardDate(key: string): string {
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
 export function experienceListItemToCardProps(
   item: ExperienceListItem
 ): ExperienceCardProps & { id: string } {
+  const event = item.kind === "event";
   return {
     id: item.id,
+    href: experienceHref(item.id, item.kind),
     imageSrc: item.cover_image_url || FALLBACK_IMAGE,
     imageAlt: item.title,
-    category: item.city || "",
+    category: (event && item.area) || item.city || "",
     title: item.title,
-    duration: formatDuration(item.duration_minutes),
+    duration: event && item.event_start_date ? eventCardDate(item.event_start_date) : formatDuration(item.duration_minutes),
     rating: item.rating ?? 0,
     reviewCount: 0,
     priceFrom: item.price_from ?? null,

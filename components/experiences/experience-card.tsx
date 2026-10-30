@@ -20,6 +20,8 @@ export interface ExperienceCardProps {
   className?: string;
   /** Links to /experiences/{id} when present — mock/placeholder cards can omit it. */
   id?: string;
+  /** Overrides the link, e.g. /events/{id} for an event. */
+  href?: string;
 }
 
 export function ExperienceCard({
@@ -34,6 +36,7 @@ export function ExperienceCard({
   currency = "NGN",
   className,
   id,
+  href,
 }: ExperienceCardProps) {
   const content = (
     <>
@@ -83,7 +86,7 @@ export function ExperienceCard({
 
   if (id) {
     return (
-      <Link href={`/experiences/${id}`} className={articleClassName}>
+      <Link href={href ?? `/experiences/${id}`} className={articleClassName}>
         {content}
       </Link>
     );

@@ -1,7 +1,8 @@
 // Public API of the experience-details feature. Other code imports only from here.
 export { experienceDetailQueryKey, useExperienceDetail } from "./model/experience-detail";
 export type { ExperienceDetail } from "./model/experience-detail.types";
-export { meetingPointLocation } from "./model/experience-details";
+export { fitAndLogistics, meetingPointLocation } from "./model/experience-details";
+export type { FitItem } from "./model/experience-details.types";
 export type { ExperienceDetailsFields, ExperienceLocation, MeetingPoint } from "./model/experience-details.types";
 export type { ExperienceDetailsViewModel } from "./view-model/use-experience-details-view-model";
 export { useExperienceDetailsViewModel } from "./view-model/use-experience-details-view-model";

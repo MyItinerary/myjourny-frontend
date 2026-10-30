@@ -19,6 +19,11 @@ export type ExperienceDetail = {
   group_size_max?: number | null;
   // "YYYY-MM-DD" for a one-off; prefills the booking calendar.
   event_start_date?: string | null;
+  /** Session start times, "HH:MM:SS"; the first is when a one-off starts. */
+  start_times?: string[] | null;
+  timezone?: string | null;
+  /** "experience" or "event"; events have their own page at /events/{id}. */
+  kind?: "experience" | "event";
   event_end_date?: string | null;
   schedule_type?: string | null;
   recurrence_type?: string | null;

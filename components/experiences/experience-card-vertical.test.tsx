@@ -27,6 +27,11 @@ const defaultProps = {
 };
 
 describe("ExperienceCardVertical", () => {
+  it("links an event to its own page", () => {
+    renderWithProviders(<ExperienceCardVertical {...defaultProps} href="/events/exp-123" />);
+    expect(screen.getByRole("link", { name: "Kayaking Adventure in Lagos" })).toHaveAttribute("href", "/events/exp-123");
+  });
+
   it("renders card content and links to the experience details page", () => {
     renderWithProviders(<ExperienceCardVertical {...defaultProps} />);
 
