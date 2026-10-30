@@ -1,20 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { CalendarDays, ChevronLeft, Users } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
 import { Footer } from "@/components/home/footer";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/lib/auth/session-store";
-import {
-  type Booking,
-  useBooking,
-  useCancellationRequest,
-  useRequestCancellation,
-} from "@/lib/queries/bookings";
+import { useBooking } from "@/lib/queries/bookings";
+import { BookingCancellationView, useBookingCancellationViewModel } from "@/features/booking-cancellation";
 import { formatSessionWhen } from "@/features/booking";
 import { BookingDayDetailsView, useBookingDayDetailsViewModel } from "@/features/booking-day-details";
 import { ExperienceLocationView, meetingPointLocation } from "@/features/experience-details";
@@ -39,10 +33,6 @@ const STATUS_LABEL: Record<string, { text: string; className: string }> = {
 // Stable stand-in while the booking loads, so the hook below runs every render.
 const EMPTY_BOOKING_DETAILS = {};
 
-function canRequestCancellation(booking: Booking) {
-  return booking.status === "confirmed" || booking.status === "pending";
-}
-
 // A customer's booking: what they paid for, the cancellation policy they
 // agreed to, and a way to ask for a cancellation. Refunds are decided by
 // MyJourny support under that policy, never automatically.
@@ -50,11 +40,8 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   const { user } = useSession();
   const { data: booking, isLoading, isError } = useBooking(bookingId);
   const { data: experience } = useExperienceDetail(booking?.experience_id ?? "");
-  const { data: cancellation } = useCancellationRequest(bookingId);
-  const requestCancellation = useRequestCancellation(bookingId);
+  const cancellation = useBookingCancellationViewModel(booking, !!user);
   const review = useBookingReviewViewModel(booking);
-  const [showForm, setShowForm] = useState(false);
-  const [reason, setReason] = useState("");
   const dayDetails = useBookingDayDetailsViewModel(booking ?? EMPTY_BOOKING_DETAILS);
 
   if (!user) {
@@ -87,7 +74,6 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
 
   const currency = booking.currency ?? "NGN";
   const status = STATUS_LABEL[booking.status] ?? STATUS_LABEL.confirmed;
-  const openRequest = cancellation?.status === "open" ? cancellation : null;
   const refunded = Number(booking.refunded_amount ?? 0);
   const meetingLocation = meetingPointLocation(booking.meeting_point);
   // In the zone the session runs in (not the browser's), as a date range for
@@ -160,66 +146,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         </div>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-border p-6">
-        <h2 className="font-sans text-lg font-bold text-[#130404]">Cancellation policy</h2>
-        <p className="mt-3 whitespace-pre-line text-sm text-[#130404]">
-          {booking.cancellation_policy_snapshot ||
-            "This experience has no written cancellation policy. Our support team will review any request."}
-        </p>
-        <p className="mt-3 text-xs text-[#6F6B72]">
-          This is the policy shown when you booked. MyJourny support reviews every cancellation request against it
-          and decides any refund.
-        </p>
-
-        {openRequest ? (
-          <div className="mt-5 rounded-xl bg-[#F4F2EE] p-4 text-sm text-[#130404]">
-            <p className="font-medium">Cancellation requested</p>
-            <p className="mt-1 text-[#6F6B72]">
-              Sent {new Date(openRequest.created_at).toLocaleDateString()}. We&apos;ll email you once support has
-              reviewed it.
-            </p>
-          </div>
-        ) : canRequestCancellation(booking) ? (
-          showForm ? (
-            <form
-              className="mt-5 flex flex-col gap-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                requestCancellation.mutate(reason.trim(), { onSuccess: () => setShowForm(false) });
-              }}
-            >
-              <label htmlFor="cancel-reason" className="text-sm font-medium text-[#130404]">
-                Why do you want to cancel?
-              </label>
-              <textarea
-                id="cancel-reason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={3}
-                maxLength={2000}
-                className="rounded-xl border border-[#E0DFDD] p-3 text-sm"
-                placeholder="e.g. My plans changed"
-              />
-              <div className="flex gap-2">
-                <Button
-                  type="submit"
-                  disabled={reason.trim().length < 3 || requestCancellation.isPending}
-                  className="bg-[#2C0101] text-white hover:bg-[#2C0101]/90"
-                >
-                  {requestCancellation.isPending ? "Sending…" : booking.payment_status === "unpaid" ? "Cancel booking" : "Request cancellation"}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                  Keep my booking
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <Button variant="outline" className="mt-5" onClick={() => setShowForm(true)}>
-              {booking.payment_status === "unpaid" ? "Cancel booking" : "Request cancellation"}
-            </Button>
-          )
-        ) : null}
-      </section>
+      <BookingCancellationView {...cancellation} />
     </Shell>
   );
 }

@@ -16,8 +16,10 @@ vi.mock("@/features/experience-details", async (importOriginal) => ({
 }));
 vi.mock("@/lib/queries/bookings", () => ({
   useBooking: () => ({ data: booking.current, isLoading: false, isError: false }),
-  useCancellationRequest: () => ({ data: null }),
-  useRequestCancellation: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+vi.mock("@/features/booking-cancellation", () => ({
+  useBookingCancellationViewModel: () => ({}),
+  BookingCancellationView: () => null,
 }));
 
 const base = {

@@ -123,3 +123,100 @@ test("a signed-out visitor is sent to log in and brought back to the booking", a
 
   await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login?next=%2Fbookings%2Fb-3");
 });
+
+const PAID_BOOKING = {
+  id: "b-3",
+  user_id: "user-1",
+  guide_id: "guide-1",
+  experience_id: "exp-3",
+  status: "confirmed",
+  payment_status: "paid",
+  payout_status: "pending",
+  requested_datetime: "2030-06-01T08:00:00",
+  session_timezone: "Africa/Lagos",
+  party_size: 2,
+  price_total: "15000.00",
+  currency: "NGN",
+  line_items: [],
+  cancellation_policy_snapshot: "Full refund up to 48 hours before.",
+  created_at: "2030-05-01T10:00:00",
+  updated_at: "2030-05-01T10:00:00",
+};
+
+test("a guest sees what they'd get back before asking to cancel, then sends the request", async ({ page }) => {
+  await page.addInitScript(SIGNED_IN);
+  let request: unknown = null;
+  let sent: unknown;
+  await mockApi(page, {
+    "GET /bookings/b-3": (r) => r.fulfill({ json: PAID_BOOKING }),
+    "GET /bookings/b-3/cancellation": (r) => r.fulfill({ json: request }),
+    "GET /bookings/b-3/refund-estimate": (r) =>
+      r.fulfill({
+        json: {
+          policy: "full_refund_until",
+          eligible: true,
+          amount: "15000.00",
+          deadline: "2030-05-30T08:00:00",
+          paid: "15000.00",
+          already_refunded: "0.00",
+        },
+      }),
+    "POST /bookings/b-3/cancellation": async (r) => {
+      sent = r.request().postDataJSON();
+      request = { id: "r-1", kind: "customer_cancellation", status: "open", outcome: "pending", created_at: "2030-05-20T10:00:00" };
+      await r.fulfill({ json: { booking_status: "confirmed", request } });
+    },
+    "GET /experiences/exp-3": (r) => r.fulfill({ json: { id: "exp-3", title: "Lagos Food Walk", status: "ACTIVE" } }),
+  });
+
+  await page.goto("/bookings/b-3");
+
+  const estimate = page.getByTestId("refund-estimate");
+  await expect(estimate.getByText("Full refund until Thu 30 May, 9:00am")).toBeVisible();
+  await expect(estimate.getByText("Estimated refund")).toBeVisible();
+
+  await page.getByRole("button", { name: "Request cancellation" }).click();
+  await page.getByLabel("Why do you want to cancel?").fill("My plans changed");
+  await page.getByRole("button", { name: "Request cancellation" }).click();
+
+  await expect(page.getByRole("status")).toContainText("Cancellation requested");
+  expect(sent).toEqual({ reason: "My plans changed" });
+  await expect(page.getByTestId("refund-estimate")).toHaveCount(0);
+});
+
+test("a declined request says the booking is still on and lets the guest ask again", async ({ page }) => {
+  await page.addInitScript(SIGNED_IN);
+  await mockApi(page, {
+    "GET /bookings/b-3": (r) => r.fulfill({ json: PAID_BOOKING }),
+    "GET /bookings/b-3/cancellation": (r) =>
+      r.fulfill({
+        json: {
+          id: "r-1",
+          kind: "customer_cancellation",
+          status: "resolved",
+          outcome: "rejected",
+          refund_amount: "0.00",
+          created_at: "2030-05-20T10:00:00",
+          resolved_at: "2030-05-21T10:00:00",
+        },
+      }),
+    "GET /bookings/b-3/refund-estimate": (r) =>
+      r.fulfill({
+        json: {
+          policy: "full_refund_until",
+          eligible: false,
+          amount: "0.00",
+          deadline: "2030-05-30T08:00:00",
+          paid: "15000.00",
+          already_refunded: "0.00",
+        },
+      }),
+    "GET /experiences/exp-3": (r) => r.fulfill({ json: { id: "exp-3", title: "Lagos Food Walk", status: "ACTIVE" } }),
+  });
+
+  await page.goto("/bookings/b-3");
+
+  await expect(page.getByRole("status")).toContainText("Cancellation request declined");
+  await expect(page.getByText("The full refund window has passed, so cancelling now gets no refund.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ask again" })).toBeVisible();
+});
