@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Heart, Share2 } from "lucide-react";
@@ -24,6 +23,7 @@ import {
   useBookingPanelViewModel,
 } from "@/features/booking";
 import { saveCheckoutDraft } from "@/features/checkout";
+import { shareExperience } from "@/lib/share";
 import {
   ExperienceBeforeYouBookView,
   ExperienceDescriptionView,
@@ -87,23 +87,11 @@ export function ExperienceDetailContent({ id }: { id: string }) {
 
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   // The phone's share sheet where there is one; otherwise copy the link.
-  const onShare = async () => {
-    const url = window.location.href;
-    if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({ title: experience?.title, url });
-      } catch {
-        // Closing the share sheet isn't an error.
-      }
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied");
-    } catch {
-      toast.error("Couldn't copy the link");
-    }
-  };
+  const onShare = () =>
+    shareExperience({
+      title: experience?.title ?? "MyJourny",
+      url: window.location.href,
+    });
   const { data: wishlistIds } = useMyWishlistedIds();
   const isSaved = wishlistIds?.has(id) ?? false;
 
@@ -190,13 +178,16 @@ export function ExperienceDetailContent({ id }: { id: string }) {
       </div>
 
       <div className="mx-auto w-full max-w-[1200px] px-6 py-4 lg:py-9">
-        {/* Breadcrumb — desktop only, matches the reference screenshot. */}
-        <p className="hidden text-sm text-muted-foreground lg:block">
-          <Link href="/" className="text-brand">
+        {/* Breadcrumb — desktop only, matches category and city page styling. */}
+        <nav aria-label="Breadcrumb" className="hidden items-center gap-1.5 lg:flex">
+          <Link href="/" className="text-base font-medium text-brand">
             Home page
-          </Link>{" "}
-          / {experience.title} /
-        </p>
+          </Link>
+          <span aria-hidden className="text-base text-foreground">
+            /
+          </span>
+          <span className="text-base font-medium text-foreground">{experience.title}</span>
+        </nav>
 
         <div className="mt-2 hidden items-start justify-between gap-4 lg:flex">
           <h1 className="font-heading text-[32px] font-extrabold text-foreground">{experience.title}</h1>
@@ -225,7 +216,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
           <span>{durationLabel}</span>
           {experienceDetails.rating && (
             <>
-              <span aria-hidden>•</span>
+              <span aria-hidden>·</span>
               <span className="inline-flex items-center gap-1">
                 <StarIcon className="size-[14px] fill-brand text-brand" />
                 {experienceDetails.rating}
@@ -288,7 +279,7 @@ export function ExperienceDetailContent({ id }: { id: string }) {
                     )}
                   </div>
                   <p className="font-sans text-[14px] font-normal leading-[22px] text-[#6F6B72]">
-                    Verified guide, Your safety and satisfaction are well guaranteed
+                    Verified guide · Your safety and satisfaction are guaranteed
                   </p>
                 </div>
               </div>

@@ -141,7 +141,7 @@ export function CategoryResultsGrid({
             className="w-auto min-w-[134px] px-6"
           >
             {loadMore?.isLoading
-              ? "Loading..."
+              ? "Loading…"
               : loadMore?.isError
                 ? "Retry loading more"
                 : moreLabel}
