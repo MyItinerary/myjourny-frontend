@@ -54,6 +54,29 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.activeTab).toBe("when");
   });
 
+  it("initializes selectedDate as null and exposes minDate", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+    expect(result.current.selectedDate).toBeNull();
+    expect(result.current.minDate).toBeInstanceOf(Date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    expect(result.current.minDate.getTime()).toBe(today.getTime());
+  });
+
+  it("prevents selecting past dates", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - 2);
+
+    act(() => {
+      result.current.onSelectDate(pastDate, "Past date");
+    });
+
+    expect(result.current.selectedDate).toBeNull();
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.activeTab).toBeNull();
+  });
+
   it("advances from When to Who on date selection", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 
@@ -62,6 +85,7 @@ describe("useSearchBarViewModel", () => {
       result.current.onSelectDate(pickedDate, "June 15");
     });
 
+    expect(result.current.selectedDate).toEqual(pickedDate);
     expect(result.current.selectedWhen).toBe("June 15");
     expect(result.current.activeTab).toBe("who");
   });
@@ -107,6 +131,39 @@ describe("useSearchBarViewModel", () => {
     });
 
     expect(mockPush).toHaveBeenCalledWith("/experiences/exp-123");
+  });
+
+  it("suggests the cities that have experiences, and finds a typed one", async () => {
+    server.use(
+      http.get(apiUrl("/experiences/cities"), () =>
+        HttpResponse.json([
+          { slug: "lagos", name: "Lagos", country: "Nigeria", count: 25, image_url: null },
+          { slug: "umuahia", name: "Umuahia", country: "Nigeria", count: 1, image_url: null },
+        ]),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    await waitFor(() =>
+      expect(result.current.filteredDestinations).toEqual([
+        { id: "lagos", city: "Lagos, Nigeria", description: "25 experiences" },
+        { id: "umuahia", city: "Umuahia, Nigeria", description: "1 experience" },
+      ]),
+    );
+
+    act(() => result.current.setWhereInput("umua"));
+    act(() => result.current.onSearch());
+    expect(mockPush).toHaveBeenCalledWith("/cities/umuahia");
+  });
+
+  it("takes the picked day to the city's results", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "" }));
+    act(() => result.current.onSelectDate(new Date(2030, 5, 1), "June 1"));
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01");
   });
 
   it("navigates to city route on destination selection", () => {

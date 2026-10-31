@@ -1,92 +1,288 @@
-import type { ExperienceDetail } from "@/lib/queries/experiences";
+import { useQuery } from "@tanstack/react-query";
 
-import type { ExperienceDetailsContent, ExperienceFact } from "./experience-details.types";
+import { apiClient } from "@/lib/api-client";
+import { groupSizeLabel } from "@/features/booking";
+import { useSession } from "@/lib/auth/session-store";
+import { formatDuration } from "@/lib/queries/experiences";
+import type {
+  BeforeYouBookItem,
+  BookingWithMeetingPoint,
+  ExperienceDetailsFields,
+  ExperienceLocation,
+  FitItem,
+  ItineraryStep,
+  ListSection,
+  MeetingLandmark,
+  MeetingPoint,
+} from "./experience-details.types";
 
-const sentence = (value: string) => value.trim();
-
-function groupSizeFact(min?: number | null, max?: number | null): ExperienceFact | null {
-  if (!max) return null;
-  const body = min && min > 1 ? `Up to ${max} guests, minimum ${min}` : `Up to ${max} guests`;
-  return { id: "group", icon: "group", title: "Group size", body };
+/** The itinerary, or the older "what you'll do" list as title-only steps. */
+export function itinerarySteps(experience: ExperienceDetailsFields): ItineraryStep[] {
+  const steps = (experience.itinerary ?? []).filter((step) => step.title?.trim());
+  if (steps.length) return steps;
+  return (experience.what_you_will_do ?? [])
+    .filter((item) => item.trim())
+    .map((title) => ({ title, description: null }));
 }
 
-/** The "Before you book" facts the experience actually has. Nothing is made
- * up: a fact without data is left out. */
-function buildFacts(experience: ExperienceDetail): ExperienceFact[] {
-  const facts: (ExperienceFact | null)[] = [];
-  const fitness = experience.requirements?.fitness;
+// What itin sends when the guide set no safety info. Not worth showing.
+const PLACEHOLDER_SAFETY_NOTES = new Set(["Safety info not available"]);
+const PLACEHOLDER_EMERGENCY = new Set(["Follow general travel safety disclaimer."]);
+
+/** The guide's own safety notes and emergency guidance, or null. */
+export function safetyDescription(safety: ExperienceDetailsFields["safety_info"]): string | null {
+  if (!safety) return null;
+  const notes = (safety.notes ?? []).map((note) => note.trim()).filter((note) => note && !PLACEHOLDER_SAFETY_NOTES.has(note));
+  const emergency = safety.emergencyGuidance?.trim();
+  const parts = [...notes, emergency && !PLACEHOLDER_EMERGENCY.has(emergency) ? emergency : null].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
+
+/** Only what the experience actually says; nothing generic. */
+export function beforeYouBookItems(experience: ExperienceDetailsFields): BeforeYouBookItem[] {
+  const items: BeforeYouBookItem[] = [];
+  const groupSize = groupSizeLabel(experience.group_size_min, experience.group_size_max);
+  if (groupSize) {
+    items.push({ kind: "guests", label: "Group size", description: groupSize });
+  }
+  if (experience.energy_level) {
+    items.push({
+      kind: "activity",
+      label: "Activity level",
+      description: `This experience is ${experience.energy_level} energy, so pace yourself accordingly`,
+    });
+  }
+  if (experience.duration_minutes) {
+    items.push({
+      kind: "duration",
+      label: "Total time spent",
+      description: `This experience runs about ${formatDuration(experience.duration_minutes)}`,
+    });
+  }
+  // Older listings only have free-text requirements; "Fit and logistics" replaces them.
+  const { fitness_level, age, accessibility } = experience.requirements ?? {};
+  const requirements = hasFitDetails(experience)
+    ? []
+    : [
+        fitness_level && `Fitness: ${fitness_level}`,
+        age && `Age: ${age}`,
+        accessibility && `Accessibility: ${accessibility}`,
+      ].filter(Boolean);
+  if (requirements.length) {
+    items.push({ kind: "requirements", label: "Guest requirements", description: requirements.join(" · ") });
+  }
+  const included = (experience.whats_included ?? []).filter((item) => item.trim());
+  if (included.length) {
+    items.push({ kind: "included", label: "What's included", description: included.join(", ") });
+  }
+  const notIncluded = (experience.whats_not_included ?? []).filter((item) => item.trim());
+  if (notIncluded.length) {
+    items.push({ kind: "not_included", label: "Not included", description: notIncluded.join(", ") });
+  }
+  const safety = safetyDescription(experience.safety_info);
+  if (safety) {
+    items.push({ kind: "safety", label: "Safety", description: safety });
+  }
+  return items;
+}
+
+// Fit and logistics shows a note on its own, so a note alone counts too.
+const hasFitDetails = (experience: ExperienceDetailsFields) =>
+  !!(
+    experience.fitness_level ||
+    experience.age_policy ||
+    experience.accessibility ||
+    experience.fitness_note?.trim() ||
+    experience.age_note?.trim() ||
+    experience.accessibility_note?.trim()
+  );
+
+const FITNESS: Record<string, string> = {
+  easy: "Easy",
+  moderate: "Moderate",
+  high: "High",
+  very_high: "Very high",
+};
+
+const ACCESSIBILITY: Record<string, string> = {
+  wheelchair_accessible: "Wheelchair accessible",
+  partly_accessible: "Partly accessible",
+  not_suitable: "Not suitable for wheelchairs",
+  not_confirmed: "Not confirmed. Ask the host before you book.",
+};
+
+// Fixed platform wording: it is a refund promise, so hosts can't write it.
+export const WEATHER_LINE = "If the weather stops it, you get a new date or a full refund.";
+
+function ageValue(policy: string, minAge: number | null | undefined): string | null {
+  if (policy === "all_ages") return "All ages";
+  if (policy === "adults_only") return "Adults only";
+  if (minAge == null) return null;
+  if (policy === "minimum_age") return `Ages ${minAge}+`;
+  if (policy === "adult_required_under") return `Under ${minAge}s come with an adult`;
+  return null;
+}
+
+/** "en" → "English"; codes Intl doesn't know (e.g. "pcm") are named here or shown as is. */
+function languageName(code: string): string {
+  if (code === "pcm") return "Nigerian Pidgin";
+  try {
+    return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+const note = (text?: string | null) => text?.trim() || null;
+
+/** "Fit and logistics": only what the host set. "Not applicable" fitness is left out. */
+export function fitAndLogistics(experience: ExperienceDetailsFields): FitItem[] {
+  const items: FitItem[] = [];
+  // Older listings may have only the host's note (moved from the old free
+  // text) until a level is chosen: the note then stands on its own.
+  const fitness = experience.fitness_level ? FITNESS[experience.fitness_level] : note(experience.fitness_note);
   if (fitness) {
-    facts.push({ id: "fitness", icon: "fitness", title: "Fitness level", body: sentence(fitness) });
-  } else if (experience.energy_level) {
-    facts.push({
-      id: "fitness",
-      icon: "fitness",
-      title: "Fitness level",
-      body: `${experience.energy_level[0].toUpperCase()}${experience.energy_level.slice(1)} energy`,
-    });
+    items.push({ kind: "fitness", label: "Fitness", value: fitness, note: experience.fitness_level ? note(experience.fitness_note) : null });
   }
-  const accessibility = experience.requirements?.accessibility ?? experience.safety_info?.mobilityAccessibility;
-  if (accessibility) {
-    facts.push({ id: "accessibility", icon: "accessibility", title: "Accessibility", body: sentence(accessibility) });
+  const age = experience.age_policy ? ageValue(experience.age_policy, experience.min_age) : note(experience.age_note);
+  if (age) items.push({ kind: "age", label: "Age", value: age, note: experience.age_policy ? note(experience.age_note) : null });
+  const access = experience.accessibility && ACCESSIBILITY[experience.accessibility];
+  if (access) {
+    items.push({ kind: "accessibility", label: "Accessibility", value: access, note: note(experience.accessibility_note) });
   }
-  if (experience.requirements?.age) {
-    facts.push({ id: "age", icon: "age", title: "Age", body: sentence(experience.requirements.age) });
+  const languages = (experience.languages ?? []).map(languageName);
+  if (languages.length) items.push({ kind: "languages", label: "Languages", value: languages.join(", "), note: null });
+  if (experience.weather_dependent) {
+    items.push({ kind: "weather", label: "Weather dependent", value: WEATHER_LINE, note: null });
   }
-  facts.push(groupSizeFact(experience.group_size_min, experience.group_size_max));
-  if (experience.cancellation_policy) {
-    facts.push({
-      id: "cancellation",
-      icon: "cancellation",
-      title: "Cancellation",
-      body: sentence(experience.cancellation_policy),
-    });
+  if (experience.pickup_available) {
+    items.push({ kind: "pickup", label: "Pickup available", value: note(experience.pickup_note) ?? "Ask the host for details.", note: null });
   }
-  return facts.filter((fact): fact is ExperienceFact => fact !== null);
+  return items;
 }
 
-// Experience categories (the same slugs the home page's category pills use).
-export const MORE_WAYS = [
-  { id: "food", slug: "local-food-drinks", title: "Local food & drinks", subtitle: "Street eats, cafés, and hidden spots" },
-  { id: "nature", slug: "nature-outdoors", title: "Nature & outdoors", subtitle: "Trails, water, and open air" },
-  { id: "art", slug: "art-creativity", title: "Art & creativity", subtitle: "Studios, galleries, and workshops" },
-  { id: "nightlife", slug: "nightlife", title: "Music & nightlife", subtitle: "Rooftops, live sets, late nights" },
-];
+const clean = (items?: string[] | null) => (items ?? []).map((item) => item.trim()).filter(Boolean);
 
-const clean = (list?: string[] | null) => (list ?? []).map((item) => item.trim()).filter(Boolean);
+/** Highlights, What to bring, Not suitable for and Know before you go; empty ones are left out. */
+export function listSections(experience: ExperienceDetailsFields): ListSection[] {
+  // Older listings have "what to bring" as one block of text: one item per line.
+  const bring = experience.what_to_bring_items?.length
+    ? clean(experience.what_to_bring_items)
+    : clean(experience.what_to_bring?.split("\n"));
+  const sections: ListSection[] = [
+    { kind: "highlights", title: "Highlights", items: clean(experience.highlights) },
+    { kind: "bring", title: "What to bring", items: bring },
+    { kind: "not_suitable", title: "Not suitable for", items: clean(experience.not_suitable_for) },
+    { kind: "know", title: "Know before you go", items: clean(experience.know_before_you_go) },
+  ];
+  return sections.filter((section) => section.items.length);
+}
 
-/** Everything the experience page shows, from itin's experience. */
-export function buildExperienceDetails(
-  experience: ExperienceDetail,
-  durationLabel: string,
-): ExperienceDetailsContent {
-  const location = [experience.city, experience.country].filter(Boolean).join(", ");
-  const hostName = experience.host?.display_name?.trim() || "Your host";
-  return {
-    id: experience.id,
-    title: experience.title,
-    headline: experience.headline ?? null,
-    durationLabel,
-    rating: experience.rating ?? null,
-    location,
-    about: experience.description?.trim() || null,
-    host: {
-      id: experience.host?.id ?? null,
-      name: hostName,
-      verified: !!experience.host?.is_verified,
-      blurb: experience.host?.headline?.trim() || "Your safety and satisfaction are well guaranteed",
+/** The description as paragraphs, split on blank lines. */
+export function descriptionParagraphs(description?: string | null): string[] {
+  return (description ?? "")
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
+/** The paragraphs that fit in `limit` characters, the last one cut at a word with "…". */
+export function previewParagraphs(paragraphs: string[], limit: number): string[] {
+  const shown: string[] = [];
+  let left = limit;
+  for (const paragraph of paragraphs) {
+    if (paragraph.length <= left) {
+      shown.push(paragraph);
+      left -= paragraph.length;
+      continue;
+    }
+    const cut = paragraph.slice(0, left).replace(/\s+\S*$/, "");
+    if (cut) shown.push(`${cut}…`);
+    break;
+  }
+  return shown.length ? shown : paragraphs.slice(0, 1);
+}
+
+/** The public landmark and photo, shown above the map; null without a landmark. */
+export function meetingLandmark(experience: ExperienceDetailsFields): MeetingLandmark | null {
+  const text = experience.meeting_landmark?.trim();
+  return text ? { text, photoUrl: experience.meeting_photo_url || null } : null;
+}
+
+const OSM_EMBED = "https://www.openstreetmap.org/export/embed.html";
+
+/** An OpenStreetMap embed around a point; a pin only for the exact spot. */
+export function mapEmbedUrl(latitude: number, longitude: number, { pin }: { pin: boolean }): string {
+  // A wider box for the rounded area, so it doesn't look like a precise spot.
+  const half = pin ? 0.006 : 0.03;
+  const bbox = [longitude - half, latitude - half, longitude + half, latitude + half]
+    .map((n) => n.toFixed(5))
+    .join(",");
+  const params = new URLSearchParams({ bbox, layer: "mapnik" });
+  if (pin) params.set("marker", `${latitude},${longitude}`);
+  return `${OSM_EMBED}?${params.toString()}`;
+}
+
+export function directionsUrl(latitude: number, longitude: number): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+}
+
+/** The booked traveller's exact meeting point, else the listing's area. */
+export function experienceLocation(
+  experience: ExperienceDetailsFields,
+  meetingPoint?: MeetingPoint | null,
+): ExperienceLocation | null {
+  const label = [experience.city, experience.country].filter(Boolean).join(", ");
+  if (meetingPoint) {
+    const instructions = meetingPoint.instructions?.trim() || null;
+    const { latitude, longitude } = meetingPoint;
+    if (latitude != null && longitude != null) {
+      return {
+        mode: "exact",
+        label,
+        latitude,
+        longitude,
+        instructions,
+        embedUrl: mapEmbedUrl(latitude, longitude, { pin: true }),
+        directionsUrl: directionsUrl(latitude, longitude),
+      };
+    }
+    if (instructions) return { mode: "exact-text", label, instructions };
+  }
+  if (experience.latitude != null && experience.longitude != null) {
+    return {
+      mode: "approximate",
+      label,
+      embedUrl: mapEmbedUrl(experience.latitude, experience.longitude, { pin: false }),
+    };
+  }
+  return label ? { mode: "label", label } : null;
+}
+
+export const myConfirmedBookingsKey = ["bookings", "user-list", "confirmed"] as const;
+
+/** The signed-in traveller's confirmed booking for this experience, if any. */
+export function useMyBookingForExperience(experienceId: string) {
+  const { user } = useSession();
+  return useQuery({
+    queryKey: myConfirmedBookingsKey,
+    queryFn: async () => {
+      const { data } = await apiClient.get<BookingWithMeetingPoint[]>("/bookings/", {
+        params: { status: "confirmed" },
+      });
+      return data;
     },
-    place: {
-      name: experience.city?.trim() || "Location",
-      detail: location || experience.country || null,
-    },
-    facts: buildFacts(experience),
-    itinerary: clean(experience.what_you_will_do),
-    highlights: clean(experience.why_you_will_like_this),
-    included: clean(experience.whats_included),
-    notIncluded: clean(experience.whats_not_included),
-    safetyNotes: clean(experience.safety_info?.notes),
-    city: experience.city?.trim() || null,
-    moreWays: MORE_WAYS,
-    cancellationPolicy: experience.cancellation_policy?.trim() || null,
-  };
+    enabled: !!user,
+    select: (bookings) => bookings.find((booking) => booking.experience_id === experienceId) ?? null,
+  });
+}
+
+/** A booking's meeting point as a location, or null when it has none. */
+export function meetingPointLocation(meetingPoint?: MeetingPoint | null): ExperienceLocation | null {
+  if (!meetingPoint) return null;
+  const location = experienceLocation(
+    { id: "", city: meetingPoint.city, country: meetingPoint.country },
+    meetingPoint,
+  );
+  return location && location.mode.startsWith("exact") ? location : null;
 }

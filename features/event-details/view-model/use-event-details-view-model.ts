@@ -65,12 +65,13 @@ export function useEventDetailsViewModel(id: string): EventDetailsViewModel {
   const [pickedQuestionId, setPickedQuestionId] = useState<string | null | undefined>(undefined);
   const openQuestionId = pickedQuestionId === undefined ? (event?.questions[0]?.id ?? null) : pickedQuestionId;
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
-  // Saved events stay on this device until the events API has wishlists.
+  // HARD-CODED stand-in. TODO(backend): saved events stay on this device until the events API has wishlists.
   const [saved, setSaved] = useState(false);
 
   const booking = useEventBookingCardViewModel({
     data: event?.booking ?? NO_TICKETS,
-    // Event checkout needs the events API; until then say so.
+    // HARD-CODED stand-in. TODO(backend/admin): event checkout needs the events API, ticket stock and
+    // payment; until then say so.
     onBook: () => toast.info("Ticket sales for this event open soon."),
   });
 

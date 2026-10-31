@@ -7,6 +7,9 @@ import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
 import {
+  startOfToday,
+  toIsoDay,
+  withDate,
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
   FALLBACK_IMAGE,
@@ -20,6 +23,27 @@ describe("search model constants & mappers", () => {
     expect(DEFAULT_DESTINATIONS.length).toBeGreaterThan(0);
     expect(DEFAULT_ACTIVITIES.length).toBeGreaterThan(0);
     expect(FALLBACK_IMAGE).toBe("/images/home/experiences/kayaking.jpg");
+  });
+
+  it("only suggests activities that are real interest categories, so each one opens a page with results", () => {
+    // The interest category and subcategory slugs GET /categories returns.
+    const interestSlugs = new Set([
+      "local-food-drinks", "street-food-markets", "cafes-coffee-culture", "bars-nightlife-drinks",
+      "culture-history", "museums-heritage-sites", "local-traditions-festivals", "historic-neighborhoods-landmarks",
+      "nature-outdoors", "hiking-trails", "beaches-waterfronts", "parks-green-spaces",
+      "art-creativity", "galleries-exhibitions", "street-art-murals", "design-creative-spaces",
+      "wellness-calm", "spas-massage", "yoga-meditation", "quiet-retreats-nature-escapes",
+      "street-life", "markets-vendors", "neighborhood-walks", "local-hangout-spots",
+      "events-live-shows", "concerts-festivals", "comedy-theatre", "sports-watch-parties",
+    ]);
+    expect(DEFAULT_ACTIVITIES.filter((a) => !interestSlugs.has(a.id)).map((a) => a.id)).toEqual([]);
+  });
+
+  it("formats the searched day for links and the API", () => {
+    expect(toIsoDay(new Date(2030, 0, 5))).toBe("2030-01-05");
+    expect(withDate("/cities/lagos", "2030-01-05")).toBe("/cities/lagos?date=2030-01-05");
+    expect(withDate("/cities/lagos", null)).toBe("/cities/lagos");
+    expect(startOfToday(new Date(2030, 0, 5, 17, 30))).toEqual(new Date(2030, 0, 5));
   });
 
   it("builds consistent query keys", () => {

@@ -38,7 +38,7 @@ export function CategoriesSection({
         </p>
 
         <div className="w-full -mr-6 overflow-x-auto pr-6 lg:mr-0 lg:overflow-visible lg:pr-0">
-          <div className="mt-[25px] flex w-[480px] flex-wrap items-start gap-4 lg:mt-[29px] lg:w-auto lg:max-w-[900px]">
+          <div className="mt-[25px] flex w-full max-w-[480px] flex-wrap items-start gap-4 md:max-w-none lg:mt-[29px] lg:w-auto lg:max-w-[900px]">
             {visible.map((category) => (
               <Link
                 key={category.id}

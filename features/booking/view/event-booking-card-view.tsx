@@ -11,7 +11,7 @@ import {
   BookingCardShell,
   BookingCardStepperButton,
   BookingCardTotalView,
-} from "./booking-card-parts";
+} from "./booking-sheet-parts";
 
 type Props = EventBookingCardProps & {
   className?: string;

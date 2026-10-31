@@ -1,6 +1,7 @@
 "use client";
 
 import { CategoryContent } from "@/app/categories/[slug]/content";
+import { ListingFiltersView, useListingFiltersViewModel } from "@/features/listing-filters";
 import { useGeolocation } from "@/lib/hooks/use-geolocation";
 import { useSession } from "@/lib/auth/session-store";
 import {
@@ -24,31 +25,45 @@ export function PopularExperiencesContent() {
   const isGuest = hydrated && !isAccount;
 
   const geolocation = useGeolocation();
-  const hasCoords = typeof geolocation === "object";
+  const hasCoords = typeof geolocation === "object" && geolocation !== null;
 
+  const filters = useListingFiltersViewModel();
   const accountQuery = useInfiniteRecommendedExperiences({
+    ...filters.params,
     latitude: hasCoords ? geolocation.latitude : undefined,
     longitude: hasCoords ? geolocation.longitude : undefined,
     pageSize: PAGE_SIZE,
     enabled: isAccount && geolocation !== "pending",
   });
-  const guestQuery = useInfiniteFilteredExperiences({ sort: "rating_desc", pageSize: PAGE_SIZE, enabled: isGuest });
+  const guestQuery = useInfiniteFilteredExperiences({
+    sort: "rating_desc",
+    ...filters.params,
+    pageSize: PAGE_SIZE,
+    enabled: isGuest,
+  });
 
   const query = isAccount ? accountQuery : guestQuery;
   const items = isAccount
     ? uniqueMatches(accountQuery.data?.pages).map(experienceMatchToCardProps)
     : (guestQuery.data?.pages ?? []).flatMap((p) => p.items).map(experienceListItemToCardProps);
 
+  const isLoading = !hydrated || (isAccount && geolocation === "pending") || query.isPending;
+  const isError = query.isError;
+
   return (
     <CategoryContent
       label={isAccount ? "Popular experiences near you" : "Popular experiences"}
+      filters={<ListingFiltersView {...filters} />}
       items={items}
       total={isAccount ? undefined : guestQuery.data?.pages[0]?.total}
-      isLoading={!hydrated || (isAccount && geolocation === "pending") || query.isPending}
+      isLoading={isLoading}
+      isError={isError}
+      onRetry={() => query.refetch()}
       moreLabel="Show more"
       loadMore={{
         hasMore: query.hasNextPage,
         isLoading: query.isFetchingNextPage,
+        isError: query.isFetchNextPageError,
         onLoadMore: () => query.fetchNextPage(),
       }}
     />

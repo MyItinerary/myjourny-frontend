@@ -3,7 +3,10 @@ import type { EventDetail } from "./event-details.types";
 /** `/events/sample` shows this event until itin has an events API. */
 export const SAMPLE_EVENT_ID = "sample";
 
-// Content from the design (Figma "Event details" 2470:39270).
+// HARD-CODED, NOT MERGEABLE AS-IS: this whole event (details, lineup, schedule, questions, ticket
+// tiers and prices, the "More ways" event categories, past events and similar events) is sample data
+// from the design. TODO(backend/admin): events must be created on the admin dashboard and served by
+// GET /events/{id} (shape: event-details.types.ts) before events go live.
 export const SAMPLE_EVENT: EventDetail = {
   id: SAMPLE_EVENT_ID,
   title: "Afro Futures Summit",

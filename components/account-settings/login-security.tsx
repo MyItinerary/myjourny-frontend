@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
 import { useMe } from "@/lib/queries/auth";
 import { DeleteAccountDialogView, useDeleteAccountViewModel } from "@/features/account-deletion";
+import { ChangePasswordDialogView, useChangePasswordViewModel } from "@/features/change-password";
 import {
   useAuthSessions,
-  useChangePassword,
   useConnectGoogle,
   useConnections,
   useDeactivateAccount,
@@ -31,8 +31,6 @@ import {
   SectionSkeleton,
   TextField,
 } from "@/components/account-settings/section-ui";
-
-const MIN_PASSWORD = 10;
 
 type ModalKey =
   | "password"
@@ -105,7 +103,6 @@ export function LoginSecuritySection() {
   const { data: connections = [], isLoading: connectionsLoading } = useConnections();
   const { data: sessions = [], isLoading: sessionsLoading } = useAuthSessions();
 
-  const changePassword = useChangePassword();
   const setupTwoFactor = useSetupTwoFactor();
   const verifyTwoFactor = useVerifyTwoFactor();
   const disableTwoFactor = useDisableTwoFactor();
@@ -117,9 +114,6 @@ export function LoginSecuritySection() {
   const [modal, setModal] = useState<ModalKey | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
-  const [currentPw, setCurrentPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
   const [twofaCode, setTwofaCode] = useState<string[]>(["", "", "", "", "", ""]);
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
@@ -133,6 +127,11 @@ export function LoginSecuritySection() {
     email: me?.email ?? "your email",
     onClose: () => setModal(null),
     onDeactivateInstead: () => setModal("deactivate"),
+  });
+  const passwordDialog = useChangePasswordViewModel({
+    open: modal === "password",
+    onClose: () => setModal(null),
+    onChanged: () => setSavedMessage("Password changed. Your other devices have been signed out."),
   });
   const upcoming = preview.data?.upcoming_booking_count ?? 0;
 
@@ -149,9 +148,6 @@ export function LoginSecuritySection() {
 
   function openPassword() {
     setSavedMessage(null);
-    setCurrentPw("");
-    setNewPw("");
-    setConfirmPw("");
     setModal("password");
   }
 
@@ -217,8 +213,10 @@ export function LoginSecuritySection() {
               </span>
             </div>
             <div className="mt-0.5 text-sm text-muted-foreground">
-              Use an authenticator app such as Google Authenticator or Authy. It generates a 6
-              digit code on your phone, so it works even when you have no network or airtime.
+              Works with any authenticator app, such as Google Authenticator, Microsoft
+              Authenticator, Authy or 1Password. If you already use one, there is nothing new to
+              install. It generates a 6 digit code on your phone, so it works even when you have
+              no network or airtime.
             </div>
           </div>
           <button
@@ -319,61 +317,13 @@ export function LoginSecuritySection() {
         </div>
       </div>
 
-      {modal === "password" && (
-        <ModalShell title="Change password" onClose={closeModal}>
-          <div className="flex flex-col gap-4">
-            <TextField
-              label="Current password"
-              type="password"
-              autoComplete="current-password"
-              value={currentPw}
-              onChange={(e) => setCurrentPw(e.target.value)}
-            />
-            <TextField
-              label="New password"
-              type="password"
-              autoComplete="new-password"
-              placeholder={`At least ${MIN_PASSWORD} characters`}
-              value={newPw}
-              onChange={(e) => setNewPw(e.target.value)}
-            />
-            <TextField
-              label="Confirm new password"
-              type="password"
-              autoComplete="new-password"
-              value={confirmPw}
-              onChange={(e) => setConfirmPw(e.target.value)}
-            />
-          </div>
-          <div className="mt-2.5 text-sm text-muted-foreground">
-            Changing your password signs you out everywhere except this device.
-          </div>
-          <ModalFooter
-            onCancel={closeModal}
-            saveLabel={changePassword.isPending ? "Saving…" : "Save"}
-            saveDisabled={
-              !currentPw || newPw.length < MIN_PASSWORD || newPw !== confirmPw || changePassword.isPending
-            }
-            onSave={() =>
-              changePassword.mutate(
-                { current_password: currentPw, new_password: newPw },
-                {
-                  onSuccess: () => {
-                    setSavedMessage("Password changed. Your other devices have been signed out.");
-                    closeModal();
-                  },
-                },
-              )
-            }
-          />
-        </ModalShell>
-      )}
+      <ChangePasswordDialogView {...passwordDialog} />
 
       {modal === "twofa1" && (
         <ModalShell title="Set up two factor authentication" onClose={closeModal}>
           <div className="text-[13px] font-medium text-brand">Step 1 of 3</div>
           <div className="mt-3.5 text-base text-foreground">
-            Open your authenticator app and scan this code
+            Open any authenticator app and scan this code
           </div>
           <div className="mt-4.5 flex flex-col items-start gap-4 sm:flex-row sm:gap-6">
             <div className="flex size-[170px] shrink-0 items-center justify-center rounded-xl border border-border bg-white p-2.5">
@@ -383,8 +333,8 @@ export function LoginSecuritySection() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm text-muted-foreground">
-                If you do not have an app yet, install Google Authenticator or Authy first. Both
-                are free.
+                Any authenticator app works. If you do not have one yet, Google Authenticator,
+                Microsoft Authenticator and Authy are all free.
               </div>
               <div className="mt-4 text-sm font-medium text-foreground">Cannot scan it?</div>
               <div className="mt-1.5 text-sm text-muted-foreground">
@@ -527,7 +477,7 @@ export function LoginSecuritySection() {
           <div className="mt-4 flex flex-col gap-4">
             <TextField
               label="Password"
-              type="password"
+              revealable
               autoComplete="current-password"
               value={offPassword}
               onChange={(e) => setOffPassword(e.target.value)}

@@ -16,6 +16,7 @@ const form = (overrides: Partial<CheckoutViewModel["form"]> = {}): CheckoutViewM
   step: "details",
   email: "",
   onEmailChange: vi.fn(),
+  onEmailBlur: vi.fn(),
   emailLocked: false,
   country: { selected: nigeria, options: [nigeria, { iso: "GB", name: "United Kingdom", dial: "44" }], onSelect: vi.fn() },
   phone: "",
@@ -32,6 +33,8 @@ const form = (overrides: Partial<CheckoutViewModel["form"]> = {}): CheckoutViewM
   canContinue: false,
   onContinue: vi.fn(),
   canPay: false,
+  free: false,
+  payment: { provider: "Paystack", methods: "Payment methods like card, bank transfer, USSD and Pay with Zap all available" },
   pending: false,
   onConfirm: vi.fn(),
   onGoogleCredential: vi.fn(),
@@ -66,6 +69,7 @@ describe("CheckoutDetailsStepView", () => {
     await user.type(screen.getByPlaceholderText("Enter email address"), "x");
     await user.type(screen.getByLabelText("Phone number"), "1");
     expect(props.onEmailChange).toHaveBeenCalled();
+    expect(props.onEmailBlur).toHaveBeenCalled();
     expect(props.onPhoneChange).toHaveBeenCalled();
     expect(screen.getByLabelText("Valid email")).toBeInTheDocument();
 
@@ -115,8 +119,36 @@ describe("CheckoutDetailsStepView", () => {
     expect(props.onConfirm).toHaveBeenCalled();
   });
 
+  it("says payment is secured by Paystack before Confirm and pay, and asks for no note itin can't store", () => {
+    const props = form({ step: "pay", emailLocked: true, email: "juliet@example.com", canPay: true });
+    renderWithProviders(<CheckoutDetailsStepView form={props} />);
+
+    expect(screen.queryByRole("textbox", { name: "Leave a note for the guide" })).not.toBeInTheDocument();
+    expect(screen.getByText("Payment secured by Paystack")).toBeInTheDocument();
+    expect(screen.getByText(/card, bank transfer, USSD/)).toBeInTheDocument();
+  });
+
+  it("names the provider it is given, so a Stripe payment doesn't say Paystack", () => {
+    const payment = { provider: "Stripe", methods: "Pay securely by card" };
+    renderWithProviders(<CheckoutDetailsStepView form={form({ step: "pay", canPay: true, payment })} />);
+    expect(screen.getByText("Payment secured by Stripe")).toBeInTheDocument();
+    expect(screen.getByText("Pay securely by card")).toBeInTheDocument();
+    expect(screen.queryByText(/Paystack/)).not.toBeInTheDocument();
+  });
+
+  it("books without a payment page when it's free", () => {
+    renderWithProviders(<CheckoutDetailsStepView form={form({ step: "pay", free: true, canPay: true })} />);
+    expect(screen.queryByText("Payment secured by Paystack")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirm and book" })).toBeInTheDocument();
+  });
+
   it("shows progress while starting checkout", () => {
     renderWithProviders(<CheckoutDetailsStepView form={form({ step: "pay", pending: true })} />);
     expect(screen.getByRole("button", { name: "Starting checkout…" })).toBeInTheDocument();
+  });
+
+  it("marks the phone optional once signed in", () => {
+    renderWithProviders(<CheckoutDetailsStepView form={form({ step: "pay", emailLocked: true, canPay: true })} />);
+    expect(screen.getByText("Phone number (optional)")).toBeInTheDocument();
   });
 });

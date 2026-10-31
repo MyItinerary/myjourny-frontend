@@ -1,4 +1,4 @@
-import { Check, Info } from "lucide-react";
+import { Check, Info, Lock } from "lucide-react";
 import Link from "next/link";
 
 import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
@@ -63,6 +63,7 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
             value={form.email}
             readOnly={form.emailLocked}
             onChange={(e) => form.onEmailChange(e.target.value)}
+            onBlur={form.onEmailBlur}
             className="pr-12 font-medium text-[#333134]"
           />
           {form.email && emailValid && (
@@ -72,7 +73,9 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
       </Field>
 
       <div className="flex flex-col gap-2">
-        <span className="font-sans text-base font-medium leading-6 text-[#333134]">Phone number</span>
+        <span className="font-sans text-base font-medium leading-6 text-[#333134]">
+          {step === "pay" ? "Phone number (optional)" : "Phone number"}
+        </span>
         <div className="flex gap-2">
           <CountryCodePickerView
             selected={form.country.selected}
@@ -159,9 +162,20 @@ export function CheckoutDetailsStepView({ form }: { form: CheckoutViewModel["for
 
       {step === "pay" && (
         <>
+          {!form.free && (
+            <div className="flex items-start gap-4 rounded-lg bg-[#F4F2EE] p-4">
+              <Lock aria-hidden className="size-6 shrink-0 text-[#333134]" />
+              <div className="flex flex-col gap-2">
+                <p className="font-sans text-lg leading-[27px] font-semibold text-[#333134]">
+                  Payment secured by {form.payment.provider}
+                </p>
+                <p className="font-sans text-sm leading-[22px] text-[#757575]">{form.payment.methods}</p>
+              </div>
+            </div>
+          )}
           <Terms verb="confirming" />
           <Button type="submit" size="cta" disabled={!form.canPay} className="w-full">
-            {form.pending ? "Starting checkout…" : "Confirm and pay"}
+            {form.pending ? (form.free ? "Booking…" : "Starting checkout…") : form.free ? "Confirm and book" : "Confirm and pay"}
           </Button>
         </>
       )}

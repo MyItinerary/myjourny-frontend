@@ -1,7 +1,7 @@
-import { formatPrice } from "@/features/booking";
+import { formatPriceOrFree } from "@/features/booking";
 import { formatBookingDates } from "@/lib/dates";
 import type { Booking } from "@/lib/queries/bookings";
-import { type ExperienceDetail, useExperienceDetail } from "@/lib/queries/experiences";
+import { type ExperienceDetail, useExperienceDetail } from "@/features/experience-details";
 
 import type { BookingConfirmation } from "./booking-confirmation.types";
 import { googleCalendarUrl } from "./calendar";
@@ -9,13 +9,15 @@ import { googleCalendarUrl } from "./calendar";
 export function buildBookingConfirmation(booking: Booking, experience?: ExperienceDetail): BookingConfirmation {
   const title = experience?.title ?? "Your experience";
   const guests = booking.party_size ?? 1;
+  const totalLabel =
+    booking.price_total != null ? formatPriceOrFree(Number(booking.price_total), booking.currency ?? "NGN") : null;
   return {
     title,
     imageUrl: experience?.cover_image_url ?? experience?.images?.[0] ?? null,
     dateLabel: formatBookingDates(booking.requested_datetime),
     guestsLabel: `${guests} guest${guests === 1 ? "" : "s"}`,
-    totalLabel:
-      booking.price_total != null ? formatPrice(Number(booking.price_total), booking.currency ?? "NGN") : null,
+    totalLabel,
+    totalHeadline: totalLabel === null ? null : totalLabel === "Free" ? "Free" : `${totalLabel} total`,
     viewHref: `/bookings/${booking.id}`,
     calendarHref: googleCalendarUrl({
       title,

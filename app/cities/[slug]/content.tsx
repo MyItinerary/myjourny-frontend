@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { SlidersHorizontal } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
+import { openMobileSearch } from "@/features/mobile-nav";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
-import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
-import { FilterChip } from "@/components/categories/filter-chip";
+import { CategoryResultsGrid } from "@/features/categories";
+import { ListingFiltersView, useListingFiltersViewModel } from "@/features/listing-filters";
 import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
+import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 import { useInterestCategories } from "@/lib/queries/categories";
 import {
@@ -22,7 +24,6 @@ import {
 } from "@/lib/queries/experiences";
 import { cn } from "@/lib/utils";
 
-const FILTERS = ["Dates", "Time of day", "Duration", "Price", "Languages"];
 // One grid page: 4 rows of the 4-col layout.
 const PAGE_SIZE = 16;
 
@@ -38,9 +39,14 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
   const isGuest = hydrated && !isAccount;
   const [interest, setInterest] = useState<string | null>(null);
 
+  // A day picked in the search bar narrows the results to that day.
+  const date = useSearchParams().get("date") ?? undefined;
+  const filters = useListingFiltersViewModel();
   const cityQuery = useInfiniteFilteredExperiences({
     city: cityName,
     interest: interest ?? undefined,
+    date,
+    ...filters.params,
     pageSize: PAGE_SIZE,
   });
   // Neither source can exclude a city, so over-fetch and drop this city's
@@ -59,8 +65,16 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
 
   const categoryChips = (categoriesQuery.data ?? []).filter((c) => c.parent_id === null);
 
-  const countLabel =
-    total === undefined ? "" : `(${total} ${total === 1 ? "result" : "results"})`;
+  // While results load, the heading shows just the city; the count follows.
+  const countLabel = cityQuery.isPending
+    ? null
+    : cityQuery.isError && items.length === 0
+      ? "(Failed to load)"
+      : total !== undefined
+        ? `(${total} ${total === 1 ? "result" : "results"})`
+        : items.length === 0
+          ? "(0 results)"
+          : `(${items.length}+ results)`;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -74,13 +88,17 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
         >
           <ChevronLeftIcon className="size-[22px] text-foreground" />
         </Link>
-        <div className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5">
+        <button
+          type="button"
+          onClick={() => openMobileSearch()}
+          className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5 text-left cursor-pointer"
+        >
           <Image src="/icons/search-lg.svg" alt="" width={18} height={18} />
           <span className="text-sm text-muted-foreground">Discover locations</span>
-        </div>
+        </button>
       </div>
 
-      <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-12">
+      <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-10 xl:px-[150px] lg:pt-9 lg:pb-12">
         <div className="flex flex-col gap-4 lg:gap-[18px]">
           <nav aria-label="Breadcrumb" className="hidden items-center gap-1.5 lg:flex">
             <Link href="/" className="text-base font-medium text-brand">
@@ -95,20 +113,18 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
           </nav>
 
           <h1 className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[40px]">
-            Experiences in {cityName} <span className="text-muted-foreground">{countLabel}</span>
+            Experiences in {cityName}
+            {countLabel && (
+              <>
+                {" "}
+                <span className="text-muted-foreground">{countLabel}</span>
+              </>
+            )}
           </h1>
 
+          <ListingFiltersView {...filters} />
+
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            <button
-              type="button"
-              className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-[104px] bg-[#F4F2EE] px-4 py-1 text-sm text-foreground transition-colors hover:bg-[#eae7e1]"
-            >
-              <span>Filters</span>
-              <SlidersHorizontal className="size-3.5" />
-            </button>
-            {FILTERS.map((filter) => (
-              <FilterChip key={filter} label={filter} />
-            ))}
             {categoryChips.map((chip) => {
               const selected = interest === chip.slug;
               return (
@@ -118,7 +134,7 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
                   aria-pressed={selected}
                   onClick={() => setInterest(selected ? null : chip.slug)}
                   className={cn(
-                    "shrink-0 cursor-pointer whitespace-nowrap rounded-[104px] px-4 py-1 text-sm transition-colors",
+                    "h-10 shrink-0 cursor-pointer whitespace-nowrap rounded-[104px] px-4 text-sm transition-colors",
                     selected
                       ? "bg-foreground text-white"
                       : "bg-[#F4F2EE] text-foreground hover:bg-[#eae7e1]"
@@ -136,10 +152,14 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
             items={items}
             categoryLabel={cityName}
             isLoading={cityQuery.isPending}
+            isError={cityQuery.isError}
+            errorMessage={cityQuery.isError ? apiErrorMessage(cityQuery.error, "Couldn't load experiences.") : undefined}
+            onRetry={() => cityQuery.refetch()}
             moreLabel="Show more"
             loadMore={{
               hasMore: cityQuery.hasNextPage,
               isLoading: cityQuery.isFetchingNextPage,
+              isError: cityQuery.isFetchNextPageError,
               onLoadMore: () => cityQuery.fetchNextPage(),
             }}
           />

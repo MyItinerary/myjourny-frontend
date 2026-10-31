@@ -3,72 +3,62 @@ import { describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
 
-import {
-  BookingCardActionView,
-  BookingCardInfoRows,
-  BookingCardPriceView,
-  BookingCardShell,
-  BookingCardStepperButton,
-  BookingCardTotalView,
-} from "./booking-card-parts";
+import { BookButton, IconTile, InfoRow, Notice, PillRow, UrgencyBadge } from "./booking-card-parts";
 
 describe("booking card parts", () => {
-  it("shows the price with its prefix and unit", () => {
-    renderWithProviders(<BookingCardPriceView price={{ prefix: "From", amount: "₦7,500", unit: "per ticket" }} />);
-    expect(screen.getByText("From ₦7,500")).toBeInTheDocument();
-    expect(screen.getByText("per ticket")).toBeInTheDocument();
+  it("says what the policy is", () => {
+    renderWithProviders(<InfoRow title="Free cancellation" body="Until Friday." />);
+    expect(screen.getByText("Free cancellation")).toBeInTheDocument();
+    expect(screen.getByText("Until Friday.")).toBeInTheDocument();
   });
 
-  it("shows the live total with its note, or the hint when nothing is priced", () => {
-    const { rerender } = renderWithProviders(
-      <BookingCardTotalView total={{ amount: "₦32,000", hint: null, note: "Fees and taxes included" }} />,
+  it("explains a policy in a tooltip, when it has one", async () => {
+    const { user } = renderWithProviders(<InfoRow title="Cancellation" body="Cancel up to 24 hours before." hint="Tickets are non-refundable." />);
+    await user.hover(screen.getByRole("button", { name: "About the cancellation policy" }));
+    expect(await screen.findByText("Tickets are non-refundable.")).toBeInTheDocument();
+  });
+
+  it("draws an icon tile and a pill row", () => {
+    const { container } = renderWithProviders(
+      <PillRow>
+        <IconTile surface="white" />
+      </PillRow>,
     );
-    expect(screen.getByText("₦32,000")).toBeInTheDocument();
-    expect(screen.getByText("Fees and taxes included")).toBeInTheDocument();
-    rerender(<BookingCardTotalView total={{ amount: "₦48,000", hint: null, note: null, updating: true }} />);
-    expect(screen.getByText("₦48,000")).toHaveAttribute("aria-busy", "true");
-    rerender(<BookingCardTotalView total={{ amount: null, hint: "Select a time", note: null }} />);
-    expect(screen.getByText("Select a time")).toBeInTheDocument();
+    expect(container.querySelector("svg")).toBeInTheDocument();
   });
 
-  it("runs the action unless it is disabled", async () => {
-    const onClick = vi.fn();
+  it("makes the last spot solid and heavier than a few", () => {
+    const { rerender } = renderWithProviders(<UrgencyBadge level="few" text="3 spots left at 7:00am on Sat 12 Sept" />);
+    expect(screen.getByRole("status")).toHaveClass("bg-[#FFF0D6]");
+    rerender(<UrgencyBadge level="one" text="Last spot at 7:00am on Sat 12 Sept" />);
+    expect(screen.getByRole("status")).toHaveClass("bg-[#FFB020]", "font-semibold");
+  });
+
+  it("carries an action in a notice, and alerts on an error", async () => {
+    const onAction = vi.fn();
     const { user, rerender } = renderWithProviders(
-      <BookingCardActionView action={{ label: "Book now", disabled: false, pending: false, onClick }}/>,
+      <Notice title="Sold out on 12 Sept" body="Next available: Sat 19 Sept." action="See all dates" onAction={onAction} />,
     );
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "See all dates" }));
+    expect(onAction).toHaveBeenCalled();
+
+    rerender(<Notice tone="error" title="We couldn't load times" body="Nothing was charged." />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("shows the label, greys out when disabled, and shows dots while loading", async () => {
+    const onClick = vi.fn();
+    const { user, rerender } = renderWithProviders(<BookButton label="Book now" loading={false} disabled={false} onClick={onClick} />);
     await user.click(screen.getByRole("button", { name: "Book now" }));
     expect(onClick).toHaveBeenCalledTimes(1);
-    rerender(<BookingCardActionView action={{ label: "Book now", disabled: true, pending: false, onClick }} />);
+
+    rerender(<BookButton label="Book now" loading={false} disabled onClick={onClick} />);
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
-  });
 
-  it("lists the policy rows, and renders nothing without any", () => {
-    const { container, rerender } = renderWithProviders(
-      <BookingCardInfoRows rows={[{ id: "r", icon: "refund", title: "Refund policy", body: "Up to 7 days before." }]} />,
-    );
-    expect(screen.getByText("Refund policy")).toBeInTheDocument();
-    rerender(<BookingCardInfoRows rows={[]} />);
-    expect(container).toBeEmptyDOMElement();
-  });
-
-  it("disables a stepper button at its limit", async () => {
-    const onClick = vi.fn();
-    const { user } = renderWithProviders(
-      <BookingCardStepperButton action="minus" size="sm" label="Decrease" disabled onClick={onClick} />,
-    );
-    await user.click(screen.getByRole("button", { name: "Decrease" }));
-    expect(onClick).not.toHaveBeenCalled();
-  });
-
-  it("is a bottom sheet with the listing's title and a close button when it can close", async () => {
-    const onClose = vi.fn();
-    const { user } = renderWithProviders(
-      <BookingCardShell onClose={onClose} title="Kayaking in Victoria Island">
-        <p>Body</p>
-      </BookingCardShell>,
-    );
-    expect(screen.getByText("Kayaking in Victoria Island")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Close" }));
-    expect(onClose).toHaveBeenCalled();
+    rerender(<BookButton label={null} loading disabled={false} onClick={onClick} />);
+    expect(screen.getByRole("button")).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByLabelText("Starting your booking")).toBeInTheDocument();
   });
 });

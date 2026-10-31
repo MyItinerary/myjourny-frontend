@@ -35,10 +35,14 @@ export function renderWithProviders(
 /** Render a model or view-model hook with app providers. */
 export function renderHookWithProviders<Result, Props>(
   hook: (props: Props) => Result,
-  { queryClient = createTestQueryClient(), initialProps }: { queryClient?: QueryClient; initialProps?: Props } = {},
+  {
+    queryClient = createTestQueryClient(),
+    initialProps,
+    reactStrictMode,
+  }: { queryClient?: QueryClient; initialProps?: Props; reactStrictMode?: boolean } = {},
 ) {
   return {
     queryClient,
-    ...renderHook(hook, { wrapper: createWrapper(queryClient), initialProps }),
+    ...renderHook(hook, { wrapper: createWrapper(queryClient), initialProps, reactStrictMode }),
   };
 }

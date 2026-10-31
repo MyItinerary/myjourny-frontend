@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Compass } from "lucide-react";
-import { useExperienceDetail } from "@/lib/queries/experiences";
+import { useExperienceDetail } from "@/features/experience-details";
 import type { Booking } from "@/lib/queries/bookings";
 
 import { formatBookingDates, parseUtcDate } from "@/lib/dates";

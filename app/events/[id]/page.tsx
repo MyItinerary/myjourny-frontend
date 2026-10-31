@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+
+import { eventsEnabled } from "@/features/event-details";
 
 import { EventDetailContent } from "./content";
 
@@ -8,6 +11,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // Events are not live until they can be set up on the admin dashboard.
+  if (!eventsEnabled()) notFound();
   const { id } = await params;
   return <EventDetailContent id={id} />;
 }

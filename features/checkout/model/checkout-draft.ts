@@ -15,6 +15,10 @@ export type CheckoutDraft = {
   total: string;
   currency: string;
   durationLabel: string;
+  /** The experience had several times to pick from, so "See time slots above" makes sense. */
+  hasTimeSlots?: boolean;
+  /** The cancellation line from the booking card, e.g. "Full refund until Fri 4 December, 9:00am". */
+  cancellationNote?: string;
   /** What they'd typed, kept when they leave to reset a password. */
   contact?: { phone: string; countryIso: string };
 };

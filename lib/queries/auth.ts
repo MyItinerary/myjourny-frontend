@@ -37,6 +37,8 @@ type MeResponse = {
   full_name: string | null;
   avatar_url: string | null;
   completed: boolean;
+  /** False for a password signup until the emailed link is opened. */
+  is_email_verified?: boolean;
 };
 
 function toSessionUser(me: MeResponse): SessionUser {

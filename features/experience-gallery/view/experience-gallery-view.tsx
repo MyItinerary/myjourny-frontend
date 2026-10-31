@@ -61,7 +61,7 @@ export function ExperienceGalleryView({ alt, ...vm }: ExperienceGalleryViewModel
               type="button"
               aria-label={label(index)}
               onClick={() => vm.onOpenViewer(index)}
-              className="relative aspect-[4/3] w-full shrink-0 cursor-pointer snap-center bg-muted"
+              className="relative aspect-[4/3] w-full shrink-0 cursor-pointer snap-center bg-muted md:aspect-[16/9]"
             >
               <Image src={src} alt={alt} fill unoptimized sizes="100vw" className="object-cover" />
             </button>

@@ -1,8 +1,8 @@
 "use client";
 
-import { ExperienceDetailsView, useExperienceDetailsViewModel } from "@/features/experience-details";
+import { ExperiencePageView, useExperiencePageViewModel } from "@/features/experience-page";
 
 export function ExperienceDetailContent({ id }: { id: string }) {
-  const vm = useExperienceDetailsViewModel(id);
-  return <ExperienceDetailsView {...vm} />;
+  const vm = useExperiencePageViewModel(id);
+  return <ExperiencePageView {...vm} />;
 }

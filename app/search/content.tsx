@@ -2,10 +2,11 @@
 
 import { Fragment, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search as SearchIcon, Sparkles, MapPin, SlidersHorizontal } from "lucide-react";
+import { Search as SearchIcon, Sparkles, MapPin, SlidersHorizontal, AlertCircle } from "lucide-react";
 import { HomeNav } from "@/components/home/home-nav";
 import { Footer } from "@/components/home/footer";
 import { ExperienceCardVertical } from "@/components/experiences/experience-card-vertical";
+import { ExperienceCardVerticalSkeleton } from "@/components/experiences/experience-card-vertical-skeleton";
 import {
   useSemanticSearch,
   formatDuration,
@@ -32,7 +33,7 @@ export function SearchContent() {
   const [paging, setPaging] = useState({ query: initialQuery, count: PAGE_SIZE });
   const visibleCount = paging.query === initialQuery ? paging.count : PAGE_SIZE;
 
-  const { data: results = [], isLoading } = useSemanticSearch({
+  const { data: results = [], isLoading, isError, refetch } = useSemanticSearch({
     q: initialQuery,
   });
 
@@ -77,7 +78,7 @@ export function SearchContent() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="e.g. quiet dinner with sunset view, adrenaline water sports..."
-                  className="w-full h-12 rounded-full border border-[#E0DFDD] bg-white pl-11 pr-4 text-sm font-medium text-[#333134] placeholder:text-[#A09C96] focus:border-brand focus:outline-none shadow-xs"
+                  className="w-full h-12 rounded-full border border-[#E0DFDD] bg-white pl-11 pr-4 text-base font-medium text-[#333134] lg:text-sm placeholder:text-[#A09C96] focus:border-brand focus:outline-none shadow-xs"
                 />
               </div>
               <Button
@@ -94,7 +95,9 @@ export function SearchContent() {
         <div className="flex items-center justify-between pb-4 border-b border-[#E0DFDD] mb-6">
           <p className="text-sm font-semibold text-foreground">
             {isLoading ? (
-              "Finding best matches..."
+              "Loading experiences…"
+            ) : isError && results.length === 0 ? (
+              <span className="text-destructive font-medium">Failed to load experiences</span>
             ) : (
               <>
                 Found <span className="text-brand font-bold">{results.length}</span>{" "}
@@ -106,9 +109,30 @@ export function SearchContent() {
 
         {/* Results Grid */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
-            <div className="size-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-            <p className="mt-3 text-sm">Searching experiences with AI matching...</p>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-10">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <ExperienceCardVerticalSkeleton key={index} />
+            ))}
+          </div>
+        ) : isError && results.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+            <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-[#FEE2E2] text-brand">
+              <AlertCircle className="size-8" />
+            </div>
+            <h2 className="font-heading text-xl font-bold text-foreground">
+              Failed to load search results
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md">
+              We couldn&apos;t complete your search at this moment. Please check your connection and try again.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => refetch()}
+              className="mt-5 rounded-full border-[#e0dfdd] hover:bg-[#F4F2EE] cursor-pointer"
+            >
+              Try again
+            </Button>
           </div>
         ) : results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -137,7 +161,7 @@ export function SearchContent() {
                   duration={formatDuration(exp.duration)}
                   rating={exp.rating ?? 0}
                   reviewCount={0}
-                  priceFrom={Number(exp.price_from ?? exp.price ?? 0)}
+                  priceFrom={exp.price_from != null ? Number(exp.price_from) : null}
                   currency={exp.currency ?? "NGN"}
                 />
 

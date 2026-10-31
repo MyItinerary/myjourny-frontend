@@ -16,7 +16,10 @@ import {
   useRequestCancellation,
 } from "@/lib/queries/bookings";
 import { formatSessionWhen } from "@/features/booking";
-import { useExperienceDetail } from "@/lib/queries/experiences";
+import { BookingDayDetailsView, useBookingDayDetailsViewModel } from "@/features/booking-day-details";
+import { ExperienceLocationView, meetingPointLocation } from "@/features/experience-details";
+import { BookingReviewView, useBookingReviewViewModel } from "@/features/reviews";
+import { useExperienceDetail } from "@/features/experience-details";
 import { cn } from "@/lib/utils";
 
 function money(amount: string | number | null | undefined, currency: string) {
@@ -33,6 +36,9 @@ const STATUS_LABEL: Record<string, { text: string; className: string }> = {
   completed: { text: "Completed", className: "bg-[#F4F2EE] text-[#130404]" },
 };
 
+// Stable stand-in while the booking loads, so the hook below runs every render.
+const EMPTY_BOOKING_DETAILS = {};
+
 function canRequestCancellation(booking: Booking) {
   return booking.status === "confirmed" || booking.status === "pending";
 }
@@ -46,14 +52,19 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   const { data: experience } = useExperienceDetail(booking?.experience_id ?? "");
   const { data: cancellation } = useCancellationRequest(bookingId);
   const requestCancellation = useRequestCancellation(bookingId);
+  const review = useBookingReviewViewModel(booking);
   const [showForm, setShowForm] = useState(false);
   const [reason, setReason] = useState("");
+  const dayDetails = useBookingDayDetailsViewModel(booking ?? EMPTY_BOOKING_DETAILS);
 
   if (!user) {
     return (
       <Shell>
         <p className="text-[#6F6B72]">
-          <Link href="/login" className="font-medium text-brand">Sign in</Link> to see this booking.
+          <Link href={`/login?next=${encodeURIComponent(`/bookings/${bookingId}`)}`} className="font-medium text-brand">
+            Sign in
+          </Link>{" "}
+          to see this booking.
         </p>
       </Shell>
     );
@@ -78,6 +89,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   const status = STATUS_LABEL[booking.status] ?? STATUS_LABEL.confirmed;
   const openRequest = cancellation?.status === "open" ? cancellation : null;
   const refunded = Number(booking.refunded_amount ?? 0);
+  const meetingLocation = meetingPointLocation(booking.meeting_point);
   // In the zone the session runs in (not the browser's), as a date range for
   // sessions over several days.
   const sessionDate = booking.requested_datetime
@@ -111,6 +123,16 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         )}
       </div>
 
+      {/* The map; "On the day" below has the instructions, directions and what to bring. */}
+      {meetingLocation && (
+        <div className="mt-8">
+          <ExperienceLocationView location={meetingLocation} heading="Where to meet" mapOnly />
+        </div>
+      )}
+      <BookingDayDetailsView {...dayDetails} />
+
+      <BookingReviewView {...review} />
+
       <section className="mt-8 rounded-2xl border border-border p-6">
         <h2 className="font-sans text-lg font-bold text-[#130404]">Receipt</h2>
         <div className="mt-4 flex flex-col gap-2 text-sm">
@@ -127,7 +149,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           ))}
           <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold text-[#130404]">
             <span>{booking.payment_status === "unpaid" ? "Total" : "Paid"}</span>
-            <span>{money(booking.price_total, currency)}</span>
+            <span>{booking.price_total != null && Number(booking.price_total) === 0 ? "Free" : money(booking.price_total, currency)}</span>
           </div>
           {refunded > 0 && (
             <div className="flex justify-between text-green-700">

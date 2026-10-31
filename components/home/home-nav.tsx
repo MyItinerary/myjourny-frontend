@@ -14,6 +14,7 @@ import { useLogout } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { SearchBarView, useSearchBarViewModel } from "@/features/search";
+import { openMobileSearch } from "@/features/mobile-nav";
 
 // Illustrated nav/menu icons (Figma "image 16"): the 44px artwork is cropped
 // to a 32px window, so it's shifted by -6px inside an overflow-clip box.
@@ -170,13 +171,10 @@ export function HomeNav({ className }: { className?: string }) {
       // Navbar becomes fixed when scrolling starts
       const scrolled = window.scrollY > 20;
       setIsScrolled(scrolled);
-      // On desktop the search sits in the page until the nav docks; on mobile
-      // it opens from the search button at any scroll position.
-      if (!scrolled && window.matchMedia("(min-width: 1024px)").matches) {
+      if (!scrolled) {
         setIsSearchExpanded(false);
         setActiveSearchTab(null);
       }
-      setProfileMenuOpen(false);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
@@ -223,14 +221,14 @@ export function HomeNav({ className }: { className?: string }) {
     <>
       {/* Dimmed backdrop overlay when search component is opened on fixed navbar */}
       <AnimatePresence>
-        {isSearchExpanded && (
+        {isScrolled && isSearchExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={handleCloseSearch}
-            className={cn("fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]", !isScrolled && "lg:hidden")}
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
           />
         )}
       </AnimatePresence>
@@ -390,7 +388,7 @@ export function HomeNav({ className }: { className?: string }) {
             <div className="relative flex items-center gap-2 sm:gap-3 shrink-0">
               <Link
                 href="#"
-                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand lg:inline-block mr-1"
+                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand xl:inline-block mr-1"
               >
                 Become a guide
               </Link>
@@ -429,7 +427,7 @@ export function HomeNav({ className }: { className?: string }) {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -6 }}
                         transition={{ duration: 0.16, ease: "easeOut" }}
-                        className="absolute right-0 top-[calc(100%+12px)] z-50"
+                        className="fixed inset-x-4 top-[76px] z-50 sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+12px)]"
                       >
                         <NotificationsDropdown
                           onClose={() => setNotificationsOpen(false)}
@@ -444,7 +442,10 @@ export function HomeNav({ className }: { className?: string }) {
               <button
                 type="button"
                 aria-label="Search"
-                onClick={() => handleOpenSearch("where")}
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  openMobileSearch();
+                }}
                 className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-[12px] bg-[#F4F2EE] text-[#333134] transition-colors hover:bg-[#eae8e3] lg:hidden"
               >
                 <Search className="size-5" />
@@ -503,8 +504,22 @@ export function HomeNav({ className }: { className?: string }) {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -6 }}
                       transition={{ duration: 0.18, ease: "easeOut" }}
-                      className="absolute right-0 top-[calc(100%+12px)] z-50 w-[401px] max-w-[calc(100vw-32px)] rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
+                      className="absolute right-0 top-[calc(100%+12px)] z-50 max-h-[calc(100dvh-96px)] w-[401px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
                     >
+                      <div className="lg:hidden">
+                        <MenuRow
+                          href="/"
+                          onClick={() => setProfileMenuOpen(false)}
+                          icon="/icons/nav/home.png"
+                          label="Home"
+                        />
+                        <MenuRow
+                          href={user ? "/wishlists" : "/login"}
+                          onClick={() => setProfileMenuOpen(false)}
+                          icon="/icons/nav/wishlist.png"
+                          label="Wishlists"
+                        />
+                      </div>
                       <MenuRow
                         href="/my-experiences"
                         onClick={() => setProfileMenuOpen(false)}
@@ -566,13 +581,13 @@ export function HomeNav({ className }: { className?: string }) {
 
           {/* Expanded Search Bar Container inside the Fixed Navbar */}
           <AnimatePresence>
-            {isSearchExpanded && (
+            {isScrolled && isSearchExpanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.24, ease: "easeOut" }}
-                className={cn("overflow-visible pb-4 pt-1 px-4 lg:px-20", !isScrolled && "lg:hidden")}
+                className="hidden overflow-visible pb-4 pt-1 px-4 lg:block lg:px-20"
               >
                 <div className="mx-auto flex w-full max-w-[860px] justify-center">
                   <NavSearchBar

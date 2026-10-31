@@ -20,7 +20,7 @@ export const DEFAULT_PASSWORD_RESET_EMAIL: PasswordResetEmailData = {
   title: "Let's get you back in",
   subtitle:
     "Happens to the best of us. Here's your code to set a new password and get back to discovering:",
-  resetUrl: "https://myjourny.app/reset?t=9k2mxa71",
+  resetUrl: "https://myjourny.io/login/forgot-password/reset?token=9k2mxa71",
   buttonLabel: "Reset password",
   expiresInMinutes: 30,
   securityNote:
@@ -42,8 +42,8 @@ export const DEFAULT_BOOKING_CONFIRMED_EMAIL: BookingConfirmedEmailData = {
   time: "6:00 AM · 2.5 hrs",
   guestsCount: 2,
   confirmationCode: "MJ-84213",
-  ticketUrl: "https://myjourny.app/bookings/MJ-84213",
-  calendarUrl: "https://myjourny.app/bookings/MJ-84213/calendar",
+  ticketUrl: "https://myjourny.io/bookings/2f6c1a9e-4b7d-4e2a-9c31-5d8e0f7a6b42",
+  calendarUrl: "https://itin-adys.onrender.com/bookings/2f6c1a9e-4b7d-4e2a-9c31-5d8e0f7a6b42/calendar.ics?token=9k2mxa71",
   host: {
     name: "Kayak Thrills",
     avatarUrl: DEFAULT_HOST_AVATAR,
@@ -55,7 +55,7 @@ export const DEFAULT_BOOKING_CONFIRMED_EMAIL: BookingConfirmedEmailData = {
     "Fresh coconut water",
   ],
   cancelUntilText: "Sat, 1 August, 6:00 AM",
-  manageBookingUrl: "https://myjourny.app/bookings/MJ-84213/manage",
+  manageBookingUrl: "https://myjourny.io/bookings/2f6c1a9e-4b7d-4e2a-9c31-5d8e0f7a6b42",
   explorerCountNote: "6 other explorers are joining this sunrise. See you on the water.",
   signOffPrefix: "Go make a story,",
   signOffTeam: "MyJourny team",
@@ -75,7 +75,7 @@ export const DEFAULT_TODAY_REMINDER_EMAIL: TodayReminderEmailData = {
   contactPhone: "0803 000 0000",
   bringNote: "Bring: swimwear or clothes you don't mind getting wet, sunscreen.",
   checkInCode: "MJ-84213",
-  directionsUrl: "https://myjourny.app/bookings/MJ-84213/directions",
+  directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=6.4281,3.4219",
   locationName: "Tarkwa Bay",
   locationState: "Lagos state",
   host: {
@@ -111,7 +111,7 @@ export const DEFAULT_PAYMENT_CONFIRMED_EMAIL: PaymentConfirmedEmailData = {
   dateCharged: "Fri, 1 August 2026",
   receiptNumber: "RCP-260801-4213",
   checkInCode: "MJ-84213",
-  downloadReceiptUrl: "https://myjourny.app/receipts/RCP-260801-4213",
+  downloadReceiptUrl: "https://itin-adys.onrender.com/bookings/2f6c1a9e-4b7d-4e2a-9c31-5d8e0f7a6b42/receipt.pdf?token=9k2mxa71",
   billingEmail: "billing@myjourny.app",
   signOffTeam: "MyJourny team",
   footerNotice:
@@ -131,7 +131,7 @@ export const DEFAULT_BOOKING_CANCELLED_EMAIL: BookingCancelledEmailData = {
   policyNote:
     "You cancelled within the free window, so the full amount was returned automatically, no action needed on your end.",
   browsePrompt: "Your city's still full of things to do when you're ready",
-  browseUrl: "https://myjourny.app/experiences",
+  browseUrl: "https://myjourny.io/popular-experiences",
   billingEmail: "billing@myjourny.app",
   bookingCode: "MJ-10552",
   signOffPrefix: "Until next time,",
@@ -146,7 +146,7 @@ export const DEFAULT_VERIFY_EMAIL_EMAIL: VerifyEmailEmailData = {
   eyebrow: "VERIFY YOUR EMAIL",
   title: "Your journey starts here",
   subtitle: "One quick step before you start exploring, confirm this is your email address.",
-  verifyUrl: "https://myjourny.app/reset?t=9k2mxa71",
+  verifyUrl: "https://myjourny.io/verify-email?token=9k2mxa71",
   buttonLabel: "Verify email",
   expiresInHours: 24,
   discoveryNote:

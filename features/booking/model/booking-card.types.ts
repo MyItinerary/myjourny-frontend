@@ -10,6 +10,8 @@ export type BookingCardInfoRow = {
   icon: BookingCardInfoIcon;
   title: string;
   body: string;
+  /** The host's own terms, in smaller print under the line. */
+  hint?: string | null;
 };
 
 /** The headline price: "₦16,000 per person", or "From ₦7,500 per ticket". */

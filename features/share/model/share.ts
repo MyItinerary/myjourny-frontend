@@ -37,6 +37,9 @@ export function shareTargets(url: string, message: string): ShareTarget[] {
 type ReferralResponse = { code?: unknown; active?: unknown } | unknown[] | null | undefined;
 
 /** The referral code to share, only while the campaign behind it is active.
+ * ASSUMED, NOT BUILT: GET /referrals/me and its `{ code, active }` shape do not exist yet.
+ * TODO(backend/admin): build referral codes and campaigns, and accept the stored code at
+ * booking and signup (`storedReferral`). Until then every link is just the page.
  * Expects GET /referrals/me → { code, active }; anything else means none. */
 export function activeReferralCode(data: ReferralResponse): string | null {
   if (!data || Array.isArray(data) || typeof data.code !== "string" || !data.code) return null;

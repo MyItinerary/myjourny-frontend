@@ -37,12 +37,9 @@ describe("date helpers", () => {
     expect(todayIn("America/Los_Angeles", now)).toBe("2030-06-01");
   });
 
-  it("moves dates and names zones", () => {
+  it("moves dates", () => {
     expect(addDaysToKey("2030-06-30", 1)).toBe("2030-07-01");
-    expect(zoneCity("America/Los_Angeles")).toBe("Los Angeles");
-    expect(zoneCity("UTC")).toBe("UTC");
   });
-
 });
 
 describe("useExperienceSessions", () => {
@@ -66,5 +63,13 @@ describe("useExperienceSessions", () => {
   it("waits for an experience id", () => {
     const { result } = renderHookWithProviders(() => useExperienceSessions(""));
     expect(result.current.fetchStatus).toBe("idle");
+  });
+});
+
+describe("zoneCity", () => {
+  it("names the city of a zone", () => {
+    expect(zoneCity("Africa/Lagos")).toBe("Lagos");
+    expect(zoneCity("America/New_York")).toBe("New York");
+    expect(zoneCity("UTC")).toBe("UTC");
   });
 });

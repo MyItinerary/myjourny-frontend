@@ -6,6 +6,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 import { HeartRoundedIcon, StarIcon } from "@/components/icons/shared-icons";
+import { formatPriceOrFree } from "@/features/booking";
 import { useMyWishlistedIds } from "@/lib/queries/wishlists";
 import { useWishlistSave } from "@/components/wishlists/wishlist-save-provider";
 
@@ -13,14 +14,6 @@ import { useWishlistSave } from "@/components/wishlists/wishlist-save-provider";
 // different card shape from the horizontal `ExperienceCard` used in the
 // rails ("Popular experiences near you" / "Based on your browsing
 // history"): full-width photo, a save button, and a two-line price.
-function formatPrice(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
-
 export function ExperienceCardVertical({
   imageSrc,
   imageAlt,
@@ -50,12 +43,12 @@ export function ExperienceCardVertical({
       )}
     >
       {(href ?? id) && (
-        <Link href={href ?? `/experiences/${id}`} className="absolute inset-0 z-0" aria-label={title} />
+        <Link href={href ?? `/experiences/${id}`} className="absolute inset-0 z-0 cursor-pointer" aria-label={title} />
       )}
 
       {/* Figma keeps the photo a fixed 212px tall in every desktop context
           (345px rail cards and 277.5px category-grid cards alike). */}
-      <div className="relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-lg lg:aspect-auto lg:h-[212px]">
+      <div className="pointer-events-none relative aspect-[345/212] w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-lg lg:aspect-auto lg:h-[212px]">
         <Image
           src={imageSrc}
           alt={imageAlt}
@@ -68,10 +61,13 @@ export function ExperienceCardVertical({
           <button
             type="button"
             aria-label={isSaved ? "Edit wishlists" : "Save to wishlist"}
-            onClick={() => id && openSave(id, title)}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (id) openSave(id, title);
+            }}
             disabled={!id}
             className={cn(
-              "absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors",
+              "pointer-events-auto absolute top-[13px] right-[13px] z-10 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors cursor-pointer",
               isSaved ? "text-brand" : "text-foreground hover:text-brand"
             )}
           >
@@ -94,10 +90,12 @@ export function ExperienceCardVertical({
           </div>
         </div>
 
-        <p className="font-heading text-foreground">
-          <span className="block text-base font-normal text-muted-foreground">from</span>
-          <span className="text-xl font-medium">{formatPrice(priceFrom, currency)}</span>
-        </p>
+        {priceFrom !== null && (
+          <p className="font-heading text-foreground">
+            {priceFrom > 0 && <span className="block text-base font-normal text-muted-foreground">from</span>}
+            <span className="text-xl font-medium">{formatPriceOrFree(priceFrom, currency)}</span>
+          </p>
+        )}
       </div>
     </article>
   );
