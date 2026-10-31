@@ -92,8 +92,9 @@ test.describe("booking sessions", () => {
   test("shows Lagos session times in a Los Angeles browser, with no preview link", async ({ page }) => {
     await openExperience(page);
 
-    // One time on the day: no picker, the date field says it, in Lagos time.
-    await expect(panel(page).getByRole("button", { name: /^Date: .*9:00 AM/ })).toBeVisible();
+    // One session on one day: no pickers, the fixed date field says the time, in Lagos time.
+    await expect(panel(page).getByTestId("fixed-date")).toContainText("9:00 AM");
+    await expect(panel(page).getByRole("button", { name: /^Date:/ })).toHaveCount(0);
     await expect(panel(page).getByText("Choose a time")).toHaveCount(0);
     await expect(page.getByRole("link", { name: /Preview/ })).toHaveCount(0);
   });
@@ -201,7 +202,7 @@ test.describe("booking sessions", () => {
     await expect(panel(page).getByText("per person, per day")).toBeVisible();
     await expect(panel(page).getByRole("button", { name: "Increase days" })).toHaveCount(0);
     // The date field names the whole run, e.g. "Sat 24 to Mon 26 October · 3 hours".
-    await expect(panel(page).getByRole("button", { name: /^Date: .+ to .+/ })).toBeVisible();
+    await expect(panel(page).getByTestId("fixed-date")).toContainText(/ to /);
     expect(quotes.at(-1)).not.toHaveProperty("days");
   });
 
@@ -270,7 +271,8 @@ test.describe("booking sessions", () => {
     await expect(sidebar.getByText("Group of 3+")).toBeVisible();
     await expect(sidebar.getByLabel("was ₦5,000")).toBeVisible();
     await expect(sidebar.getByText("₦4,500", { exact: true }).first()).toBeVisible();
-    await expect(sidebar.getByText("Group saving")).toBeVisible();
+    // The itemised "Group saving" row is not shown on the card.
+    await expect(sidebar.getByText("Group saving")).toHaveCount(0);
     await expect(sidebar.getByText("Early-bird discount (1% off)")).toHaveCount(0);
     // The processing fee is added at checkout, not shown on the experience.
     await expect(sidebar.getByText("₦13,500", { exact: true })).toBeVisible();

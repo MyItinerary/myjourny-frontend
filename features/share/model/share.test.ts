@@ -19,6 +19,11 @@ describe("buildShareUrl", () => {
     );
   });
 
+  it("does not throw without an origin, as when the page renders on the server", () => {
+    expect(buildShareUrl("", "/experiences/abc")).toBe("/experiences/abc");
+    expect(buildShareUrl("", "/events/sample", "DANIEL10")).toBe("/events/sample?ref=DANIEL10");
+  });
+
   it("keeps the page's own query", () => {
     expect(buildShareUrl("https://myjourny.com", "/experiences/abc?date=2026-09-12", "X")).toBe(
       "https://myjourny.com/experiences/abc?date=2026-09-12&ref=X",

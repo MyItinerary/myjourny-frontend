@@ -64,7 +64,7 @@ test.describe("experience page for a guest", () => {
   });
 
   test("shows who hosts it and the booking panel, not a log-in wall", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Hosted by Kayan Thrille" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Kayan Thrille" })).toBeVisible();
     await expect(page.getByText("Log in to see your host")).toHaveCount(0);
     await expect(page.getByText("Log in to book")).toHaveCount(0);
     await expect(page.locator("div.sticky").getByRole("button", { name: /Book now/ })).toBeVisible();

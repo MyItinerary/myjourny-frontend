@@ -172,8 +172,9 @@ test("guest limits, exclusions and safety notes show before booking", async ({ p
 
   const beforeYouBook = page.locator("section").filter({ has: page.getByRole("heading", { name: "Before you book" }) });
   await expect(beforeYouBook.getByText("3–8 guests per booking")).toBeVisible();
-  await expect(beforeYouBook.getByText("Drinks")).toBeVisible();
-  await expect(beforeYouBook.getByText("Venue has step-free access")).toBeVisible();
+  // Exclusions and safety notes have their own sections further down the page.
+  await expect(page.getByText("Drinks")).toBeVisible();
+  await expect(page.getByText("Venue has step-free access")).toBeVisible();
 
   // The booking card keeps to what it needs: the limits are on the page, not under the guests.
   const panel = page.locator("div.sticky").filter({ hasText: "Guests" });
@@ -224,9 +225,8 @@ test("the page shows the host's fit details, lists, paragraphs and meeting landm
   await expect(page.getByRole("heading", { name: "Makoko Floating Village Boat Tour" }).first()).toBeVisible();
 
   await expect(page.getByText("Breakfast is on the jetty.")).toBeVisible();
-  const fit = page.locator("section").filter({ has: page.getByRole("heading", { name: "Fit and logistics" }) });
-  await expect(fit.getByText("Moderate", { exact: true })).toBeVisible();
-  await expect(fit.getByText("Two hours in a canoe")).toBeVisible();
+  const fit = page.locator("section").filter({ has: page.getByRole("heading", { name: "Before you book" }) });
+  await expect(fit.getByText("Moderate. Two hours in a canoe")).toBeVisible();
   await expect(fit.getByText("Ages 12+")).toBeVisible();
   await expect(fit.getByText("Not confirmed. Ask the host before you book.")).toBeVisible();
   await expect(fit.getByText("English, Yoruba")).toBeVisible();

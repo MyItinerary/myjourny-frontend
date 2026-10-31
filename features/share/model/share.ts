@@ -11,9 +11,10 @@ const REFERRAL_STORAGE_KEY = "myjourny:referral";
 /** The link to share: the page itself, plus the sharer's referral code when a
  * referral campaign is active for them. Without one it is just the page. */
 export function buildShareUrl(origin: string, path: string, referralCode?: string | null): string {
-  const url = new URL(path, origin);
+  // On the server there is no origin yet; the link is completed in the browser.
+  const url = new URL(path, origin || "http://localhost");
   if (referralCode) url.searchParams.set(REFERRAL_PARAM, referralCode);
-  return url.toString();
+  return origin ? url.toString() : `${url.pathname}${url.search}`;
 }
 
 /** Where each "share via" button sends the link. */
