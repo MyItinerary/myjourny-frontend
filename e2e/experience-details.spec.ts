@@ -173,7 +173,7 @@ test("guest limits, exclusions and safety notes show before booking", async ({ p
   const beforeYouBook = page.locator("section").filter({ has: page.getByRole("heading", { name: "Before you book" }) });
   await expect(beforeYouBook.getByText("3–8 guests per booking")).toBeVisible();
   // Exclusions and safety notes have their own sections further down the page.
-  await expect(page.getByText("Drinks")).toBeVisible();
+  await expect(page.getByText("Drinks", { exact: true })).toBeVisible();
   await expect(page.getByText("Venue has step-free access")).toBeVisible();
 
   // The booking card keeps to what it needs: the limits are on the page, not under the guests.

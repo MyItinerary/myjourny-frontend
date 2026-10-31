@@ -67,6 +67,6 @@ test("the search button in the header opens search on a category page", async ({
   });
   await page.goto("/categories/culture-history");
 
-  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await page.getByRole("button", { name: "Search", exact: true }).first().click();
   await expect(page.getByRole("searchbox", { name: /Search destinations/ })).toBeVisible();
 });
