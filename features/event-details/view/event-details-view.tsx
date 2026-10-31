@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, Heart, Share2 } from "lucide-react";
 
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
@@ -10,7 +9,7 @@ import { DetailActions, DetailBreadcrumbs } from "@/components/shared/detail-pag
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookingBarView, EventBookingCardView } from "@/features/booking";
 import { ExperienceGalleryView } from "@/features/experience-gallery";
-import { cn } from "@/lib/utils";
+import { ShareDialogView } from "@/features/share";
 
 import type { EventDetailsViewModel } from "../view-model/use-event-details-view-model";
 import { EventPastEventsView } from "./event-past-events-view";
@@ -27,39 +26,7 @@ export function EventDetailsView(vm: EventDetailsViewModel) {
 
   return (
     <div className="flex flex-1 flex-col pb-24 lg:pb-0">
-      <div className="hidden lg:block">
-        <HomeNav />
-      </div>
-
-      {/* Mobile compact header: back, wishlist, share. */}
-      <div className="flex items-center justify-between px-6 py-4 lg:hidden">
-        <button
-          type="button"
-          aria-label="Back"
-          onClick={vm.onBack}
-          className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
-        >
-          <ChevronLeft className="size-5 text-foreground" />
-        </button>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={vm.saved ? "Remove from wishlist" : "Add to wishlist"}
-            onClick={vm.onToggleSave}
-            className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
-          >
-            <Heart className={cn("size-[18px]", vm.saved ? "fill-brand text-brand" : "text-foreground")} />
-          </button>
-          <button
-            type="button"
-            aria-label="Share"
-            onClick={vm.onShare}
-            className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
-          >
-            <Share2 className="size-[18px] text-foreground" />
-          </button>
-        </div>
-      </div>
+      <HomeNav />
 
       {status === "loading" && (
         <div className="mx-auto w-full max-w-[1512px] px-6 py-8 lg:px-20">
@@ -97,7 +64,6 @@ export function EventDetailsView(vm: EventDetailsViewModel) {
                     <span>{event.venueLabel}</span>
                   </p>
                   <DetailActions
-                    className="hidden lg:flex"
                     saved={vm.saved}
                     onToggleSave={vm.onToggleSave}
                     onShare={vm.onShare}
@@ -136,12 +102,9 @@ export function EventDetailsView(vm: EventDetailsViewModel) {
             />
           )}
 
-          <BookingBarView
-            priceFrom={vm.priceFrom}
-            note={event.dateLabel}
-            actionLabel="Get tickets"
-            onBookNow={vm.onOpenMobileBooking}
-          />
+          <ShareDialogView {...vm.share} />
+
+          <BookingBarView {...vm.bar} onAction={vm.onBookFromBar} onExpand={vm.onOpenMobileBooking} />
 
           {/* Mobile bottom sheet: the same ticket card as the sidebar. */}
           {vm.mobileBookingOpen && (
@@ -152,12 +115,8 @@ export function EventDetailsView(vm: EventDetailsViewModel) {
                 onClick={vm.onCloseMobileBooking}
                 className="absolute inset-0 bg-black/40"
               />
-              <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-[32px]">
-                <EventBookingCardView
-                  {...vm.booking}
-                  className="rounded-b-none border-b-0"
-                  onClose={vm.onCloseMobileBooking}
-                />
+              <div className="animate-in slide-in-from-bottom absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-[24px] duration-300">
+                <EventBookingCardView {...vm.booking} title={event.title} onClose={vm.onCloseMobileBooking} />
               </div>
             </div>
           )}

@@ -47,7 +47,7 @@ export type EventDetail = {
   /** Category cards; `slug` is the category's page, /categories/{slug}. */
   moreWays: { id: string; slug: string; title: string; subtitle: string }[];
   knowBeforeYouGo: string[];
-  pastEvents: { id: string; title: string; caption: string; imageUrl: string | null; tone: EventTone }[];
+  pastEvents: { id: string; title: string; imageUrl: string | null; tone: EventTone }[];
   similar: {
     id: string;
     title: string;

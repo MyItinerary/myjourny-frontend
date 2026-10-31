@@ -23,6 +23,8 @@ export type BookingCardPrice = {
  * is missing ("Select a time") while nothing can be priced. */
 export type BookingCardTotal = {
   amount: string | null;
+  /** The figure is a quick estimate, being confirmed by the server. */
+  updating?: boolean;
   hint: string | null;
   note: string | null;
 };
@@ -65,4 +67,16 @@ export type EventBookingData = {
   /** "Saturday 12 September 2026" and "Doors 6:00pm · Music from 7:00pm". */
   date: { title: string; subtitle: string | null };
   tiers: EventTicketTier[];
+};
+
+/** What the collapsed mobile bar shows. */
+export type BookingBarProps = {
+  /** "₦16,000 per person", "From ₦7,500 per ticket", "Sold out on 12 Sept". */
+  summary: string;
+  /** The underlined line: "Sat 12 Sept · 9:00am". */
+  detail?: string | null;
+  /** The amber badge, only for a real count: "3 spots left at 7:00am". */
+  urgency?: string | null;
+  actionLabel: string;
+  actionDisabled?: boolean;
 };

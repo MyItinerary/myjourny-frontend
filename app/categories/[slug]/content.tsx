@@ -37,23 +37,7 @@ export function CategoryContent({
 }) {
   return (
     <div className="flex flex-1 flex-col">
-      <div className="hidden lg:block">
-        <HomeNav />
-      </div>
-
-      <div className="flex items-center gap-3 px-6 py-4 lg:hidden">
-        <Link
-          href="/"
-          aria-label="Back"
-          className="flex size-[38px] shrink-0 items-center justify-center rounded-full bg-white shadow-sm"
-        >
-          <ChevronLeftIcon className="size-[22px] text-foreground" />
-        </Link>
-        <div className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5">
-          <Image src="/icons/search-lg.svg" alt="" width={18} height={18} />
-          <span className="text-sm text-muted-foreground">Discover locations</span>
-        </div>
-      </div>
+      <HomeNav />
 
       <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-[150px] lg:pt-9 lg:pb-9">
         <CategoryHeader label={label} count={items.length} total={total} />

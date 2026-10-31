@@ -13,11 +13,15 @@ vi.mock("@/components/home/experience-rail-section", () => ({
   ExperienceRailSection: ({ heading }: { heading: string }) => <section aria-label={heading} />,
 }));
 vi.mock("@/features/experience-gallery", () => ({ ExperienceGalleryView: () => <div>Gallery</div> }));
+vi.mock("@/features/share", () => ({ ShareDialogView: () => null }));
 vi.mock("@/features/booking", () => ({
-  BookingBarView: ({ priceFrom, note, actionLabel, onBookNow }: Record<string, string & (() => void)>) => (
-    <button onClick={onBookNow}>
-      {actionLabel} {priceFrom} {note}
-    </button>
+  BookingBarView: ({ summary, detail, actionLabel, onAction, onExpand }: Record<string, string & (() => void)>) => (
+    <>
+      <button onClick={onAction}>
+        {actionLabel} | {summary} | {detail}
+      </button>
+      <button onClick={onExpand}>Expand bar</button>
+    </>
   ),
   EventBookingCardView: ({ onClose }: { onClose?: () => void }) => (
     <div data-testid={onClose ? "sheet-card" : "side-card"}>{onClose && <button onClick={onClose}>Close card</button>}</div>
@@ -30,16 +34,17 @@ function vm(overrides: Partial<EventDetailsViewModel> = {}): EventDetailsViewMod
     event: SAMPLE_EVENT,
     gallery: {} as EventDetailsViewModel["gallery"],
     booking: {} as EventDetailsViewModel["booking"],
-    priceFrom: "₦10,000",
+    bar: { summary: "From ₦10,000 per ticket", detail: "Sat 14 Nov · Doors 8:30am", actionLabel: "Get tickets" },
     openQuestionId: null,
     onToggleQuestion: vi.fn(),
     mobileBookingOpen: false,
     onOpenMobileBooking: vi.fn(),
+    onBookFromBar: vi.fn(),
     onCloseMobileBooking: vi.fn(),
     saved: false,
     onToggleSave: vi.fn(),
     onShare: vi.fn(),
-    onBack: vi.fn(),
+    share: { open: false } as never,
     similar: [],
     ...overrides,
   };
@@ -53,7 +58,7 @@ describe("EventDetailsView", () => {
     expect(screen.getByText("9:00AM to 5:00PM")).toBeInTheDocument();
     expect(screen.getByText("Harbour Hall, Victoria Island, Lagos.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "About this event" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Past events" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Past events by this host" })).toBeInTheDocument();
     expect(screen.getByTestId("side-card")).toBeInTheDocument();
     expect(screen.getByText("Footer")).toBeInTheDocument();
   });
@@ -74,21 +79,22 @@ describe("EventDetailsView", () => {
     expect(screen.getByRole("link", { name: "Back to home" })).toHaveAttribute("href", "/");
   });
 
-  it("wires back, wishlist and share", async () => {
+  it("wires wishlist and share", async () => {
     const view = vm();
     const { user } = renderWithProviders(<EventDetailsView {...view} />);
-    await user.click(screen.getByRole("button", { name: "Back" }));
-    await user.click(screen.getAllByRole("button", { name: "Add to wishlist", hidden: true })[0]);
-    await user.click(screen.getAllByRole("button", { name: "Share", hidden: true })[0]);
-    expect(view.onBack).toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Add to wishlist" }));
+    await user.click(screen.getByRole("button", { name: "Share" }));
     expect(view.onToggleSave).toHaveBeenCalled();
     expect(view.onShare).toHaveBeenCalled();
   });
 
-  it("opens the mobile ticket sheet from the bar and closes it", async () => {
+  it("gets tickets from the bar's button, expands the sheet from the rest of the bar, and closes it", async () => {
     const view = vm();
     const { user, rerender } = renderWithProviders(<EventDetailsView {...view} />);
-    await user.click(screen.getByRole("button", { name: /Get tickets ₦10,000 Sat, 14 Nov 2026/ }));
+    await user.click(screen.getByRole("button", { name: /Get tickets \| From ₦10,000 per ticket \| Sat 14 Nov/ }));
+    expect(view.onBookFromBar).toHaveBeenCalled();
+    expect(view.onOpenMobileBooking).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Expand bar" }));
     expect(view.onOpenMobileBooking).toHaveBeenCalled();
     rerender(<EventDetailsView {...vm({ mobileBookingOpen: true, onCloseMobileBooking: view.onCloseMobileBooking })} />);
     await user.click(screen.getByRole("button", { name: "Close card" }));

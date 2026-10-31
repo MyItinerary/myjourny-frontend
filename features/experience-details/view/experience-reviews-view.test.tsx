@@ -64,6 +64,7 @@ describe("ExperienceReviewsView", () => {
     expect(screen.getByText("Ngozi A.")).toBeInTheDocument();
     expect(screen.getByText("Thank you, Hauwa.")).toBeInTheDocument();
     expect(screen.getAllByText("Verified booking")).toHaveLength(2);
+    expect(screen.queryByText("Report")).not.toBeInTheDocument();
   });
 
   it("searches, sorts and filters", async () => {

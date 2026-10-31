@@ -19,8 +19,10 @@ import { Addons, DaysRow, PromoCode } from "./experience-booking-card-extras";
 
 type Props = ExperienceBookingCardProps & {
   className?: string;
-  /** Shows a close button, for the mobile bottom sheet. */
+  /** Shows the sheet header with a close button, for the mobile bottom sheet. */
   onClose?: () => void;
+  /** The sheet header's title. */
+  title?: string;
 };
 
 /** The one start time of the chosen day, when there is no choice to make. */
@@ -181,9 +183,9 @@ function GuestRow({ row }: { row: ExperienceBookingCardProps["guests"][number] }
 
 /** The booking card on an experience page: price, date, time, guests, total
  * and the book button. Red is reserved for the button. */
-export function ExperienceBookingCardView({ className, onClose, ...card }: Props) {
+export function ExperienceBookingCardView({ className, onClose, title, ...card }: Props) {
   return (
-    <BookingCardShell className={className} onClose={onClose}>
+    <BookingCardShell className={className} onClose={onClose} title={title}>
       <div className="flex flex-col gap-1">
         <BookingCardPriceView price={card.price} />
         {card.scheduleLabel && (

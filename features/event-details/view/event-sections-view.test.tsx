@@ -24,15 +24,15 @@ describe("EventSectionsView", () => {
     expect(screen.getByText("Entry and ID")).toBeInTheDocument();
     expect(screen.getByText("Amara Okoye")).toBeInTheDocument();
     expect(screen.getByText("Harbour Hall, 14 Marina Road, Victoria Island, Lagos")).toBeInTheDocument();
-    expect(screen.getByText("Nature & outdoors")).toBeInTheDocument();
+    expect(screen.getByText("Talks & conferences")).toBeInTheDocument();
     expect(screen.getByText("Afro Futures Collective")).toBeInTheDocument();
   });
 
-  it("links each category card to its category page", () => {
+  it("links each category card to its event category page", () => {
     renderWithProviders(<EventSectionsView event={SAMPLE_EVENT} openQuestionId={null} onToggleQuestion={vi.fn()} />);
-    expect(screen.getByRole("link", { name: /Nature & outdoors/ })).toHaveAttribute("href", "/categories/nature-outdoors");
-    expect(screen.getByRole("link", { name: /Music & nightlife/ })).toHaveAttribute("href", "/categories/nightlife");
-    expect(screen.getAllByRole("link", { name: /Local food|Nature|Art|Music/ })).toHaveLength(SAMPLE_EVENT.moreWays.length);
+    expect(screen.getByRole("link", { name: /Talks & conferences/ })).toHaveAttribute("href", "/events/categories/talks-conferences");
+    expect(screen.getByRole("link", { name: /Music & concerts/ })).toHaveAttribute("href", "/events/categories/music-concerts");
+    expect(screen.getAllByRole("link", { name: /Music|Talks|Arts|Food/ })).toHaveLength(SAMPLE_EVENT.moreWays.length);
   });
 
   it("opens a question through the toggle", async () => {

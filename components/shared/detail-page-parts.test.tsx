@@ -7,6 +7,7 @@ import { renderWithProviders } from "@/test/utils/render";
 import {
   DetailActions,
   DetailBreadcrumbs,
+  DetailCategoryCards,
   DetailExpandableText,
   DetailFact,
   DetailHostStrip,
@@ -19,6 +20,16 @@ describe("detail page parts", () => {
     renderWithProviders(<DetailBreadcrumbs items={[{ label: "Home page", href: "/" }, { label: "Kayaking" }]} />);
     expect(screen.getByRole("link", { name: "Home page" })).toHaveAttribute("href", "/");
     expect(screen.getByText("Kayaking")).toHaveAttribute("aria-current", "page");
+  });
+
+  it("links each category card where the page says its categories live", () => {
+    renderWithProviders(
+      <DetailCategoryCards
+        items={[{ id: "a", slug: "nature-outdoors", title: "Nature & outdoors", subtitle: "Trails and water" }]}
+        hrefFor={(slug) => `/categories/${slug}`}
+      />,
+    );
+    expect(screen.getByRole("link", { name: /Nature & outdoors/ })).toHaveAttribute("href", "/categories/nature-outdoors");
   });
 
   it("titles a section", () => {

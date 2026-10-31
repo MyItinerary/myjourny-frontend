@@ -8,6 +8,16 @@ import { useExperienceDetailsViewModel } from "./use-experience-details-view-mod
 const push = vi.fn();
 const back = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, back }) }));
+const shareOpen = vi.fn();
+const shareOptions = vi.fn();
+const captureReferral = vi.fn();
+vi.mock("@/features/share", () => ({
+  captureReferral: (search: string) => captureReferral(search),
+  useShareDialogViewModel: (options: unknown) => {
+    shareOptions(options);
+    return { onOpen: shareOpen };
+  },
+}));
 vi.mock("sonner", () => ({ toast: { success: vi.fn() } }));
 
 const session = { user: null as { id: string } | null, hydrated: true };
@@ -38,11 +48,17 @@ vi.mock("@/lib/queries/experiences", async (importOriginal) => ({
 }));
 
 const bookingProps = vi.fn();
+const bookingCard: { action: { label: string; disabled: boolean; pending: boolean; onClick: () => void } | null } = { action: null };
 vi.mock("@/features/booking", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/booking")>()),
   useExperienceBookingCardViewModel: (props: unknown) => {
     bookingProps(props);
-    return { marker: "card" };
+    return {
+      ...bookingCard,
+      marker: "card",
+      price: { prefix: null, amount: "₦16,000", unit: "per person" },
+      sessions: { noSessions: false, allSoldOut: false, options: [], selectedDate: null },
+    };
   },
 }));
 
@@ -70,8 +86,13 @@ describe("useExperienceDetailsViewModel", () => {
     const { result } = renderHook(() => useExperienceDetailsViewModel("exp-1"));
     expect(result.current.status).toBe("ready");
     expect(result.current.content).toMatchObject({ title: "Sunrise Kayaking", durationLabel: "1 hour" });
-    expect(result.current.booking).toEqual({ marker: "card" });
-    expect(result.current.priceFrom).toBe("₦16,000.00");
+    expect(result.current.booking).toMatchObject({ marker: "card" });
+    expect(result.current.bar).toEqual({
+      summary: "₦16,000 per person",
+      detail: null,
+      urgency: null,
+      actionLabel: "Book now",
+    });
     expect(result.current.reviews.count).toBeGreaterThan(0);
   });
 
@@ -121,6 +142,21 @@ describe("useExperienceDetailsViewModel", () => {
     expect(result.current.mobileBookingOpen).toBe(false);
   });
 
+  it("starts the booking from the bar's button when it can be booked, else pulls the sheet up", () => {
+    const onClick = vi.fn();
+    bookingCard.action = { label: "Book now", disabled: false, pending: false, onClick };
+    const { result } = renderHook(() => useExperienceDetailsViewModel("exp-1"));
+    act(() => result.current.onBookFromBar());
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(result.current.mobileBookingOpen).toBe(false);
+
+    bookingCard.action = { label: "Select at least 2 guests", disabled: true, pending: false, onClick };
+    const blocked = renderHook(() => useExperienceDetailsViewModel("exp-1"));
+    act(() => blocked.result.current.onBookFromBar());
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(blocked.result.current.mobileBookingOpen).toBe(true);
+  });
+
   it("saves a guest's pick as a checkout draft and goes to checkout", () => {
     renderHook(() => useExperienceDetailsViewModel("exp-1"));
     const { onGuestBook } = bookingProps.mock.lastCall![0] as { onGuestBook: (d: unknown) => void };
@@ -144,27 +180,17 @@ describe("useExperienceDetailsViewModel", () => {
     expect(bookingProps).toHaveBeenLastCalledWith(expect.objectContaining({ onGuestBook: undefined }));
   });
 
-  it("goes back in history, or home without any", () => {
-    const { result } = renderHook(() => useExperienceDetailsViewModel("exp-1"));
-    vi.spyOn(window.history, "length", "get").mockReturnValue(3);
-    act(() => result.current.onBack());
-    expect(back).toHaveBeenCalled();
-    vi.spyOn(window.history, "length", "get").mockReturnValue(1);
-    act(() => result.current.onBack());
-    expect(push).toHaveBeenCalledWith("/");
+  it("remembers the referral code on the link the visitor arrived through", () => {
+    window.history.pushState({}, "", "?ref=DANIEL10");
+    renderHook(() => useExperienceDetailsViewModel("exp-1"));
+    expect(captureReferral).toHaveBeenCalledWith("?ref=DANIEL10");
+    window.history.pushState({}, "", "/");
   });
 
-  it("shares through the share sheet, or copies the link", async () => {
+  it("opens the share dialog for this page", () => {
     const { result } = renderHook(() => useExperienceDetailsViewModel("exp-1"));
-    const share = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "share", { value: share, configurable: true });
-    await act(() => result.current.onShare());
-    expect(share).toHaveBeenCalledWith(expect.objectContaining({ title: "Sunrise Kayaking" }));
-
-    Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
-    await act(() => result.current.onShare());
-    expect(writeText).toHaveBeenCalledWith(window.location.href);
+    expect(shareOptions).toHaveBeenLastCalledWith(expect.objectContaining({ path: "/experiences/exp-1" }));
+    act(() => result.current.onShare());
+    expect(shareOpen).toHaveBeenCalled();
   });
 });

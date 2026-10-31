@@ -20,35 +20,50 @@ const INFO_ICONS: Record<BookingCardInfoIcon, LucideIcon> = {
   group: Users,
 };
 
-/** The white rounded frame both booking cards share. */
+/** The white rounded frame both booking cards share. With `onClose` it is the
+ * mobile bottom sheet: a drag handle, the listing's title and a close button
+ * on top, and rounded top corners only. */
 export function BookingCardShell({
   className,
   onClose,
+  title,
   children,
 }: {
   className?: string;
-  /** Shows a close button, for the mobile bottom sheet. */
+  /** Turns the card into the mobile bottom sheet, with a close button. */
   onClose?: () => void;
+  /** The sheet header's title: the experience or event. */
+  title?: string;
   children: ReactNode;
 }) {
+  const sheet = !!onClose;
   return (
     <div
       className={cn(
-        "relative flex w-full flex-col gap-5 rounded-[32px] border border-[#E7E7E7] bg-white px-7 py-8",
+        "relative flex w-full flex-col bg-white",
+        sheet
+          ? "rounded-t-[24px] px-4 pt-2 pb-[34px]"
+          : "gap-5 rounded-[32px] border border-[#E7E7E7] px-7 py-8",
         className,
       )}
     >
-      {onClose && (
-        <button
-          type="button"
-          aria-label="Close"
-          onClick={onClose}
-          className="absolute top-4 right-4 flex size-8 cursor-pointer items-center justify-center rounded-full bg-[#F4F2EE] text-[#333134]"
-        >
-          <X className="size-4" />
-        </button>
+      {sheet && (
+        <div className="flex flex-col items-center gap-1.5 pb-3">
+          <span aria-hidden className="h-1 w-9 rounded-sm bg-[#E0E0E0]" />
+          <div className="flex w-full items-center justify-between gap-2">
+            <p className="min-w-0 truncate font-sans text-lg leading-[27px] font-medium text-[#333134]">{title}</p>
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={onClose}
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center"
+            >
+              <X className="size-6 text-[#333134]" />
+            </button>
+          </div>
+        </div>
       )}
-      {children}
+      <div className="flex flex-col gap-5">{children}</div>
     </div>
   );
 }
@@ -121,7 +136,12 @@ export function BookingCardTotalView({ total }: { total: BookingCardTotal }) {
         <div className="flex min-h-9 items-center justify-between text-[#333134]">
           <span className="font-sans text-xl leading-[30px] font-medium">Total</span>
           {total.amount ? (
-            <span className="font-sans text-2xl leading-9 font-semibold">{total.amount}</span>
+            <span
+              className={cn("font-sans text-2xl leading-9 font-semibold transition-opacity", total.updating && "opacity-60")}
+              aria-busy={total.updating}
+            >
+              {total.amount}
+            </span>
           ) : (
             <span className="font-sans text-base text-[#6F6B72]">{total.hint}</span>
           )}

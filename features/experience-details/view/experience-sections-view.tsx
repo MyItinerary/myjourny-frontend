@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import {
+  DetailCategoryCards,
   DetailDivider,
   DetailExpandableText,
   DetailFact,
@@ -132,6 +133,11 @@ export function ExperienceSectionsView({ content }: { content: ExperienceDetails
           <DetailSection title="Where you’ll be">
             <DetailMapPlaceholder label={content.location} />
             <DetailNote icon={MapPin}>Exact meeting point shared after booking.</DetailNote>
+          </DetailSection>
+        )}
+        {content.moreWays.length > 0 && (
+          <DetailSection title={`More ways to experience ${content.city ?? "your city"}`}>
+            <DetailCategoryCards items={content.moreWays} hrefFor={(slug) => `/categories/${slug}`} />
           </DetailSection>
         )}
     </>

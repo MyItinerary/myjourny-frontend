@@ -44,6 +44,14 @@ function buildFacts(experience: ExperienceDetail): ExperienceFact[] {
   return facts.filter((fact): fact is ExperienceFact => fact !== null);
 }
 
+// Experience categories (the same slugs the home page's category pills use).
+export const MORE_WAYS = [
+  { id: "food", slug: "local-food-drinks", title: "Local food & drinks", subtitle: "Street eats, cafés, and hidden spots" },
+  { id: "nature", slug: "nature-outdoors", title: "Nature & outdoors", subtitle: "Trails, water, and open air" },
+  { id: "art", slug: "art-creativity", title: "Art & creativity", subtitle: "Studios, galleries, and workshops" },
+  { id: "nightlife", slug: "nightlife", title: "Music & nightlife", subtitle: "Rooftops, live sets, late nights" },
+];
+
 const clean = (list?: string[] | null) => (list ?? []).map((item) => item.trim()).filter(Boolean);
 
 /** Everything the experience page shows, from itin's experience. */
@@ -77,6 +85,8 @@ export function buildExperienceDetails(
     included: clean(experience.whats_included),
     notIncluded: clean(experience.whats_not_included),
     safetyNotes: clean(experience.safety_info?.notes),
+    city: experience.city?.trim() || null,
+    moreWays: MORE_WAYS,
     cancellationPolicy: experience.cancellation_policy?.trim() || null,
   };
 }

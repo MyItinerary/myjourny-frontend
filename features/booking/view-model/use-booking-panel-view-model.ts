@@ -75,6 +75,10 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
   seatsWarning: string | null;
   /** Null until the selection can be booked and is priced. */
   total: string | null;
+  /** The list-price total, shown the instant a ticket is added while the server's quote is still on its way. Null when nothing can be booked. */
+  totalEstimate: string | null;
+  /** The server is pricing the latest selection. */
+  totalUpdating: boolean;
   booking: { available: boolean; disabled: boolean; pending: boolean; label: string; onBook: () => void };
 };
 
@@ -312,6 +316,8 @@ export function useBookingPanelViewModel({
         ? `Only ${seatsLeft} spot${seatsLeft === 1 ? "" : "s"} left for this session.`
         : null,
     total,
+    totalEstimate: selection ? formatPrice(estimateTotal(), currency) : null,
+    totalUpdating: !!selection && quoting,
     booking: {
       available: !!guideId,
       disabled: !isReady || (quoting && !onGuestBook) || createBooking.isPending,

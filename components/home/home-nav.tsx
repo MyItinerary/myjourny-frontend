@@ -8,7 +8,7 @@ import { Bell, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { PlaneNavIcon } from "@/components/icons/nav-icons";
+import { UserAvatar } from "@/components/shared/user-avatar";
 import { useSession } from "@/lib/auth/session-store";
 import { useLogout } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
@@ -170,7 +170,9 @@ export function HomeNav({ className }: { className?: string }) {
       // Navbar becomes fixed when scrolling starts
       const scrolled = window.scrollY > 20;
       setIsScrolled(scrolled);
-      if (!scrolled) {
+      // On desktop the search sits in the page until the nav docks; on mobile
+      // it opens from the search button at any scroll position.
+      if (!scrolled && window.matchMedia("(min-width: 1024px)").matches) {
         setIsSearchExpanded(false);
         setActiveSearchTab(null);
       }
@@ -221,26 +223,26 @@ export function HomeNav({ className }: { className?: string }) {
     <>
       {/* Dimmed backdrop overlay when search component is opened on fixed navbar */}
       <AnimatePresence>
-        {isScrolled && isSearchExpanded && (
+        {isSearchExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={handleCloseSearch}
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
+            className={cn("fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]", !isScrolled && "lg:hidden")}
           />
         )}
       </AnimatePresence>
 
       {/* Spacer to preserve document flow since header is fixed */}
-      <div className="relative h-[68px] sm:h-[76px] w-full lg:h-[100px]">
+      <div className="relative h-[72px] w-full lg:h-[100px]">
         <header
           className={cn(
             "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
             isScrolled
               ? "bg-[rgba(255,255,255,0.93)] backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.05)]"
-              : "bg-transparent",
+              : "bg-white/93 lg:bg-transparent",
             className
           )}
           style={{
@@ -250,8 +252,8 @@ export function HomeNav({ className }: { className?: string }) {
           {/* Main nav row: max 1512px width & 100px height on desktop */}
           <div
             className={cn(
-              "mx-auto flex w-full max-w-[1512px] items-center justify-between px-3 sm:px-6 transition-all duration-300 lg:px-20",
-              "h-[68px] sm:h-[76px] lg:h-[100px]"
+              "mx-auto flex w-full max-w-[1512px] items-center justify-between px-4 transition-all duration-300 lg:px-20",
+              "h-[72px] lg:h-[100px]"
             )}
             style={{
               maxWidth: "1512px",
@@ -266,7 +268,7 @@ export function HomeNav({ className }: { className?: string }) {
                 height={29}
                 priority
                 style={{ width: "auto" }}
-                className="h-[22px] sm:h-[26px] w-auto lg:h-[29px]"
+                className="h-6 w-auto lg:h-[29px]"
               />
             </Link>
 
@@ -384,29 +386,6 @@ export function HomeNav({ className }: { className?: string }) {
               </AnimatePresence>
             </div>
 
-            {/* Mobile compact search pill when scrolled and not expanded */}
-            {isScrolled && !isSearchExpanded && (
-              <motion.button
-                type="button"
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => handleOpenSearch("where")}
-                className="mx-2 flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-full border border-[#E0DFDD] bg-[#F4F2EE] py-1.5 pl-3 pr-1.5 shadow-xs transition-all hover:border-[#c7c1ba] sm:mx-3 lg:hidden cursor-pointer"
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
-                  <PlaneNavIcon className="size-3.5 shrink-0 text-[#6F6B72]" />
-                  <span className="truncate font-sans text-[12px] sm:text-[13px] font-medium text-[#333134]">
-                    Where / When / Who
-                  </span>
-                </div>
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-xs">
-                  <Search className="size-3.5 stroke-[2.5]" />
-                </span>
-              </motion.button>
-            )}
-
             {/* Right Nav: Notifications + Profile Icon Trigger + Dropdown Menu */}
             <div className="relative flex items-center gap-2 sm:gap-3 shrink-0">
               <Link
@@ -417,7 +396,7 @@ export function HomeNav({ className }: { className?: string }) {
               </Link>
 
               {user && (
-                <div ref={notifContainerRef} className="relative">
+                <div ref={notifContainerRef} className="relative hidden lg:block">
                   <button
                     type="button"
                     aria-label="Notifications"
@@ -461,8 +440,36 @@ export function HomeNav({ className }: { className?: string }) {
                 </div>
               )}
 
+              {/* Mobile: search and menu buttons (Figma "Desktop nav" 2577:42149). */}
+              <button
+                type="button"
+                aria-label="Search"
+                onClick={() => handleOpenSearch("where")}
+                className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-[12px] bg-[#F4F2EE] text-[#333134] transition-colors hover:bg-[#eae8e3] lg:hidden"
+              >
+                <Search className="size-5" />
+              </button>
+
               {/* Profile icon button trigger */}
               <div ref={menuContainerRef} className="relative">
+                <button
+                  type="button"
+                  aria-label="Menu"
+                  title="Menu"
+                  aria-expanded={profileMenuOpen}
+                  onClick={() => {
+                    setProfileMenuOpen((prev) => !prev);
+                    setNotificationsOpen(false);
+                  }}
+                  className={cn(
+                    "flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-[12px] bg-[#F4F2EE] text-[#333134] transition-colors hover:bg-[#eae8e3] lg:hidden",
+                    profileMenuOpen && "ring-2 ring-brand/20"
+                  )}
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
+                    <path d="M3 7h14M3 13h14" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" />
+                  </svg>
+                </button>
                 <button
                   type="button"
                   aria-label="Profile menu"
@@ -473,8 +480,8 @@ export function HomeNav({ className }: { className?: string }) {
                     setNotificationsOpen(false);
                   }}
                   className={cn(
-                    "flex shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer",
-                    "size-10 sm:size-11 lg:size-12",
+                    "hidden shrink-0 items-center justify-center rounded-[12px] text-[#333134] transition-all cursor-pointer lg:flex",
+                    "lg:size-12",
                     isScrolled
                       ? "bg-[#F4F2EE] hover:bg-[#eae8e3]"
                       : "bg-[#FFF] hover:bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.04)]",
@@ -485,13 +492,7 @@ export function HomeNav({ className }: { className?: string }) {
                     background: profileMenuOpen || isScrolled ? "#F4F2EE" : "#FFF",
                   }}
                 >
-                  <Image
-                    src="/icons/nav/profile-button.png"
-                    alt=""
-                    width={48}
-                    height={48}
-                    className="size-full rounded-[12px] object-cover"
-                  />
+                  <UserAvatar user={user} />
                 </button>
 
                 {/* Floating Dropdown Card Menu */}
@@ -565,13 +566,13 @@ export function HomeNav({ className }: { className?: string }) {
 
           {/* Expanded Search Bar Container inside the Fixed Navbar */}
           <AnimatePresence>
-            {isScrolled && isSearchExpanded && (
+            {isSearchExpanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.24, ease: "easeOut" }}
-                className="overflow-visible pb-4 pt-1 px-4 lg:px-20"
+                className={cn("overflow-visible pb-4 pt-1 px-4 lg:px-20", !isScrolled && "lg:hidden")}
               >
                 <div className="mx-auto flex w-full max-w-[860px] justify-center">
                   <NavSearchBar

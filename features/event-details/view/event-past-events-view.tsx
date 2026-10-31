@@ -19,7 +19,7 @@ export function EventPastEventsView({ events }: { events: EventDetail["pastEvent
     <section aria-labelledby="past-events" className="mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[77px] lg:px-20 lg:pb-[79px]">
       <div className="flex items-center justify-between gap-4">
         <h2 id="past-events" className="font-sans text-[32px] leading-[120%] font-extrabold text-[#333134] lg:text-[40px] lg:leading-[48px]">
-          Past events
+          Past events by this host
         </h2>
         <div className="flex gap-1">
           <button
@@ -48,16 +48,13 @@ export function EventPastEventsView({ events }: { events: EventDetail["pastEvent
           <li key={event.id} className="flex w-[243px] shrink-0 snap-start flex-col gap-2.5">
             <div
               className={cn(
-                "relative flex h-[200px] flex-col justify-end overflow-hidden rounded-[20px] p-2.5",
+                "relative h-[200px] overflow-hidden rounded-[20px]",
                 TONE_CLASSES[event.tone],
               )}
             >
               {event.imageUrl && (
                 <Image src={event.imageUrl} alt="" fill unoptimized sizes="243px" className="object-cover" />
               )}
-              <span className="relative w-fit rounded-md bg-white/70 px-2 py-1 font-sans text-xs text-[#6F6B72]">
-                {event.caption}
-              </span>
             </div>
             <p className="font-sans text-[15px] font-medium text-[#333134]">{event.title}</p>
           </li>

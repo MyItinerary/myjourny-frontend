@@ -36,6 +36,10 @@ export type ExperienceDetailsContent = {
   included: string[];
   notIncluded: string[];
   safetyNotes: string[];
+  /** City, for "More ways to experience Lagos". Null when the experience has none. */
+  city: string | null;
+  /** Experience category cards: they open /categories/{slug}. */
+  moreWays: { id: string; slug: string; title: string; subtitle: string }[];
   /** Reads like "Free cancellation" copy, from the experience's own policy. */
   cancellationPolicy: string | null;
 };

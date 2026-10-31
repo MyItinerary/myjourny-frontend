@@ -134,6 +134,32 @@ export function DetailNote({ children, icon: Icon = Info }: { children: ReactNod
   );
 }
 
+/** Category cards ("More ways to experience Lagos"): each links to its category page. */
+export function DetailCategoryCards({
+  items,
+  hrefFor,
+}: {
+  items: { id: string; slug: string; title: string; subtitle: string }[];
+  /** Where a category lives: /categories/{slug} for experiences, /events/categories/{slug} for events. */
+  hrefFor: (slug: string) => string;
+}) {
+  return (
+    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {items.map((way) => (
+        <li key={way.id} className="min-w-0">
+          <Link
+            href={hrefFor(way.slug)}
+            className="flex min-w-0 flex-col gap-0.5 rounded-[20px] bg-[#F4F2EE] p-[18px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs focus-visible:outline-2 focus-visible:outline-[#32070F]"
+          >
+            <span className="truncate font-sans text-[17px] font-medium text-[#333134]">{way.title}</span>
+            <span className="truncate font-sans text-sm text-[#6F6B72]">{way.subtitle}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** The host (or organiser) on the left, where it happens on the right. */
 export function DetailHostStrip({
   name,

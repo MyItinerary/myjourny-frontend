@@ -27,10 +27,13 @@ const grid = () => within(screen.getByTestId("gallery-grid"));
 const strip = () => within(screen.getByTestId("gallery-strip"));
 
 describe("ExperienceGalleryView", () => {
-  it("shows a placeholder when there are no photos", () => {
+  it("shows five placeholder tiles when there are no photos", () => {
     renderWithProviders(<ExperienceGalleryView {...viewModel({ images: [] })} alt="Lagos Food Walk" />);
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByTestId("gallery-grid").children).toHaveLength(6);
+    // The View all chip is there, but has nothing to open yet.
+    expect(screen.getByRole("button", { name: "View all" })).toBeDisabled();
   });
 
   it("puts five photos in the grid and the rest behind View all", async () => {
@@ -48,22 +51,26 @@ describe("ExperienceGalleryView", () => {
     expect(vm.onOpenViewer).toHaveBeenCalledWith(2);
   });
 
-  it("has no View all when every photo fits in the grid", () => {
-    renderWithProviders(<ExperienceGalleryView {...viewModel({ images: photos(5) })} alt="Lagos Food Walk" />);
+  it("always offers View all, even when every photo fits in the grid", async () => {
+    const vm = viewModel({ images: photos(5) });
+    const { user } = renderWithProviders(<ExperienceGalleryView {...vm} alt="Lagos Food Walk" />);
     expect(grid().getAllByRole("img")).toHaveLength(5);
-    expect(screen.queryByRole("button", { name: /View all/ })).not.toBeInTheDocument();
+    await user.click(grid().getByRole("button", { name: "View all 5 photos" }));
+    expect(vm.onOpenViewer).toHaveBeenCalledWith(0);
   });
 
-  it("lays out one or two photos without empty tiles", () => {
+  it("keeps five tiles with fewer photos, filling the rest with placeholders", () => {
     const { unmount } = renderWithProviders(
       <ExperienceGalleryView {...viewModel({ images: photos(1) })} alt="Lagos Food Walk" />,
     );
-    expect(grid().getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByTestId("gallery-grid").children).toHaveLength(6);
+    expect(grid().getAllByRole("button")).toHaveLength(2);
     expect(strip().queryByText("1 / 1")).not.toBeInTheDocument();
     unmount();
 
-    renderWithProviders(<ExperienceGalleryView {...viewModel({ images: photos(2) })} alt="Lagos Food Walk" />);
-    expect(grid().getAllByRole("button")).toHaveLength(2);
+    renderWithProviders(<ExperienceGalleryView {...viewModel({ images: photos(3) })} alt="Lagos Food Walk" />);
+    expect(screen.getByTestId("gallery-grid").children).toHaveLength(6);
+    expect(grid().getAllByRole("button")).toHaveLength(4);
   });
 
   it("lets small screens swipe through every photo with a counter", async () => {

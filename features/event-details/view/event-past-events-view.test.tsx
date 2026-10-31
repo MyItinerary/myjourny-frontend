@@ -6,16 +6,18 @@ import { renderWithProviders } from "@/test/utils/render";
 import { EventPastEventsView } from "./event-past-events-view";
 
 const events = [
-  { id: "p1", title: "Afro Futures Summit 2025", caption: "Crowd in the main hall", imageUrl: null, tone: 2 as const },
-  { id: "p2", title: "Salon: Water", caption: "Round-table evening", imageUrl: "https://img.test/w.jpg", tone: 5 as const },
+  { id: "p1", title: "Afro Futures Summit 2025", imageUrl: null, tone: 2 as const },
+  { id: "p2", title: "Salon: Water", imageUrl: "https://img.test/w.jpg", tone: 5 as const },
 ];
 
 describe("EventPastEventsView", () => {
-  it("shows each past event with its caption", () => {
+  it("shows each past event by its title", () => {
     renderWithProviders(<EventPastEventsView events={events} />);
-    expect(screen.getByRole("heading", { name: "Past events" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Past events by this host" })).toBeInTheDocument();
     expect(screen.getByText("Afro Futures Summit 2025")).toBeInTheDocument();
-    expect(screen.getByText("Round-table evening")).toBeInTheDocument();
+    // No caption chips on the photos.
+    expect(screen.queryByText("Round-table evening")).not.toBeInTheDocument();
+    expect(screen.queryByText("Crowd in the main hall")).not.toBeInTheDocument();
   });
 
   it("scrolls the row with the arrows", async () => {

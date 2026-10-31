@@ -15,8 +15,10 @@ import {
 
 type Props = EventBookingCardProps & {
   className?: string;
-  /** Shows a close button, for the mobile bottom sheet. */
+  /** Shows the sheet header with a close button, for the mobile bottom sheet. */
   onClose?: () => void;
+  /** The sheet header's title. */
+  title?: string;
 };
 
 const MARKER_STYLES = {
@@ -102,9 +104,9 @@ function TierCard({ tier }: { tier: EventTierRow }) {
 
 /** The booking card on an event page: the date, ticket tiers with
  * steppers, total and the book button. */
-export function EventBookingCardView({ className, onClose, ...card }: Props) {
+export function EventBookingCardView({ className, onClose, title, ...card }: Props) {
   return (
-    <BookingCardShell className={className} onClose={onClose}>
+    <BookingCardShell className={className} onClose={onClose} title={title}>
       <div className="flex items-center gap-3 rounded-2xl bg-[#F4F2EE] px-3.5 py-3">
         <BookingCardIconTile icon={CalendarDays} tone="white" />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">

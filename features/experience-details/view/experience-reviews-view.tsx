@@ -105,7 +105,6 @@ function Review({ review, onToggleHelpful }: { review: ReviewRow; onToggleHelpfu
           <ThumbsUp className="size-4" aria-hidden />
           {review.voted ? `Helpful · ${review.helpfulCount}` : "Was this helpful?"}
         </button>
-        <span className="font-sans text-[13px] leading-[18px] text-[#6F6B72]">Report</span>
       </footer>
     </article>
   );

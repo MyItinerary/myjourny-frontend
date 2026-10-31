@@ -22,7 +22,13 @@ describe("SAMPLE_EVENT", () => {
     }
   });
 
-  it("points every category card at a category page", () => {
+  it("has similar events whose ids are unique and open the sample page", () => {
+    expect(SAMPLE_EVENT.similar.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(SAMPLE_EVENT.similar.map((item) => item.id)).size).toBe(SAMPLE_EVENT.similar.length);
+    for (const item of SAMPLE_EVENT.similar) expect(item.id.startsWith(`${SAMPLE_EVENT_ID}-`)).toBe(true);
+  });
+
+  it("points every category card at an event category", () => {
     for (const way of SAMPLE_EVENT.moreWays) expect(way.slug).toMatch(/^[a-z0-9-]+$/);
   });
 

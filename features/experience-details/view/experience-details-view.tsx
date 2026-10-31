@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, Heart, Share2, Star } from "lucide-react";
+import { Star } from "lucide-react";
 
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
@@ -11,7 +11,7 @@ import { SaveToCollectionModal } from "@/components/wishlists/save-to-collection
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookingBarView, ExperienceBookingCardView } from "@/features/booking";
 import { ExperienceGalleryView } from "@/features/experience-gallery";
-import { cn } from "@/lib/utils";
+import { ShareDialogView } from "@/features/share";
 
 import type { ExperienceDetailsViewModel } from "../view-model/use-experience-details-view-model";
 import { ExperienceReviewsView } from "./experience-reviews-view";
@@ -43,39 +43,7 @@ export function ExperienceDetailsView(vm: ExperienceDetailsViewModel) {
 
   return (
     <div className="flex flex-1 flex-col pb-24 lg:pb-0">
-      <div className="hidden lg:block">
-        <HomeNav />
-      </div>
-
-      {/* Mobile compact header: back, wishlist, share. */}
-      <div className="flex items-center justify-between px-6 py-4 lg:hidden">
-        <button
-          type="button"
-          aria-label="Back"
-          onClick={vm.onBack}
-          className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
-        >
-          <ChevronLeft className="size-5 text-foreground" />
-        </button>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={vm.saved ? "Remove from wishlist" : "Add to wishlist"}
-            onClick={vm.onToggleSave}
-            className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
-          >
-            <Heart className={cn("size-[18px]", vm.saved ? "fill-brand text-brand" : "text-foreground")} />
-          </button>
-          <button
-            type="button"
-            aria-label="Share"
-            onClick={vm.onShare}
-            className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
-          >
-            <Share2 className="size-[18px] text-foreground" />
-          </button>
-        </div>
-      </div>
+      <HomeNav />
 
       {status === "loading" && <Loading />}
       {status === "error" && <LoadError />}
@@ -115,7 +83,6 @@ export function ExperienceDetailsView(vm: ExperienceDetailsViewModel) {
                     )}
                   </p>
                   <DetailActions
-                    className="hidden lg:flex"
                     saved={vm.saved}
                     onToggleSave={vm.onToggleSave}
                     onShare={vm.onShare}
@@ -151,7 +118,9 @@ export function ExperienceDetailsView(vm: ExperienceDetailsViewModel) {
             />
           )}
 
-          <BookingBarView priceFrom={vm.priceFrom} onBookNow={vm.onOpenMobileBooking} />
+          <ShareDialogView {...vm.share} />
+
+          <BookingBarView {...vm.bar} onAction={vm.onBookFromBar} onExpand={vm.onOpenMobileBooking} />
 
           {/* Mobile bottom sheet: the same booking card as the sidebar. */}
           {vm.mobileBookingOpen && (
@@ -162,10 +131,10 @@ export function ExperienceDetailsView(vm: ExperienceDetailsViewModel) {
                 onClick={vm.onCloseMobileBooking}
                 className="absolute inset-0 bg-black/40"
               />
-              <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-[32px]">
+              <div className="animate-in slide-in-from-bottom absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-[24px] duration-300">
                 <ExperienceBookingCardView
                   {...vm.booking}
-                  className="rounded-b-none border-b-0"
+                  title={content.title}
                   onClose={vm.onCloseMobileBooking}
                 />
               </div>

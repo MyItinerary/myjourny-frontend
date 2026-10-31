@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ExperienceDetail } from "@/lib/queries/experiences";
 
-import { buildExperienceDetails } from "./experience-details";
+import { buildExperienceDetails, MORE_WAYS } from "./experience-details";
 
 const base: ExperienceDetail = { id: "exp-1", status: "ACTIVE", title: "Sunrise Kayaking" };
 
@@ -88,6 +88,14 @@ describe("buildExperienceDetails", () => {
     expect(content.included).toEqual(["Kayak"]);
     expect(content.notIncluded).toEqual(["Tips"]);
     expect(content.safetyNotes).toEqual(["Life jackets are mandatory"]);
+  });
+
+  it("offers experience categories, not event categories, named for the city", () => {
+    const content = buildExperienceDetails({ ...base, city: "Lagos" }, "1 hour");
+    expect(content.city).toBe("Lagos");
+    expect(content.moreWays).toBe(MORE_WAYS);
+    expect(MORE_WAYS.map((way) => way.slug)).toEqual(["local-food-drinks", "nature-outdoors", "art-creativity", "nightlife"]);
+    expect(buildExperienceDetails(base, "1 hour").city).toBeNull();
   });
 
   it("describes the host", () => {

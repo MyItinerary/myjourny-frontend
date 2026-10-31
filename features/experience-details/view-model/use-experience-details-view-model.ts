@@ -1,16 +1,17 @@
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 import { saveCheckoutDraft } from "@/features/checkout";
 import {
   type BookingCardInfoRow,
+  type BookingBarProps,
   type ExperienceBookingCardProps,
   type GuestBookingDetails,
-  formatPrice,
+  toExperienceBookingBar,
   useExperienceBookingCardViewModel,
 } from "@/features/booking";
 import { type ExperienceGalleryViewModel, useExperienceGalleryViewModel } from "@/features/experience-gallery";
+import { captureReferral, type ShareDialogViewModel, useShareDialogViewModel } from "@/features/share";
 import { useSession } from "@/lib/auth/session-store";
 import {
   experienceListItemToCardProps,
@@ -41,17 +42,20 @@ export type ExperienceDetailsViewModel = {
   gallery: ExperienceGalleryViewModel;
   reviews: ExperienceReviewsViewModel;
   booking: ExperienceBookingCardProps;
-  /** "₦16,000", for the mobile bar. */
-  priceFrom: string;
+  /** The collapsed mobile bar. */
+  bar: BookingBarProps;
   mobileBookingOpen: boolean;
   onOpenMobileBooking: () => void;
+  /** The bar's button: starts the booking, or pulls the sheet up when the selection can't be booked yet. */
+  onBookFromBar: () => void;
   onCloseMobileBooking: () => void;
   saved: boolean;
   onToggleSave: () => void;
   saveModalOpen: boolean;
   onCloseSaveModal: () => void;
+  /** Opens the share dialog. */
   onShare: () => void;
-  onBack: () => void;
+  share: ShareDialogViewModel;
   similar: ReturnType<typeof experienceMatchToCardProps>[];
 };
 
@@ -71,10 +75,6 @@ export function useExperienceDetailsViewModel(id: string): ExperienceDetailsView
   const { data: experience, isLoading, isError } = useExperienceDetail(id);
   const gallery = useExperienceGalleryViewModel(experience);
   const { data: prices } = useExperiencePrices(id);
-  const minPrice = (prices ?? []).reduce(
-    (min, p) => (min === null || p.amount < min ? p.amount : min),
-    null as number | null,
-  );
   const currency = experience?.currency ?? "NGN";
   const durationLabel = formatDuration(experience?.duration_minutes) || "Flexible";
 
@@ -126,19 +126,17 @@ export function useExperienceDetailsViewModel(id: string): ExperienceDetailsView
     info,
   });
 
-  const onShare = async () => {
-    const url = window.location.href;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: experience?.title, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied");
-    } catch {
-      // The visitor closed the share sheet, or the clipboard is blocked.
-    }
-  };
+  // A visitor who arrived through someone's referral link keeps that code.
+  useEffect(() => {
+    captureReferral(window.location.search);
+  }, []);
+
+  const share = useShareDialogViewModel({
+    path: `/experiences/${id}`,
+    title: experience?.title ?? "this experience",
+    imageUrl: gallery.images[0] ?? null,
+    kind: "experience",
+  });
 
   return {
     status: isLoading ? "loading" : isError || !experience ? "error" : "ready",
@@ -146,16 +144,20 @@ export function useExperienceDetailsViewModel(id: string): ExperienceDetailsView
     gallery,
     reviews,
     booking,
-    priceFrom: formatPrice(minPrice ?? 0, currency),
+    bar: toExperienceBookingBar(booking),
     mobileBookingOpen,
     onOpenMobileBooking: () => setMobileBookingOpen(true),
+    onBookFromBar: () => {
+      if (booking.action && !booking.action.disabled) booking.action.onClick();
+      else setMobileBookingOpen(true);
+    },
     onCloseMobileBooking: () => setMobileBookingOpen(false),
     saved: wishlistIds?.has(id) ?? false,
     onToggleSave: () => setSaveModalOpen(true),
     saveModalOpen,
     onCloseSaveModal: () => setSaveModalOpen(false),
-    onShare,
-    onBack: () => (window.history.length > 1 ? router.back() : router.push("/")),
+    onShare: share.onOpen,
+    share,
     similar,
   };
 }

@@ -60,6 +60,8 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
     quoteError: null,
     seatsWarning: null,
     total: "₦9,000.00",
+    totalEstimate: "₦9,000.00",
+    totalUpdating: false,
     booking: { available: true, disabled: false, pending: false, label: "Book now - ₦9,000.00", onBook: vi.fn() },
     ...overrides,
   };

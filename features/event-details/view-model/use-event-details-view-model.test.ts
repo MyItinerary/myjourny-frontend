@@ -5,21 +5,29 @@ import { SAMPLE_EVENT } from "../model/sample-event";
 import type { EventDetail } from "../model/event-details.types";
 import { useEventDetailsViewModel } from "./use-event-details-view-model";
 
-const push = vi.fn();
-const back = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, back }) }));
 const toast = { info: vi.fn(), success: vi.fn() };
+const shareOpen = vi.fn();
+const shareOptions = vi.fn();
+const captureReferral = vi.fn();
+vi.mock("@/features/share", () => ({
+  captureReferral: (search: string) => captureReferral(search),
+  useShareDialogViewModel: (options: unknown) => {
+    shareOptions(options);
+    return { onOpen: shareOpen };
+  },
+}));
 vi.mock("sonner", () => ({ toast: { info: (m: string) => toast.info(m), success: (m: string) => toast.success(m) } }));
 
 const query = { data: undefined as EventDetail | undefined, isLoading: false, isError: false };
 vi.mock("../model/event-details", () => ({ useEventDetail: () => query }));
 
 const bookingOptions = vi.fn();
+const bookingAction = { label: "Get tickets", disabled: true, pending: false, onClick: vi.fn() };
 vi.mock("@/features/booking", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/booking")>()),
   useEventBookingCardViewModel: (options: unknown) => {
     bookingOptions(options);
-    return { marker: "card" };
+    return { marker: "card", action: bookingAction };
   },
 }));
 
@@ -35,8 +43,14 @@ describe("useEventDetailsViewModel", () => {
     const { result } = renderHook(() => useEventDetailsViewModel("sample"));
     expect(result.current.status).toBe("ready");
     expect(result.current.event?.title).toBe("Afro Futures Summit");
-    expect(result.current.booking).toEqual({ marker: "card" });
-    expect(result.current.priceFrom).toBe("₦10,000");
+    expect(result.current.booking).toMatchObject({ marker: "card" });
+    expect(result.current.bar).toEqual({
+      summary: "From ₦10,000 per ticket",
+      detail: "Sat 14 Nov · Doors 8:30am",
+      urgency: "4 left in Regular",
+      actionLabel: "Get tickets",
+      actionDisabled: false,
+    });
     expect(bookingOptions).toHaveBeenLastCalledWith(expect.objectContaining({ data: SAMPLE_EVENT.booking }));
   });
 
@@ -81,6 +95,20 @@ describe("useEventDetailsViewModel", () => {
     expect(toast.info).toHaveBeenCalledWith("Ticket sales for this event open soon.");
   });
 
+  it("gets the tickets from the bar's button when some are picked, else pulls the sheet up", () => {
+    bookingAction.disabled = false;
+    const { result } = renderHook(() => useEventDetailsViewModel("sample"));
+    act(() => result.current.onBookFromBar());
+    expect(bookingAction.onClick).toHaveBeenCalledTimes(1);
+    expect(result.current.mobileBookingOpen).toBe(false);
+
+    bookingAction.disabled = true;
+    const none = renderHook(() => useEventDetailsViewModel("sample"));
+    act(() => none.result.current.onBookFromBar());
+    expect(bookingAction.onClick).toHaveBeenCalledTimes(1);
+    expect(none.result.current.mobileBookingOpen).toBe(true);
+  });
+
   it("links similar events to their own pages, without a save button", () => {
     query.data = {
       ...SAMPLE_EVENT,
@@ -94,27 +122,17 @@ describe("useEventDetailsViewModel", () => {
     ]);
   });
 
-  it("goes back in history, or home without any", () => {
-    const { result } = renderHook(() => useEventDetailsViewModel("sample"));
-    vi.spyOn(window.history, "length", "get").mockReturnValue(3);
-    act(() => result.current.onBack());
-    expect(back).toHaveBeenCalled();
-    vi.spyOn(window.history, "length", "get").mockReturnValue(1);
-    act(() => result.current.onBack());
-    expect(push).toHaveBeenCalledWith("/");
+  it("remembers the referral code on the link the visitor arrived through", () => {
+    window.history.pushState({}, "", "?ref=DANIEL10");
+    renderHook(() => useEventDetailsViewModel("sample"));
+    expect(captureReferral).toHaveBeenCalledWith("?ref=DANIEL10");
+    window.history.pushState({}, "", "/");
   });
 
-  it("shares through the share sheet, or copies the link", async () => {
+  it("opens the share dialog for this page", () => {
     const { result } = renderHook(() => useEventDetailsViewModel("sample"));
-    const share = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "share", { value: share, configurable: true });
-    await act(() => result.current.onShare());
-    expect(share).toHaveBeenCalledWith(expect.objectContaining({ title: "Afro Futures Summit" }));
-    Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
-    await act(() => result.current.onShare());
-    expect(writeText).toHaveBeenCalledWith(window.location.href);
-    expect(toast.success).toHaveBeenCalledWith("Link copied");
+    expect(shareOptions).toHaveBeenLastCalledWith(expect.objectContaining({ path: "/events/sample" }));
+    act(() => result.current.onShare());
+    expect(shareOpen).toHaveBeenCalled();
   });
 });

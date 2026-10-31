@@ -16,9 +16,13 @@ vi.mock("@/components/wishlists/save-to-collection-modal", () => ({
   SaveToCollectionModal: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div role="dialog">Save</div> : null),
 }));
 vi.mock("@/features/experience-gallery", () => ({ ExperienceGalleryView: () => <div>Gallery</div> }));
+vi.mock("@/features/share", () => ({ ShareDialogView: () => null }));
 vi.mock("@/features/booking", () => ({
-  BookingBarView: ({ priceFrom, onBookNow }: { priceFrom: string; onBookNow: () => void }) => (
-    <button onClick={onBookNow}>Bar {priceFrom}</button>
+  BookingBarView: ({ summary, onAction, onExpand }: { summary: string; onAction: () => void; onExpand: () => void }) => (
+    <>
+      <button onClick={onAction}>Bar {summary}</button>
+      <button onClick={onExpand}>Expand bar</button>
+    </>
   ),
   ExperienceBookingCardView: ({ onClose }: { onClose?: () => void }) => (
     <div data-testid={onClose ? "sheet-card" : "side-card"}>{onClose && <button onClick={onClose}>Close card</button>}</div>
@@ -48,16 +52,17 @@ function vm(overrides: Partial<ExperienceDetailsViewModel> = {}): ExperienceDeta
       onToggleHelpful: vi.fn(),
     },
     booking: {} as ExperienceDetailsViewModel["booking"],
-    priceFrom: "₦16,000.00",
+    bar: { summary: "₦16,000 per person", actionLabel: "Book now" },
     mobileBookingOpen: false,
     onOpenMobileBooking: vi.fn(),
+    onBookFromBar: vi.fn(),
     onCloseMobileBooking: vi.fn(),
     saved: false,
     onToggleSave: vi.fn(),
     saveModalOpen: false,
     onCloseSaveModal: vi.fn(),
     onShare: vi.fn(),
-    onBack: vi.fn(),
+    share: { open: false } as never,
     similar: [],
     ...overrides,
   };
@@ -90,21 +95,22 @@ describe("ExperienceDetailsView", () => {
     expect(screen.getByRole("link", { name: "Back to home" })).toHaveAttribute("href", "/");
   });
 
-  it("wires back, wishlist and share", async () => {
+  it("wires wishlist and share", async () => {
     const view = vm();
     const { user } = renderWithProviders(<ExperienceDetailsView {...view} />);
-    await user.click(screen.getByRole("button", { name: "Back" }));
-    await user.click(screen.getAllByRole("button", { name: "Add to wishlist", hidden: true })[0]);
-    await user.click(screen.getAllByRole("button", { name: "Share", hidden: true })[0]);
-    expect(view.onBack).toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Add to wishlist" }));
+    await user.click(screen.getByRole("button", { name: "Share" }));
     expect(view.onToggleSave).toHaveBeenCalled();
     expect(view.onShare).toHaveBeenCalled();
   });
 
-  it("opens the mobile booking sheet from the bar and closes it", async () => {
+  it("starts the booking from the bar's button, expands the sheet from the rest of the bar, and closes it", async () => {
     const view = vm();
     const { user, rerender } = renderWithProviders(<ExperienceDetailsView {...view} />);
-    await user.click(screen.getByRole("button", { name: "Bar ₦16,000.00" }));
+    await user.click(screen.getByRole("button", { name: "Bar ₦16,000 per person" }));
+    expect(view.onBookFromBar).toHaveBeenCalled();
+    expect(view.onOpenMobileBooking).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Expand bar" }));
     expect(view.onOpenMobileBooking).toHaveBeenCalled();
     rerender(<ExperienceDetailsView {...vm({ mobileBookingOpen: true, onCloseMobileBooking: view.onCloseMobileBooking })} />);
     await user.click(screen.getByRole("button", { name: "Close card" }));

@@ -19,5 +19,10 @@ export const experienceContent: ExperienceDetailsContent = {
   included: ["Kayak and life jacket"],
   notIncluded: ["Tips for your host"],
   safetyNotes: ["Life jackets are mandatory"],
+  city: "Lagos",
+  moreWays: [
+    { id: "food", slug: "local-food-drinks", title: "Local food & drinks", subtitle: "Street eats" },
+    { id: "nature", slug: "nature-outdoors", title: "Nature & outdoors", subtitle: "Trails and water" },
+  ],
   cancellationPolicy: null,
 };

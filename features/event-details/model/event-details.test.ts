@@ -14,6 +14,10 @@ describe("fetchEvent", () => {
     await expect(fetchEvent(SAMPLE_EVENT_ID)).resolves.toBe(SAMPLE_EVENT);
   });
 
+  it("serves the sample's similar events as the sample page, under their own id", async () => {
+    await expect(fetchEvent("sample-3")).resolves.toMatchObject({ id: "sample-3", title: SAMPLE_EVENT.title });
+  });
+
   it("asks the events API for any other event", async () => {
     server.use(http.get(apiUrl("/events/ev-1"), () => HttpResponse.json({ ...SAMPLE_EVENT, id: "ev-1", title: "Lagos Salon" })));
     await expect(fetchEvent("ev-1")).resolves.toMatchObject({ id: "ev-1", title: "Lagos Salon" });

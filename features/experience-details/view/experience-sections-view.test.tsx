@@ -19,6 +19,7 @@ describe("ExperienceSectionsView", () => {
       "What’s included",
       "Safety notes",
       "Where you’ll be",
+      "More ways to experience Lagos",
     ]);
     expect(screen.getByRole("link", { name: "Kayak Thrills" })).toHaveAttribute("href", "/guides/h1");
     expect(screen.getByText("Fitness level")).toBeInTheDocument();
@@ -26,6 +27,12 @@ describe("ExperienceSectionsView", () => {
     expect(screen.getByText("Tips for your host")).toBeInTheDocument();
     expect(screen.getByText("Please note itinerary is subject to change")).toBeInTheDocument();
     expect(screen.getByText("Exact meeting point shared after booking.")).toBeInTheDocument();
+  });
+
+  it("links the category cards to experience categories", () => {
+    renderWithProviders(<ExperienceSectionsView content={content} />);
+    expect(screen.getByRole("link", { name: /Nature & outdoors/ })).toHaveAttribute("href", "/categories/nature-outdoors");
+    expect(screen.getByRole("link", { name: /Local food/ })).toHaveAttribute("href", "/categories/local-food-drinks");
   });
 
   it("numbers the itinerary", () => {
@@ -47,6 +54,7 @@ describe("ExperienceSectionsView", () => {
           notIncluded: [],
           safetyNotes: [],
           location: "",
+          moreWays: [],
         }}
       />,
     );

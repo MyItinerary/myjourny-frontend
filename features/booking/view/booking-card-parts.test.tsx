@@ -25,6 +25,8 @@ describe("booking card parts", () => {
     );
     expect(screen.getByText("₦32,000")).toBeInTheDocument();
     expect(screen.getByText("Fees and taxes included")).toBeInTheDocument();
+    rerender(<BookingCardTotalView total={{ amount: "₦48,000", hint: null, note: null, updating: true }} />);
+    expect(screen.getByText("₦48,000")).toHaveAttribute("aria-busy", "true");
     rerender(<BookingCardTotalView total={{ amount: null, hint: "Select a time", note: null }} />);
     expect(screen.getByText("Select a time")).toBeInTheDocument();
   });
@@ -58,13 +60,14 @@ describe("booking card parts", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it("closes the sheet from the shell's close button", async () => {
+  it("is a bottom sheet with the listing's title and a close button when it can close", async () => {
     const onClose = vi.fn();
     const { user } = renderWithProviders(
-      <BookingCardShell onClose={onClose}>
+      <BookingCardShell onClose={onClose} title="Kayaking in Victoria Island">
         <p>Body</p>
       </BookingCardShell>,
     );
+    expect(screen.getByText("Kayaking in Victoria Island")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Close" }));
     expect(onClose).toHaveBeenCalled();
   });

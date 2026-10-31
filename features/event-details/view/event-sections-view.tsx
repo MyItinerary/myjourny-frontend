@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Car,
   Languages,
@@ -16,7 +15,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { eventCategoryHref } from "@/features/event-categories";
 import {
+  DetailCategoryCards,
   DetailDivider,
   DetailExpandableText,
   DetailFact,
@@ -133,19 +134,7 @@ export function EventSectionsView({ event, openQuestionId, onToggleQuestion }: P
 
       {event.moreWays.length > 0 && (
         <DetailSection title={`More ways to experience ${event.city}`}>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {event.moreWays.map((way) => (
-              <li key={way.id} className="min-w-0">
-                <Link
-                  href={`/categories/${way.slug}`}
-                  className="flex min-w-0 flex-col gap-0.5 rounded-[20px] bg-[#F4F2EE] p-[18px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs focus-visible:outline-2 focus-visible:outline-[#32070F]"
-                >
-                  <span className="truncate font-sans text-[17px] font-medium text-[#333134]">{way.title}</span>
-                  <span className="truncate font-sans text-sm text-[#6F6B72]">{way.subtitle}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <DetailCategoryCards items={event.moreWays} hrefFor={eventCategoryHref} />
         </DetailSection>
       )}
 
