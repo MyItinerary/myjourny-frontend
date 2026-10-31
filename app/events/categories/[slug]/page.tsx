@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { eventCategoryLabel } from "@/features/event-categories";
-import { eventsEnabled } from "@/features/event-details";
+import { eventsEnabled } from "@/lib/feature-flags";
 
 import { EventCategoryContent } from "./content";
 

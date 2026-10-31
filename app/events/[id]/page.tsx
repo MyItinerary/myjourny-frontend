@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { eventsEnabled } from "@/features/event-details";
+import { eventsEnabled } from "@/lib/feature-flags";
 
 import { EventDetailContent } from "./content";
 

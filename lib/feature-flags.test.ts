@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { eventsEnabled } from "./events-enabled";
+import { eventsEnabled } from "./feature-flags";
 
 describe("eventsEnabled", () => {
   it("is off unless the flag is exactly true", () => {

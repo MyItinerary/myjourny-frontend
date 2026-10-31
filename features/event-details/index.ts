@@ -5,4 +5,3 @@ export { SAMPLE_EVENT, SAMPLE_EVENT_ID } from "./model/sample-event";
 export type { EventDetailsViewModel } from "./view-model/use-event-details-view-model";
 export { useEventDetailsViewModel } from "./view-model/use-event-details-view-model";
 export { EventDetailsView } from "./view/event-details-view";
-export { eventsEnabled } from "./model/events-enabled";
