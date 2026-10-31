@@ -13,6 +13,7 @@ function sessionChoice(overrides: Partial<SessionChoice> = {}): SessionChoice {
     scheduled: true,
     noSessions: false,
     allSoldOut: false,
+    openDayCount: 3,
     options: [
       { startsAt: "a", label: "9:00 AM", note: null, disabled: false, selected: true },
       { startsAt: "b", label: "3:00 PM", note: "Sold out", disabled: true, selected: false },
@@ -58,6 +59,8 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
     quoteError: null,
     seatsWarning: null,
     total: "₦9,000",
+    totalEstimate: "₦9,000",
+    totalUpdating: false,
     booking: { available: true, disabled: false, pending: false, label: "Book now - ₦9,000", onBook: vi.fn() },
     card: {
       headline: { showFrom: true, amount: "₦5,000", unit: "per person", was: null, pill: null },
@@ -91,7 +94,8 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("From")).toBeInTheDocument();
     expect(screen.getAllByText("₦5,000").length).toBeGreaterThan(0);
     expect(screen.getByText("per person")).toBeInTheDocument();
-    expect(screen.getByText("10% off if you book before 4 September")).toBeInTheDocument();
+    // Rule notes are not shown on the card.
+    expect(screen.queryByText("10% off if you book before 4 September")).not.toBeInTheDocument();
     // The schedule, the long "qualifies for 10% off" line and the date line are gone: the date field and the total say it.
     expect(screen.queryByText(/Every Saturday|qualifies for|Subtotal|You save/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Date: Sat 1 June · 3 hours" })).toBeInTheDocument();
@@ -215,21 +219,33 @@ describe("BookingPanelView", () => {
     expect(screen.getByText("OLD has expired")).toBeInTheDocument();
   });
 
-  it("lists add-ons and what a group or promo code saved, above the total", () => {
+  it("does not list the itemised breakdown above the total", () => {
     renderWithProviders(
       <BookingPanelView
         {...withCard({
           breakdown: [
             { key: "t", label: "Adult × 2", amount: "₦10,000" },
             { key: "a", label: "GoPro footage", amount: "₦5,000" },
-            { key: "s", label: "Group saving", amount: "₦1,200" },
           ],
         })}
       />,
     );
-    expect(screen.getByText("GoPro footage")).toBeInTheDocument();
-    expect(screen.getByText("Group saving")).toBeInTheDocument();
-    expect(screen.getByText("₦1,200")).toBeInTheDocument();
+    expect(screen.queryByText("GoPro footage")).not.toBeInTheDocument();
+    expect(screen.queryByText("Adult × 2")).not.toBeInTheDocument();
+  });
+
+  it("shows a fixed date as plain text, with no calendar, when only one day is bookable", () => {
+    renderWithProviders(
+      <BookingPanelView {...withCard({}, { sessions: { ...panelViewModel().sessions, openDayCount: 1 } })} />,
+    );
+    expect(screen.getByTestId("fixed-date")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Date:/ })).not.toBeInTheDocument();
+  });
+
+  it("shows the list-price estimate at once, dimmed, while the server prices a change", () => {
+    renderWithProviders(<BookingPanelView {...withCard({}, { totalEstimate: "₦48,000", totalUpdating: true })} />);
+    const total = screen.getByText("₦48,000");
+    expect(total).toHaveClass("opacity-60");
   });
 
   it("shows a group price with a pill that says why", () => {
