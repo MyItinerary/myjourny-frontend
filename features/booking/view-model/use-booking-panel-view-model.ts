@@ -166,7 +166,8 @@ export function useBookingPanelViewModel({
   const pickedKey = JSON.stringify(picked);
   const selection: PricingSelection | null = useMemo(
     () =>
-      picked.items.length === 0 || !withinGroupSize
+      // Until the sessions arrive the request can only be a guessed date, which a scheduled experience rejects.
+      picked.items.length === 0 || !withinGroupSize || sessions.loading
         ? null
         : {
             experience_id: experienceId,
@@ -177,7 +178,7 @@ export function useBookingPanelViewModel({
     // `picked` and `request` are rebuilt every render; their JSON is the
     // stable dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [experienceId, pickedKey, requestKey, appliedPromo, withinGroupSize],
+    [experienceId, pickedKey, requestKey, appliedPromo, withinGroupSize, sessions.loading],
   );
   const { data: lastQuote, isFetching: quoting, isError: quoteFailed, error: quoteErrorCause, refetch: retryQuote } = useBookingQuote(selection);
   // The query keeps the previous quote while a new one loads; drop it once
