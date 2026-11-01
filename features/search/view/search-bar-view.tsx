@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 
-import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
+import { DateRangePanel } from "@/components/shared/date-range-panel";
 import { cn } from "@/lib/utils";
 
 import type { SearchBarViewModel } from "../view-model/use-search-bar-view-model";
@@ -20,7 +20,7 @@ export function SearchBarView({
   activeTab,
   selectedWhere,
   selectedWhen,
-  selectedDate,
+  draftRange,
   whoText,
   guests,
   totalGuests,
@@ -38,7 +38,11 @@ export function SearchBarView({
   onSelectActivity,
   onSelectExperience,
   onSelectEvent,
-  onSelectDate,
+  onPickDate,
+  onPickDatePreset,
+  onApplyDates,
+  onClearDates,
+  onAnyDate,
   incrementGuest,
   decrementGuest,
   onSearch,
@@ -210,25 +214,24 @@ export function SearchBarView({
         </div>
       )}
 
-      {/* Calendar Dropdown Modal */}
+      {/* Dual-date picker: the same panel as the results page's Dates chip. */}
       {activeTab === "when" && (
         <div
-          className={cn(
-            "absolute z-50 flex w-[350px] max-w-[calc(100vw-32px)] flex-col items-start gap-3 rounded-[24px] border border-[#e0dfdd] bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
-            variant === "nav" ? "top-[calc(100%+8px)] left-1/2 -translate-x-1/2" : "top-[calc(100%+8px)] left-0 lg:left-[170px]",
-          )}
+          role="dialog"
+          aria-label="Dates"
+          className="absolute top-[calc(100%+8px)] left-1/2 z-50 w-[700px] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-[24px] border border-[#e0dfdd] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150"
         >
-          <DatePickerCalendar
-            selectedDate={selectedDate}
-            presets={computeDatePresets()}
-            onSelect={(date) => {
-              const preset = computeDatePresets().find(
-                (p) => p.date.toDateString() === date.toDateString(),
-              );
-              onSelectDate(
-                date,
-                preset?.label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }),
-              );
+          <DateRangePanel
+            range={draftRange}
+            onPick={onPickDate}
+            onPreset={onPickDatePreset}
+            onAnyDate={() => {
+              onAnyDate();
+              setTimeout(() => whoInputRef.current?.focus(), 80);
+            }}
+            onClear={onClearDates}
+            onApply={() => {
+              onApplyDates();
               setTimeout(() => whoInputRef.current?.focus(), 80);
             }}
           />

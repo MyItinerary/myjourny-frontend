@@ -93,16 +93,47 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.activeTab).toBe("when");
   });
 
-  it("advances from When to Who on date selection", () => {
+  it("picks a date range with two taps and applies it, then moves on to Who", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 
-    const pickedDate = new Date(2030, 5, 15);
-    act(() => {
-      result.current.onSelectDate(pickedDate, "June 15");
-    });
+    act(() => result.current.onPickDate(new Date(2030, 5, 15)));
+    expect(result.current.draftRange).toEqual({ start: new Date(2030, 5, 15), end: null });
+    // Nothing is in the bar until Apply.
+    expect(result.current.selectedWhen).toBe("");
 
-    expect(result.current.selectedWhen).toBe("June 15");
+    act(() => result.current.onPickDate(new Date(2030, 5, 20)));
+    act(() => result.current.onApplyDates());
+
+    expect(result.current.selectedWhen).toBe("15 Jun – 20 Jun");
     expect(result.current.activeTab).toBe("who");
+  });
+
+  it("takes quick picks, a single day, Clear and Any date", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onPickDatePreset(new Date(2030, 5, 15), new Date(2030, 5, 15)));
+    act(() => result.current.onApplyDates());
+    expect(result.current.selectedWhen).toBe("15 Jun");
+
+    act(() => result.current.onClearDates());
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.draftRange).toEqual({ start: null, end: null });
+
+    act(() => result.current.onPickDatePreset(new Date(2030, 5, 15), new Date(2030, 5, 20)));
+    act(() => result.current.onAnyDate());
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.activeTab).toBe("who");
+  });
+
+  it("starts a new range when the second tap is earlier, and drops unapplied dates on close", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onPickDate(new Date(2030, 5, 20)));
+    act(() => result.current.onPickDate(new Date(2030, 5, 15)));
+    expect(result.current.draftRange).toEqual({ start: new Date(2030, 5, 15), end: null });
+
+    act(() => result.current.onClose());
+    expect(result.current.draftRange).toEqual({ start: null, end: null });
   });
 
   it("updates guest counts correctly", () => {
@@ -146,7 +177,7 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.canSearch).toBe(false);
   });
 
-  it("executes search and navigates when all criteria are met", () => {
+  it("executes search and navigates once a place is chosen", () => {
     mockPush.mockClear();
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 
@@ -155,7 +186,6 @@ describe("useSearchBarViewModel", () => {
         id: "exp-123",
         title: "Nike Art Gallery Deep Dive",
       });
-      result.current.onSelectDate(new Date(2030, 5, 15), "June 15");
       result.current.incrementGuest("adults");
     });
 

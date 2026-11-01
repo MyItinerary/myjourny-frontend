@@ -47,5 +47,10 @@ export interface GuestCounts {
   infants: number;
 }
 
+export interface DateRange {
+  start: Date | null;
+  end: Date | null;
+}
+
 export type SearchTab = "where" | "when" | "who";
 export type SearchBarVariant = "hero" | "nav";

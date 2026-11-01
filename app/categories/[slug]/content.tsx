@@ -121,7 +121,7 @@ export function CategoryContent({
         </div>
       )}
 
-      <CitiesSection cities={cities} variant="category" />
+      <CitiesSection cities={cities} />
 
       <OtherExperiencesRail exclude={results ? results.items : items} />
 
@@ -147,7 +147,6 @@ function OtherExperiencesRail({ exclude }: { exclude: ExperienceItem[] }) {
       items={items}
       isLoading={isPending}
       cardVariant="vertical"
-      margins="results"
     />
   );
 }

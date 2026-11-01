@@ -1,6 +1,7 @@
 // Public API of the search feature. Other code imports only from here.
 export type {
   ActivitySuggestion,
+  DateRange,
   DestinationSuggestion,
   EventSuggestion,
   ExperienceSuggestion,

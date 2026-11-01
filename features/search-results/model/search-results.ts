@@ -1,3 +1,4 @@
+import { formatDateRange } from "@/lib/dates";
 import { useInfiniteFilteredExperiences, type ExperienceFilters } from "@/lib/queries/experiences";
 
 import {
@@ -50,13 +51,7 @@ export function formatNaira(amount: number): string {
   return `₦${amount.toLocaleString("en-NG")}`;
 }
 
-const SHORT_DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
-
-export function formatDateRange({ start, end }: DateRange): string {
-  if (!start) return "";
-  if (!end || start.toDateString() === end.toDateString()) return SHORT_DATE.format(start);
-  return `${SHORT_DATE.format(start)} – ${SHORT_DATE.format(end)}`;
-}
+export { formatDateRange };
 
 export function formatPriceRange({ min, max }: PriceRange): string {
   if (min == null && max == null) return "";

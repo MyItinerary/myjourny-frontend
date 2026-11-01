@@ -108,7 +108,6 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
         items={beyondItems}
         isLoading={beyondIsLoading}
         cardVariant="vertical"
-        margins="results"
         mobileArrowsBelow
       />
 

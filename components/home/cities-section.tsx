@@ -7,52 +7,26 @@ import { useState } from "react";
 import type { City } from "@/lib/mock-data/home";
 import { cn } from "@/lib/utils";
 
-// Figma: "Discover by cities". Three layouts share this component:
-// - Homepage desktop (2001:9148): 900px column, 4 cols of 207×170, 8
-//   visible, left-aligned header, "See more" expand.
-// - Category desktop (2001:12259): 1213px column, 5 cols of 223×170, 10
-//   visible, CENTERED header, "See more" expand.
-// - Mobile (2001:9422): 2 horizontally-scrollable rows of 251×170 tiles
-//   bleeding past the screen edge; no "See more" link.
-// Tile height is a fixed 170px everywhere — only the width changes.
-export function CitiesSection({
-  cities,
-  variant = "home",
-}: {
-  cities: City[];
-  variant?: "home" | "category";
-}) {
-  const visibleCount = variant === "category" ? 10 : 8;
+// Figma: "Discover by cities" (2581:47084 desktop / 2001:9422 mobile). One layout
+// everywhere: a left-aligned title (no subtext) between the 80px page margins,
+// 5 columns of 170px-tall tiles (10 visible, "See more" expands) on desktop; on
+// mobile 2 horizontally-scrollable rows of 251×170 tiles bleeding past the
+// screen edge, with no "See more" link.
+export function CitiesSection({ cities }: { cities: City[] }) {
+  const visibleCount = 10;
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? cities : cities.slice(0, visibleCount);
   const hasMore = cities.length > visibleCount;
 
   return (
-    <section
-      className={cn(
-        "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[78px] lg:pb-[27px]",
-        // Results pages: same 80px side margins as the grid above (Figma 2001:18074).
-        variant === "category" && "max-w-[1512px] lg:px-20"
-      )}
-    >
-      {/* Homepage keeps the heading left-aligned; the category page centers it. */}
-      <div className="flex flex-col gap-[10px] lg:gap-4">
-        <h2 className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[32px]">
-          Discover by cities
-        </h2>
-        {variant === "home" && (
-          <p className="text-lg leading-[28px] text-muted-foreground lg:text-xl lg:leading-[30px]">
-            Every city has its own rhythm. Find yours.
-          </p>
-        )}
-      </div>
+    <section className="mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[78px] lg:px-20 lg:pb-[27px]">
+      <h2 className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground">Discover by cities</h2>
 
       {/* Mobile: 2 rows scrolling horizontally past the screen edge. */}
       <div className="-mr-6 mt-[39px] overflow-x-auto pr-6 lg:mr-0 lg:mt-[75px] lg:overflow-visible lg:pr-0">
         <div
           className={cn(
-            "grid grid-flow-col grid-rows-2 gap-x-6 gap-y-[27px] lg:grid-flow-row lg:grid-rows-none",
-            variant === "category" ? "lg:grid-cols-5" : "lg:grid-cols-4"
+            "grid grid-flow-col grid-rows-2 gap-x-6 gap-y-[27px] lg:grid-flow-row lg:grid-cols-5 lg:grid-rows-none",
           )}
         >
           {visible.map((city) => {

@@ -128,3 +128,12 @@ export function formatUtcTime(datetimeStr?: string | null): string | null {
   if (!d) return null;
   return formatTime(d, true);
 }
+
+const SHORT_DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
+
+/** "12 Nov – 21 Nov", or "12 Nov" for a single day; empty without a start. */
+export function formatDateRange({ start, end }: { start: Date | null; end: Date | null }): string {
+  if (!start) return "";
+  if (!end || start.toDateString() === end.toDateString()) return SHORT_DATE.format(start);
+  return `${SHORT_DATE.format(start)} – ${SHORT_DATE.format(end)}`;
+}

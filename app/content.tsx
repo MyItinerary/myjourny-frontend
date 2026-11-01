@@ -94,7 +94,6 @@ export function HomeContent() {
       <Reveal key="popular-experiences">
         <ExperienceRailSection
           heading="Popular experiences near you"
-          subheading="Hand-picked spots people are loving right now."
           items={realPopularItems}
           isLoading={popularIsLoading}
           seeMoreHref="/popular-experiences"
@@ -105,7 +104,6 @@ export function HomeContent() {
     <Reveal key="popular-experiences">
       <ExperienceRailSection
         heading="Popular experiences"
-        subheading="Hand-picked spots people are loving right now."
         items={guestPopularItems}
         isLoading={guestPopularQuery.isPending}
         seeMoreHref="/popular-experiences"
@@ -149,7 +147,6 @@ export function HomeContent() {
           <Reveal>
             <ExperienceRailSection
               heading="Top picks right now"
-              subheading={hasCoords ? "What's happening around you" : "What's happening right now"}
               items={realTopPicksItems}
               cardVariant="vertical"
               isLoading={topPicksIsLoading}
@@ -160,7 +157,6 @@ export function HomeContent() {
         <Reveal>
           <ExperienceRailSection
             heading="Top picks right now"
-            subheading="New on MyJourny"
             items={guestTopPicksItems}
             cardVariant="vertical"
             isLoading={guestTopPicksQuery.isPending}
@@ -177,7 +173,6 @@ export function HomeContent() {
           <Reveal>
             <ExperienceRailSection
               heading="Based on your browsing history"
-              subheading="A few things we noticed you're drawn to."
               items={realBrowsingHistoryItems}
               cardVariant="vertical"
               isLoading={browsingHistoryIsLoading}

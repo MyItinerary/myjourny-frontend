@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { formatDateRange } from "@/lib/dates";
 import { categoriesBySlug } from "@/lib/mock-data/home";
 
 import {
@@ -13,6 +14,7 @@ import {
 } from "../model/search";
 import type {
   ActivitySuggestion,
+  DateRange,
   DestinationSuggestion,
   EventSuggestion,
   ExperienceSuggestion,
@@ -58,10 +60,10 @@ export function useSearchBarViewModel({
   const [selectedWhereId, setSelectedWhereId] = useState("");
   const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | "event" | null>(null);
 
-  const [selectedWhen, setSelectedWhen] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date>(
-    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-  );
+  // The dates in the bar, and the range being picked in the open calendar (applied on Apply).
+  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
+  const [draftRange, setDraftRange] = useState<DateRange>({ start: null, end: null });
+  const selectedWhen = formatDateRange(dateRange);
 
   // What they typed into "Who"; null once the steppers take over and the text
   // comes from the counts.
@@ -200,16 +202,39 @@ export function useSearchBarViewModel({
     setActiveTab("when");
   }, []);
 
-  const onSelectDate = useCallback((date: Date, label?: string) => {
-    setSelectedDate(date);
-    setSelectedWhen(label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }));
-    setActiveTab("who");
+  const onPickDate = useCallback((date: Date) => {
+    setDraftRange((range) => {
+      // First tap sets the start, the second the end; the same day twice is one day.
+      if (!range.start || range.end) return { start: date, end: null };
+      return date < range.start ? { start: date, end: null } : { start: range.start, end: date };
+    });
   }, []);
+
+  const onPickDatePreset = useCallback((start: Date, end: Date) => setDraftRange({ start, end }), []);
+
+  const onApplyDates = useCallback(() => {
+    if (!draftRange.start) return;
+    setDateRange({ start: draftRange.start, end: draftRange.end ?? draftRange.start });
+    setActiveTab("who");
+  }, [draftRange]);
+
+  const onClearDates = useCallback(() => {
+    setDraftRange({ start: null, end: null });
+    setDateRange({ start: null, end: null });
+  }, []);
+
+  /** "Any date": no dates, on to guests. */
+  const onAnyDate = useCallback(() => {
+    onClearDates();
+    setActiveTab("who");
+  }, [onClearDates]);
 
   const handleClose = useCallback(() => {
     setActiveTab(null);
+    // Dates picked but not applied are dropped.
+    setDraftRange(dateRange);
     onClose?.();
-  }, [onClose]);
+  }, [dateRange, onClose]);
 
   const onSearch = useCallback(
     (customQuery?: string) => {
@@ -318,7 +343,7 @@ export function useSearchBarViewModel({
     selectedWhere,
     debouncedWhere,
     selectedWhen,
-    selectedDate,
+    draftRange,
     whoText,
     guests,
     totalGuests,
@@ -336,7 +361,11 @@ export function useSearchBarViewModel({
     onSelectActivity,
     onSelectExperience,
     onSelectEvent,
-    onSelectDate,
+    onPickDate,
+    onPickDatePreset,
+    onApplyDates,
+    onClearDates,
+    onAnyDate,
     onNavigateToDestination,
     onNavigateToActivity,
     onNavigateToExperience,
