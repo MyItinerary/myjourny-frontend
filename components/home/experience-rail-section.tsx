@@ -37,6 +37,8 @@ interface ExperienceRailSectionProps {
   className?: string;
   /** Renders skeleton cards in place of `items` — same wrapper markup, no layout shift once real data arrives. */
   isLoading?: boolean;
+  /** Vertical variant only. "results" is the search/city/category results layout (Figma 2581:47120): 80px side margins to match the grid above, 48px card gaps, title and arrows only. */
+  margins?: "page" | "results";
   /** Vertical variant only. Overrides the default 1512px-grid outer container — pages that don't live on that grid (e.g. the 1200px experience detail page) pass their own matching container so the section lines up with the rest of their content instead of the homepage's margins. */
   containerClassName?: string;
   /** Vertical variant only. On mobile, puts the prev/next arrows under the cards (city page, Figma 2364:36066) instead of under the subtitle. */
@@ -66,8 +68,10 @@ export function ExperienceRailSection({
   isLoading = false,
   containerClassName,
   bleedClassName,
+  margins = "page",
   mobileArrowsBelow = false,
 }: ExperienceRailSectionProps) {
+  const results = margins === "results";
   const headingBlock = (center: boolean) => (
     <div
       className={cn(
@@ -75,10 +79,10 @@ export function ExperienceRailSection({
         center && "items-center text-center lg:items-start lg:text-left"
       )}
     >
-      <h2 className="font-sans text-[32px] font-extrabold leading-[120%] text-[#333134] lg:max-w-[688px] lg:text-[40px] lg:leading-[48px]">
+      <h2 className="font-sans text-[32px] font-extrabold leading-[120%] text-[#333134] lg:max-w-[688px] lg:text-[32px] lg:leading-[38px]">
         {heading}
       </h2>
-      {subheading ? (
+      {subheading && !results ? (
         <p className="font-sans text-lg font-normal leading-[28px] text-[#6F6B72] lg:text-[20px] lg:leading-[30px]">
           {subheading}
         </p>
@@ -92,10 +96,12 @@ export function ExperienceRailSection({
         <section
           className={cn(
             containerClassName ??
-              cn(
-                "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[77px] lg:pb-[79px]",
-                wide && "max-w-[1212px]"
-              ),
+              (results
+                ? "mx-auto w-full max-w-[1512px] px-6 py-10 lg:px-20 lg:py-[53px]"
+                : cn(
+                    "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[77px] lg:pb-[79px]",
+                    wide && "max-w-[1212px]"
+                  )),
             className
           )}
         >
@@ -111,23 +117,31 @@ export function ExperienceRailSection({
                 the viewport edge, not at the content column). */}
             <div
               className={cn(
-                "mt-[34px]",
-                bleedClassName ?? (wide ? "-mr-6 lg:-mr-[calc((100vw-1212px)/2)]" : "-mr-6 lg:-mr-[calc((100vw-900px)/2)]")
+                results ? "mt-6 lg:mt-12" : "mt-[34px]",
+                bleedClassName ??
+                  (results
+                    ? "-mr-6 lg:-mr-[max(80px,calc((100vw-1352px)/2))]"
+                    : wide
+                      ? "-mr-6 lg:-mr-[calc((100vw-1212px)/2)]"
+                      : "-mr-6 lg:-mr-[calc((100vw-900px)/2)]")
               )}
             >
               {isLoading ? (
                 // Skeletons don't need to be draggable/scrollable — skip the
                 // Carousel machinery entirely and just render a plain row.
-                <div className="flex gap-6 overflow-hidden lg:gap-[34px]">
+                <div className={cn("flex gap-6 overflow-hidden", results ? "lg:gap-12" : "lg:gap-[34px]")}>
                   {Array.from({ length: 4 }).map((_, index) => (
                     <ExperienceCardVerticalSkeleton key={index} className="w-[345px] shrink-0" />
                   ))}
                 </div>
               ) : (
                 /* basis includes the pl gap: 345px card + 24px (mobile) / 34px (lg) */
-                <CarouselContent className="-ml-6 lg:-ml-[34px]">
+                <CarouselContent className={cn("-ml-6", results ? "lg:-ml-12" : "lg:-ml-[34px]")}>
                   {items.map((item) => (
-                    <CarouselItem key={item.id} className="basis-[369px] pl-6 lg:basis-[379px] lg:pl-[34px]">
+                    <CarouselItem
+                      key={item.id}
+                      className={cn("basis-[369px] pl-6", results ? "lg:basis-[393px] lg:pl-12" : "lg:basis-[379px] lg:pl-[34px]")}
+                    >
                       <ExperienceCardVertical {...item} />
                     </CarouselItem>
                   ))}

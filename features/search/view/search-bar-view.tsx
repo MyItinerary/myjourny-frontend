@@ -24,11 +24,12 @@ export function SearchBarView({
   whoText,
   guests,
   totalGuests,
-  allFieldsFilled,
+  canSearch,
   isSearchingExperiences,
   suggestedExperiences,
   filteredDestinations,
   filteredActivities,
+  filteredEvents,
   guestTypes,
   setActiveTab,
   setWhereInput,
@@ -36,6 +37,7 @@ export function SearchBarView({
   onSelectDestination,
   onSelectActivity,
   onSelectExperience,
+  onSelectEvent,
   onSelectDate,
   incrementGuest,
   decrementGuest,
@@ -157,7 +159,7 @@ export function SearchBarView({
         <button
           type="button"
           aria-label="Search"
-          disabled={!allFieldsFilled}
+          disabled={!canSearch}
           onClick={() => onSearch()}
           className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-5 text-white transition-all hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-sm w-full lg:w-auto"
         >
@@ -168,7 +170,7 @@ export function SearchBarView({
         <button
           type="button"
           aria-label="Search"
-          disabled={!allFieldsFilled}
+          disabled={!canSearch}
           onClick={() => onSearch()}
           className="flex size-12 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto cursor-pointer"
         >
@@ -184,6 +186,7 @@ export function SearchBarView({
               destinations={filteredDestinations}
               activities={filteredActivities}
               experiences={suggestedExperiences}
+              events={filteredEvents}
               isSearchingExperiences={isSearchingExperiences}
               query={selectedWhere}
               onSelectDestination={(dest) => {
@@ -196,6 +199,10 @@ export function SearchBarView({
               }}
               onSelectExperience={(exp) => {
                 onSelectExperience(exp);
+                setTimeout(() => whenInputRef.current?.focus(), 80);
+              }}
+              onSelectEvent={(ev) => {
+                onSelectEvent(ev);
                 setTimeout(() => whenInputRef.current?.focus(), 80);
               }}
             />
@@ -234,7 +241,7 @@ export function SearchBarView({
           variant={variant}
           guests={guests}
           totalGuests={totalGuests}
-          allFieldsFilled={allFieldsFilled}
+          canSearch={canSearch}
           guestTypes={guestTypes}
           incrementGuest={incrementGuest}
           decrementGuest={decrementGuest}

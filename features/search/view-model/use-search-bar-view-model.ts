@@ -6,6 +6,7 @@ import { categoriesBySlug } from "@/lib/mock-data/home";
 import {
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
+  DEFAULT_EVENTS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
   useSearchExperiences,
@@ -13,6 +14,7 @@ import {
 import type {
   ActivitySuggestion,
   DestinationSuggestion,
+  EventSuggestion,
   ExperienceSuggestion,
   ExperienceSuggestionRow,
   GuestCounts,
@@ -23,6 +25,8 @@ import type {
 export interface UseSearchBarViewModelOptions {
   variant?: SearchBarVariant;
   initialActiveTab?: SearchTab | null;
+  /** Prefills "Where", e.g. with what the current results page was searched for. */
+  initialWhere?: string;
   onClose?: () => void;
   debounceMs?: number;
 }
@@ -42,16 +46,17 @@ function formatGuestsText(counts: GuestCounts) {
 export function useSearchBarViewModel({
   variant = "hero",
   initialActiveTab = null,
+  initialWhere = "",
   onClose,
   debounceMs = 600,
 }: UseSearchBarViewModelOptions = {}) {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<SearchTab | null>(initialActiveTab);
-  const [selectedWhere, setSelectedWhere] = useState("");
-  const [debouncedWhere, setDebouncedWhere] = useState("");
+  const [selectedWhere, setSelectedWhere] = useState(initialWhere);
+  const [debouncedWhere, setDebouncedWhere] = useState(initialWhere);
   const [selectedWhereId, setSelectedWhereId] = useState("");
-  const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | null>(null);
+  const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | "event" | null>(null);
 
   const [selectedWhen, setSelectedWhen] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>(
@@ -101,7 +106,7 @@ export function useSearchBarViewModel({
   );
 
   const totalGuests = guests.adults + guests.children + guests.infants;
-  const allFieldsFilled = !!selectedWhere.trim() && !!selectedWhen.trim() && totalGuests > 0;
+  const canSearch = !!selectedWhere.trim();
 
   const trimmedQuery = selectedWhere.trim().toLowerCase();
 
@@ -122,6 +127,14 @@ export function useSearchBarViewModel({
         act.label.toLowerCase().includes(trimmedQuery) ||
         act.id.toLowerCase().includes(trimmedQuery) ||
         act.subtitle.toLowerCase().includes(trimmedQuery),
+    );
+  }, [trimmedQuery]);
+
+  // Hardcoded for now: three to start with, then the ones matching what's typed.
+  const filteredEvents = useMemo(() => {
+    if (!trimmedQuery) return DEFAULT_EVENTS.slice(0, 3);
+    return DEFAULT_EVENTS.filter(
+      (ev) => ev.title.toLowerCase().includes(trimmedQuery) || ev.subtitle.toLowerCase().includes(trimmedQuery),
     );
   }, [trimmedQuery]);
 
@@ -180,6 +193,13 @@ export function useSearchBarViewModel({
     setActiveTab("when");
   }, []);
 
+  const onSelectEvent = useCallback((ev: EventSuggestion) => {
+    setSelectedWhere(ev.title);
+    setSelectedWhereId(ev.id);
+    setSelectedType("event");
+    setActiveTab("when");
+  }, []);
+
   const onSelectDate = useCallback((date: Date, label?: string) => {
     setSelectedDate(date);
     setSelectedWhen(label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }));
@@ -198,6 +218,12 @@ export function useSearchBarViewModel({
       if (!trimmed) return;
 
       handleClose();
+
+      // There's no event page yet, so an event is searched for by name.
+      if (selectedType === "event") {
+        router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
+        return;
+      }
 
       if (selectedType === "experience" && selectedWhereId) {
         router.push(`/experiences/${selectedWhereId}`);
@@ -270,6 +296,14 @@ export function useSearchBarViewModel({
     [handleClose, router],
   );
 
+  const onNavigateToEvent = useCallback(
+    (ev: EventSuggestion) => {
+      handleClose();
+      router.push(`/search?q=${encodeURIComponent(ev.title)}`);
+    },
+    [handleClose, router],
+  );
+
   const onNavigateToExperience = useCallback(
     (exp: ExperienceSuggestion) => {
       handleClose();
@@ -288,11 +322,12 @@ export function useSearchBarViewModel({
     whoText,
     guests,
     totalGuests,
-    allFieldsFilled,
+    canSearch,
     isSearchingExperiences,
     suggestedExperiences,
     filteredDestinations,
     filteredActivities,
+    filteredEvents,
     guestTypes: GUEST_TYPES,
     setActiveTab,
     setWhereInput,
@@ -300,10 +335,12 @@ export function useSearchBarViewModel({
     onSelectDestination,
     onSelectActivity,
     onSelectExperience,
+    onSelectEvent,
     onSelectDate,
     onNavigateToDestination,
     onNavigateToActivity,
     onNavigateToExperience,
+    onNavigateToEvent,
     updateGuests,
     incrementGuest,
     decrementGuest,

@@ -21,7 +21,46 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.selectedWhere).toBe("");
     expect(result.current.selectedWhen).toBe("");
     expect(result.current.totalGuests).toBe(0);
-    expect(result.current.allFieldsFilled).toBe(false);
+    expect(result.current.canSearch).toBe(false);
+  });
+
+  it("prefills Where from initialWhere and lets it search right away", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel({ initialWhere: "Lagos" }));
+
+    expect(result.current.selectedWhere).toBe("Lagos");
+    expect(result.current.canSearch).toBe(true);
+  });
+
+  it("suggests three events to start with, then the ones matching what's typed", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    expect(result.current.filteredEvents).toHaveLength(3);
+
+    act(() => result.current.setWhereInput("jazz"));
+    expect(result.current.filteredEvents.map((e) => e.title)).toEqual(["Lagos Jazz Night"]);
+
+    act(() => result.current.setWhereInput("zzzz"));
+    expect(result.current.filteredEvents).toEqual([]);
+  });
+
+  it("searches an event by name, since there's no event page yet", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectEvent({ id: "jazz", title: "Lagos Jazz Night", subtitle: "Lagos" }));
+    expect(result.current.selectedWhere).toBe("Lagos Jazz Night");
+    expect(result.current.activeTab).toBe("when");
+
+    act(() => result.current.onSearch());
+    expect(mockPush).toHaveBeenCalledWith("/search?q=Lagos%20Jazz%20Night");
+  });
+
+  it("goes straight to the search results when an event is tapped in the mobile modal", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onNavigateToEvent({ id: "jazz", title: "Lagos Jazz Night", subtitle: "Lagos" }));
+    expect(mockPush).toHaveBeenCalledWith("/search?q=Lagos%20Jazz%20Night");
   });
 
   it("advances from Where to When on destination selection", () => {
@@ -87,6 +126,26 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.totalGuests).toBe(1);
   });
 
+  it("enables search once a place or activity is entered, without dates or guests", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    expect(result.current.canSearch).toBe(false);
+
+    act(() => {
+      result.current.setWhereInput("Lagos");
+    });
+
+    expect(result.current.canSearch).toBe(true);
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.totalGuests).toBe(0);
+
+    act(() => {
+      result.current.setWhereInput("   ");
+    });
+
+    expect(result.current.canSearch).toBe(false);
+  });
+
   it("executes search and navigates when all criteria are met", () => {
     mockPush.mockClear();
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
@@ -100,7 +159,7 @@ describe("useSearchBarViewModel", () => {
       result.current.incrementGuest("adults");
     });
 
-    expect(result.current.allFieldsFilled).toBe(true);
+    expect(result.current.canSearch).toBe(true);
 
     act(() => {
       result.current.onSearch();

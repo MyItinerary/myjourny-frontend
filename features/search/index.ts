@@ -2,6 +2,7 @@
 export type {
   ActivitySuggestion,
   DestinationSuggestion,
+  EventSuggestion,
   ExperienceSuggestion,
   ExperienceSuggestionRow,
   GuestCounts,
@@ -12,6 +13,7 @@ export type {
 export {
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
+  DEFAULT_EVENTS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
   searchExperiencesQueryKey,

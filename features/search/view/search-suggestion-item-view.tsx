@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { Ticket } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 import type {
   ActivitySuggestion,
   DestinationSuggestion,
+  EventSuggestion,
   ExperienceSuggestionRow,
 } from "../model/search.types";
 
@@ -80,11 +82,13 @@ export interface SearchSuggestionListProps {
   destinations: DestinationSuggestion[];
   activities: ActivitySuggestion[];
   experiences: ExperienceSuggestionRow[];
+  events: EventSuggestion[];
   isSearchingExperiences?: boolean;
   query?: string;
   onSelectDestination: (dest: DestinationSuggestion) => void;
   onSelectActivity: (act: ActivitySuggestion) => void;
   onSelectExperience: (exp: ExperienceSuggestionRow) => void;
+  onSelectEvent: (ev: EventSuggestion) => void;
   className?: string;
 }
 
@@ -92,16 +96,19 @@ export function SearchSuggestionList({
   destinations,
   activities,
   experiences,
+  events,
   isSearchingExperiences = false,
   query = "",
   onSelectDestination,
   onSelectActivity,
   onSelectExperience,
+  onSelectEvent,
   className,
 }: SearchSuggestionListProps) {
   const hasDestinations = destinations.length > 0;
   const hasActivities = activities.length > 0;
   const hasExperiences = experiences.length > 0;
+  const hasEvents = events.length > 0;
   const trimmed = query.trim();
 
   return (
@@ -202,6 +209,28 @@ export function SearchSuggestionList({
         </div>
       )}
 
+      {hasEvents && (
+        <div className={cn("flex flex-col gap-2", (hasDestinations || hasActivities || hasExperiences) && "border-t border-[#f0eee9] pt-3")}>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#6F6B72]">Events</span>
+          {events.map((ev) => (
+            <button
+              key={ev.id}
+              type="button"
+              onClick={() => onSelectEvent(ev)}
+              className="flex w-full items-center gap-[14.5px] rounded-xl p-1.5 text-left transition-colors hover:bg-[#F4F2EE]/70 cursor-pointer"
+            >
+              <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[10px] bg-[#F4F2EE]">
+                <Ticket aria-hidden className="size-5 text-[#F5032D]" />
+              </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-sm font-semibold leading-5 text-[#130404] truncate">{ev.title}</span>
+                <span className="text-xs leading-4 text-[#6F6B72] truncate">{ev.subtitle}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
       {isSearchingExperiences && !hasExperiences && trimmed.length >= 2 && (
         <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground border-t border-[#f0eee9] pt-3">
           <div className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
@@ -209,9 +238,9 @@ export function SearchSuggestionList({
         </div>
       )}
 
-      {!hasDestinations && !hasActivities && !hasExperiences && !isSearchingExperiences && (
+      {!hasDestinations && !hasActivities && !hasExperiences && !hasEvents && !isSearchingExperiences && (
         <p className="py-3 text-center text-sm text-muted-foreground">
-          No destinations, activities, or experiences found matching &ldquo;{query}&rdquo;
+          No destinations, activities, experiences, or events found matching &ldquo;{query}&rdquo;
         </p>
       )}
     </div>

@@ -23,11 +23,13 @@ describe("SearchSuggestionList", () => {
         fallbackImage: "/images/home/experiences/kayaking.jpg",
       },
     ],
+    events: [{ id: "jazz", title: "Lagos Jazz Night", subtitle: "Lagos · Live music · from NGN 8,000" }],
     isSearchingExperiences: false,
     query: "",
     onSelectDestination: vi.fn(),
     onSelectActivity: vi.fn(),
     onSelectExperience: vi.fn(),
+    onSelectEvent: vi.fn(),
   };
 
   it("renders destinations and triggers callback on click", async () => {
@@ -50,6 +52,17 @@ describe("SearchSuggestionList", () => {
     expect(screen.getByText("Local food")).toBeInTheDocument();
     await user.click(screen.getByText("Local food"));
     expect(onSelectActivity).toHaveBeenCalledWith(defaultProps.activities[0]);
+  });
+
+  it("renders events after experiences and triggers callback on click", async () => {
+    const onSelectEvent = vi.fn();
+    const { user } = renderWithProviders(<SearchSuggestionList {...defaultProps} onSelectEvent={onSelectEvent} />);
+
+    const headings = screen.getAllByText(/^(Destinations|Activities & Experiences|Experiences|Events)$/).map((h) => h.textContent);
+    expect(headings).toEqual(["Destinations", "Activities & Experiences", "Experiences", "Events"]);
+    expect(screen.getByText("Lagos · Live music · from NGN 8,000")).toBeInTheDocument();
+    await user.click(screen.getByText("Lagos Jazz Night"));
+    expect(onSelectEvent).toHaveBeenCalledWith(defaultProps.events[0]);
   });
 
   it("renders experiences and triggers callback on click", async () => {
@@ -83,11 +96,12 @@ describe("SearchSuggestionList", () => {
         destinations={[]}
         activities={[]}
         experiences={[]}
+        events={[]}
         query="Nonexistent"
       />,
     );
 
-    expect(screen.getByText(/No destinations, activities, or experiences found/i)).toBeInTheDocument();
+    expect(screen.getByText(/No destinations, activities, experiences, or events found/i)).toBeInTheDocument();
   });
 });
 

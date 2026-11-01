@@ -7,6 +7,7 @@ import { FALLBACK_IMAGE } from "@/lib/queries/experiences";
 import type {
   ActivitySuggestion,
   DestinationSuggestion,
+  EventSuggestion,
   ExperienceSuggestion,
   SearchExperiencesParams,
 } from "./search.types";
@@ -43,6 +44,16 @@ export const DEFAULT_ACTIVITIES: ActivitySuggestion[] = [
   { id: "wellness-calm", label: "Wellness & calm", subtitle: "Spas, quiet spots, and yoga sessions" },
   { id: "street-life", label: "Street life", subtitle: "Markets, corners, and everyday city buzz" },
   { id: "events-live-shows", label: "Events & live shows", subtitle: "Concerts, festivals, and live music" },
+];
+
+// HARDCODED until the backend has an events search. Replace with a query hook returning the same shape.
+export const DEFAULT_EVENTS: EventSuggestion[] = [
+  { id: "lagos-jazz-night", title: "Lagos Jazz Night", subtitle: "Lagos · Live music · from NGN 8,000" },
+  { id: "amapiano-rooftop-party", title: "Amapiano Rooftop Party", subtitle: "Lagos · Nightlife · from NGN 12,000" },
+  { id: "abuja-food-drink-festival", title: "Abuja Food & Drink Festival", subtitle: "Abuja · Food & drink · from NGN 5,000" },
+  { id: "stand-up-comedy-live", title: "Stand-Up Comedy Live", subtitle: "Lagos · Comedy · from NGN 6,000" },
+  { id: "ibadan-highlife-evening", title: "Ibadan Highlife Evening", subtitle: "Ibadan · Live music · from NGN 4,000" },
+  { id: "art-film-weekender", title: "Art & Film Weekender", subtitle: "Lagos · Arts & film · from NGN 3,500" },
 ];
 
 export function formatExperienceSubtitle(

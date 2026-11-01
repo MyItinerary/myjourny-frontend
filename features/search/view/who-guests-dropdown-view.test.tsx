@@ -41,18 +41,18 @@ describe("WhoGuestsDropdownView", () => {
     expect(decrementGuest).toHaveBeenCalledWith("adults");
   });
 
-  it("does not render search button when allFieldsFilled is false even if totalGuests > 0", () => {
+  it("does not render search button when canSearch is false", () => {
     renderWithProviders(
-      <WhoGuestsDropdownView {...defaultProps} allFieldsFilled={false} />,
+      <WhoGuestsDropdownView {...defaultProps} canSearch={false} />,
     );
 
     expect(screen.queryByRole("button", { name: "Search" })).not.toBeInTheDocument();
   });
 
-  it("renders and triggers search button when allFieldsFilled is true", async () => {
+  it("renders and triggers search button when canSearch is true", async () => {
     const onSearch = vi.fn();
     const { user } = renderWithProviders(
-      <WhoGuestsDropdownView {...defaultProps} allFieldsFilled={true} onSearch={onSearch} />,
+      <WhoGuestsDropdownView {...defaultProps} canSearch={true} onSearch={onSearch} />,
     );
 
     const searchButton = screen.getByRole("button", { name: "Search" });

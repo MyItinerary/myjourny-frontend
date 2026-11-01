@@ -31,22 +31,20 @@ export function CitiesSection({
     <section
       className={cn(
         "mx-auto w-full max-w-[900px] px-6 lg:px-0 pt-[77px] pb-[78px] lg:pb-[27px]",
-        variant === "category" && "max-w-[1213px]"
+        // Results pages: same 80px side margins as the grid above (Figma 2001:18074).
+        variant === "category" && "max-w-[1512px] lg:px-20"
       )}
     >
       {/* Homepage keeps the heading left-aligned; the category page centers it. */}
-      <div
-        className={cn(
-          "flex flex-col gap-[10px] lg:gap-4",
-          variant === "category" && "lg:items-center lg:text-center"
-        )}
-      >
-        <h2 className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[40px]">
+      <div className="flex flex-col gap-[10px] lg:gap-4">
+        <h2 className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[32px]">
           Discover by cities
         </h2>
-        <p className="text-lg leading-[28px] text-muted-foreground lg:text-xl lg:leading-[30px]">
-          Every city has its own rhythm. Find yours.
-        </p>
+        {variant === "home" && (
+          <p className="text-lg leading-[28px] text-muted-foreground lg:text-xl lg:leading-[30px]">
+            Every city has its own rhythm. Find yours.
+          </p>
+        )}
       </div>
 
       {/* Mobile: 2 rows scrolling horizontally past the screen edge. */}

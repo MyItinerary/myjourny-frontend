@@ -30,7 +30,7 @@ export function CategoriesSection({
     // 480px-wide block that scrolls horizontally past the screen edge.
     <section className="w-full overflow-x-clip bg-[#F4F2EE] px-6 py-[43px] lg:px-0 lg:pt-[77px] lg:pb-[61px]">
       <div className="mx-auto flex w-full max-w-[900px] flex-col items-start gap-4 text-left lg:items-start lg:gap-[15px]">
-        <h2 className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#333134] lg:text-[40px] lg:leading-[48px]">
+        <h2 className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#333134] lg:text-[32px] lg:leading-[38px]">
           {heading}
         </h2>
         <p className="max-w-[345px] font-sans text-lg font-normal leading-[28px] text-[#6F6B72] lg:max-w-[333px] lg:text-[20px] lg:leading-[30px]">
