@@ -120,13 +120,17 @@ export function HomeNav({ className }: { className?: string }) {
   const { user } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  // "My experiences" lives in the account menu, not the pill bar, so its pages
+  // (and bookings) light up no pill. /experiences and /events are the discovery pages.
   const currentPathTab = pathname?.startsWith("/wishlists") || pathname === "/wishlist"
     ? "wishlist"
-    : pathname?.startsWith("/my-experiences") || pathname?.startsWith("/bookings")
+    : pathname === "/experiences" || pathname?.startsWith("/experiences/")
       ? "experiences"
-      : pathname === "/" || pathname === ""
-        ? "home"
-        : null;
+      : pathname === "/events" || pathname?.startsWith("/events/")
+        ? "events"
+        : pathname === "/" || pathname === ""
+          ? "home"
+          : null;
 
   const [activeTab, setActiveTab] = useState<string | null>(currentPathTab);
 
@@ -142,16 +146,22 @@ export function HomeNav({ className }: { className?: string }) {
       icon: "/icons/nav/home.png",
     },
     {
-      id: "wishlist",
-      label: "Wishlists",
-      href: "/wishlists",
-      icon: "/icons/nav/wishlist.png",
+      id: "experiences",
+      label: "Experiences",
+      href: "/experiences",
+      icon: "/icons/nav/experiences.png",
     },
     {
-      id: "experiences",
-      label: "My experiences",
-      href: "/my-experiences",
-      icon: "/icons/nav/experiences.png",
+      id: "events",
+      label: "Events",
+      href: "/events",
+      icon: "/icons/nav/events.png",
+    },
+    {
+      id: "wishlist",
+      label: "My Wishlist",
+      href: "/wishlists",
+      icon: "/icons/nav/wishlist.png",
     },
   ];
   const logout = useLogout();
@@ -295,9 +305,10 @@ export function HomeNav({ className }: { className?: string }) {
                           aria-current={isActive ? "page" : undefined}
                           className={cn(
                             "relative flex items-center rounded-full text-base font-medium select-none transition-colors duration-200",
+                            // Wide screens show every label (Figma 2581:47271); below xl only the active chip does.
                             isActive
                               ? "h-[43px] text-[#1F1F1F]"
-                              : "h-12 text-foreground hover:bg-black/[0.04]"
+                              : "h-12 text-[#747474] hover:bg-black/[0.04] xl:h-[43px]"
                           )}
                         >
                           {isActive && (
@@ -316,7 +327,7 @@ export function HomeNav({ className }: { className?: string }) {
                             layout="position"
                             className={cn(
                               "relative z-10 flex h-full items-center",
-                              isActive ? "px-4 gap-2" : "w-12 justify-center"
+                              isActive ? "gap-2 px-4" : "w-12 justify-center xl:w-auto xl:gap-2 xl:px-4"
                             )}
                             transition={{
                               type: "spring",
@@ -325,20 +336,9 @@ export function HomeNav({ className }: { className?: string }) {
                             }}
                           >
                             <NavArt src={item.icon} />
-                            <AnimatePresence initial={false} mode="popLayout">
-                              {isActive && (
-                                <motion.span
-                                  key={item.id}
-                                  initial={{ opacity: 0, scale: 0.85, x: -4 }}
-                                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                                  exit={{ opacity: 0, scale: 0.85, x: -4 }}
-                                  transition={{ duration: 0.16, ease: "easeOut" }}
-                                  className="whitespace-nowrap font-medium"
-                                >
-                                  {item.label}
-                                </motion.span>
-                              )}
-                            </AnimatePresence>
+                            <span className={cn("whitespace-nowrap font-medium", !isActive && "hidden xl:inline")}>
+                              {item.label}
+                            </span>
                           </motion.div>
                         </Link>
                       );
@@ -512,6 +512,18 @@ export function HomeNav({ className }: { className?: string }) {
                           onClick={() => setProfileMenuOpen(false)}
                           icon="/icons/nav/home.png"
                           label="Home"
+                        />
+                        <MenuRow
+                          href="/experiences"
+                          onClick={() => setProfileMenuOpen(false)}
+                          icon="/icons/nav/experiences.png"
+                          label="Experiences"
+                        />
+                        <MenuRow
+                          href="/events"
+                          onClick={() => setProfileMenuOpen(false)}
+                          icon="/icons/nav/events.png"
+                          label="Events"
                         />
                         <MenuRow
                           href={user ? "/wishlists" : "/login"}
