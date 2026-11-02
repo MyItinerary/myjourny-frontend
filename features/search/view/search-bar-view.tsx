@@ -105,6 +105,9 @@ export function SearchBarView({
           />
         </div>
 
+        {/* Divider (side-by-side layout only; the stacked phone layout uses divide-y above) */}
+        <span aria-hidden="true" data-testid="search-field-divider" className="hidden h-[39px] w-px shrink-0 bg-[#E0DFDD] lg:block" />
+
         {/* When Tab */}
         <div
           onClick={() => {
@@ -130,6 +133,9 @@ export function SearchBarView({
             className="w-full border-0 bg-transparent p-0 font-sans text-base text-foreground placeholder:text-muted-foreground lg:text-sm outline-none focus:ring-0 leading-tight cursor-pointer"
           />
         </div>
+
+        {/* Divider (side-by-side layout only; the stacked phone layout uses divide-y above) */}
+        <span aria-hidden="true" data-testid="search-field-divider" className="hidden h-[39px] w-px shrink-0 bg-[#E0DFDD] lg:block" />
 
         {/* Who Tab */}
         <div

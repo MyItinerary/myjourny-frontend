@@ -25,7 +25,7 @@ export function HomeRailView({ heading, mutedHeading, items, isLoading = false, 
       <div className="mx-auto w-full max-w-[1512px] px-6 py-10 lg:px-32 lg:py-[53px]">
         <Carousel opts={{ align: "start", dragFree: true }}>
           <div className="flex items-center justify-between gap-4">
-            <h2 className="font-sans text-[32px] font-extrabold leading-[120%] text-[#333134] lg:text-[40px]">
+            <h2 className="font-sans text-[28px] font-extrabold leading-[120%] text-[#333134]">
               {mutedHeading ? (
                 <>
                   <span className="text-[#6F6B72]">{mutedHeading}</span>{" "}
@@ -40,7 +40,7 @@ export function HomeRailView({ heading, mutedHeading, items, isLoading = false, 
           </div>
 
           {/* The cards run to the viewport edge, not the content column. */}
-          <div className="-mr-6 mt-8 lg:-mr-[max(8rem,calc((100vw-1512px)/2+8rem))] lg:mt-12">
+          <div className="-mr-6 mt-4 lg:-mr-[max(8rem,calc((100vw-1512px)/2+8rem))] lg:mt-6">
             {isLoading ? (
               <div className="flex gap-6 overflow-hidden lg:gap-12">
                 {Array.from({ length: 4 }).map((_, index) => (

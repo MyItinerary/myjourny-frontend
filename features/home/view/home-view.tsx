@@ -2,12 +2,13 @@ import { Reveal } from "@/components/motion/reveal";
 import { NewsletterSection } from "@/components/home/newsletter-section";
 import { Footer } from "@/components/home/footer";
 
+import { HOME_SECTION_IDS } from "../model/home-sections.types";
 import type { HomeViewModel } from "../view-model/use-home-view-model";
 import { HomeBrowseView } from "./home-browse-view";
 import { HomeCitiesView } from "./home-cities-view";
 import { HomeHeroView } from "./home-hero-view";
 import { HomeRailView } from "./home-rail-view";
-import { HomeTasteQuizBandView } from "./home-taste-quiz-band-view";
+import { HomeTasteQuizPopupView } from "./home-taste-quiz-popup-view";
 import { HomeWhyBookView } from "./home-why-book-view";
 
 // Figma "Home" (671:24717). Section order follows the design; rails with
@@ -23,7 +24,7 @@ export function HomeView({
   localFoodAndDrinks,
   unforgettableTravel,
   browsingHistory,
-  tasteQuiz,
+  tasteQuizPopup,
   cities,
 }: HomeViewModel) {
   return (
@@ -80,10 +81,6 @@ export function HomeView({
         </Reveal>
       )}
 
-      <Reveal>
-        <HomeTasteQuizBandView {...tasteQuiz} />
-      </Reveal>
-
       {localFoodAndDrinks.show && (
         <Reveal>
           <HomeRailView
@@ -126,12 +123,16 @@ export function HomeView({
         </Reveal>
       )}
 
-      <Reveal>
-        <NewsletterSection />
-      </Reveal>
+      <div id={HOME_SECTION_IDS.newsletter}>
+        <Reveal>
+          <NewsletterSection />
+        </Reveal>
+      </div>
       <Reveal>
         <Footer tone="white" />
       </Reveal>
+
+      <HomeTasteQuizPopupView {...tasteQuizPopup} />
     </div>
   );
 }

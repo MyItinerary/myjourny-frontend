@@ -21,7 +21,7 @@ export function HomeBrowseView() {
   return (
     <section className="w-full bg-[#fcfcfc]">
       <div className="mx-auto w-full max-w-[1512px] px-6 py-10 lg:px-32 lg:py-[53px]">
-        <h2 className="pb-6 font-sans text-[32px] font-extrabold leading-normal text-[#333134] lg:text-[36px]">
+        <h2 className="pb-6 font-sans text-[28px] font-extrabold leading-normal text-[#333134]">
           Browse everything
         </h2>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

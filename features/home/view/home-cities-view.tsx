@@ -20,7 +20,7 @@ export function HomeCitiesView({ cities }: { cities: CityTile[] }) {
   return (
     <section className="w-full overflow-x-clip bg-[#fcfcfc]">
       <div className="mx-auto flex w-full max-w-[1512px] flex-col gap-8 px-6 py-10 lg:gap-[53px] lg:px-32 lg:py-[53px]">
-        <h2 className="font-sans text-[32px] font-extrabold leading-[120%] text-[#333134] lg:text-[40px]">
+        <h2 className="font-sans text-[28px] font-extrabold leading-[120%] text-[#333134]">
           Discover by cities
         </h2>
 

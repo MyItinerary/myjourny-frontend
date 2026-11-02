@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
 
+import { HOME_SECTION_IDS } from "../model/home-sections.types";
 import type { HomeViewModel } from "../view-model/use-home-view-model";
 import { HomeView } from "./home-view";
 
@@ -10,6 +11,7 @@ vi.mock("@/components/motion/reveal", () => ({ Reveal: ({ children }: { children
 vi.mock("./home-browse-view", () => ({ HomeBrowseView: () => <section aria-label="Browse everything" /> }));
 vi.mock("@/components/home/newsletter-section", () => ({ NewsletterSection: () => <section aria-label="Newsletter" /> }));
 vi.mock("@/components/home/footer", () => ({ Footer: () => <footer /> }));
+vi.mock("./home-taste-quiz-popup-view", () => ({ HomeTasteQuizPopupView: () => <aside aria-label="Taste quiz popup" /> }));
 vi.mock("./home-hero-view", () => ({ HomeHeroView: () => <header aria-label="Hero" /> }));
 vi.mock("./home-cities-view", () => ({ HomeCitiesView: () => <section aria-label="Cities" /> }));
 vi.mock("./home-rail-view", () => ({
@@ -31,7 +33,7 @@ function viewModel(overrides: Partial<HomeViewModel> = {}): HomeViewModel {
     localFoodAndDrinks: rail(true),
     unforgettableTravel: rail(true),
     browsingHistory: rail(false),
-    tasteQuiz: { visible: true, href: "/onboarding" },
+    tasteQuizPopup: { visible: true, href: "/onboarding", onDismiss: () => {} },
     cities: { cities: [], show: true },
     ...overrides,
   };
@@ -51,7 +53,6 @@ describe("HomeView", () => {
       "Top picks right now",
       "Explore Lagos intentionally",
       "Culture & history experiences",
-      "Personalise your feed",
       "Local food & drinks experiences",
       "Cities",
       "Browse everything",
@@ -66,15 +67,21 @@ describe("HomeView", () => {
       <HomeView
         {...viewModel({
           happeningNear: rail(false),
-          tasteQuiz: { visible: false, href: "/onboarding" },
           cities: { cities: [], show: false },
         })}
       />,
     );
 
     expect(screen.queryByRole("region", { name: "Happening near you" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("region", { name: "Personalise your feed" })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Cities" })).not.toBeInTheDocument();
+  });
+
+  it("marks the newsletter, so the taste-quiz popup knows where to stop", () => {
+    renderWithProviders(<HomeView {...viewModel()} />);
+
+    expect(document.getElementById(HOME_SECTION_IDS.newsletter)).toContainElement(
+      screen.getByRole("region", { name: "Newsletter" }),
+    );
   });
 
   it("has no 'Discover by categories' section", () => {

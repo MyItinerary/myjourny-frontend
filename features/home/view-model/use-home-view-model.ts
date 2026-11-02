@@ -9,7 +9,7 @@ import {
 } from "@/lib/queries/experiences";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 import { useDiscoverCitiesViewModel, type DiscoverCitiesViewModel } from "@/features/cities";
-import { useTasteQuizCtaViewModel, type TasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
+import { useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
 
 import {
   DUMMY_LOCAL_FOOD_AND_DRINKS,
@@ -17,6 +17,7 @@ import {
   DUMMY_UNFORGETTABLE_TRAVEL,
 } from "../model/home-dummy-rails";
 import { useHomeHeroViewModel, type HomeHeroViewModel } from "./use-home-hero-view-model";
+import { useTasteQuizPopupViewModel, type TasteQuizPopupViewModel } from "./use-taste-quiz-popup-view-model";
 
 export type HomeRail = {
   items: ExperienceCardProps[];
@@ -36,7 +37,7 @@ export type HomeViewModel = {
   unforgettableTravel: HomeRail;
   /** Signed-in users only. */
   browsingHistory: HomeRail;
-  tasteQuiz: TasteQuizCtaViewModel;
+  tasteQuizPopup: TasteQuizPopupViewModel;
   cities: DiscoverCitiesViewModel;
 };
 
@@ -100,7 +101,7 @@ export function useHomeViewModel(): HomeViewModel {
     localFoodAndDrinks: rail(DUMMY_LOCAL_FOOD_AND_DRINKS, false),
     unforgettableTravel: rail(DUMMY_UNFORGETTABLE_TRAVEL, false),
     browsingHistory,
-    tasteQuiz: useTasteQuizCtaViewModel(),
+    tasteQuizPopup: useTasteQuizPopupViewModel(useTasteQuizCtaViewModel()),
     cities: useDiscoverCitiesViewModel(),
   };
 }
