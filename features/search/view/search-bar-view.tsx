@@ -70,7 +70,7 @@ export function SearchBarView({
     <div
       ref={searchBarRef}
       className={cn(
-        "relative flex flex-col gap-2 rounded-[28px] border border-[#c7c1ba] bg-white p-2 lg:flex-row lg:items-center lg:gap-[9px] lg:rounded-[57px] shadow-sm transition-all",
+        "relative flex flex-col gap-2 rounded-[28px] border border-[#c7c1ba] bg-white p-2 text-left lg:flex-row lg:items-center lg:gap-[9px] lg:rounded-[57px] shadow-sm transition-all",
         variant === "nav" && "shadow-lg border-[#E0DFDD] bg-white",
         className,
       )}

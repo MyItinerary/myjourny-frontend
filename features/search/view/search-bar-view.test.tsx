@@ -71,6 +71,16 @@ describe("SearchBarView", () => {
     expect(dividers[1].compareDocumentPosition(who) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it("keeps its text left-aligned even inside a centred page section", () => {
+    const { container } = renderWithProviders(
+      <div className="text-center">
+        <SearchBarView {...defaultVm} />
+      </div>,
+    );
+
+    expect(container.querySelector("div.text-center > div")).toHaveClass("text-left");
+  });
+
   it("calls setWhereInput on user typing", async () => {
     const setWhereInput = vi.fn();
     const { user } = renderWithProviders(
