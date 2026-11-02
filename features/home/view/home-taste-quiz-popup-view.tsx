@@ -24,28 +24,28 @@ export function HomeTasteQuizPopupView({ visible, href, onDismiss }: TasteQuizPo
         >
           <div className="flex flex-col gap-[18px]">
             <div className="flex items-center gap-2">
-              <Image src="/icons/home/stars-01.svg" alt="" width={20} height={20} unoptimized />
-              <p className="font-sans text-sm font-medium leading-[21px] text-[#F5032D]">This page can match your taste</p>
+              <Image src="/icons/home/stars-01.svg" alt="" width={16} height={16} unoptimized />
+              <p className="font-sans text-xs font-medium leading-[18px] text-[#F5032D]">This page can match your taste</p>
             </div>
             <div className="flex flex-col gap-1.5">
-              <h2 className="font-sans text-xl font-medium leading-[30px] text-[#333134]">
+              <h2 className="font-sans text-base font-medium leading-6 text-[#333134]">
                 Right now you&rsquo;re seeing what everyone else sees.
               </h2>
-              <p className="font-sans text-base leading-6 text-[#6F6B72]">
+              <p className="font-sans text-sm leading-[22px] text-[#6F6B72]">
                 Five questions, about 40 seconds, and this page starts looking like yours.
               </p>
             </div>
             <div className="flex flex-col gap-3">
               <Link
                 href={href}
-                className="inline-flex h-12 w-full items-center justify-center rounded-[200px] bg-[#F5032D] px-4 py-3 font-sans text-base font-medium leading-6 text-white transition-colors hover:bg-[#d90328]"
+                className="inline-flex h-11 w-full items-center justify-center rounded-[200px] bg-[#F5032D] px-4 py-3 font-sans text-sm font-medium leading-[21px] text-white transition-colors hover:bg-[#d90328]"
               >
                 Take it
               </Link>
               <button
                 type="button"
                 onClick={onDismiss}
-                className="inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-[200px] border border-[#2C0101] bg-transparent px-4 py-3 font-sans text-base font-medium leading-6 text-[#2C0101] transition-colors hover:bg-[#2C0101]/5"
+                className="inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-[200px] border border-[#2C0101] bg-transparent px-4 py-3 font-sans text-sm font-medium leading-[21px] text-[#2C0101] transition-colors hover:bg-[#2C0101]/5"
               >
                 Maybe later
               </button>
