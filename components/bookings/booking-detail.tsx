@@ -227,9 +227,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col">
-      <div className="hidden lg:block">
-        <HomeNav />
-      </div>
+      <HomeNav />
       <main className="mx-auto w-full max-w-[720px] px-6 py-8">
         <Link href="/" className="mb-6 inline-flex items-center gap-1 text-sm text-[#6F6B72] hover:text-[#130404]">
           <ChevronLeft className="size-4" /> Home
