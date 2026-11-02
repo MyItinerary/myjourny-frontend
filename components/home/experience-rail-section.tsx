@@ -149,14 +149,14 @@ export function ExperienceRailSection({
           ? chunk(Array.from({ length: 3 }), 2).map((row, index) => (
               <div key={index} className="-mr-6 flex gap-3 overflow-hidden pr-6">
                 {row.map((_, itemIndex) => (
-                  <ExperienceCardSkeleton key={itemIndex} className="w-[360px] shrink-0 p-0" />
+                  <ExperienceCardSkeleton key={itemIndex} className="w-[85vw] max-w-[360px] shrink-0 p-0" />
                 ))}
               </div>
             ))
           : chunk(items.slice(0, 3), 2).map((row, index) => (
               <div key={index} className="-mr-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pr-6">
                 {row.map((item) => (
-                  <ExperienceCard key={item.id} {...item} className="w-[360px] shrink-0 snap-start p-0" />
+                  <ExperienceCard key={item.id} {...item} className="w-[85vw] max-w-[360px] shrink-0 snap-start p-0" />
                 ))}
               </div>
             ))}

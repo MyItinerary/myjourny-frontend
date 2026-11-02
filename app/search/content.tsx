@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import { HomeNav } from "@/components/home/home-nav";
 import { Footer } from "@/components/home/footer";
-import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
+import { CategoryResultsGrid } from "@/features/categories";
 import {
   EmptyResultsView,
   MoreFiltersDialogView,
@@ -51,17 +51,21 @@ export function SearchContent() {
           <ResultsFilterRowView {...results} className="mt-4 lg:mt-[18px]" />
 
           <div className="px-6 pt-5 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-20 lg:pt-7 lg:pb-12">
-          {!results.isLoading && results.items.length === 0 ? (
+          {results.isEmpty ? (
             <EmptyResultsView hasActiveFilters={results.hasActiveFilters} onClearAll={results.clearAll} />
           ) : (
             <CategoryResultsGrid
               items={results.items}
               categoryLabel={query || "this search"}
               isLoading={results.isLoading}
+              isError={results.isError}
+              errorMessage={results.errorMessage}
+              onRetry={results.onRetry}
               moreLabel="Show more"
               loadMore={{
                 hasMore: results.hasMore,
                 isLoading: results.isLoadingMore,
+                isError: results.isLoadMoreError,
                 onLoadMore: results.onLoadMore,
               }}
             />

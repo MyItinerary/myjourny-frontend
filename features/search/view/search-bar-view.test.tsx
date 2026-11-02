@@ -95,6 +95,16 @@ describe("SearchBarView", () => {
     expect(onApplyDates).toHaveBeenCalled();
   });
 
+  it("disables past days in the calendar", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2030, 5, 10));
+    renderWithProviders(<SearchBarView {...defaultVm} activeTab="when" />);
+
+    expect(screen.getAllByRole("button", { name: "5" })[0]).toBeDisabled();
+    expect(screen.getAllByRole("button", { name: "15" })[0]).toBeEnabled();
+    vi.useRealTimers();
+  });
+
   it("renders guest selectors when activeTab is 'who'", async () => {
     const incrementGuest = vi.fn();
     const { user } = renderWithProviders(

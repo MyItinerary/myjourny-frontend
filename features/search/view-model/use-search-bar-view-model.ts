@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { toCityDestination, useExperienceCities } from "@/features/cities";
 import { formatDateRange } from "@/lib/dates";
 import { categoriesBySlug } from "@/lib/mock-data/home";
 
@@ -10,7 +11,10 @@ import {
   DEFAULT_EVENTS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
+  startOfToday,
+  toIsoDay,
   useSearchExperiences,
+  withDate,
 } from "../model/search";
 import type {
   ActivitySuggestion,
@@ -112,15 +116,23 @@ export function useSearchBarViewModel({
 
   const trimmedQuery = selectedWhere.trim().toLowerCase();
 
+  // Cities that have experiences, from the API; the built-in list only until
+  // it loads (or if it can't).
+  const citiesQuery = useExperienceCities();
+  const destinations: DestinationSuggestion[] = useMemo(
+    () => (citiesQuery.data?.length ? citiesQuery.data.map(toCityDestination) : DEFAULT_DESTINATIONS),
+    [citiesQuery.data],
+  );
+
   const filteredDestinations = useMemo(() => {
-    if (!trimmedQuery) return DEFAULT_DESTINATIONS.slice(0, 5);
-    return DEFAULT_DESTINATIONS.filter(
+    if (!trimmedQuery) return destinations.slice(0, 5);
+    return destinations.filter(
       (dest) =>
         dest.city.toLowerCase().includes(trimmedQuery) ||
         dest.id.toLowerCase().includes(trimmedQuery) ||
         dest.description.toLowerCase().includes(trimmedQuery),
     );
-  }, [trimmedQuery]);
+  }, [destinations, trimmedQuery]);
 
   const filteredActivities = useMemo(() => {
     if (!trimmedQuery) return DEFAULT_ACTIVITIES.slice(0, 6);
@@ -203,6 +215,7 @@ export function useSearchBarViewModel({
   }, []);
 
   const onPickDate = useCallback((date: Date) => {
+    if (date < startOfToday()) return;
     setDraftRange((range) => {
       // First tap sets the start, the second the end; the same day twice is one day.
       if (!range.start || range.end) return { start: date, end: null };
@@ -243,6 +256,10 @@ export function useSearchBarViewModel({
       if (!trimmed) return;
 
       handleClose();
+      // The dates they picked go to city and category results.
+      const { start, end } = dateRange;
+      const day = start && start >= startOfToday() ? toIsoDay(start) : null;
+      const until = day && end && toIsoDay(end) !== day ? toIsoDay(end) : null;
 
       // There's no event page yet, so an event is searched for by name.
       if (selectedType === "event") {
@@ -256,16 +273,16 @@ export function useSearchBarViewModel({
       }
 
       if (selectedType === "activity" && selectedWhereId) {
-        router.push(`/categories/${selectedWhereId}`);
+        router.push(withDate(`/categories/${selectedWhereId}`, day, until));
         return;
       }
 
       if (selectedType === "destination" && selectedWhereId) {
-        router.push(`/cities/${selectedWhereId}`);
+        router.push(withDate(`/cities/${selectedWhereId}`, day, until));
         return;
       }
 
-      const matchedDest = DEFAULT_DESTINATIONS.find(
+      const matchedDest = destinations.find(
         (d) =>
           d.city.toLowerCase().includes(trimmed) ||
           d.id.toLowerCase().includes(trimmed) ||
@@ -281,28 +298,28 @@ export function useSearchBarViewModel({
       );
 
       if (matchedDest && !matchedAct) {
-        router.push(`/cities/${matchedDest.id}`);
+        router.push(withDate(`/cities/${matchedDest.id}`, day, until));
         return;
       }
 
       if (matchedAct) {
-        router.push(`/categories/${matchedAct.id}`);
+        router.push(withDate(`/categories/${matchedAct.id}`, day, until));
         return;
       }
 
       if (matchedDest) {
-        router.push(`/cities/${matchedDest.id}`);
+        router.push(withDate(`/cities/${matchedDest.id}`, day, until));
         return;
       }
 
       if (categoriesBySlug.has(trimmed)) {
-        router.push(`/categories/${trimmed}`);
+        router.push(withDate(`/categories/${trimmed}`, day, until));
         return;
       }
 
       router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
     },
-    [handleClose, router, selectedType, selectedWhere, selectedWhereId],
+    [dateRange, destinations, handleClose, router, selectedType, selectedWhere, selectedWhereId],
   );
 
   const onNavigateToDestination = useCallback(

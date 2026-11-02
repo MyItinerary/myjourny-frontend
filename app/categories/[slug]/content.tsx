@@ -1,23 +1,20 @@
 "use client";
 
-import type { ComponentProps } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import type { ComponentProps, ReactNode } from "react";
 
 import { HomeNav } from "@/components/home/home-nav";
 import { CitiesSection } from "@/components/home/cities-section";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
-import { CategoryHeader } from "@/components/categories/category-header";
-import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
-import { ChevronLeftIcon } from "@/components/icons/onboarding-icons";
+import { CategoryHeader, CategoryResultsGrid } from "@/features/categories";
+import { useDiscoverCitiesViewModel } from "@/features/cities";
 import {
   EmptyResultsView,
   MoreFiltersDialogView,
   ResultsFilterRowView,
   type SearchResultsViewModel,
 } from "@/features/search-results";
-import { cities } from "@/lib/mock-data/home";
 import { experienceListItemToCardProps, useFilteredExperiences } from "@/lib/queries/experiences";
 import type { ExperienceItem } from "@/lib/mock-data/home";
 
@@ -29,42 +26,34 @@ export function CategoryContent({
   label,
   items,
   isLoading = false,
+  isError = false,
+  errorMessage,
+  onRetry,
   moreLabel,
   loadMore,
   total,
   results,
+  filters,
 }: {
   label: string;
   items: ExperienceItem[];
   isLoading?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
   moreLabel?: string;
   loadMore?: ComponentProps<typeof CategoryResultsGrid>["loadMore"];
   /** Exact result count, when the source knows it. */
   total?: number;
   /** Filterable results (the new layout: filter row, 80px margins). Without it the page keeps its plain header. */
   results?: SearchResultsViewModel;
+  /** Filter controls shown under the heading, on the plain header. */
+  filters?: ReactNode;
 }) {
+  const discoverCities = useDiscoverCitiesViewModel();
   return (
     <div className="flex flex-1 flex-col">
-      <div className={results ? undefined : "hidden lg:block"}>
-        <HomeNav searchSummary={results ? { where: results.heading, query: label } : undefined} />
-      </div>
-
-      {!results && (
-      <div className="flex items-center gap-3 px-6 py-4 lg:hidden">
-        <Link
-          href="/"
-          aria-label="Back"
-          className="flex size-[38px] shrink-0 items-center justify-center rounded-full bg-white shadow-sm"
-        >
-          <ChevronLeftIcon className="size-[22px] text-foreground" />
-        </Link>
-        <div className="flex flex-1 items-center gap-2 rounded-full border border-[#c7c1ba] bg-white px-4 py-3.5">
-          <Image src="/icons/search-lg.svg" alt="" width={18} height={18} />
-          <span className="text-sm text-muted-foreground">Discover locations</span>
-        </div>
-      </div>
-      )}
+      <HomeNav searchSummary={results ? { where: results.heading, query: label } : undefined} />
 
       {results ? (
         <>
@@ -90,7 +79,7 @@ export function CategoryContent({
             <ResultsFilterRowView {...results} className="mt-4 lg:mt-[18px]" />
 
             <div className="px-6 pt-5 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-20 lg:pt-7 lg:pb-9">
-              {!results.isLoading && results.items.length === 0 ? (
+              {results.isEmpty ? (
                 <EmptyResultsView
                   hasActiveFilters={results.hasActiveFilters}
                   onClearAll={results.clearAll}
@@ -100,10 +89,14 @@ export function CategoryContent({
                   items={results.items}
                   categoryLabel={label}
                   isLoading={results.isLoading}
+                  isError={results.isError}
+                  errorMessage={results.errorMessage}
+                  onRetry={results.onRetry}
                   moreLabel="Show more"
                   loadMore={{
                     hasMore: results.hasMore,
                     isLoading: results.isLoadingMore,
+                    isError: results.isLoadMoreError,
                     onLoadMore: results.onLoadMore,
                   }}
                 />
@@ -114,14 +107,30 @@ export function CategoryContent({
         </>
       ) : (
         <div className="px-6 pt-4 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-20 lg:pt-9 lg:pb-9">
-          <CategoryHeader label={label} count={items.length} total={total} />
+          <CategoryHeader
+            label={label}
+            count={items.length}
+            total={total}
+            isLoading={isLoading}
+            isError={isError}
+            filters={filters}
+          />
           <div className="mt-6 lg:mt-9">
-            <CategoryResultsGrid items={items} categoryLabel={label} isLoading={isLoading} moreLabel={moreLabel} loadMore={loadMore} />
+            <CategoryResultsGrid
+              items={items}
+              categoryLabel={label}
+              isLoading={isLoading}
+              isError={isError}
+              errorMessage={errorMessage}
+              onRetry={onRetry}
+              moreLabel={moreLabel}
+              loadMore={loadMore}
+            />
           </div>
         </div>
       )}
 
-      <CitiesSection cities={cities} />
+      {discoverCities.show && <CitiesSection cities={discoverCities.cities} />}
 
       <OtherExperiencesRail exclude={results ? results.items : items} />
 

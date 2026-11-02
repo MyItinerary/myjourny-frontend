@@ -282,4 +282,45 @@ describe("useSearchResultsViewModel", () => {
     act(() => result.current.closePanel());
     expect(result.current.panelOpen).toBe(false);
   });
+
+  it("starts from the dates in the results link and asks for that day", async () => {
+    const calls: URLSearchParams[] = [];
+    mockApi((params) => calls.push(params));
+    audience = "guest";
+    const { result } = renderHookWithProviders(() =>
+      useSearchResultsViewModel({ subject: { kind: "city", label: "Lagos" }, city: "Lagos", date: "2030-06-01" }),
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(calls.at(-1)?.get("date")).toBe("2030-06-01");
+    expect(result.current.filters.dateRange.start).toEqual(new Date(2030, 5, 1));
+    expect(result.current.filterCount).toBe(1);
+  });
+
+  it("follows new dates in the link while the page stays open", async () => {
+    mockApi();
+    audience = "guest";
+    const { result, rerender } = renderHookWithProviders(
+      ({ date }: { date: string }) =>
+        useSearchResultsViewModel({ subject: { kind: "city", label: "Lagos" }, city: "Lagos", date }),
+      { initialProps: { date: "2030-06-01" } },
+    );
+
+    rerender({ date: "2030-07-09" });
+    await waitFor(() => expect(result.current.filters.dateRange.start).toEqual(new Date(2030, 6, 9)));
+  });
+
+  it("gives the API's reason when the listing fails, and isn't empty", async () => {
+    server.use(
+      http.get(apiUrl("/experiences/filter"), () =>
+        HttpResponse.json({ detail: "Pick today or a later date." }, { status: 400 }),
+      ),
+    );
+    const { result } = setup();
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.errorMessage).toBe("Pick today or a later date.");
+    expect(result.current.isEmpty).toBe(false);
+    expect(result.current.countLabel).toBe("(Failed to load)");
+  });
 });

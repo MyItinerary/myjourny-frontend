@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { formatPrice, useBookingQuote, useCreateBooking } from "@/features/booking";
+import { CANCEL_CUTOFF_HOURS, formatPriceOrFree, useBookingQuote, useCreateBooking } from "@/features/booking";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 
@@ -13,6 +13,7 @@ import type { Country } from "../model/country.types";
 import { useCheckoutDraft } from "../model/checkout-draft-store";
 import {
   isEmailTakenError,
+  isTwoFactorChallenge,
   useEmailHasAccount,
   useGuestGoogleSignup,
   useGuestLogin,
@@ -26,6 +27,12 @@ export type OrderSummary = {
   when: string;
   guests: string;
   durationLabel: string;
+  /** "Up to 24 hours before, full refund" */
+  cancellationNote: string;
+  /** "See time slots above" is only said when there were slots. */
+  hasTimeSlots: boolean;
+  /** Nothing to pay: no "x 1 Adult", no taxes and fees. */
+  free: boolean;
   /** "₦16,000.00" */
   total: string;
   /** "x 1 Adult" */
@@ -41,6 +48,8 @@ export type CheckoutStep = "details" | "password" | "pay";
 /** The "Welcome back!" sheet for an email that already has an account. */
 export type CheckoutLogin = {
   open: boolean;
+  /** The account was made with Google and has no password: offer only Google. */
+  googleOnly: boolean;
   onOpenChange: (open: boolean) => void;
   email: string;
   onEmailChange: (value: string) => void;
@@ -64,6 +73,8 @@ export type CheckoutViewModel = {
     step: CheckoutStep;
     email: string;
     onEmailChange: (value: string) => void;
+    /** They left the email field: look up whether it has an account. */
+    onEmailBlur: () => void;
     /** Typed email is fine to use; the email is locked once signed in or past the first step. */
     emailLocked: boolean;
     country: {
@@ -85,8 +96,12 @@ export type CheckoutViewModel = {
     /** This email already has an account: "Continue" becomes "Login and continue to book". */
     accountExists: boolean;
     canContinue: boolean;
-    onContinue: () => void;
+    onContinue: () => Promise<void> | void;
     canPay: boolean;
+    /** The total is nothing, so there is no payment page: "Confirm and book". */
+    free: boolean;
+    /** Who takes the payment: itin sends NGN to Paystack and every other currency to Stripe. */
+    payment: { provider: string; methods: string };
     pending: boolean;
     onConfirm: () => void;
     onGoogleCredential: (credential: string) => void;
@@ -124,11 +139,17 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   // The email sign-up turned away as already taken, when the lookup didn't know.
   const [takenEmail, setTakenEmail] = useState<string | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [googleOnly, setGoogleOnly] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginPending, setLoginPending] = useState(false);
   const [loginGoogleLoading, setLoginGoogleLoading] = useState(false);
-  const lookup = useEmailHasAccount(emailInput);
+  // The email last looked up: set when they leave the field or press Continue,
+  // so the lookup runs once per finished email, not on every pause in typing.
+  const [checkedEmail, setCheckedEmail] = useState("");
+  // Continue was pressed before the email was looked up: waiting for the answer.
+  const [continuePending, setContinuePending] = useState(false);
+  const lookup = useEmailHasAccount(checkedEmail);
 
   const country =
     pickedCountry ?? COUNTRIES.find((c) => c.iso === draft?.contact?.countryIso) ?? DEFAULT_COUNTRY;
@@ -141,10 +162,10 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   // Nothing to check out (a refresh in a new tab, or storage was blocked):
   // back to browsing.
   useEffect(() => {
-    if (hydrated && !draft) router.replace("/");
-  }, [hydrated, draft, router]);
+    if (hydrated && !draft && !submitting) router.replace("/");
+  }, [hydrated, draft, submitting, router]);
 
-  const total = draft ? (quote ? formatPrice(Number(quote.total), draft.currency) : draft.total) : "";
+  const total = draft ? (quote ? formatPriceOrFree(Number(quote.total), draft.currency) : draft.total) : "";
   const summary: OrderSummary | null = draft
     ? {
         title: draft.title,
@@ -153,6 +174,10 @@ export function useCheckoutViewModel(): CheckoutViewModel {
         when: draft.when,
         guests: `${draft.guests} guest${draft.guests === 1 ? "" : "s"}`,
         durationLabel: draft.durationLabel,
+        // Drafts saved before the card sent its line fall back to the default cutoff.
+        cancellationNote: draft.cancellationNote ?? `Up to ${CANCEL_CUTOFF_HOURS} hours before, full refund`,
+        hasTimeSlots: !!draft.hasTimeSlots,
+        free: total === "Free",
         total,
         quantity: `x ${draft.ticketsLabel}`,
         changeHref: `/experiences/${draft.experienceId}`,
@@ -164,7 +189,19 @@ export function useCheckoutViewModel(): CheckoutViewModel {
   const phoneValid = isValidPhone(country, phone);
   const detailsValid = EMAIL_PATTERN.test(emailInput.trim()) && phoneValid;
 
-  const accountExists = step === "details" && (lookup.exists || takenEmail === emailInput.trim());
+  const emailChecked = checkedEmail === emailInput.trim();
+  const accountExists =
+    step === "details" && ((emailChecked && lookup.exists) || takenEmail === emailInput.trim());
+
+  const continueToNext = (hasAccount: boolean, hasPassword = true) => {
+    if (hasAccount) {
+      setLoginEmail(emailInput.trim());
+      setGoogleOnly(!hasPassword);
+      setLoginOpen(true);
+    } else {
+      setStage("password");
+    }
+  };
 
   const confirmMismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const passwordError =
@@ -186,15 +223,17 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     });
     clearCheckoutDraft();
     if (booking.url) window.location.href = booking.url;
-    else if (booking.status === "confirmed") router.push(`/bookings/${booking.id}/success`);
-    else router.push(`/bookings/${booking.id}`);
+    // Free experiences are confirmed straight away, with nothing to pay.
+    else router.push(`/bookings/${booking.id}/success`);
   };
 
   // A new account is created with the phone as well as the email, so it lands
   // on their profile. (Someone already signed in, e.g. with Google, has no
   // sign-up to attach it to; saving theirs needs itin's verified phone-change flow.)
   const onConfirm = async () => {
-    if (submitting || !draft || !phoneValid) return;
+    // The phone is saved with a new account; a signed-in guest has no sign-up to
+    // attach it to, so it isn't asked of them.
+    if (submitting || !draft || (step === "password" && !phoneValid)) return;
     if (step === "password" && !passwordsReady) return;
     setSubmitting(true);
     register.reset();
@@ -224,37 +263,42 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     googleSignup.mutate(
       { token: credential },
       {
-        onSuccess: () => setGoogleLoading(false),
+        onSuccess: (data) => {
+          setGoogleLoading(false);
+          if (isTwoFactorChallenge(data)) finishOnLoginPage();
+        },
         onError: () => setGoogleLoading(false),
       },
     );
   };
 
-  // Logged in: straight on to the payment page, no extra click.
-  const continueAfterLogin = async () => {
-    setLoginOpen(false);
-    setSubmitting(true);
-    try {
-      await bookAndPay();
-    } catch (error) {
-      attemptKey.current = null;
-      toast.error(apiErrorMessage(error, "Couldn't start your booking. Please try again."));
-      setSubmitting(false);
-    }
+  // Logged in: the sheet closes and the page behind it, kept as it was, is now
+  // the last step: Confirm and pay. (Figma also has a note for the guide; it
+  // comes back once itin stores it.)
+  const continueAfterLogin = () => setLoginOpen(false);
+
+  // The sheet has no code step: an account with 2FA finishes on the login
+  // page, which asks for the code and comes back here. The draft is kept,
+  // and the phone they typed goes with it.
+  const finishOnLoginPage = () => {
+    saveCheckoutContact({ phone, countryIso: country.iso });
+    router.push(`/login?next=${encodeURIComponent("/checkout")}`);
   };
 
   const onLogin = async () => {
     if (loginPending || !loginEmail.trim() || !loginPassword) return;
     setLoginPending(true);
+    let data: unknown;
     try {
       // Email and password only. Wrong details are reported by the login itself.
-      await login.mutateAsync({ email: loginEmail.trim(), password: loginPassword });
+      data = await login.mutateAsync({ email: loginEmail.trim(), password: loginPassword });
     } catch {
       setLoginPending(false);
       return;
     }
     setLoginPending(false);
-    await continueAfterLogin();
+    if (isTwoFactorChallenge(data)) finishOnLoginPage();
+    else continueAfterLogin();
   };
 
   const onLoginGoogle = (credential: string) => {
@@ -262,9 +306,10 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     googleSignup.mutate(
       { token: credential },
       {
-        onSuccess: async () => {
+        onSuccess: (data) => {
           setLoginGoogleLoading(false);
-          await continueAfterLogin();
+          if (isTwoFactorChallenge(data)) finishOnLoginPage();
+          else continueAfterLogin();
         },
         onError: () => setLoginGoogleLoading(false),
       },
@@ -278,6 +323,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       step,
       email: step === "pay" ? email : emailInput,
       onEmailChange: setEmailInput,
+      onEmailBlur: () => setCheckedEmail(emailInput.trim()),
       emailLocked: step !== "details",
       country: { selected: country, options: COUNTRIES, onSelect: setCountry },
       phone,
@@ -291,17 +337,26 @@ export function useCheckoutViewModel(): CheckoutViewModel {
       emailTaken: isEmailTakenError(register.error),
       loginHref: `/login?next=${encodeURIComponent("/checkout")}`,
       accountExists,
-      canContinue: detailsValid && !googleLoading && !lookup.checking,
-      onContinue: () => {
-        if (!detailsValid) return;
-        if (accountExists) {
-          setLoginEmail(emailInput.trim());
-          setLoginOpen(true);
-        } else {
-          setStage("password");
-        }
+      canContinue: detailsValid && !googleLoading && !lookup.checking && !continuePending,
+      onContinue: async () => {
+        if (!detailsValid || continuePending) return;
+        // An account found only by sign-up's "already registered" has a password.
+        if (emailChecked) return continueToNext(accountExists, !lookup.exists || lookup.hasPassword);
+        // They pressed Continue (or Enter) without leaving the email field.
+        const typed = emailInput.trim();
+        setCheckedEmail(typed);
+        setContinuePending(true);
+        const found = await lookup.check(typed);
+        setContinuePending(false);
+        if (found.exists) continueToNext(true, found.hasPassword);
+        else continueToNext(takenEmail === typed);
       },
-      canPay: step === "password" ? passwordsReady && !submitting : phoneValid && !submitting,
+      free: total === "Free",
+      payment:
+        draft?.currency === "NGN"
+          ? { provider: "Paystack", methods: "Payment methods like card, bank transfer, USSD and Pay with Zap all available" }
+          : { provider: "Stripe", methods: "Pay securely by card" },
+      canPay: step === "password" ? passwordsReady && phoneValid && !submitting : !submitting,
       pending: submitting,
       onConfirm,
       onGoogleCredential,
@@ -309,6 +364,7 @@ export function useCheckoutViewModel(): CheckoutViewModel {
     },
     login: {
       open: loginOpen,
+      googleOnly,
       onOpenChange: setLoginOpen,
       email: loginEmail,
       onEmailChange: setLoginEmail,

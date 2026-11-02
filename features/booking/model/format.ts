@@ -8,6 +8,26 @@ export function formatPrice(amount: number, currency: string): string {
   }).format(amount);
 }
 
+/** A price people pay: "Free" when it's nothing, otherwise as formatPrice.
+ * Not for discounts, fees or refunds, where ₦0.00 is the right answer. */
+export function formatPriceOrFree(amount: number, currency: string): string {
+  return amount === 0 ? "Free" : formatPrice(amount, currency);
+}
+
+/** "3–8 guests per booking", "At least 3 guests per booking", "Up to 8 guests
+ * per booking", or null when the experience sets no limits. A minimum of 1 is
+ * no limit. */
+export function groupSizeLabel(min?: number | null, max?: number | null): string | null {
+  const least = min && min > 1 ? min : null;
+  const most = max && max > 0 ? max : null;
+  if (least && most) {
+    return least === most ? `Exactly ${least} guests per booking` : `${least}–${most} guests per booking`;
+  }
+  if (least) return `At least ${least} guests per booking`;
+  if (most) return `Up to ${most} guest${most === 1 ? "" : "s"} per booking`;
+  return null;
+}
+
 export const UNIT_SUFFIX: Record<PricingUnit, string> = {
   per_person: "/ person",
   per_booking: "/ group",
@@ -71,6 +91,18 @@ export function describeRules(rules: PriceRule[], currency: string, context: Rul
   return notes;
 }
 
+/** A host-supplied link that is safe to open: http(s) only, so a
+ * `javascript:` or `data:` value can never run on our site. */
+export function safeExternalUrl(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Log in, then come back to this experience. */
 export function guestLoginHref(experienceId: string): string {
   return `/login?next=${encodeURIComponent(`/experiences/${experienceId}`)}`;
@@ -97,6 +129,16 @@ export function formatSessionWhen(startsAt: string, endsAt?: string | null, time
     hour: "numeric",
     minute: "2-digit",
   }).format(start);
+}
+
+/**
+ * The day only, "Saturday, October 17": for experiences without a schedule,
+ * where the host confirms the start time and the server's noon is a placeholder.
+ */
+export function formatSessionDay(startsAt: string, timeZone = "Africa/Lagos"): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone, weekday: "long", month: "long", day: "numeric" }).format(
+    parseUtc(startsAt),
+  );
 }
 
 /** The parts of an experience's schedule a label needs. */
@@ -145,4 +187,18 @@ export function scheduleLabel(s: ScheduleSummary): string | null {
     return null;
   }
   return length > 1 ? `${pattern} · ${length} days` : pattern;
+}
+
+/** "₦16,000": whole amounts without kobo, as the booking cards show them. */
+export function formatMoneyCompact(amount: number, currency: string): string {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  }).format(amount);
+}
+
+/** "₦16,000.00" → "₦16,000": drops empty kobo, keeps real ones ("₦16,000.50"). */
+export function trimWholeAmount(formatted: string): string {
+  return formatted.replace(/\.00(?!\d)/, "");
 }

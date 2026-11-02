@@ -34,7 +34,7 @@ export function GuideProfileContent({ id }: { id: string }) {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
             <div className="size-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-            <p className="mt-3 text-sm">Loading guide profile...</p>
+            <p className="mt-3 text-sm">Loading guide profile…</p>
           </div>
         ) : !guide ? (
           <div className="py-20 text-center">
@@ -46,7 +46,7 @@ export function GuideProfileContent({ id }: { id: string }) {
               href="/"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#2C0101] px-6 text-sm font-semibold text-white hover:bg-black transition-colors"
             >
-              Back to Home
+              Back to home
             </Link>
           </div>
         ) : (
@@ -69,7 +69,7 @@ export function GuideProfileContent({ id }: { id: string }) {
                     {guide.is_verified && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#02A078]/10 px-2.5 py-0.5 text-xs font-semibold text-[#02A078]">
                         <CheckCircle2 className="size-3.5" />
-                        <span>Verified Guide</span>
+                        <span>Verified guide</span>
                       </span>
                     )}
                   </div>

@@ -30,14 +30,20 @@ const account = vi.hoisted(() => ({
   register: { mutateAsync: vi.fn(), reset: vi.fn(), error: null as unknown },
   google: { mutate: vi.fn() },
   login: { mutateAsync: vi.fn() },
-  lookup: { exists: false, checking: false },
+  lookup: { exists: false, hasPassword: false, checking: false },
+  lookedUp: [] as string[],
+  check: vi.fn(),
 }));
 vi.mock("../model/guest-account", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../model/guest-account")>()),
   useGuestRegister: () => account.register,
   useGuestGoogleSignup: () => account.google,
   useGuestLogin: () => account.login,
-  useEmailHasAccount: () => account.lookup,
+  // Nothing is looked up until the view-model hands over a finished email.
+  useEmailHasAccount: (email: string) => {
+    account.lookedUp.push(email);
+    return email ? { ...account.lookup, check: account.check } : { exists: false, checking: false, check: account.check };
+  },
 }));
 
 const draft: CheckoutDraft = {
@@ -79,7 +85,10 @@ beforeEach(() => {
   account.register.error = null;
   account.google.mutate.mockReset();
   account.login.mutateAsync.mockReset();
-  account.lookup = { exists: false, checking: false };
+  account.lookup = { exists: false, hasPassword: false, checking: false };
+  account.lookedUp = [];
+  account.check.mockReset();
+  account.check.mockImplementation(async () => ({ exists: account.lookup.exists, hasPassword: account.lookup.hasPassword }));
   saveCheckoutDraft(draft);
   // The quote needs an account; most tests don't have one yet.
   server.use(http.post(apiUrl("/bookings/quote"), () => HttpResponse.json({}, { status: 401 })));
@@ -108,7 +117,37 @@ describe("useCheckoutViewModel", () => {
       total: "₦16,000.00",
       quantity: "x 1 Adult",
       changeHref: "/experiences/exp-1",
+      cancellationNote: "Up to 24 hours before, full refund",
+      hasTimeSlots: false,
+      free: false,
     });
+  });
+
+  it("knows when there were time slots to see, and when the booking is free", () => {
+    saveCheckoutDraft({ ...draft, hasTimeSlots: true, total: "Free" });
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(result.current.summary).toMatchObject({ hasTimeSlots: true, free: true, total: "Free" });
+  });
+
+  it("says Paystack takes naira payments and Stripe takes the rest", () => {
+    const naira = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(naira.result.current.form.payment.provider).toBe("Paystack");
+    naira.unmount();
+
+    saveCheckoutDraft({ ...draft, currency: "USD" });
+    const dollars = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(dollars.result.current.form.payment).toEqual({ provider: "Stripe", methods: "Pay securely by card" });
+  });
+
+  it("shows the booking card's cancellation line, or the default for an older draft", () => {
+    saveCheckoutDraft({ ...draft, cancellationNote: "Full refund until Fri 7 June, 9:00am" });
+    const carried = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(carried.result.current.summary?.cancellationNote).toBe("Full refund until Fri 7 June, 9:00am");
+    carried.unmount();
+
+    saveCheckoutDraft(draft);
+    const older = renderHookWithProviders(() => useCheckoutViewModel());
+    expect(older.result.current.summary?.cancellationNote).toBe("Up to 24 hours before, full refund");
   });
 
   it("sends the guest home when there is no saved booking", () => {
@@ -117,7 +156,7 @@ describe("useCheckoutViewModel", () => {
     expect(nav.replace).toHaveBeenCalledWith("/");
   });
 
-  it("continues only with a valid email and phone, then asks for a password", () => {
+  it("continues only with a valid email and phone, then asks for a password", async () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     expect(result.current.form.canContinue).toBe(false);
 
@@ -128,7 +167,9 @@ describe("useCheckoutViewModel", () => {
     fillDetails(result);
     expect(result.current.form.phone).toBe("7016377711");
     expect(result.current.form.canContinue).toBe(true);
-    act(() => result.current.form.onContinue());
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
 
     expect(result.current.form.step).toBe("password");
     expect(result.current.form.emailLocked).toBe(true);
@@ -136,21 +177,75 @@ describe("useCheckoutViewModel", () => {
   });
 
   it("waits for the account lookup before letting them continue", () => {
-    account.lookup = { exists: false, checking: true };
+    account.lookup = { exists: false, hasPassword: false, checking: true };
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
+    act(() => result.current.form.onEmailBlur());
 
     expect(result.current.form.canContinue).toBe(false);
   });
 
-  it("opens the log-in sheet instead of the password step when the email has an account", () => {
-    account.lookup = { exists: true, checking: false };
+  it("looks the email up once they leave the field, not while they type", () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
+    expect(account.lookedUp.every((email) => email === "")).toBe(true);
+
+    act(() => result.current.form.onEmailBlur());
+
+    expect(new Set(account.lookedUp.filter(Boolean))).toEqual(new Set(["juliet@example.com"]));
+  });
+
+  it("looks the email up on Continue when they never left the field, then carries on", async () => {
+    account.lookup = { exists: true, hasPassword: true, checking: false };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+    expect(result.current.form.accountExists).toBe(false);
+
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
+
+    expect(result.current.login.open).toBe(true);
+    expect(result.current.login.email).toBe("juliet@example.com");
+  });
+
+  it("offers only Google when the account was made with Google", () => {
+    account.lookup = { exists: true, hasPassword: false, checking: false };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+    act(() => result.current.form.onEmailBlur());
+
+    act(() => {
+      void result.current.form.onContinue();
+    });
+
+    expect(result.current.login.open).toBe(true);
+    expect(result.current.login.googleOnly).toBe(true);
+  });
+
+  it("offers only Google on Continue too, when they never left the email field", async () => {
+    account.lookup = { exists: true, hasPassword: false, checking: false };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
+
+    expect(result.current.login.googleOnly).toBe(true);
+  });
+
+  it("opens the log-in sheet instead of the password step when the email has an account", async () => {
+    account.lookup = { exists: true, hasPassword: true, checking: false };
+    const { result } = renderHookWithProviders(() => useCheckoutViewModel());
+    fillDetails(result);
+    act(() => result.current.form.onEmailBlur());
     expect(result.current.form.accountExists).toBe(true);
     expect(result.current.login.open).toBe(false);
 
-    act(() => result.current.form.onContinue());
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
 
     expect(result.current.form.step).toBe("details");
     expect(result.current.login.open).toBe(true);
@@ -162,7 +257,9 @@ describe("useCheckoutViewModel", () => {
     account.register.mutateAsync.mockRejectedValue({ response: { data: { detail: "Email already registered" } } });
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
-    act(() => result.current.form.onContinue());
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
     act(() => result.current.form.onPasswordChange("longenough1"));
     act(() => result.current.form.onConfirmPasswordChange("longenough1"));
 
@@ -176,10 +273,13 @@ describe("useCheckoutViewModel", () => {
   });
 
   function openLogin() {
-    account.lookup = { exists: true, checking: false };
+    account.lookup = { exists: true, hasPassword: true, checking: false };
     const hook = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(hook.result);
-    act(() => hook.result.current.form.onContinue());
+    act(() => hook.result.current.form.onEmailBlur());
+    act(() => {
+      void hook.result.current.form.onContinue();
+    });
     return hook.result;
   }
 
@@ -206,28 +306,25 @@ describe("useCheckoutViewModel", () => {
     expect(result.current.form.canPay).toBe(true);
   });
 
-  it("logs in, then books and goes to the payment page without another click", async () => {
+  it("logs in, then closes the sheet and leaves the page as it was, ready for the last step", async () => {
     account.login.mutateAsync.mockResolvedValue({ access_token: "a", refresh_token: "r" });
-    server.use(
-      http.post(apiUrl("/bookings/"), () =>
-        HttpResponse.json({ id: "b-1", status: "pending", payment_status: "unpaid", url: "https://pay.test/3" }),
-      ),
-    );
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
     const result = openLogin();
     expect(result.current.login.canSubmit).toBe(false);
     act(() => result.current.login.onPasswordChange("secret123"));
     expect(result.current.login.canSubmit).toBe(true);
 
-    await withLocation(async () => {
-      act(() => {
-        void result.current.login.onSubmit();
-      });
-      await waitFor(() => expect(window.location.href).toBe("https://pay.test/3"));
+    act(() => {
+      void result.current.login.onSubmit();
     });
+    await waitFor(() => expect(result.current.login.open).toBe(false));
 
     expect(account.login.mutateAsync).toHaveBeenCalledWith({ email: "juliet@example.com", password: "secret123" });
     expect(account.register.mutateAsync).not.toHaveBeenCalled();
-    expect(result.current.login.open).toBe(false);
+    // Nothing is booked until they press Confirm and pay.
+    expect(created).not.toHaveBeenCalled();
+    expect(result.current.form.email.trim()).toBe("juliet@example.com");
   });
 
   it("stays on the log-in sheet when the details are wrong", async () => {
@@ -246,18 +343,39 @@ describe("useCheckoutViewModel", () => {
     expect(created).not.toHaveBeenCalled();
   });
 
-  it("logs in with Google from the sheet and books", async () => {
-    server.use(
-      http.post(apiUrl("/bookings/"), () =>
-        HttpResponse.json({ id: "b-1", status: "confirmed", payment_status: "paid", url: null }),
-      ),
-    );
+  it("sends an account with 2FA to the login page for its code, keeping the phone", async () => {
+    account.login.mutateAsync.mockResolvedValue({ "2fa_required": true });
+    const result = openLogin();
+    act(() => result.current.login.onPasswordChange("secret123"));
+
+    act(() => {
+      void result.current.login.onSubmit();
+    });
+
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/login?next=%2Fcheckout"));
+    const stored = JSON.parse(window.localStorage.getItem("myjourny:checkout-draft")!);
+    expect(stored.contact).toEqual({ phone: "7016377711", countryIso: "NG" });
+  });
+
+  it("sends a Google account with 2FA to the login page too", () => {
+    account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ "2fa_required": true }));
+    const result = openLogin();
+
+    act(() => result.current.login.onGoogleCredential("cred"));
+
+    expect(nav.push).toHaveBeenCalledWith("/login?next=%2Fcheckout");
+  });
+
+  it("logs in with Google from the sheet, then closes it without booking", async () => {
+    const created = vi.fn();
+    server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
     account.google.mutate.mockImplementation((_payload, options) => options.onSuccess({ access_token: "a" }));
     const result = openLogin();
 
     act(() => result.current.login.onGoogleCredential("cred"));
 
-    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-1/success"));
+    await waitFor(() => expect(result.current.login.open).toBe(false));
+    expect(created).not.toHaveBeenCalled();
   });
 
   it("stops the spinner when Google sign-in from the sheet fails", () => {
@@ -268,34 +386,25 @@ describe("useCheckoutViewModel", () => {
     expect(nav.push).not.toHaveBeenCalled();
   });
 
-  it("shows why booking failed after a log-in", async () => {
-    account.login.mutateAsync.mockResolvedValue({ access_token: "a" });
-    server.use(http.post(apiUrl("/bookings/"), () => HttpResponse.json({ detail: "This date is sold out" }, { status: 409 })));
-    const result = openLogin();
-    act(() => result.current.login.onPasswordChange("secret123"));
-
-    act(() => {
-      void result.current.login.onSubmit();
-    });
-
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("This date is sold out"));
-  });
-
-  it("won't continue on an invalid phone", () => {
+  it("won't continue on an invalid phone", async () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     act(() => result.current.form.onEmailChange("juliet@example.com"));
     act(() => result.current.form.onPhoneChange("12345"));
 
-    act(() => result.current.form.onContinue());
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
 
     expect(result.current.form.canContinue).toBe(false);
     expect(result.current.form.step).toBe("details");
   });
 
-  it("checks the password rules and that both match before paying", () => {
+  it("checks the password rules and that both match before paying", async () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
-    act(() => result.current.form.onContinue());
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
     expect(result.current.form.canPay).toBe(false);
     expect(result.current.form.passwordError).toBeNull();
 
@@ -331,7 +440,9 @@ describe("useCheckoutViewModel", () => {
     );
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
-    act(() => result.current.form.onContinue());
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
     act(() => result.current.form.onPasswordChange("longenough1"));
     act(() => result.current.form.onConfirmPasswordChange("longenough1"));
 
@@ -359,7 +470,9 @@ describe("useCheckoutViewModel", () => {
     server.use(http.post(apiUrl("/bookings/"), () => (created(), HttpResponse.json({}, { status: 201 }))));
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
     fillDetails(result);
-    act(() => result.current.form.onContinue());
+    await act(async () => {
+      await result.current.form.onContinue();
+    });
     act(() => result.current.form.onPasswordChange("longenough1"));
     act(() => result.current.form.onConfirmPasswordChange("longenough1"));
 
@@ -381,7 +494,7 @@ describe("useCheckoutViewModel", () => {
     expect(result.current.form.loginHref).toBe("/login?next=%2Fcheckout");
   });
 
-  it("asks only for the phone once signed in, and books without signing up", async () => {
+  it("asks nothing more once signed in, and books without signing up", async () => {
     session.value = signedIn;
     server.use(
       http.post(apiUrl("/bookings/"), () =>
@@ -391,9 +504,8 @@ describe("useCheckoutViewModel", () => {
     const { result } = renderHookWithProviders(() => useCheckoutViewModel());
 
     expect(result.current.form.step).toBe("pay");
-    expect(result.current.form.email).toBe("juliet@example.com");
-    expect(result.current.form.canPay).toBe(false);
-    act(() => result.current.form.onPhoneChange("7016377711"));
+    expect(result.current.form.email.trim()).toBe("juliet@example.com");
+    // The phone isn't saved for a signed-in guest, so it isn't required.
     expect(result.current.form.canPay).toBe(true);
 
     await withLocation(async () => {
@@ -417,7 +529,7 @@ describe("useCheckoutViewModel", () => {
     await waitFor(() => expect(result.current.summary?.total).toBe("₦15,000.00"));
   });
 
-  it("opens the booking's page without a checkout link, and the success page when it's free", async () => {
+  it("goes to the success page when there is no checkout link", async () => {
     session.value = signedIn;
     server.use(
       http.post(apiUrl("/bookings/"), () => HttpResponse.json({ id: "b-2", status: "confirmed", payment_status: "unpaid", url: null })),
@@ -438,7 +550,7 @@ describe("useCheckoutViewModel", () => {
     act(() => {
       void second.result.current.form.onConfirm();
     });
-    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-3"));
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/bookings/b-3/success"));
   });
 
   it("shows why a booking couldn't start", async () => {

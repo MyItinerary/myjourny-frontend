@@ -18,6 +18,12 @@ const EXPERIENCE = {
   host: { id: "guide-1", display_name: "Kayan Thrille" },
 };
 
+const SIGNED_IN = {
+  accessToken: "e2e-access",
+  refreshToken: "e2e-refresh",
+  user: { id: "user-1", email: "juliet@example.com", fullName: null, avatarUrl: null },
+};
+
 const QUOTE = {
   currency: "NGN",
   lines: [{ kind: "ticket", label: "Adult", quantity: 1, unit_amount: "16000", amount: "16000" }],
@@ -134,6 +140,42 @@ test("after paying, the booking page says you're going", async ({ page }) => {
   await expect(page.getByText("Lagos Food Walk").first()).toBeVisible();
 });
 
+test("a declined card offers to try the payment again instead of waiting", async ({ page }) => {
+  await page.addInitScript((auth) => window.localStorage.setItem("myjourny:auth", JSON.stringify(auth)), SIGNED_IN);
+  await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
+  let retried: Record<string, unknown> | null = null;
+  await mockApi(page, {
+    // The backend releases the booking when Paystack reports the decline.
+    "GET /bookings/b-1": (r) =>
+      r.fulfill({
+        json: {
+          id: "b-1",
+          experience_id: "exp-1",
+          status: "cancelled",
+          payment_status: "unpaid",
+          requested_datetime: "2026-07-16T08:00:00",
+          party_size: 1,
+          price_total: "16000.00",
+          currency: "NGN",
+        },
+      }),
+    "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
+    "POST /bookings/b-1/retry-payment": (r) => {
+      retried = r.request().postDataJSON();
+      return r.fulfill({ json: { id: "b-1", status: "pending", payment_status: "unpaid", url: "https://paystack.test/pay" } });
+    },
+  });
+
+  await page.goto("/bookings/b-1/cancel");
+
+  await expect(page.getByRole("heading", { name: "Payment not completed" })).toBeVisible();
+  await expect(page.getByText("Confirming your payment…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Try payment again" }).click();
+
+  await expect(page).toHaveURL("https://paystack.test/pay");
+  expect(retried).toMatchObject({ platform: "web" });
+});
+
 test("a signed-in user skips checkout: Book now goes straight to the payment page", async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(
@@ -180,7 +222,7 @@ test("a signed-in user skips checkout: Book now goes straight to the payment pag
   expect(created).toBe(1);
 });
 
-test("a guest whose email already has an account logs in and goes straight to payment", async ({ page }) => {
+test("a guest whose email already has an account logs in, then pays", async ({ page }) => {
   let bookingBody: Record<string, unknown> | null = null;
   await page.route("https://paystack.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>Paystack</h1>" }));
   await mockApi(page, {
@@ -206,7 +248,7 @@ test("a guest whose email already has an account logs in and goes straight to pa
       r.request().headers().authorization
         ? r.fulfill({ json: QUOTE })
         : r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
-    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true } }),
+    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true, has_password: true } }),
     "POST /auth/login": (r) => r.fulfill({ json: { access_token: "login-access", refresh_token: "login-refresh" } }),
     "GET /auth/me": (r) =>
       r.fulfill({ json: { id: "user-1", email: "juliet@example.com", full_name: null, avatar_url: null } }),
@@ -226,6 +268,12 @@ test("a guest whose email already has an account logs in and goes straight to pa
   await expect(page.getByText("Welcome back!")).toBeVisible();
   await page.getByPlaceholder("Enter password").fill("secret123");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
+
+  // Logged in, the page behind the sheet is now the last step: nothing is booked until Confirm and pay.
+  await expect(page.getByText("Welcome back!")).toHaveCount(0);
+  await expect(page.getByText("Payment secured by Paystack")).toBeVisible();
+  expect(bookingBody).toBeNull();
+  await page.getByRole("button", { name: "Confirm and pay" }).click();
 
   await expect(page).toHaveURL("https://paystack.test/pay");
   expect(bookingBody).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
@@ -257,7 +305,7 @@ test("resetting a password from the checkout leads back to it, with the booking 
       r.request().headers().authorization
         ? r.fulfill({ json: QUOTE })
         : r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
-    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true } }),
+    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true, has_password: true } }),
     "POST /auth/password/request-reset": (r) => r.fulfill({ json: { message: "ok" } }),
     "POST /auth/password/reset-with-token": (r) => r.fulfill({ json: { message: "ok" } }),
     "POST /auth/login": (r) => r.fulfill({ json: { access_token: "login-access", refresh_token: "login-refresh" } }),
@@ -294,4 +342,38 @@ test("resetting a password from the checkout leads back to it, with the booking 
 
   await expect(page).toHaveURL("https://paystack.test/pay");
   expect(bookingBody).toMatchObject({ experience_id: "exp-1", guide_id: "guide-1" });
+});
+
+test("an account made with Google is offered Google, not a password", async ({ page }) => {
+  await mockApi(page, {
+    "GET /experiences/exp-1": (r) => r.fulfill({ json: EXPERIENCE }),
+    "GET /experiences/exp-1/pricing": (r) =>
+      r.fulfill({
+        json: {
+          currency: "NGN",
+          prices: [{ id: "adult", label: "Adult", amount: "16000", pricing_unit: "per_person" }],
+          addons: [],
+          rules: [],
+        },
+      }),
+    "GET /experiences/exp-1/sessions": (r) =>
+      r.fulfill({
+        json: {
+          timezone: "Africa/Lagos",
+          scheduled: true,
+          sessions: [{ starts_at: `${SESSION_DAY}T08:00:00Z`, local_date: SESSION_DAY, local_time: "09:00:00", seats_left: 8, sold_out: false }],
+        },
+      }),
+    "POST /bookings/quote": (r) => r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
+    "POST /auth/email-exists": (r) => r.fulfill({ json: { exists: true, has_password: false } }),
+  });
+
+  await page.goto("/experiences/exp-1");
+  await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
+  await page.getByPlaceholder("Enter email address").fill("juliet@example.com");
+  await page.getByLabel("Phone number").fill("7016377711");
+  await page.getByRole("button", { name: "Login and continue to book" }).click();
+
+  await expect(page.getByText("juliet@example.com signs in with Google")).toBeVisible();
+  await expect(page.getByPlaceholder("Enter password")).toHaveCount(0);
 });

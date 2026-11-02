@@ -146,7 +146,7 @@ export function SaveToCollectionModal({ experienceId, isOpen, onClose }: SaveToC
         <button
           type="button"
           onClick={() => setIsCreatingNew(true)}
-          className="w-full cursor-pointer rounded-full bg-[#F5032D] px-4 py-[18px] text-xl font-medium text-white transition-colors hover:bg-[#d90227] sm:text-2xl"
+          className="sticky bottom-0 w-full cursor-pointer rounded-full shadow-[0_-8px_16px_white] sm:static sm:shadow-none bg-[#F5032D] px-4 py-[18px] text-xl font-medium text-white transition-colors hover:bg-[#d90227] sm:text-2xl"
         >
           Create a new wishlist
         </button>

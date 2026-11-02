@@ -10,6 +10,7 @@ import { PreferencesSection } from "@/components/account-settings/preferences";
 import { PrivacySection } from "@/components/account-settings/privacy";
 import { SETTINGS_NAV_ITEMS, SettingsNav } from "@/components/account-settings/settings-nav";
 import { SettingsHeader } from "@/components/account-settings/settings-header";
+import { useVerifyEmailNoticeViewModel, VerifyEmailNoticeView } from "@/features/verify-email";
 
 export function ProfileView() {
   const searchParams = useSearchParams();
@@ -17,6 +18,7 @@ export function ProfileView() {
   const initialTab = SETTINGS_NAV_ITEMS.some((item) => item.key === tabParam) ? tabParam! : "personal";
 
   const [active, setActive] = useState(initialTab);
+  const verifyNotice = useVerifyEmailNoticeViewModel();
 
   const activeLabel = SETTINGS_NAV_ITEMS.find((item) => item.key === active)?.label ?? "";
 
@@ -28,6 +30,7 @@ export function ProfileView() {
         <SettingsNav active={active} onChange={setActive} />
 
         <div className="flex-1 px-4 py-10 lg:px-16 lg:py-14">
+          <VerifyEmailNoticeView {...verifyNotice} />
           {active === "personal" ? (
             <PersonalInfoSection />
           ) : active === "security" ? (

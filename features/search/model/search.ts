@@ -1,3 +1,4 @@
+import { toIsoDay } from "@/lib/dates";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
@@ -13,6 +14,19 @@ import type {
 } from "./search.types";
 
 export { FALLBACK_IMAGE };
+
+/** Midnight today, local time: the earliest day a search can be for. */
+export function startOfToday(now: Date = new Date()): Date {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+export { toIsoDay };
+
+/** A results page link, carrying the searched day, and the last day of a range, when there are any. */
+export function withDate(path: string, isoDay: string | null, isoUntil?: string | null): string {
+  if (!isoDay) return path;
+  return isoUntil ? `${path}?date=${isoDay}&until=${isoUntil}` : `${path}?date=${isoDay}`;
+}
 
 export const DEFAULT_DESTINATIONS: DestinationSuggestion[] = [
   ...suggestedDestinations,
@@ -31,7 +45,6 @@ export const DEFAULT_ACTIVITIES: ActivitySuggestion[] = [
   { id: "street-food-markets", label: "Street food & markets", subtitle: "Local delicacies and bustling night markets" },
   { id: "cafes-coffee-culture", label: "Cafés & coffee culture", subtitle: "Artisan coffee, cozy spots, and pastry shops" },
   { id: "bars-nightlife-drinks", label: "Bars & nightlife drinks", subtitle: "Cocktail bars, speakeasies, and rooftop lounges" },
-  { id: "nightlife", label: "Nightlife", subtitle: "Clubs, lounges, and late-night spots" },
   { id: "culture-history", label: "Culture & history", subtitle: "Museums, heritage, and local stories" },
   { id: "museums-heritage-sites", label: "Museums & heritage sites", subtitle: "Historical landmarks, art galleries, and monuments" },
   { id: "local-traditions-festivals", label: "Local traditions & festivals", subtitle: "Cultural celebrations and traditional ceremonies" },

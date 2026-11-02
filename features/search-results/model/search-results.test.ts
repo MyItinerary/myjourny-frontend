@@ -12,6 +12,7 @@ import {
   formatPriceRange,
   formatResultsCount,
   resultsNoun,
+  dateRangeFromLink,
   toExperienceFilters,
   toggleType,
 } from "./search-results";
@@ -213,12 +214,13 @@ describe("toExperienceFilters", () => {
         }),
       ),
     ).toEqual({
+      date: undefined,
       interest: "cafes-coffee-culture",
       price_min: 10000,
       price_max: 25000,
       duration_min: 120,
       duration_max: 240,
-      time_of_day: "evening",
+      time_of_day: "night",
     });
   });
 
@@ -269,5 +271,27 @@ describe("buildPanel", () => {
     const panel = buildPanel(withFilters({ types: ["events"] }), { tookQuiz: false });
     const flags = panel.typeSection?.blocks.find((b) => b.kind === "flags");
     expect(flags?.kind === "flags" && flags.items.find((i) => i.id === "hideSoldOut")?.on).toBe(true);
+  });
+});
+
+describe("dates and times the API takes", () => {
+  it("sends one day as `date`, and a longer range not at all yet", () => {
+    const day = new Date(2030, 5, 1);
+    expect(toExperienceFilters(withFilters({ dateRange: { start: day, end: day } })).date).toBe("2030-06-01");
+    expect(toExperienceFilters(withFilters({ dateRange: { start: day, end: new Date(2030, 5, 3) } })).date).toBeUndefined();
+  });
+
+  it("maps the finer times of day onto the day and night listings store", () => {
+    const sent = (timeOfDay: ResultsFilters["timeOfDay"]) => toExperienceFilters(withFilters({ timeOfDay })).time_of_day;
+    expect([sent("morning"), sent("afternoon"), sent("evening"), sent("late_night")]).toEqual(["day", "day", "night", "night"]);
+  });
+
+  it("reads a results link's dates", () => {
+    const first = new Date(2030, 5, 1);
+    expect(dateRangeFromLink("2030-06-01")).toEqual({ start: first, end: first });
+    expect(dateRangeFromLink("2030-06-01", "2030-06-03")).toEqual({ start: first, end: new Date(2030, 5, 3) });
+    expect(dateRangeFromLink("2030-06-01", "2030-05-01")).toEqual({ start: first, end: first });
+    expect(dateRangeFromLink("not-a-day")).toEqual({ start: null, end: null });
+    expect(dateRangeFromLink()).toEqual({ start: null, end: null });
   });
 });

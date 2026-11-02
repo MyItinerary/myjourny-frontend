@@ -93,6 +93,16 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.activeTab).toBe("when");
   });
 
+  it("ignores a past day", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - 2);
+
+    act(() => result.current.onPickDate(pastDate));
+
+    expect(result.current.draftRange).toEqual({ start: null, end: null });
+  });
+
   it("picks a date range with two taps and applies it, then moves on to Who", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 
@@ -196,6 +206,51 @@ describe("useSearchBarViewModel", () => {
     });
 
     expect(mockPush).toHaveBeenCalledWith("/experiences/exp-123");
+  });
+
+  it("suggests the cities that have experiences, and finds a typed one", async () => {
+    server.use(
+      http.get(apiUrl("/experiences/cities"), () =>
+        HttpResponse.json([
+          { slug: "lagos", name: "Lagos", country: "Nigeria", count: 25, image_url: null },
+          { slug: "umuahia", name: "Umuahia", country: "Nigeria", count: 1, image_url: null },
+        ]),
+      ),
+    );
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    await waitFor(() =>
+      expect(result.current.filteredDestinations).toEqual([
+        { id: "lagos", city: "Lagos, Nigeria", description: "25 experiences" },
+        { id: "umuahia", city: "Umuahia, Nigeria", description: "1 experience" },
+      ]),
+    );
+
+    act(() => result.current.setWhereInput("umua"));
+    act(() => result.current.onSearch());
+    expect(mockPush).toHaveBeenCalledWith("/cities/umuahia");
+  });
+
+  it("takes the picked day to the city's results", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "" }));
+    act(() => result.current.onPickDate(new Date(2030, 5, 1)));
+    act(() => result.current.onApplyDates());
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01");
+  });
+
+  it("takes a picked range to the city's results", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "" }));
+    act(() => result.current.onPickDatePreset(new Date(2030, 5, 1), new Date(2030, 5, 3)));
+    act(() => result.current.onApplyDates());
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01&until=2030-06-03");
   });
 
   it("navigates to city route on destination selection", () => {

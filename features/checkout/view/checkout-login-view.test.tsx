@@ -27,6 +27,7 @@ function viewport(desktop: boolean) {
 
 const login = (overrides: Partial<CheckoutLogin> = {}): CheckoutLogin => ({
   open: true,
+  googleOnly: false,
   onOpenChange: vi.fn(),
   email: "juliet@example.com",
   onEmailChange: vi.fn(),
@@ -113,5 +114,12 @@ describe("CheckoutLoginView on desktop", () => {
     await user.click(screen.getByRole("button", { name: "Close" }));
 
     expect(props.onOpenChange).toHaveBeenCalledWith(false, expect.anything());
+  });
+
+  it("offers only Google to an account made with Google", () => {
+    renderWithProviders(<CheckoutLoginView login={login({ googleOnly: true })} />);
+    expect(screen.getByText(/juliet@example.com signs in with Google/)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Enter password")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
   });
 });

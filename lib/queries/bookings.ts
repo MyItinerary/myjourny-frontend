@@ -4,7 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { apiErrorMessage } from "@/lib/api-error";
-import { useSession } from "@/lib/auth/session-store";
+import { getTokens, useSession } from "@/lib/auth/session-store";
 
 export type Booking = {
   id: string;
@@ -43,9 +43,22 @@ export type Booking = {
   hold_expires_at?: string | null;
   // The experience's cancellation policy as shown when this was booked.
   cancellation_policy_snapshot?: string | null;
+  // Day-of details, only on confirmed or completed bookings.
+  meeting_point?: {
+    latitude?: number | null;
+    longitude?: number | null;
+    instructions?: string | null;
+    city?: string | null;
+    country?: string | null;
+  } | null;
+  what_to_bring?: string | null;
+  host_phone?: string | null;
   cancelled_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  // Signed downloads: the PDF receipt once paid, the calendar file once confirmed.
+  receipt_url?: string | null;
+  calendar_url?: string | null;
 };
 
 // A cancellation request (itin's RefundRequestOut). Support decides the
@@ -95,7 +108,7 @@ export function useBooking(bookingId: string, { pollUntil }: { pollUntil?: numbe
       const { data } = await apiClient.get<Booking>(`/bookings/${bookingId}`);
       return data;
     },
-    enabled: !!user && !!bookingId,
+    enabled: !!bookingId && (!!user || !!getTokens().accessToken),
     refetchInterval: (query) => {
       const booking = query.state.data;
       if (!pollUntil || !booking || bookingPaymentState(booking) !== "processing") return false;
@@ -134,7 +147,7 @@ export function useCancellationRequest(bookingId: string) {
       );
       return data;
     },
-    enabled: !!user && !!bookingId,
+    enabled: !!bookingId && (!!user || !!getTokens().accessToken),
   });
 }
 

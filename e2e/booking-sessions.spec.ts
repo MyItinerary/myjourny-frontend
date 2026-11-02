@@ -92,9 +92,45 @@ test.describe("booking sessions", () => {
   test("shows Lagos session times in a Los Angeles browser, with no preview link", async ({ page }) => {
     await openExperience(page);
 
-    await expect(panel(page).getByRole("button", { name: /9:00 AM/ })).toBeVisible();
-    await expect(panel(page).getByText("Times are Lagos time.")).toBeVisible();
+    // One session on one day: no pickers, the fixed date field says the time, in Lagos time.
+    await expect(panel(page).getByTestId("fixed-date")).toContainText("9:00 AM");
+    await expect(panel(page).getByRole("button", { name: /^Date:/ })).toHaveCount(0);
+    await expect(panel(page).getByText("Choose a time")).toHaveCount(0);
     await expect(page.getByRole("link", { name: /Preview/ })).toHaveCount(0);
+  });
+
+  test("a free experience says Free, not ₦0.00, and books with no payment page", async ({ page }) => {
+    await openExperience(page, {
+      "GET /experience-prices": (r) => r.fulfill({ json: [{ id: "adult", experience_id: "exp-1", label: "Adult", amount: 0 }] }),
+      "GET /experiences/exp-1/pricing": (r) =>
+        r.fulfill({
+          json: {
+            currency: "NGN",
+            prices: [{ id: "adult", label: "Adult", amount: "0.00", pricing_unit: "per_person" }],
+            addons: [],
+            rules: [],
+          },
+        }),
+      "POST /bookings/quote": (r) =>
+        r.fulfill({
+          json: {
+            ...quote,
+            lines: [{ kind: "ticket", label: "Adult", quantity: 1, unit_amount: "0", amount: "0" }],
+            subtotal: "0",
+            total: "0",
+          },
+        }),
+      "POST /bookings": (r) => r.fulfill({ json: { id: "b-free", status: "confirmed", payment_status: "paid", url: null } }),
+    });
+
+    // The button no longer says "Book now", so find the sidebar by its guest row.
+    const sidebar = page.locator("div.sticky").filter({ hasText: "Guests" });
+    await expect(sidebar.getByRole("button", { name: "Book for free" })).toBeVisible();
+    await expect(sidebar.getByText("Free", { exact: true }).first()).toBeVisible();
+    await expect(sidebar.getByText("₦0.00")).toHaveCount(0);
+
+    await sidebar.getByRole("button", { name: "Book for free" }).click();
+    await expect(page).toHaveURL(/\/bookings\/b-free\/success$/);
   });
 
   test("caps guests at the seats left in the session", async ({ page }) => {
@@ -102,8 +138,8 @@ test.describe("booking sessions", () => {
       "GET /experiences/exp-1/sessions": (r) => r.fulfill({ json: sessions(1) }),
     });
 
-    await expect(panel(page).getByText("1 left")).toBeVisible();
-    await expect(panel(page).getByRole("button", { name: "Increase Participants" })).toBeDisabled();
+    await expect(panel(page).getByText(/^Last spot at 9:00 AM on /)).toBeVisible();
+    await expect(panel(page).getByRole("button", { name: "Increase guests" })).toBeDisabled();
   });
 
   test("shows the server's message and fresh seats when the session fills up", async ({ page }) => {
@@ -162,10 +198,11 @@ test.describe("booking sessions", () => {
       },
     });
 
-    await expect(panel(page).getByText("Every Saturday · 3 days")).toBeVisible();
-    await expect(panel(page).getByText("Each booking covers all 3 days.")).toBeVisible();
+    await expect(panel(page).getByText("Every Saturday · 3 days")).toHaveCount(0);
+    await expect(panel(page).getByText("per person, per day")).toBeVisible();
     await expect(panel(page).getByRole("button", { name: "Increase days" })).toHaveCount(0);
-    await expect(panel(page).getByText(/ – /).first()).toBeVisible();
+    // The date field names the whole run, e.g. "Sat 24 to Mon 26 October · 3 hours".
+    await expect(panel(page).getByTestId("fixed-date")).toContainText(/ to /);
     expect(quotes.at(-1)).not.toHaveProperty("days");
   });
 
@@ -179,7 +216,7 @@ test.describe("booking sessions", () => {
       },
     });
 
-    await expect(panel(page).getByText(/The host will confirm the start time/)).toBeVisible();
+    await expect(panel(page).getByText("Choose a time")).toHaveCount(0);
     await expect.poll(() => quotes.length).toBeGreaterThan(0);
     // The date, not a guessed time in the browser's zone.
     expect(quotes.at(-1)).toHaveProperty("requested_date");
@@ -225,23 +262,28 @@ test.describe("booking sessions", () => {
         });
       },
     });
-    const sidebar = page.locator("div.sticky").filter({ hasText: "Free cancellation" });
+    const sidebar = page.locator("div.sticky").filter({ hasText: "Book now" });
 
-    await expect(sidebar.getByText("Your booking qualifies for 10% off (3+ guests)")).toBeVisible();
-    await expect(sidebar.getByText("Discounts don't combine: you get the biggest one you qualify for.")).toBeVisible();
-    await expect(sidebar.getByText("₦15,000.00", { exact: true }).first()).toBeVisible();
+    // The long "qualifies for 10% off" lines, the subtotal and "You save" are gone. The group price says it instead.
+    await expect(sidebar.getByText("Your booking qualifies for 10% off (3+ guests)")).toHaveCount(0);
+    await expect(sidebar.getByText("Subtotal")).toHaveCount(0);
+    await expect(sidebar.getByText("You save ₦1,500")).toHaveCount(0);
+    await expect(sidebar.getByText("Group of 3+")).toBeVisible();
+    await expect(sidebar.getByLabel("was ₦5,000")).toBeVisible();
+    await expect(sidebar.getByText("₦4,500", { exact: true }).first()).toBeVisible();
+    // The itemised "Group saving" row is not shown on the card.
+    await expect(sidebar.getByText("Group saving")).toHaveCount(0);
     await expect(sidebar.getByText("Early-bird discount (1% off)")).toHaveCount(0);
-    await expect(sidebar.getByText("−₦1,500.00")).toBeVisible();
-    await expect(sidebar.getByText("You save ₦1,500.00")).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Book now - ₦13,802.50" })).toBeEnabled();
+    // The processing fee is added at checkout, not shown on the experience.
+    await expect(sidebar.getByText("₦13,500", { exact: true })).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "Book now" })).toBeEnabled();
+    await expect(sidebar.getByText("Payment processing fee", { exact: true })).toHaveCount(0);
 
     // Below the minimum group size nothing is priced or bookable.
     const quotesBefore = quotes.length;
-    await sidebar.getByRole("button", { name: "Decrease Participants" }).click();
-    await expect(sidebar.getByText("This experience needs at least 3 guests.")).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Select at least 3 guests" })).toBeDisabled();
-    await expect(sidebar.getByText("Total")).toHaveCount(0);
-    await expect(sidebar.getByText("Payment processing fee")).toHaveCount(0);
+    await sidebar.getByRole("button", { name: "Decrease guests" }).click();
+    await expect(sidebar.getByRole("button", { name: "Book now" })).toBeDisabled();
+    await expect(sidebar.getByText("Needs 3 guests")).toBeVisible();
     expect(quotes.length).toBe(quotesBefore);
   });
 });

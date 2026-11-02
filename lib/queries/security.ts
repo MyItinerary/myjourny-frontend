@@ -16,23 +16,6 @@ type Tokens = { access_token: string; refresh_token: string };
 
 const SECURITY_KEY = ["security"] as const;
 
-// itin revokes every session but this one on a password change. A token
-// from before session tracking can't be kept, so it sends fresh ones back.
-export function useChangePassword() {
-  return useMutation({
-    mutationFn: async (payload: { current_password: string; new_password: string }) => {
-      const { data } = await apiClient.post<Message & Partial<Tokens>>("/auth/password/change", payload);
-      return data;
-    },
-    onSuccess: (data) => {
-      if (data.access_token && data.refresh_token) {
-        setTokens({ access_token: data.access_token, refresh_token: data.refresh_token });
-      }
-    },
-    onError: (error) => toast.error(apiErrorMessage(error, "Couldn't change your password.")),
-  });
-}
-
 // --- Two-factor (TOTP) ---------------------------------------------------
 
 export type TwoFactorStatus = { enabled: boolean; method: "totp" | null; added_at: string | null };

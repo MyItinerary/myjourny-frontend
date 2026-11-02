@@ -52,7 +52,8 @@ export function experienceMatchToCardProps(
     duration: formatDuration(match.duration),
     rating: match.rating ?? 0,
     reviewCount: 0,
-    priceFrom: Number(match.price_from ?? match.price ?? 0),
+    // price_from is null when nothing is on sale; the legacy `price` is 0 then, which isn't "Free".
+    priceFrom: match.price_from != null ? Number(match.price_from) : null,
     currency: match.currency,
   };
 }
@@ -63,8 +64,13 @@ type RecommendationParams = {
   city?: string;
   /** Category numeric ID — passed as ?id=<id> to GET /experiences/recommendations */
   id?: number;
-  /** Category slug — exact match against Experience.interest_tags on the backend, see /categories/[slug]. */
+  /** Interest category or subcategory slug; the backend also matches its subcategories and older tags. */
   interest?: string;
+  price_min?: number;
+  price_max?: number;
+  duration_min?: number;
+  duration_max?: number;
+  time_of_day?: string;
 };
 
 async function fetchRecommendations(
@@ -76,6 +82,11 @@ async function fetchRecommendations(
     city: params.city,
     id: params.id,
     interest: params.interest,
+    price_min: params.price_min,
+    price_max: params.price_max,
+    duration_min: params.duration_min,
+    duration_max: params.duration_max,
+    time_of_day: params.time_of_day,
     offset: params.offset,
     limit: params.limit,
   };
@@ -165,80 +176,6 @@ export function useBrowsingHistory(limit = 10) {
       });
       return data;
     },
-  });
-}
-
-// Matches itin's ExperienceDetail DTO (extends ExperienceOut) — a
-// DIFFERENT field-naming scheme than ExperienceMatch above (price_from
-// not price, cover_image_url not imageUrl, id not experience_id, etc.).
-// This is a best-effort shape from reading the DTO, not verified against
-// a live response the way ExperienceMatch was (itin was down when this
-// page was built from screenshots rather than live Figma access) —
-// re-verify against a real GET /experiences/{id} call once itin's back up.
-export type ExperienceDetail = {
-  id: string;
-  guide_id?: string | null;
-  status: string;
-  title: string;
-  headline?: string | null;
-  description?: string | null;
-  city?: string | null;
-  country?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  duration_minutes?: number | null;
-  group_size_min?: number | null;
-  group_size_max?: number | null;
-  // "YYYY-MM-DD" when the experience is a fixed one-off event — used to
-  // prefill the booking calendar. schedule_type/recurrence_* also exist on
-  // the DTO for recurring experiences, but resolving a recurrence rule
-  // into real occurrence dates isn't attempted here (see booking panel).
-  event_start_date?: string | null;
-  event_end_date?: string | null;
-  schedule_type?: string | null;
-  recurrence_type?: string | null;
-  recurrence_interval?: number | null;
-  recurrence_days?: string[] | null;
-  length_days?: number | null;
-  price_from?: number | null;
-  currency?: string | null;
-  interest_tags?: string[] | null;
-  energy_level?: string | null;
-  safety_badge_count?: number | null;
-  rating?: number | null;
-  cover_image_url?: string | null;
-  cancellation_policy?: string | null;
-  requirements?: { fitness?: string; age?: string; accessibility?: string } | null;
-  safety_info?: {
-    riskLevel?: string;
-    notes?: string[];
-    mobilityAccessibility?: string;
-    emergencyGuidance?: string;
-  } | null;
-  booking_url?: string | null;
-  what_you_will_do?: string[] | null;
-  whats_included?: string[] | null;
-  whats_not_included?: string[] | null;
-  why_you_will_like_this?: string[] | null;
-  images?: string[] | null;
-  host?: {
-    id: string;
-    display_name?: string | null;
-    headline?: string | null;
-    about?: string | null;
-    is_verified?: boolean | null;
-    rating_avg?: number | null;
-  } | null;
-};
-
-export function useExperienceDetail(id: string) {
-  return useQuery({
-    queryKey: ["experiences", "detail", id],
-    queryFn: async () => {
-      const { data } = await apiClient.get<ExperienceDetail>(`/experiences/${id}`);
-      return data;
-    },
-    enabled: !!id,
   });
 }
 
@@ -372,6 +309,8 @@ export type ExperienceFilters = {
   duration_max?: number;
   time_of_day?: string;
   rating_min?: number;
+  /** YYYY-MM-DD: only experiences someone can start that day (today or later). */
+  date?: string;
   sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
 };
 
@@ -387,7 +326,7 @@ export function experienceListItemToCardProps(
     duration: formatDuration(item.duration_minutes),
     rating: item.rating ?? 0,
     reviewCount: 0,
-    priceFrom: item.price_from ?? 0,
+    priceFrom: item.price_from ?? null,
     currency: item.currency ?? "NGN",
   };
 }

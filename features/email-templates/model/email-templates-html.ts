@@ -8,7 +8,8 @@ import type {
   VerifyEmailEmailData,
 } from "./email-templates.types";
 
-const EMAIL_BASE_URL = "https://myjourny.app";
+// Where the exported emails load their images from (myjourny.app/images 404s).
+const EMAIL_BASE_URL = "https://myjourny.io";
 const LOGO_FULL_URL = `${EMAIL_BASE_URL}/images/email-templates/3.png`;
 const HERO_1_FULL_URL = `${EMAIL_BASE_URL}/images/email-templates/1.png`;
 const HERO_2_FULL_URL = `${EMAIL_BASE_URL}/images/email-templates/2.png`;

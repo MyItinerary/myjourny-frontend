@@ -29,33 +29,41 @@ function LoginForm({ login, header }: { login: CheckoutLogin; header: React.Reac
 
       <GoogleAuthButton loading={login.googleLoading} onCredential={login.onGoogleCredential} />
 
-      <div className="flex items-center gap-3 px-6">
-        <span aria-hidden className="h-px flex-1 bg-[#E7E7E7]" />
-        <span className="font-sans text-base text-[#333134]">or</span>
-        <span aria-hidden className="h-px flex-1 bg-[#E7E7E7]" />
-      </div>
+      {login.googleOnly ? (
+        <p className="text-center font-sans text-sm text-[#6F6B72]">
+          {login.email} signs in with Google, so there&apos;s no password to enter.
+        </p>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 px-6">
+            <span aria-hidden className="h-px flex-1 bg-[#E7E7E7]" />
+            <span className="font-sans text-base text-[#333134]">or</span>
+            <span aria-hidden className="h-px flex-1 bg-[#E7E7E7]" />
+          </div>
 
-      <div className="flex flex-col gap-4">
-        <Input
-          type="email"
-          size="cta"
-          autoComplete="email"
-          placeholder="Enter email address"
-          aria-label="Email address"
-          value={login.email}
-          onChange={(e) => login.onEmailChange(e.target.value)}
-        />
-        <div className="flex flex-col gap-2">
-          <PasswordInput placeholder="Enter password" value={login.password} onChange={login.onPasswordChange} />
-          <Link href={login.forgotHref} onClick={login.onForgotPassword} className="self-start font-sans text-sm font-medium text-[#F5032D]">
-            Forgot password?
-          </Link>
-        </div>
-      </div>
+          <div className="flex flex-col gap-4">
+            <Input
+              type="email"
+              size="cta"
+              autoComplete="email"
+              placeholder="Enter email address"
+              aria-label="Email address"
+              value={login.email}
+              onChange={(e) => login.onEmailChange(e.target.value)}
+            />
+            <div className="flex flex-col gap-2">
+              <PasswordInput placeholder="Enter password" value={login.password} onChange={login.onPasswordChange} />
+              <Link href={login.forgotHref} onClick={login.onForgotPassword} className="self-start font-sans text-sm font-medium text-[#F5032D]">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
 
-      <Button type="submit" size="cta" disabled={!login.canSubmit} className="w-full">
-        {login.pending ? "Logging in…" : "Continue"}
-      </Button>
+          <Button type="submit" size="cta" disabled={!login.canSubmit} className="w-full">
+            {login.pending ? "Logging in…" : "Continue"}
+          </Button>
+        </>
+      )}
 
       <p className="text-center font-sans text-sm font-medium leading-[21px] text-[#6F6B72]">
         By continuing you agree to our{" "}

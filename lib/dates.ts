@@ -137,3 +137,17 @@ export function formatDateRange({ start, end }: { start: Date | null; end: Date 
   if (!end || start.toDateString() === end.toDateString()) return SHORT_DATE.format(start);
   return `${SHORT_DATE.format(start)} – ${SHORT_DATE.format(end)}`;
 }
+
+/** A local date as YYYY-MM-DD, the form the API's `date` filter takes. */
+export function toIsoDay(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** "YYYY-MM-DD" as a local date, or null when it isn't one. */
+export function parseIsoDay(value: string | null | undefined): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value ?? "");
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) || toIsoDay(date) !== value ? null : date;
+}

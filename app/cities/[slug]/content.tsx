@@ -1,11 +1,12 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import { HomeNav } from "@/components/home/home-nav";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
 import { Footer } from "@/components/home/footer";
-import { CategoryResultsGrid } from "@/components/categories/category-results-grid";
+import { CategoryResultsGrid } from "@/features/categories";
 import {
   EmptyResultsView,
   MoreFiltersDialogView,
@@ -33,9 +34,13 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
   const isAccount = user !== null;
   const isGuest = hydrated && !isAccount;
 
+  // Dates picked in the search bar start the page's date filter.
+  const searchParams = useSearchParams();
   const results = useSearchResultsViewModel({
     subject: { kind: "city", label: cityName },
     city: cityName,
+    date: searchParams.get("date") ?? undefined,
+    until: searchParams.get("until") ?? undefined,
   });
 
   // Neither source can exclude a city, so over-fetch and drop this city's
@@ -49,7 +54,6 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
     : (guestBeyondQuery.data?.items ?? []).filter((m) => !isThisCity(m.city)).slice(0, 10).map(experienceListItemToCardProps);
   const beyondIsLoading = isAccount ? accountBeyondQuery.isPending : !hydrated || guestBeyondQuery.isPending;
 
-  const isEmpty = !results.isLoading && results.items.length === 0;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -80,7 +84,7 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
         <ResultsFilterRowView {...results} className="mt-4 lg:mt-[18px]" />
 
         <div className="px-6 pt-5 pb-10 lg:mx-auto lg:w-full lg:max-w-[1512px] lg:px-20 lg:pt-7 lg:pb-12">
-          {isEmpty ? (
+          {results.isEmpty ? (
             <EmptyResultsView
               hasActiveFilters={results.hasActiveFilters}
               onClearAll={results.clearAll}
@@ -90,10 +94,14 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
               items={results.items}
               categoryLabel={cityName}
               isLoading={results.isLoading}
+              isError={results.isError}
+              errorMessage={results.errorMessage}
+              onRetry={results.onRetry}
               moreLabel="Show more"
               loadMore={{
                 hasMore: results.hasMore,
                 isLoading: results.isLoadingMore,
+                isError: results.isLoadMoreError,
                 onLoadMore: results.onLoadMore,
               }}
             />

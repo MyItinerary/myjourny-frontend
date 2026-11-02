@@ -17,6 +17,8 @@ const GOES = [
   },
 ];
 
+const SECTION_HEADING = "mt-6 text-sm font-medium text-foreground";
+
 /** The delete-account dialog. Step 1 says what blocks deletion, or what goes
  * and what is kept; step 2 asks the person to type DELETE. */
 export function DeleteAccountDialogView(vm: DeleteAccountViewModel) {
@@ -46,8 +48,9 @@ function WhatHappens(vm: DeleteAccountViewModel) {
         </div>
       ) : (
         <>
-          <div className="mt-3.5 text-base text-foreground">Deleting is permanent. Here is what goes.</div>
-          <div className="mt-4.5 flex flex-col gap-3.5">
+          <div className="mt-3.5 text-base text-foreground">Deleting is permanent.</div>
+          <h3 className={SECTION_HEADING}>What gets deleted</h3>
+          <div className="mt-3 flex flex-col gap-3.5">
             {GOES.map((item) => (
               <div key={item.title} className="rounded-xl border border-border p-4">
                 <div className="text-[15px] font-medium text-foreground">{item.title}</div>
@@ -55,11 +58,12 @@ function WhatHappens(vm: DeleteAccountViewModel) {
               </div>
             ))}
           </div>
-          <div className="mt-5 rounded-xl border border-border p-4">
-            <div className="text-[15px] font-medium text-foreground">What we keep</div>
+          <h3 className={SECTION_HEADING}>What we keep</h3>
+          <div className="mt-3 rounded-xl border border-border p-4">
+            <div className="text-[15px] font-medium text-foreground">Booking and payment records</div>
             <div className="mt-0.5 text-sm text-muted-foreground">
-              Booking and payment records, without your name or contact details. We have to keep them for refunds,
-              disputes and tax. Download your data from Privacy first if you want your own copy of receipts.
+              Kept without your name or contact details. We have to keep them for refunds, disputes and legal
+              compliance. Download your data from Privacy first if you want your own copy of receipts.
             </div>
           </div>
         </>

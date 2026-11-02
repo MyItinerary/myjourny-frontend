@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiErrorMessage } from "@/lib/api-error";
 import { useMe } from "@/lib/queries/auth";
+import { CityDialogView, useProfileCityViewModel } from "@/features/profile-city";
 import {
   useConfirmPhoneChange,
   useGetProfile,
@@ -27,21 +27,6 @@ import {
 const NOT_PROVIDED = "Not provided";
 const SHOW_FULL = "Show my full name";
 const SHOW_FIRST = "Show my first name only";
-
-const CITIES: [string, string][] = [
-  ["Lagos", "Lagos State · Most experiences on MyJourny today"],
-  ["Abuja", "Federal Capital Territory"],
-  ["Port Harcourt", "Rivers State"],
-  ["Ibadan", "Oyo State"],
-  ["Benin City", "Edo State"],
-  ["Enugu", "Enugu State"],
-  ["Kano", "Kano State"],
-  ["Calabar", "Cross River State"],
-  ["Uyo", "Akwa Ibom State"],
-  ["Jos", "Plateau State"],
-  ["Kaduna", "Kaduna State"],
-  ["Abeokuta", "Ogun State"],
-];
 
 type ModalKey =
   | "legalName"
@@ -109,9 +94,16 @@ export function PersonalInfoSection() {
   const [dobDraft, setDobDraft] = useState("");
   const [emergencyName, setEmergencyName] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
-  const [cityDraft, setCityDraft] = useState("");
-  const [citySearch, setCitySearch] = useState("");
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+
+  const cityDialog = useProfileCityViewModel({
+    city: profile?.city ?? null,
+    ready: !isLoading && !!profile,
+    open: modal === "city",
+    onClose: () => setModal(null),
+    onSaved: setSavedMessage,
+    onError: (error) => toast.error(apiErrorMessage(error, "Couldn't save that change.")),
+  });
 
   if (isLoading) return <SectionSkeleton />;
 
@@ -160,18 +152,8 @@ export function PersonalInfoSection() {
       setEmergencyName(profile?.emergency_contact_name ?? "");
       setEmergencyPhone(profile?.emergency_contact_phone ?? "");
     }
-    if (key === "city") {
-      setCityDraft(profile?.city ?? "");
-      setCitySearch("");
-    }
     setModal(key);
   }
-
-  const filteredCities = CITIES.filter(([label, meta]) => {
-    const q = citySearch.trim().toLowerCase();
-    if (!q) return true;
-    return label.toLowerCase().includes(q) || meta.toLowerCase().includes(q);
-  });
 
   const preferredNameAction = values.preferredName === NOT_PROVIDED ? "Add" : "Edit";
   const emergencyAction = values.emergency === NOT_PROVIDED ? "Add" : "Edit";
@@ -540,59 +522,7 @@ export function PersonalInfoSection() {
         </ModalShell>
       )}
 
-      {modal === "city" && (
-        <ModalShell title="Edit city" onClose={closeModal}>
-          <div className="flex h-12 items-center gap-2.5 rounded-xl border border-border px-4 text-muted-foreground">
-            <Search size={20} className="shrink-0" />
-            <input
-              value={citySearch}
-              onChange={(e) => setCitySearch(e.target.value)}
-              placeholder="Search for a city"
-              className="h-full flex-1 border-none bg-transparent font-sans text-base text-foreground outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-          <div className="mt-3 flex max-h-70 flex-col gap-0.5 overflow-auto">
-            {filteredCities.map(([label, meta]) => {
-              const selected = cityDraft === label;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setCityDraft(label)}
-                  className={cn(
-                    "flex cursor-pointer items-center justify-between gap-4 rounded-xl px-3.5 py-3 text-left hover:bg-[#F5F5F5]",
-                    selected ? "bg-muted" : "bg-transparent",
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <MapPin size={20} className="shrink-0 text-foreground" />
-                    <div>
-                      <div className="text-[15px] font-medium text-foreground">{label}</div>
-                      <div className="text-[13px] text-muted-foreground">{meta}</div>
-                    </div>
-                  </div>
-                  {selected && (
-                    <div className="shrink-0 text-[13px] font-medium text-brand">Selected</div>
-                  )}
-                </button>
-              );
-            })}
-            {filteredCities.length === 0 && (
-              <div className="px-3.5 py-5 text-sm text-muted-foreground">
-                No city matches that. Try the nearest large city — we use it to pick what your
-                feed opens on.
-              </div>
-            )}
-          </div>
-          <ModalFooter
-            onCancel={closeModal}
-            saveDisabled={!cityDraft || updateProfile.isPending}
-            onSave={() =>
-              save({ city: cityDraft }, `Saved. Your feed now opens on experiences in ${cityDraft}.`)
-            }
-          />
-        </ModalShell>
-      )}
+      <CityDialogView {...cityDialog} />
     </div>
   );
 }

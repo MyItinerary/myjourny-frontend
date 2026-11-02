@@ -22,7 +22,7 @@ export function addDaysToKey(key: string, days: number): string {
   return dateKey(date);
 }
 
-/** "Africa/Lagos" → "Lagos", for "Times are Lagos time". */
+/** "Africa/Lagos" → "Lagos", for "Times are Lagos time." */
 export function zoneCity(timeZone: string): string {
   return (timeZone.split("/").pop() ?? timeZone).replace(/_/g, " ");
 }

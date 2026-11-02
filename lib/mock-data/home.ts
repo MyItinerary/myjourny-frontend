@@ -6,9 +6,8 @@ export type ExperienceItem = ExperienceCardProps & { id: string };
 export type Category = { id: string; label: string };
 
 // Figma "Discover by categories" (2001:8436), guest variant — top-level
-// categories. The design always shows a "See more" row even in the
-// collapsed (VISIBLE_COUNT=7) state, meaning more than 7 exist — added an
-// 8th so `hasMore` is true here too, matching the reference screenshot.
+// categories, used until GET /categories loads. These match the API's
+// interest category slugs (there is no "nightlife" category).
 export const guestCategories: Category[] = [
   { id: "local-food-drinks", label: "Local food & drinks" },
   { id: "culture-history", label: "Culture & history" },
@@ -17,7 +16,6 @@ export const guestCategories: Category[] = [
   { id: "wellness-calm", label: "Wellness & calm" },
   { id: "street-life", label: "Street life" },
   { id: "events-live-shows", label: "Events & live shows" },
-  { id: "nightlife", label: "Nightlife" },
 ];
 
 // Same component, `onboarded=true` variant (2001:8471) — subcategories

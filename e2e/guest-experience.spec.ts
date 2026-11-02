@@ -43,21 +43,34 @@ test.describe("experience page for a guest", () => {
             ],
           },
         }),
-      // The quote needs an account; a guest still gets the panel.
-      "POST /bookings/quote": (r) => r.fulfill({ status: 401, json: { detail: "Not authenticated" } }),
+      // The quote is public, so a guest sees the price like anyone else.
+      "POST /bookings/quote": (r) =>
+        r.fulfill({
+          json: {
+            currency: "NGN",
+            lines: [{ kind: "ticket", label: "Adult", quantity: 1, unit_amount: "5000", amount: "5000" }],
+            subtotal: "5000",
+            discount: "0",
+            checkout_fee: "0",
+            total: "5000",
+            guests: 1,
+            days: 1,
+            promo_applied: false,
+          },
+        }),
     });
     await page.goto("/experiences/exp-1");
     await expect(page.getByRole("heading", { name: "Lagos Food Walk" }).first()).toBeVisible();
   });
 
-  test("shows the host and the booking panel, not a log-in wall", async ({ page }) => {
+  test("shows who hosts it and the booking panel, not a log-in wall", async ({ page }) => {
     await expect(page.getByRole("link", { name: "Kayan Thrille" })).toBeVisible();
     await expect(page.getByText("Log in to see your host")).toHaveCount(0);
     await expect(page.getByText("Log in to book")).toHaveCount(0);
     await expect(page.locator("div.sticky").getByRole("button", { name: /Book now/ })).toBeVisible();
   });
 
-  test("Book now starts checkout by asking for the guest's details", async ({ page }) => {
+  test("Book now opens the checkout, which starts with email and phone", async ({ page }) => {
     await page.locator("div.sticky").getByRole("button", { name: /Book now/ }).click();
 
     await expect(page).toHaveURL(/\/checkout$/);
@@ -67,7 +80,7 @@ test.describe("experience page for a guest", () => {
 });
 
 test.describe("experience photos", () => {
-  const PHOTOS = [1, 2, 3, 4, 5].map((n) => `https://photos.test/lagos-food-walk-${n}.jpg`);
+  const PHOTOS = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `https://photos.test/lagos-food-walk-${n}.jpg`);
   // A 1x1 PNG, so the page never loads a real photo.
   const PIXEL = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
@@ -88,22 +101,22 @@ test.describe("experience photos", () => {
   });
 
   test("View all opens every photo, one at a time", async ({ page }) => {
-    await page.getByRole("button", { name: "View all 5 photos" }).click();
-    const viewer = page.getByRole("dialog", { name: "Photo 1 of 5" });
+    await page.getByRole("button", { name: "View all 8 photos" }).click();
+    const viewer = page.getByRole("dialog", { name: "Photo 1 of 8" });
     await expect(viewer).toBeVisible();
 
     await page.getByRole("button", { name: "Next photo" }).click();
-    await expect(page.getByRole("dialog", { name: "Photo 2 of 5" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Photo 2 of 8" })).toBeVisible();
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("ArrowLeft");
-    await expect(page.getByRole("dialog", { name: "Photo 5 of 5" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Photo 8 of 8" })).toBeVisible();
 
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
   test("clicking a photo opens the viewer on that photo", async ({ page }) => {
-    await page.getByTestId("gallery-grid").getByRole("button", { name: "View photo 3 of 5" }).click();
-    await expect(page.getByRole("dialog", { name: "Photo 3 of 5" })).toBeVisible();
+    await page.getByTestId("gallery-grid").getByRole("button", { name: "View photo 3 of 8" }).click();
+    await expect(page.getByRole("dialog", { name: "Photo 3 of 8" })).toBeVisible();
   });
 });

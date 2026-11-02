@@ -8,6 +8,7 @@ import { Bell } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/shared/user-avatar";
 import { useSession } from "@/lib/auth/session-store";
 import { useLogout } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
@@ -185,7 +186,6 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
         setIsSearchExpanded(false);
         setActiveSearchTab(null);
       }
-      setProfileMenuOpen(false);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
@@ -416,7 +416,7 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
 
               <Link
                 href="#"
-                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand lg:inline-block mr-1"
+                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand xl:inline-block mr-1"
               >
                 Become a guide
               </Link>
@@ -455,7 +455,7 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -6 }}
                         transition={{ duration: 0.16, ease: "easeOut" }}
-                        className="absolute right-0 top-[calc(100%+12px)] z-50"
+                        className="fixed inset-x-4 top-[76px] z-50 sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+12px)]"
                       >
                         <NotificationsDropdown
                           onClose={() => setNotificationsOpen(false)}
@@ -490,13 +490,7 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                     background: profileMenuOpen || isScrolled ? "#F4F2EE" : "#FFF",
                   }}
                 >
-                  <Image
-                    src="/icons/nav/profile-button.png"
-                    alt=""
-                    width={48}
-                    height={48}
-                    className="size-full rounded-[12px] object-cover"
-                  />
+                  <UserAvatar user={user} />
                 </button>
 
                 {/* Floating Dropdown Card Menu */}
@@ -507,8 +501,22 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -6 }}
                       transition={{ duration: 0.18, ease: "easeOut" }}
-                      className="absolute right-0 top-[calc(100%+12px)] z-50 w-[401px] max-w-[calc(100vw-32px)] rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
+                      className="absolute right-0 top-[calc(100%+12px)] z-50 max-h-[calc(100dvh-96px)] w-[401px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
                     >
+                      <div className="lg:hidden">
+                        <MenuRow
+                          href="/"
+                          onClick={() => setProfileMenuOpen(false)}
+                          icon="/icons/nav/home.png"
+                          label="Home"
+                        />
+                        <MenuRow
+                          href={user ? "/wishlists" : "/login"}
+                          onClick={() => setProfileMenuOpen(false)}
+                          icon="/icons/nav/wishlist.png"
+                          label="Wishlists"
+                        />
+                      </div>
                       <MenuRow
                         href="/my-experiences"
                         onClick={() => setProfileMenuOpen(false)}

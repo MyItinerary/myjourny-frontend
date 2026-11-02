@@ -26,7 +26,7 @@ export function WishlistDialogShell({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(18,18,18,0.3)] p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(18,18,18,0.3)] sm:items-center sm:p-4"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -34,7 +34,7 @@ export function WishlistDialogShell({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "max-h-[90vh] w-full overflow-y-auto rounded-[20px] bg-white p-5 sm:p-[30px]",
+          "max-h-[85dvh] w-full overflow-y-auto rounded-t-[20px] bg-white p-5 pb-[calc(20px+env(safe-area-inset-bottom))] sm:max-h-[90vh] sm:rounded-[20px] sm:p-[30px]",
           className
         )}
       >
@@ -44,7 +44,7 @@ export function WishlistDialogShell({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#212121] hover:bg-[#F5F5F5]"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#212121] hover:bg-[#F5F5F5]"
           >
             <X className="size-6" />
           </button>

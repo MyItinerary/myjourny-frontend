@@ -61,8 +61,10 @@ test.describe("account deletion", () => {
       },
     });
 
-    await expect(page.getByText("What we keep")).toBeVisible();
-    await expect(page.getByText(/Booking and payment records, without your name or contact details/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What gets deleted" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What we keep" })).toBeVisible();
+    await expect(page.getByText("Booking and payment records", { exact: true })).toBeVisible();
+    await expect(page.getByText(/refunds, disputes and legal compliance/)).toBeVisible();
     await page.getByRole("button", { name: "Continue to delete" }).click();
 
     const confirm = page.getByRole("button", { name: "Delete my account" });

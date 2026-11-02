@@ -1,4 +1,4 @@
-import { formatDateRange } from "@/lib/dates";
+import { formatDateRange, parseIsoDay, toIsoDay } from "@/lib/dates";
 import { useInfiniteFilteredExperiences, type ExperienceFilters } from "@/lib/queries/experiences";
 
 import {
@@ -22,6 +22,7 @@ import type {
   ResultsFilters,
   RowChip,
   SubRow,
+  TimeOfDay,
 } from "./search-results.types";
 
 export const PRICE_CEILING = 100_000;
@@ -306,7 +307,8 @@ export function buildResultsHeading(subject: { kind: "city" | "category" | "quer
   }
 }
 
-export function formatResultsCount(total: number | undefined): string {
+export function formatResultsCount(total: number | undefined, failed = false): string {
+  if (failed) return "(Failed to load)";
   if (total === undefined) return "";
   return `(${total} ${total === 1 ? "result" : "results"})`;
 }
@@ -324,16 +326,39 @@ export function durationBand(value: DurationBand | null) {
 }
 
 /** Maps the filter state to what the listing API understands today. Everything else is held in state only. */
+/** The range a results link carries in `date` and `until`; one day without `until`. */
+export function dateRangeFromLink(date?: string, until?: string): DateRange {
+  const start = parseIsoDay(date);
+  if (!start) return EMPTY_FILTERS.dateRange;
+  const end = parseIsoDay(until);
+  return { start, end: end && end >= start ? end : start };
+}
+
+// Listings only store day or night until the API takes the finer times.
+const LISTING_TIME_OF_DAY: Record<TimeOfDay, string> = {
+  morning: "day",
+  afternoon: "day",
+  evening: "night",
+  late_night: "night",
+};
+
+/** The API's `date` takes one day, so a longer range doesn't narrow results yet. */
+function singleDay({ start, end }: DateRange): string | undefined {
+  if (!start) return undefined;
+  return !end || toIsoDay(end) === toIsoDay(start) ? toIsoDay(start) : undefined;
+}
+
 export function toExperienceFilters(filters: ResultsFilters): ExperienceFilters {
   const duration = durationBand(filters.duration);
   return {
+    date: singleDay(filters.dateRange),
     // The listing takes one interest slug: the newest subcategory, else the newest category.
     interest: filters.subcategories[0] ?? filters.categories[0],
     price_min: filters.free ? undefined : (filters.price.min ?? undefined),
     price_max: filters.free ? 0 : (filters.price.max ?? undefined),
     duration_min: duration?.min ?? undefined,
     duration_max: duration?.max ?? undefined,
-    time_of_day: filters.timeOfDay ?? undefined,
+    time_of_day: filters.timeOfDay ? LISTING_TIME_OF_DAY[filters.timeOfDay] : undefined,
   };
 }
 

@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useTasteQuizAudience, useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
+import { apiErrorMessage } from "@/lib/api-error";
 import { experienceListItemToCardProps } from "@/lib/queries/experiences";
 
 import { ALL_CATEGORIES, FOR_YOU_CATEGORY_SLUGS, PRICE_QUICK_RANGES, SUBCATEGORIES } from "../model/filter-catalog";
@@ -11,6 +12,7 @@ import {
   buildRowChips,
   buildSubRows,
   countActiveFilters,
+  dateRangeFromLink,
   EMPTY_FILTERS,
   formatResultsCount,
   normalizeFilters,
@@ -43,6 +45,10 @@ export interface UseSearchResultsViewModelOptions {
   /** The category slug a category page lists; chips picked in the row replace it. */
   interest?: string;
   search?: string;
+  /** The first day from the results link (YYYY-MM-DD). */
+  date?: string;
+  /** The last day of a range from the results link. */
+  until?: string;
 }
 
 function today(): Date {
@@ -56,14 +62,22 @@ function comingWeekend(): DateRange {
   return { start: saturday, end: new Date(saturday.getTime() + DAY) };
 }
 
-export function useSearchResultsViewModel({ subject, city, interest, search }: UseSearchResultsViewModelOptions) {
-  const [filters, setFilters] = useState<ResultsFilters>(EMPTY_FILTERS);
+export function useSearchResultsViewModel({ subject, city, interest, search, date, until }: UseSearchResultsViewModelOptions) {
+  const [filters, setFilters] = useState<ResultsFilters>(() => ({ ...EMPTY_FILTERS, dateRange: dateRangeFromLink(date, until) }));
   // Set when choosing or clearing a type removed filters that no longer apply.
   const [clearedNote, setClearedNote] = useState<number | null>(null);
   const [openDropdown, setOpenDropdown] = useState<DropdownFilterId | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   // The date picker applies on "Apply", everything else is live.
   const [draftRange, setDraftRange] = useState<DateRange>(EMPTY_FILTERS.dateRange);
+
+  // A new search from the nav can land on the same page with other dates.
+  const linkDates = `${date ?? ""}|${until ?? ""}`;
+  const [seenLinkDates, setSeenLinkDates] = useState(linkDates);
+  if (linkDates !== seenLinkDates) {
+    setSeenLinkDates(linkDates);
+    setFilters((f) => ({ ...f, dateRange: dateRangeFromLink(date, until) }));
+  }
 
   const tookQuiz = useTasteQuizAudience() === "taken";
   const quizHref = useTasteQuizCtaViewModel().href;
@@ -237,11 +251,16 @@ export function useSearchResultsViewModel({ subject, city, interest, search }: U
 
   return {
     heading: buildResultsHeading(subject),
-    countLabel: formatResultsCount(total),
+    countLabel: formatResultsCount(total, listing.isError && items.length === 0),
     total,
     footerLabel: total === undefined ? "Show results" : `Show ${total} ${noun}`,
     items,
     isLoading: listing.isPending,
+    isEmpty: !listing.isPending && !listing.isError && items.length === 0,
+    isError: listing.isError,
+    errorMessage: listing.isError ? apiErrorMessage(listing.error, "Couldn't load experiences.") : undefined,
+    onRetry: () => listing.refetch(),
+    isLoadMoreError: listing.isFetchNextPageError,
     hasMore: listing.hasNextPage ?? false,
     isLoadingMore: listing.isFetchingNextPage,
     onLoadMore: () => listing.fetchNextPage(),
