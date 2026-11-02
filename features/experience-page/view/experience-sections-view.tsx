@@ -53,7 +53,8 @@ export function ExperienceSectionsView({ content, details }: Props) {
       id: item.kind,
       icon: FIT_ICONS[item.kind],
       title: item.label,
-      body: item.note ? `${item.value}. ${item.note}` : item.value,
+      // Some values already end in a full stop ("Not confirmed. Ask the host before you book.").
+      body: item.note ? `${item.value.replace(/\.$/, "")}. ${item.note}` : item.value,
     })),
     ...(guests ? [{ id: "guests", icon: Users, title: guests.label, body: guests.description }] : []),
   ];

@@ -34,6 +34,12 @@ describe("ExperienceSectionsView", () => {
     expect(screen.getByText("Please note itinerary is subject to change")).toBeInTheDocument();
   });
 
+  it("doesn't double the full stop when a fit value already ends in one", () => {
+    const fit = [{ kind: "accessibility" as const, label: "Accessibility", value: "Not confirmed. Ask the host before you book.", note: "Sandy paths" }];
+    renderWithProviders(<ExperienceSectionsView content={content} details={{ ...details, fit }} />);
+    expect(screen.getByText("Not confirmed. Ask the host before you book. Sandy paths")).toBeInTheDocument();
+  });
+
   it("numbers the itinerary and shows each step's note", () => {
     renderWithProviders(<ExperienceSectionsView content={content} details={details} />);
     const steps = screen.getAllByRole("listitem").filter((li) => /hotel pickup|park gate/.test(li.textContent ?? ""));
