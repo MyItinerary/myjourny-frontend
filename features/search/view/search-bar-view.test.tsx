@@ -56,6 +56,31 @@ describe("SearchBarView", () => {
     expect(screen.getByRole("button", { name: "Search" })).toBeDisabled();
   });
 
+  it("puts a divider between Where and When, and between When and Who", () => {
+    renderWithProviders(<SearchBarView {...defaultVm} />);
+
+    const dividers = screen.getAllByTestId("search-field-divider");
+    expect(dividers).toHaveLength(2);
+    const where = screen.getByLabelText("Where");
+    const when = screen.getByLabelText("When");
+    const who = screen.getByLabelText("Who");
+    // Document order: Where, divider, When, divider, Who.
+    expect(where.compareDocumentPosition(dividers[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(dividers[0].compareDocumentPosition(when) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(when.compareDocumentPosition(dividers[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(dividers[1].compareDocumentPosition(who) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("keeps its text left-aligned even inside a centred page section", () => {
+    const { container } = renderWithProviders(
+      <div className="text-center">
+        <SearchBarView {...defaultVm} />
+      </div>,
+    );
+
+    expect(container.querySelector("div.text-center > div")).toHaveClass("text-left");
+  });
+
   it("calls setWhereInput on user typing", async () => {
     const setWhereInput = vi.fn();
     const { user } = renderWithProviders(
