@@ -21,7 +21,46 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.selectedWhere).toBe("");
     expect(result.current.selectedWhen).toBe("");
     expect(result.current.totalGuests).toBe(0);
-    expect(result.current.allFieldsFilled).toBe(false);
+    expect(result.current.canSearch).toBe(false);
+  });
+
+  it("prefills Where from initialWhere and lets it search right away", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel({ initialWhere: "Lagos" }));
+
+    expect(result.current.selectedWhere).toBe("Lagos");
+    expect(result.current.canSearch).toBe(true);
+  });
+
+  it("suggests three events to start with, then the ones matching what's typed", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    expect(result.current.filteredEvents).toHaveLength(3);
+
+    act(() => result.current.setWhereInput("jazz"));
+    expect(result.current.filteredEvents.map((e) => e.title)).toEqual(["Lagos Jazz Night"]);
+
+    act(() => result.current.setWhereInput("zzzz"));
+    expect(result.current.filteredEvents).toEqual([]);
+  });
+
+  it("searches an event by name, since there's no event page yet", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectEvent({ id: "jazz", title: "Lagos Jazz Night", subtitle: "Lagos" }));
+    expect(result.current.selectedWhere).toBe("Lagos Jazz Night");
+    expect(result.current.activeTab).toBe("when");
+
+    act(() => result.current.onSearch());
+    expect(mockPush).toHaveBeenCalledWith("/search?q=Lagos%20Jazz%20Night");
+  });
+
+  it("goes straight to the search results when an event is tapped in the mobile modal", () => {
+    mockPush.mockClear();
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onNavigateToEvent({ id: "jazz", title: "Lagos Jazz Night", subtitle: "Lagos" }));
+    expect(mockPush).toHaveBeenCalledWith("/search?q=Lagos%20Jazz%20Night");
   });
 
   it("advances from Where to When on destination selection", () => {
@@ -54,40 +93,57 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.activeTab).toBe("when");
   });
 
-  it("initializes selectedDate as null and exposes minDate", () => {
-    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
-    expect(result.current.selectedDate).toBeNull();
-    expect(result.current.minDate).toBeInstanceOf(Date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    expect(result.current.minDate.getTime()).toBe(today.getTime());
-  });
-
-  it("prevents selecting past dates", () => {
+  it("ignores a past day", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
     const pastDate = new Date();
     pastDate.setDate(pastDate.getDate() - 2);
 
-    act(() => {
-      result.current.onSelectDate(pastDate, "Past date");
-    });
+    act(() => result.current.onPickDate(pastDate));
 
-    expect(result.current.selectedDate).toBeNull();
-    expect(result.current.selectedWhen).toBe("");
-    expect(result.current.activeTab).toBeNull();
+    expect(result.current.draftRange).toEqual({ start: null, end: null });
   });
 
-  it("advances from When to Who on date selection", () => {
+  it("picks a date range with two taps and applies it, then moves on to Who", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 
-    const pickedDate = new Date(2030, 5, 15);
-    act(() => {
-      result.current.onSelectDate(pickedDate, "June 15");
-    });
+    act(() => result.current.onPickDate(new Date(2030, 5, 15)));
+    expect(result.current.draftRange).toEqual({ start: new Date(2030, 5, 15), end: null });
+    // Nothing is in the bar until Apply.
+    expect(result.current.selectedWhen).toBe("");
 
-    expect(result.current.selectedDate).toEqual(pickedDate);
-    expect(result.current.selectedWhen).toBe("June 15");
+    act(() => result.current.onPickDate(new Date(2030, 5, 20)));
+    act(() => result.current.onApplyDates());
+
+    expect(result.current.selectedWhen).toBe("15 Jun – 20 Jun");
     expect(result.current.activeTab).toBe("who");
+  });
+
+  it("takes quick picks, a single day, Clear and Any date", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onPickDatePreset(new Date(2030, 5, 15), new Date(2030, 5, 15)));
+    act(() => result.current.onApplyDates());
+    expect(result.current.selectedWhen).toBe("15 Jun");
+
+    act(() => result.current.onClearDates());
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.draftRange).toEqual({ start: null, end: null });
+
+    act(() => result.current.onPickDatePreset(new Date(2030, 5, 15), new Date(2030, 5, 20)));
+    act(() => result.current.onAnyDate());
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.activeTab).toBe("who");
+  });
+
+  it("starts a new range when the second tap is earlier, and drops unapplied dates on close", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onPickDate(new Date(2030, 5, 20)));
+    act(() => result.current.onPickDate(new Date(2030, 5, 15)));
+    expect(result.current.draftRange).toEqual({ start: new Date(2030, 5, 15), end: null });
+
+    act(() => result.current.onClose());
+    expect(result.current.draftRange).toEqual({ start: null, end: null });
   });
 
   it("updates guest counts correctly", () => {
@@ -111,7 +167,27 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.totalGuests).toBe(1);
   });
 
-  it("executes search and navigates when all criteria are met", () => {
+  it("enables search once a place or activity is entered, without dates or guests", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    expect(result.current.canSearch).toBe(false);
+
+    act(() => {
+      result.current.setWhereInput("Lagos");
+    });
+
+    expect(result.current.canSearch).toBe(true);
+    expect(result.current.selectedWhen).toBe("");
+    expect(result.current.totalGuests).toBe(0);
+
+    act(() => {
+      result.current.setWhereInput("   ");
+    });
+
+    expect(result.current.canSearch).toBe(false);
+  });
+
+  it("executes search and navigates once a place is chosen", () => {
     mockPush.mockClear();
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 
@@ -120,11 +196,10 @@ describe("useSearchBarViewModel", () => {
         id: "exp-123",
         title: "Nike Art Gallery Deep Dive",
       });
-      result.current.onSelectDate(new Date(2030, 5, 15), "June 15");
       result.current.incrementGuest("adults");
     });
 
-    expect(result.current.allFieldsFilled).toBe(true);
+    expect(result.current.canSearch).toBe(true);
 
     act(() => {
       result.current.onSearch();
@@ -160,10 +235,43 @@ describe("useSearchBarViewModel", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 
     act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "" }));
-    act(() => result.current.onSelectDate(new Date(2030, 5, 1), "June 1"));
+    act(() => result.current.onPickDate(new Date(2030, 5, 1)));
+    act(() => result.current.onApplyDates());
     act(() => result.current.onSearch());
 
     expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01");
+  });
+
+  it("takes the picked dates to a text search", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.setWhereInput("jazz"));
+    act(() => result.current.onPickDatePreset(new Date(2030, 5, 1), new Date(2030, 5, 3)));
+    act(() => result.current.onApplyDates());
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/search?q=jazz&date=2030-06-01&until=2030-06-03");
+  });
+
+  it("takes the picked day to an event search", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+    const event = { id: "ev-1", title: "Lagos Jazz Night", subtitle: "", imageUrl: "" };
+
+    act(() => result.current.onPickDate(new Date(2030, 5, 1)));
+    act(() => result.current.onApplyDates());
+    act(() => result.current.onNavigateToEvent(event as never));
+    expect(mockPush).toHaveBeenCalledWith("/search?q=Lagos%20Jazz%20Night&date=2030-06-01");
+  });
+
+  it("takes a picked range to the city's results", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "" }));
+    act(() => result.current.onPickDatePreset(new Date(2030, 5, 1), new Date(2030, 5, 3)));
+    act(() => result.current.onApplyDates());
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01&until=2030-06-03");
   });
 
   it("navigates to city route on destination selection", () => {

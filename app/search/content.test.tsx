@@ -4,20 +4,19 @@ import { describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils/render";
 import { SearchContent } from "./content";
 
-const searchState = vi.hoisted(() => ({
-  data: [] as unknown[],
-  isLoading: false,
+const listState = vi.hoisted(() => ({
+  data: undefined as { pages: Array<{ items: unknown[]; total?: number }> } | undefined,
+  isPending: false,
   isError: false,
+  error: null as unknown,
   refetch: vi.fn(),
+  lastFilters: undefined as Record<string, unknown> | undefined,
 }));
 
-const navState = vi.hoisted(() => ({
-  query: "kayak",
-  push: vi.fn(),
-}));
+const navState = vi.hoisted(() => ({ query: "kayak" }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: navState.push, replace: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
   useSearchParams: () => new URLSearchParams(navState.query ? `q=${navState.query}` : ""),
   usePathname: () => "/search",
 }));
@@ -26,17 +25,37 @@ vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav data-testid="
 vi.mock("@/components/home/footer", () => ({ Footer: () => <footer data-testid="footer" /> }));
 vi.mock("@/features/taste-quiz-cta", () => ({
   TasteQuizCtaView: () => null,
-  useTasteQuizCtaViewModel: () => ({ isVisible: false, onDismiss: vi.fn() }),
+  useTasteQuizCtaViewModel: () => ({ isVisible: false, onDismiss: vi.fn(), href: "/quiz" }),
+  useTasteQuizAudience: () => "guest",
 }));
 
 vi.mock("@/lib/queries/experiences", () => ({
-  useSemanticSearch: () => ({
-    data: searchState.data,
-    isLoading: searchState.isLoading,
-    isError: searchState.isError,
-    refetch: searchState.refetch,
+  useInfiniteFilteredExperiences: (filters: Record<string, unknown>) => {
+    listState.lastFilters = filters;
+    return {
+      data: listState.data,
+      isPending: listState.isPending,
+      isError: listState.isError,
+      error: listState.error,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetchNextPageError: false,
+      refetch: listState.refetch,
+      fetchNextPage: vi.fn(),
+    };
+  },
+  experienceListItemToCardProps: (item: { id: string; title: string }) => ({
+    id: item.id,
+    title: item.title,
+    category: "Lagos",
+    imageAlt: item.title,
+    imageSrc: "/images/kayak.jpg",
+    rating: 4.8,
+    reviewCount: 10,
+    priceFrom: 10000,
+    currency: "NGN",
+    duration: "2 hours",
   }),
-  formatDuration: (d: number | null) => `${d} hours`,
 }));
 
 vi.mock("@/components/experiences/experience-card-vertical", () => ({
@@ -45,93 +64,64 @@ vi.mock("@/components/experiences/experience-card-vertical", () => ({
   ),
 }));
 
-describe("SearchContent", () => {
-  it("shows loading message and skeleton loaders while search is pending", () => {
-    searchState.isLoading = true;
-    searchState.isError = false;
-    searchState.data = [];
+function setList(state: Partial<typeof listState>) {
+  Object.assign(listState, { data: undefined, isPending: false, isError: false, error: null }, state);
+}
 
+describe("SearchContent", () => {
+  it("starts the date filter from the link", () => {
+    navState.query = "kayak&date=2030-06-01";
+    setList({ data: { pages: [{ items: [], total: 0 }] } });
+    renderWithProviders(<SearchContent />);
+    expect(listState.lastFilters).toMatchObject({ search: "kayak", date: "2030-06-01" });
+    navState.query = "kayak";
+  });
+
+  it("lists from the public listing with the typed text", () => {
+    setList({ data: { pages: [{ items: [], total: 0 }] } });
+    renderWithProviders(<SearchContent />);
+    expect(listState.lastFilters).toMatchObject({ search: "kayak" });
+  });
+
+  it("shows skeletons, and no empty state, while pending", () => {
+    setList({ isPending: true });
     const { container } = renderWithProviders(<SearchContent />);
 
-    expect(screen.getByText("Loading experiences…")).toBeInTheDocument();
-    const skeletons = container.querySelectorAll(".animate-pulse");
-    expect(skeletons.length).toBeGreaterThan(0);
-    expect(screen.queryByText(/No matching experiences found/i)).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    expect(screen.queryByText("No results found")).not.toBeInTheDocument();
   });
 
-  it("shows error state and retries search on 'Try again' click", async () => {
-    const handleRefetch = vi.fn();
-    searchState.isLoading = false;
-    searchState.isError = true;
-    searchState.data = [];
-    searchState.refetch = handleRefetch;
-
+  it("shows the error, not an empty state, and retries on 'Try again'", async () => {
+    const refetch = vi.fn();
+    setList({ isError: true, refetch });
     const { user } = renderWithProviders(<SearchContent />);
 
-    expect(screen.getByText("Failed to load experiences")).toBeInTheDocument();
-    expect(screen.getByText("Failed to load search results")).toBeInTheDocument();
-    expect(
-      screen.getByText(/We couldn't complete your search at this moment/i)
-    ).toBeInTheDocument();
-
-    const retryButton = screen.getByRole("button", { name: "Try again" });
-    await user.click(retryButton);
-    expect(handleRefetch).toHaveBeenCalledOnce();
+    expect(screen.getByText("(Failed to load)")).toBeInTheDocument();
+    expect(screen.queryByText("No results found")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledOnce();
   });
 
-  it("renders empty state when search returns zero results", () => {
-    searchState.isLoading = false;
-    searchState.isError = false;
-    searchState.data = [];
-
+  it("shows the empty state when nothing matches", () => {
+    setList({ data: { pages: [{ items: [], total: 0 }] } });
     renderWithProviders(<SearchContent />);
-
-    expect(screen.getByText("No matching experiences found")).toBeInTheDocument();
-    expect(screen.queryByText("Failed to load search results")).not.toBeInTheDocument();
-    expect(screen.getByText((_, el) => el?.tagName === "P" && !!el?.textContent?.includes("Found 0 experiences"))).toBeInTheDocument();
+    expect(screen.getByText("No results found")).toBeInTheDocument();
   });
 
-  it("renders experiences cards when search succeeds with results", () => {
-    searchState.isLoading = false;
-    searchState.isError = false;
-    searchState.data = [
-      {
-        experience_id: "exp-1",
-        title: "Tarkwa Bay Kayaking",
-        city: "Lagos",
-        duration: 2,
-        rating: 4.9,
-        price_from: 20000,
-        currency: "NGN",
-      },
-    ];
-
+  it("shows the cards and count when results load", () => {
+    setList({ data: { pages: [{ items: [{ id: "exp-1", title: "Lekki Kayak Trail" }], total: 1 }] } });
     renderWithProviders(<SearchContent />);
 
-    expect(screen.getByText("Tarkwa Bay Kayaking")).toBeInTheDocument();
-    expect(screen.getByText((_, el) => el?.tagName === "P" && !!el?.textContent?.includes("Found 1 experience"))).toBeInTheDocument();
-    expect(screen.queryByText("No matching experiences found")).not.toBeInTheDocument();
+    expect(screen.getByText("Lekki Kayak Trail")).toBeInTheDocument();
+    expect(screen.getByText("(1 result)")).toBeInTheDocument();
   });
 
-  it("retains already-loaded search results and count if background refetch fails", () => {
-    searchState.isLoading = false;
-    searchState.isError = true;
-    searchState.data = [
-      {
-        experience_id: "exp-1",
-        title: "Tarkwa Bay Kayaking",
-        city: "Lagos",
-        duration: 2,
-        rating: 4.9,
-        price_from: 20000,
-        currency: "NGN",
-      },
-    ];
-
+  it("keeps loaded results and their count if a refetch fails", () => {
+    setList({ isError: true, data: { pages: [{ items: [{ id: "exp-1", title: "Lekki Kayak Trail" }], total: 1 }] } });
     renderWithProviders(<SearchContent />);
 
-    expect(screen.getByText("Tarkwa Bay Kayaking")).toBeInTheDocument();
-    expect(screen.getByText((_, el) => el?.tagName === "P" && !!el?.textContent?.includes("Found 1 experience"))).toBeInTheDocument();
-    expect(screen.queryByText("Failed to load search results")).not.toBeInTheDocument();
+    expect(screen.getByText("Lekki Kayak Trail")).toBeInTheDocument();
+    expect(screen.getByText("(1 result)")).toBeInTheDocument();
+    expect(screen.queryByText("(Failed to load)")).not.toBeInTheDocument();
   });
 });

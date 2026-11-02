@@ -1,3 +1,4 @@
+import { toIsoDay } from "@/lib/dates";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
@@ -6,7 +7,9 @@ import { FALLBACK_IMAGE } from "@/lib/queries/experiences";
 
 import type {
   ActivitySuggestion,
+  DateRange,
   DestinationSuggestion,
+  EventSuggestion,
   ExperienceSuggestion,
   SearchExperiencesParams,
 } from "./search.types";
@@ -18,15 +21,19 @@ export function startOfToday(now: Date = new Date()): Date {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
-/** A local date as YYYY-MM-DD, the form the API's `date` filter takes. */
-export function toIsoDay(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+export { toIsoDay };
+
+/** A results page link, carrying the searched day, and the last day of a range, when there are any. */
+export function withDate(path: string, isoDay: string | null, isoUntil?: string | null): string {
+  if (!isoDay) return path;
+  const joiner = path.includes("?") ? "&" : "?";
+  return isoUntil ? `${path}${joiner}date=${isoDay}&until=${isoUntil}` : `${path}${joiner}date=${isoDay}`;
 }
 
-/** A results page link, carrying the searched day when there is one. */
-export function withDate(path: string, isoDay: string | null): string {
-  return isoDay ? `${path}?date=${isoDay}` : path;
+/** The `date` and `until` a results link carries for the dates in the bar; past dates are dropped. */
+export function linkDates({ start, end }: DateRange): { day: string | null; until: string | null } {
+  const day = start && start >= startOfToday() ? toIsoDay(start) : null;
+  return { day, until: day && end && toIsoDay(end) !== day ? toIsoDay(end) : null };
 }
 
 export const DEFAULT_DESTINATIONS: DestinationSuggestion[] = [
@@ -58,6 +65,16 @@ export const DEFAULT_ACTIVITIES: ActivitySuggestion[] = [
   { id: "wellness-calm", label: "Wellness & calm", subtitle: "Spas, quiet spots, and yoga sessions" },
   { id: "street-life", label: "Street life", subtitle: "Markets, corners, and everyday city buzz" },
   { id: "events-live-shows", label: "Events & live shows", subtitle: "Concerts, festivals, and live music" },
+];
+
+// HARDCODED until the backend has an events search. Replace with a query hook returning the same shape.
+export const DEFAULT_EVENTS: EventSuggestion[] = [
+  { id: "lagos-jazz-night", title: "Lagos Jazz Night", subtitle: "Lagos · Live music · from NGN 8,000" },
+  { id: "amapiano-rooftop-party", title: "Amapiano Rooftop Party", subtitle: "Lagos · Nightlife · from NGN 12,000" },
+  { id: "abuja-food-drink-festival", title: "Abuja Food & Drink Festival", subtitle: "Abuja · Food & drink · from NGN 5,000" },
+  { id: "stand-up-comedy-live", title: "Stand-Up Comedy Live", subtitle: "Lagos · Comedy · from NGN 6,000" },
+  { id: "ibadan-highlife-evening", title: "Ibadan Highlife Evening", subtitle: "Ibadan · Live music · from NGN 4,000" },
+  { id: "art-film-weekender", title: "Art & Film Weekender", subtitle: "Lagos · Arts & film · from NGN 3,500" },
 ];
 
 export function formatExperienceSubtitle(
