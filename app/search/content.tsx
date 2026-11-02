@@ -23,6 +23,8 @@ export function SearchContent() {
   const results = useSearchResultsViewModel({
     subject: query ? { kind: "query", label: query } : { kind: "category", label: "All experiences" },
     search: query || undefined,
+    date: searchParams.get("date") ?? undefined,
+    until: searchParams.get("until") ?? undefined,
   });
 
   return (

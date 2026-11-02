@@ -69,6 +69,14 @@ function setList(state: Partial<typeof listState>) {
 }
 
 describe("SearchContent", () => {
+  it("starts the date filter from the link", () => {
+    navState.query = "kayak&date=2030-06-01";
+    setList({ data: { pages: [{ items: [], total: 0 }] } });
+    renderWithProviders(<SearchContent />);
+    expect(listState.lastFilters).toMatchObject({ search: "kayak", date: "2030-06-01" });
+    navState.query = "kayak";
+  });
+
   it("lists from the public listing with the typed text", () => {
     setList({ data: { pages: [{ items: [], total: 0 }] } });
     renderWithProviders(<SearchContent />);

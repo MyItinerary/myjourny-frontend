@@ -7,6 +7,7 @@ import { FALLBACK_IMAGE } from "@/lib/queries/experiences";
 
 import type {
   ActivitySuggestion,
+  DateRange,
   DestinationSuggestion,
   EventSuggestion,
   ExperienceSuggestion,
@@ -25,7 +26,14 @@ export { toIsoDay };
 /** A results page link, carrying the searched day, and the last day of a range, when there are any. */
 export function withDate(path: string, isoDay: string | null, isoUntil?: string | null): string {
   if (!isoDay) return path;
-  return isoUntil ? `${path}?date=${isoDay}&until=${isoUntil}` : `${path}?date=${isoDay}`;
+  const joiner = path.includes("?") ? "&" : "?";
+  return isoUntil ? `${path}${joiner}date=${isoDay}&until=${isoUntil}` : `${path}${joiner}date=${isoDay}`;
+}
+
+/** The `date` and `until` a results link carries for the dates in the bar; past dates are dropped. */
+export function linkDates({ start, end }: DateRange): { day: string | null; until: string | null } {
+  const day = start && start >= startOfToday() ? toIsoDay(start) : null;
+  return { day, until: day && end && toIsoDay(end) !== day ? toIsoDay(end) : null };
 }
 
 export const DEFAULT_DESTINATIONS: DestinationSuggestion[] = [

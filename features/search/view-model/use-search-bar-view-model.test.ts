@@ -242,6 +242,27 @@ describe("useSearchBarViewModel", () => {
     expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01");
   });
 
+  it("takes the picked dates to a text search", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.setWhereInput("jazz"));
+    act(() => result.current.onPickDatePreset(new Date(2030, 5, 1), new Date(2030, 5, 3)));
+    act(() => result.current.onApplyDates());
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/search?q=jazz&date=2030-06-01&until=2030-06-03");
+  });
+
+  it("takes the picked day to an event search", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+    const event = { id: "ev-1", title: "Lagos Jazz Night", subtitle: "", imageUrl: "" };
+
+    act(() => result.current.onPickDate(new Date(2030, 5, 1)));
+    act(() => result.current.onApplyDates());
+    act(() => result.current.onNavigateToEvent(event as never));
+    expect(mockPush).toHaveBeenCalledWith("/search?q=Lagos%20Jazz%20Night&date=2030-06-01");
+  });
+
   it("takes a picked range to the city's results", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 

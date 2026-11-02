@@ -11,8 +11,8 @@ import {
   DEFAULT_EVENTS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
+  linkDates,
   startOfToday,
-  toIsoDay,
   useSearchExperiences,
   withDate,
 } from "../model/search";
@@ -256,14 +256,12 @@ export function useSearchBarViewModel({
       if (!trimmed) return;
 
       handleClose();
-      // The dates they picked go to city and category results.
-      const { start, end } = dateRange;
-      const day = start && start >= startOfToday() ? toIsoDay(start) : null;
-      const until = day && end && toIsoDay(end) !== day ? toIsoDay(end) : null;
+      // The dates they picked go to every results page.
+      const { day, until } = linkDates(dateRange);
 
       // There's no event page yet, so an event is searched for by name.
       if (selectedType === "event") {
-        router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
+        router.push(withDate(`/search?q=${encodeURIComponent(rawQuery)}`, day, until));
         return;
       }
 
@@ -317,7 +315,7 @@ export function useSearchBarViewModel({
         return;
       }
 
-      router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
+      router.push(withDate(`/search?q=${encodeURIComponent(rawQuery)}`, day, until));
     },
     [dateRange, destinations, handleClose, router, selectedType, selectedWhere, selectedWhereId],
   );
@@ -341,9 +339,10 @@ export function useSearchBarViewModel({
   const onNavigateToEvent = useCallback(
     (ev: EventSuggestion) => {
       handleClose();
-      router.push(`/search?q=${encodeURIComponent(ev.title)}`);
+      const { day, until } = linkDates(dateRange);
+      router.push(withDate(`/search?q=${encodeURIComponent(ev.title)}`, day, until));
     },
-    [handleClose, router],
+    [dateRange, handleClose, router],
   );
 
   const onNavigateToExperience = useCallback(
