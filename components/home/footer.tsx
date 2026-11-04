@@ -156,7 +156,10 @@ export function Footer({ tone = "default" }: { tone?: "default" | "white" }) {
               <ul className="flex flex-col gap-2.5">
                 {column.links.map((link) => (
                   <li key={link} className="flex h-6 items-center">
-                    <Link href="#" className="text-sm text-[#4a4540] hover:text-[#222222] hover:underline">
+                    <Link
+                      href={link === "Cancellation options" ? "/legal/cancellations" : "#"}
+                      className="text-sm text-[#4a4540] hover:text-[#222222] hover:underline"
+                    >
                       {link}
                     </Link>
                   </li>

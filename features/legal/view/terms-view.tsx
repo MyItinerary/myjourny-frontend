@@ -6,6 +6,28 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { TermsViewModel } from "../view-model/use-terms-view-model";
 
+export function FormattedText({ text }: { text: string }) {
+  if (!text || !text.includes("**")) {
+    return <>{text}</>;
+  }
+
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return (
+            <strong key={i} className="font-bold text-[#130404]">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part;
+      })}
+    </>
+  );
+}
+
 export function TermsView({
   data,
   activeSectionId,
@@ -28,14 +50,6 @@ export function TermsView({
       <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-16">
         {/* Left Sticky Sidebar / Table of Contents */}
         <aside className="w-full shrink-0 lg:sticky lg:top-24 lg:w-[260px]">
-          <Link
-            href={backHref}
-            className="mb-6 inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#6F6B72] transition-colors hover:text-[#130404]"
-          >
-            <ChevronLeft className="size-4" />
-            <span>{backLabel}</span>
-          </Link>
-
           <div className="rounded-xl border border-[#EBEBEB] bg-[#FAF9F7] p-4 lg:border-0 lg:bg-transparent lg:p-0">
             <h2 className="mb-3 font-sans text-xs font-bold tracking-wider text-[#6F6B72] uppercase">
               On this page
@@ -73,6 +87,18 @@ export function TermsView({
                 );
               })}
             </nav>
+
+            {backHref && backLabel && (
+              <div className="mt-8 pt-4 border-t border-[#EBEBEB] lg:border-0 lg:pt-6">
+                <Link
+                  href={backHref}
+                  className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#6F6B72] transition-colors hover:text-[#130404]"
+                >
+                  <ChevronLeft className="size-4" />
+                  <span>{backLabel}</span>
+                </Link>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -80,21 +106,25 @@ export function TermsView({
         <main className="min-w-0 flex-1 max-w-[760px]">
           {/* Introductory Clauses */}
           <div className="space-y-4 font-sans text-base leading-relaxed text-[#333134]">
-            <p>{data.companyAgreementText}</p>
             <p>
-              By creating an account or making a booking, you agree to these terms, our{" "}
-              <Link href="/legal/privacy" className="text-[#E11D48] underline hover:text-[#BE123C]">
-                Privacy Policy
-              </Link>
-              , and our{" "}
-              <Link
-                href="/legal/cancellations"
-                className="text-[#E11D48] underline hover:text-[#BE123C]"
-              >
-                Cancellation and Refund Policy
-              </Link>
-              . If you do not agree, please do not use MyJourny.
+              <FormattedText text={data.companyAgreementText} />
             </p>
+            {data.agreementNoticeText && (
+              <p>
+                By creating an account or making a booking, you agree to these terms, our{" "}
+                <Link href="/legal/privacy" className="text-[#E11D48] underline hover:text-[#BE123C]">
+                  Privacy Policy
+                </Link>
+                , and our{" "}
+                <Link
+                  href="/legal/cancellations"
+                  className="text-[#E11D48] underline hover:text-[#BE123C]"
+                >
+                  Cancellation and Refund Policy
+                </Link>
+                . If you do not agree, please do not use MyJourny.
+              </p>
+            )}
           </div>
 
           {/* The Short Version Card */}
@@ -112,14 +142,16 @@ export function TermsView({
                     <Check className="size-3 stroke-[3]" />
                   </span>
                   <span className="font-sans text-sm leading-relaxed text-[#333134]">
-                    {item.text}
+                    <FormattedText text={item.text} />
                   </span>
                 </li>
               ))}
             </ul>
-            <div className="mt-6 border-t border-[#EAE7E0] pt-4 font-sans text-xs text-[#6F6B72]">
-              {data.shortVersion.disclaimer}
-            </div>
+            {data.shortVersion.disclaimer && (
+              <div className="mt-6 border-t border-[#EAE7E0] pt-4 font-sans text-xs text-[#6F6B72]">
+                {data.shortVersion.disclaimer}
+              </div>
+            )}
           </section>
 
           {/* Detailed Terms Sections */}
@@ -136,7 +168,7 @@ export function TermsView({
                 </h2>
                 {section.intro && (
                   <p className="font-sans text-base leading-relaxed text-[#333134]">
-                    {section.intro}
+                    <FormattedText text={section.intro} />
                   </p>
                 )}
 
@@ -144,7 +176,7 @@ export function TermsView({
                   <ul className="space-y-2 pl-4 list-disc marker:text-[#E11D48]">
                     {section.bullets.map((bullet, idx) => (
                       <li key={idx} className="font-sans text-base leading-relaxed text-[#333134]">
-                        {bullet}
+                        <FormattedText text={bullet} />
                       </li>
                     ))}
                   </ul>
@@ -161,7 +193,9 @@ export function TermsView({
                               {item.boldPrefix}
                             </strong>
                           )}
-                          <span>{item.text}</span>
+                          <span>
+                            <FormattedText text={item.text} />
+                          </span>
                         </p>
 
                         {item.bullets && item.bullets.length > 0 && (
@@ -173,7 +207,7 @@ export function TermsView({
                                     key={subIdx}
                                     className="font-sans text-base leading-relaxed text-[#333134]"
                                   >
-                                    {subBullet}
+                                    <FormattedText text={subBullet} />
                                   </li>
                                 );
                               }
@@ -187,7 +221,9 @@ export function TermsView({
                                       {subBullet.boldPrefix}
                                     </strong>
                                   )}
-                                  <span>{subBullet.text}</span>
+                                  <span>
+                                    <FormattedText text={subBullet.text} />
+                                  </span>
                                 </li>
                               );
                             })}
