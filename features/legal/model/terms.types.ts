@@ -3,17 +3,26 @@ export interface ShortVersionItem {
   text: string;
 }
 
+export interface BulletItem {
+  boldPrefix?: string;
+  text: string;
+}
+
 export interface TermsParagraph {
   number?: string;
   boldPrefix?: string;
   text: string;
+  bullets?: Array<string | BulletItem>;
 }
 
 export interface TermsSection {
   id: string;
   number?: string;
   title: string;
+  eyebrow?: string;
+  intro?: string;
   items: TermsParagraph[];
+  bullets?: string[];
 }
 
 export interface TableOfContentsItem {

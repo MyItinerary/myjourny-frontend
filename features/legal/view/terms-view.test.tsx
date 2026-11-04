@@ -23,7 +23,8 @@ const mockTermsData: TermsData = {
     { id: "short-version", label: "The short version" },
     { id: "section-1", label: "1. What MyJourny is, and what it is not" },
     { id: "section-2", label: "2. Your account" },
-    { id: "part-2", label: "PART II: EVENTS AND TICKETS", isPartHeading: true },
+    { id: "section-11", label: "11. Acceptable use" },
+    { id: "part-b", label: "PART II: EVENTS AND TICKETS", isPartHeading: true },
   ],
   sections: [
     {
@@ -54,6 +55,36 @@ const mockTermsData: TermsData = {
         },
       ],
     },
+    {
+      id: "section-11",
+      number: "11.",
+      title: "11. Acceptable use",
+      intro: "You must not:",
+      bullets: ["break the law", "give false information"],
+      items: [],
+    },
+    {
+      id: "part-b",
+      eyebrow: "PART B",
+      title: "Events and tickets",
+      intro: "Part B applies when you buy a ticket to an event.",
+      items: [
+        {
+          boldPrefix: "B1. The organiser is the seller.",
+          text: "The event is run by the organiser.",
+        },
+        {
+          boldPrefix: "B7. Cancellations and changes by the organiser.",
+          text: "",
+          bullets: [
+            {
+              boldPrefix: "Cancelled:",
+              text: "You receive a full refund automatically.",
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 
@@ -66,32 +97,30 @@ describe("TermsView", () => {
     onSectionSelect: vi.fn(),
   };
 
-  it("renders the title, last updated, and introductory text", () => {
-    render(<TermsView {...defaultProps} />);
+  it("renders the page header, TOC navigation, and back link", () => {
+    const onSectionSelect = vi.fn();
+    render(<TermsView {...defaultProps} onSectionSelect={onSectionSelect} />);
 
+    // Header and agreement notice
     expect(screen.getByRole("heading", { level: 1, name: "Terms of Use" })).toBeInTheDocument();
     expect(screen.getByText(/Last updated:/)).toBeInTheDocument();
     expect(screen.getByText(/These terms are an agreement between you/)).toBeInTheDocument();
-  });
 
-  it("renders the table of contents navigation items", () => {
-    render(<TermsView {...defaultProps} />);
-
+    // Table of contents
     expect(screen.getByRole("navigation", { name: "Table of contents" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "The short version" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "1. What MyJourny is, and what it is not" })
     ).toBeInTheDocument();
-    expect(screen.getByText("PART II: EVENTS AND TICKETS")).toBeInTheDocument();
-  });
+    expect(screen.getByRole("button", { name: "PART II: EVENTS AND TICKETS" })).toBeInTheDocument();
 
-  it("invokes onSectionSelect when a table of contents item is clicked", () => {
-    const onSectionSelect = vi.fn();
-    render(<TermsView {...defaultProps} onSectionSelect={onSectionSelect} />);
+    // Back link
+    const backLink = screen.getByRole("link", { name: "All legal documents" });
+    expect(backLink).toHaveAttribute("href", "/legal");
 
+    // Click TOC item
     const button = screen.getByRole("button", { name: "2. Your account" });
     fireEvent.click(button);
-
     expect(onSectionSelect).toHaveBeenCalledWith("section-2");
   });
 
@@ -107,20 +136,26 @@ describe("TermsView", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders terms sections and bold prefixes", () => {
+  it("renders terms sections with bold prefixes, intro, and bullets", () => {
     render(<TermsView {...defaultProps} />);
 
+    // Numbered sections and bold lead-ins
     expect(
       screen.getByRole("heading", { level: 2, name: "1. What MyJourny is, and what it is not" })
     ).toBeInTheDocument();
     expect(screen.getByText("The host is the seller.")).toBeInTheDocument();
     expect(screen.getByText("Instant booking.")).toBeInTheDocument();
-  });
 
-  it("renders back link to all legal documents", () => {
-    render(<TermsView {...defaultProps} />);
+    // Acceptable use bullets
+    expect(screen.getByText("You must not:")).toBeInTheDocument();
+    expect(screen.getByText("break the law")).toBeInTheDocument();
+    expect(screen.getByText("give false information")).toBeInTheDocument();
 
-    const backLink = screen.getByRole("link", { name: "All legal documents" });
-    expect(backLink).toHaveAttribute("href", "/legal");
+    // Part B
+    expect(screen.getByText("PART B")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Events and tickets" })).toBeInTheDocument();
+    expect(screen.getByText("Part B applies when you buy a ticket to an event.")).toBeInTheDocument();
+    expect(screen.getByText("B1. The organiser is the seller.")).toBeInTheDocument();
+    expect(screen.getByText("Cancelled:")).toBeInTheDocument();
   });
 });

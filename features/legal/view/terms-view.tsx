@@ -44,12 +44,14 @@ export function TermsView({
               {data.tableOfContents.map((item) => {
                 if (item.isPartHeading) {
                   return (
-                    <div
+                    <button
                       key={item.id}
-                      className="pt-5 pb-1 font-sans text-xs font-bold tracking-wider text-[#6F6B72] uppercase"
+                      type="button"
+                      onClick={() => onSectionSelect(item.id)}
+                      className="pt-5 pb-1 text-left font-sans text-xs font-bold tracking-wider text-[#6F6B72] uppercase transition-colors hover:text-[#130404] cursor-pointer"
                     >
                       {item.label}
-                    </div>
+                    </button>
                   );
                 }
 
@@ -124,44 +126,79 @@ export function TermsView({
           <div className="space-y-12">
             {data.sections.map((section) => (
               <section key={section.id} id={section.id} className="scroll-mt-24 space-y-4">
+                {section.eyebrow && (
+                  <p className="font-sans text-xs font-bold tracking-wider text-[#E11D48] uppercase">
+                    {section.eyebrow}
+                  </p>
+                )}
                 <h2 className="font-sans text-xl font-bold text-[#130404] sm:text-2xl">
                   {section.title}
                 </h2>
-                <div className="space-y-4">
-                  {section.items.map((item, index) => (
-                    <p
-                      key={`${section.id}-${index}`}
-                      className="font-sans text-base leading-relaxed text-[#333134]"
-                    >
-                      {item.number && <span className="mr-2 font-normal">{item.number}</span>}
-                      {item.boldPrefix && (
-                        <strong className="mr-1.5 font-bold text-[#130404]">{item.boldPrefix}</strong>
-                      )}
-                      <span>{item.text}</span>
-                    </p>
-                  ))}
-                </div>
+                {section.intro && (
+                  <p className="font-sans text-base leading-relaxed text-[#333134]">
+                    {section.intro}
+                  </p>
+                )}
+
+                {section.bullets && section.bullets.length > 0 && (
+                  <ul className="space-y-2 pl-4 list-disc marker:text-[#E11D48]">
+                    {section.bullets.map((bullet, idx) => (
+                      <li key={idx} className="font-sans text-base leading-relaxed text-[#333134]">
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {section.items && section.items.length > 0 && (
+                  <div className="space-y-4">
+                    {section.items.map((item, index) => (
+                      <div key={`${section.id}-${index}`} className="space-y-2">
+                        <p className="font-sans text-base leading-relaxed text-[#333134]">
+                          {item.number && <span className="mr-2 font-normal">{item.number}</span>}
+                          {item.boldPrefix && (
+                            <strong className="mr-1.5 font-bold text-[#130404]">
+                              {item.boldPrefix}
+                            </strong>
+                          )}
+                          <span>{item.text}</span>
+                        </p>
+
+                        {item.bullets && item.bullets.length > 0 && (
+                          <ul className="space-y-2 pl-6 list-disc marker:text-[#E11D48]">
+                            {item.bullets.map((subBullet, subIdx) => {
+                              if (typeof subBullet === "string") {
+                                return (
+                                  <li
+                                    key={subIdx}
+                                    className="font-sans text-base leading-relaxed text-[#333134]"
+                                  >
+                                    {subBullet}
+                                  </li>
+                                );
+                              }
+                              return (
+                                <li
+                                  key={subIdx}
+                                  className="font-sans text-base leading-relaxed text-[#333134]"
+                                >
+                                  {subBullet.boldPrefix && (
+                                    <strong className="mr-1.5 font-bold text-[#130404]">
+                                      {subBullet.boldPrefix}
+                                    </strong>
+                                  )}
+                                  <span>{subBullet.text}</span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
             ))}
-
-            {/* Anchors for Remaining Sections (to support navigation as more content is added) */}
-            {data.tableOfContents
-              .filter(
-                (item) =>
-                  !item.isPartHeading &&
-                  item.id !== "short-version" &&
-                  !data.sections.some((s) => s.id === item.id)
-              )
-              .map((item) => (
-                <section key={item.id} id={item.id} className="scroll-mt-24 space-y-4">
-                  <h2 className="font-sans text-xl font-bold text-[#130404] sm:text-2xl">
-                    {item.label}
-                  </h2>
-                  <p className="font-sans text-sm italic text-[#6F6B72]">
-                    Additional terms for this section will be provided soon.
-                  </p>
-                </section>
-              ))}
           </div>
         </main>
       </div>
