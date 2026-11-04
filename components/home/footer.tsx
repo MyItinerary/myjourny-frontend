@@ -171,7 +171,7 @@ export function Footer({ tone = "default" }: { tone?: "default" | "white" }) {
           <Link href="#" className="hover:text-[#222222] hover:underline">
             Privacy
           </Link>
-          <Link href="#" className="hover:text-[#222222] hover:underline">
+          <Link href="/legal/terms" className="hover:text-[#222222] hover:underline">
             Terms
           </Link>
           <Link href="#" className="hover:text-[#222222] hover:underline">
