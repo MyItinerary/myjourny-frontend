@@ -6,7 +6,7 @@ export const termsData: TermsData = {
   companyAgreementText:
     'These terms are an agreement between you and [COMPANY LEGAL NAME] (RC [RC NUMBER] ), registered at [REGISTERED ADDRESS] . We call ourselves "MyJourny", "we", or "us". You are "you" or "the guest".',
   agreementNoticeText:
-    "By creating an account or making a booking, you agree to these terms, our Privacy Policy, and our Cancellation and Refund Policy. If you do not agree, please do not use MyJourny.",
+    "By creating an account or making a booking, you agree to these terms, our [Privacy Policy](/legal/privacy), and our [Cancellation and Refund Policy](/legal/cancellations). If you do not agree, please do not use MyJourny.",
   shortVersion: {
     title: "The short version",
     disclaimer: "This summary is for convenience. The full terms below are what apply.",

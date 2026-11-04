@@ -275,7 +275,7 @@ export const cancellationData: TermsData = {
         },
         {
           number: "8.3",
-          text: "If you cancel, guests get a full refund, and you are not paid for that booking. Repeated cancellations affect your listing's visibility and can lead to suspension. See the Host Terms.",
+          text: "If you cancel, guests get a full refund, and you are not paid for that booking. Repeated cancellations affect your listing's visibility and can lead to suspension. See the [Host Terms](/legal/hosts).",
         },
         {
           number: "8.4",

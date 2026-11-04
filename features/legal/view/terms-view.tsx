@@ -7,11 +7,13 @@ import { cn } from "@/lib/utils";
 import type { TermsViewModel } from "../view-model/use-terms-view-model";
 
 export function FormattedText({ text }: { text: string }) {
-  if (!text || !text.includes("**")) {
+  if (!text) return null;
+  if (!text.includes("**") && !text.includes("[")) {
     return <>{text}</>;
   }
 
-  const parts = text.split(/(\*\*.*?\*\*)/g);
+  // Matches either **bold text** or [link text](url)
+  const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
   return (
     <>
       {parts.map((part, i) => {
@@ -20,6 +22,20 @@ export function FormattedText({ text }: { text: string }) {
             <strong key={i} className="font-bold text-[#130404]">
               {part.slice(2, -2)}
             </strong>
+          );
+        }
+        if (part.startsWith("[") && part.includes("](") && part.endsWith(")")) {
+          const closeBracket = part.indexOf("](");
+          const label = part.slice(1, closeBracket);
+          const href = part.slice(closeBracket + 2, -1);
+          return (
+            <Link
+              key={i}
+              href={href}
+              className="text-[#E11D48] underline hover:text-[#BE123C]"
+            >
+              {label}
+            </Link>
           );
         }
         return part;
@@ -111,18 +127,7 @@ export function TermsView({
             </p>
             {data.agreementNoticeText && (
               <p>
-                By creating an account or making a booking, you agree to these terms, our{" "}
-                <Link href="/legal/privacy" className="text-[#E11D48] underline hover:text-[#BE123C]">
-                  Privacy Policy
-                </Link>
-                , and our{" "}
-                <Link
-                  href="/legal/cancellations"
-                  className="text-[#E11D48] underline hover:text-[#BE123C]"
-                >
-                  Cancellation and Refund Policy
-                </Link>
-                . If you do not agree, please do not use MyJourny.
+                <FormattedText text={data.agreementNoticeText} />
               </p>
             )}
           </div>
