@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { cn } from "@/lib/utils";
 import type { DocumentQuestions, ReadNextItem } from "../model/terms.types";
 import { FormattedText } from "./formatted-text";
 
@@ -22,7 +23,12 @@ export function ReadNextCards({
         {title}
       </h2>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-4",
+          items.length >= 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"
+        )}
+      >
         {items.map((item, index) => (
           <Link
             key={index}

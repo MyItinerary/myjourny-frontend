@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { TermsViewModel } from "../view-model/use-terms-view-model";
 import { CancellationTiersChart } from "./cancellation-tiers-chart";
 import { CookiePreferencesCard } from "./cookie-preferences-card";
+import { EnforcementStepsCard } from "./enforcement-steps-card";
 import { FormattedText } from "./formatted-text";
 import { LegalTable } from "./legal-table";
 import { PrivacyAtAGlance } from "./privacy-at-a-glance";
@@ -130,11 +131,17 @@ export function TermsView({
                 {data.shortVersion.title}
               </h2>
               <ul className="space-y-3.5">
-                {data.shortVersion.items.map((item) => (
+                {data.shortVersion.items.map((item, index) => (
                   <li key={item.id} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[#E11D48] text-white">
-                      <Check className="size-3 stroke-[3]" />
-                    </span>
+                    {data.shortVersion?.variant === "numbered" ? (
+                      <span className="font-sans text-base font-bold text-[#E11D48] shrink-0 w-4">
+                        {index + 1}
+                      </span>
+                    ) : (
+                      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[#E11D48] text-white">
+                        <Check className="size-3 stroke-[3]" />
+                      </span>
+                    )}
                     <span className="font-sans text-sm leading-relaxed text-[#333134]">
                       <FormattedText text={item.text} />
                     </span>
@@ -172,6 +179,10 @@ export function TermsView({
                 {section.id === "schedule-3" && <CancellationTiersChart />}
 
                 {section.table && <LegalTable table={section.table} />}
+
+                {section.enforcementSteps && (
+                  <EnforcementStepsCard steps={section.enforcementSteps} />
+                )}
 
                 {section.bullets && section.bullets.length > 0 && (
                   <ul className="space-y-2 pl-4 list-disc marker:text-[#E11D48]">

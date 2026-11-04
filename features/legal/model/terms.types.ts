@@ -34,6 +34,13 @@ export interface SectionActionCard {
   buttonText: string;
 }
 
+export interface EnforcementStep {
+  number: number;
+  title: string;
+  description: string;
+  isHighlighted?: boolean;
+}
+
 export interface TermsSection {
   id: string;
   number?: string;
@@ -45,6 +52,7 @@ export interface TermsSection {
   table?: SectionTable;
   note?: string;
   actionCard?: SectionActionCard;
+  enforcementSteps?: EnforcementStep[];
 }
 
 export interface TableOfContentsItem {
@@ -73,7 +81,8 @@ export interface TermsData {
   agreementNoticeText: string;
   shortVersion?: {
     title: string;
-    disclaimer: string;
+    disclaimer?: string;
+    variant?: "checks" | "numbered";
     items: ShortVersionItem[];
   };
   atAGlance?: {
