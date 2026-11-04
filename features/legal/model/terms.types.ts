@@ -15,6 +15,17 @@ export interface TermsParagraph {
   bullets?: Array<string | BulletItem>;
 }
 
+export interface AtAGlanceItem {
+  question: string;
+  answer: string;
+}
+
+export interface SectionTable {
+  headers: string[];
+  rows: string[][];
+  note?: string;
+}
+
 export interface TermsSection {
   id: string;
   number?: string;
@@ -23,6 +34,8 @@ export interface TermsSection {
   intro?: string;
   items: TermsParagraph[];
   bullets?: string[];
+  table?: SectionTable;
+  note?: string;
 }
 
 export interface TableOfContentsItem {
@@ -36,10 +49,14 @@ export interface TermsData {
   lastUpdated: string;
   companyAgreementText: string;
   agreementNoticeText: string;
-  shortVersion: {
+  shortVersion?: {
     title: string;
     disclaimer: string;
     items: ShortVersionItem[];
+  };
+  atAGlance?: {
+    title: string;
+    items: AtAGlanceItem[];
   };
   tableOfContents: TableOfContentsItem[];
   sections: TermsSection[];

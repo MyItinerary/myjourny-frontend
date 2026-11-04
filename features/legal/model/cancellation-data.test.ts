@@ -10,9 +10,10 @@ describe("cancellationData", () => {
   });
 
   it("contains the 5 short version summary bullets", () => {
-    expect(cancellationData.shortVersion.items.length).toBe(5);
-    expect(cancellationData.shortVersion.items[0].text).toContain("cancellation policy with exact dates and amounts");
-    expect(cancellationData.shortVersion.items[1].text).toContain("If a host cancels, you get a **full refund**");
+    expect(cancellationData.shortVersion).toBeDefined();
+    expect(cancellationData.shortVersion?.items.length).toBe(5);
+    expect(cancellationData.shortVersion?.items[0].text).toContain("cancellation policy with exact dates and amounts");
+    expect(cancellationData.shortVersion?.items[1].text).toContain("If a host cancels, you get a **full refund**");
   });
 
   it("defines table of contents items matching the sections", () => {

@@ -6,44 +6,11 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { TermsViewModel } from "../view-model/use-terms-view-model";
 import { CancellationTiersChart } from "./cancellation-tiers-chart";
+import { FormattedText } from "./formatted-text";
+import { LegalTable } from "./legal-table";
+import { PrivacyAtAGlance } from "./privacy-at-a-glance";
 
-export function FormattedText({ text }: { text: string }) {
-  if (!text) return null;
-  if (!text.includes("**") && !text.includes("[")) {
-    return <>{text}</>;
-  }
-
-  // Matches either **bold text** or [link text](url)
-  const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (part.startsWith("**") && part.endsWith("**")) {
-          return (
-            <strong key={i} className="font-bold text-[#130404]">
-              {part.slice(2, -2)}
-            </strong>
-          );
-        }
-        if (part.startsWith("[") && part.includes("](") && part.endsWith(")")) {
-          const closeBracket = part.indexOf("](");
-          const label = part.slice(1, closeBracket);
-          const href = part.slice(closeBracket + 2, -1);
-          return (
-            <Link
-              key={i}
-              href={href}
-              className="text-[#E11D48] underline hover:text-[#BE123C]"
-            >
-              {label}
-            </Link>
-          );
-        }
-        return part;
-      })}
-    </>
-  );
-}
+export { FormattedText };
 
 export function TermsView({
   data,
@@ -122,43 +89,57 @@ export function TermsView({
         {/* Right Main Content */}
         <main className="min-w-0 flex-1 max-w-[760px]">
           {/* Introductory Clauses */}
-          <div className="space-y-4 font-sans text-base leading-relaxed text-[#333134]">
-            <p>
-              <FormattedText text={data.companyAgreementText} />
-            </p>
-            {data.agreementNoticeText && (
-              <p>
-                <FormattedText text={data.agreementNoticeText} />
-              </p>
-            )}
-          </div>
+          {(data.companyAgreementText || data.agreementNoticeText) ? (
+            <div className="space-y-4 font-sans text-base leading-relaxed text-[#333134]">
+              {data.companyAgreementText && (
+                <p>
+                  <FormattedText text={data.companyAgreementText} />
+                </p>
+              )}
+              {data.agreementNoticeText && (
+                <p>
+                  <FormattedText text={data.agreementNoticeText} />
+                </p>
+              )}
+            </div>
+          ) : null}
+
+          {/* At a glance Card */}
+          {data.atAGlance && (
+            <PrivacyAtAGlance
+              title={data.atAGlance.title}
+              items={data.atAGlance.items}
+            />
+          )}
 
           {/* The Short Version Card */}
-          <section
-            id="short-version"
-            className="my-10 scroll-mt-24 rounded-[20px] bg-[#F7F5F0] p-6 sm:p-8"
-          >
-            <h2 className="mb-4 font-sans text-xl font-bold text-[#130404]">
-              {data.shortVersion.title}
-            </h2>
-            <ul className="space-y-3.5">
-              {data.shortVersion.items.map((item) => (
-                <li key={item.id} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[#E11D48] text-white">
-                    <Check className="size-3 stroke-[3]" />
-                  </span>
-                  <span className="font-sans text-sm leading-relaxed text-[#333134]">
-                    <FormattedText text={item.text} />
-                  </span>
-                </li>
-              ))}
-            </ul>
-            {data.shortVersion.disclaimer && (
-              <div className="mt-6 border-t border-[#EAE7E0] pt-4 font-sans text-xs text-[#6F6B72]">
-                {data.shortVersion.disclaimer}
-              </div>
-            )}
-          </section>
+          {data.shortVersion && (
+            <section
+              id="short-version"
+              className="my-10 scroll-mt-24 rounded-[20px] bg-[#F7F5F0] p-6 sm:p-8"
+            >
+              <h2 className="mb-4 font-sans text-xl font-bold text-[#130404]">
+                {data.shortVersion.title}
+              </h2>
+              <ul className="space-y-3.5">
+                {data.shortVersion.items.map((item) => (
+                  <li key={item.id} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[#E11D48] text-white">
+                      <Check className="size-3 stroke-[3]" />
+                    </span>
+                    <span className="font-sans text-sm leading-relaxed text-[#333134]">
+                      <FormattedText text={item.text} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {data.shortVersion.disclaimer && (
+                <div className="mt-6 border-t border-[#EAE7E0] pt-4 font-sans text-xs text-[#6F6B72]">
+                  {data.shortVersion.disclaimer}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Detailed Terms Sections */}
           <div className="space-y-12">
@@ -182,6 +163,8 @@ export function TermsView({
 
                 {section.id === "schedule-3" && <CancellationTiersChart />}
 
+                {section.table && <LegalTable table={section.table} />}
+
                 {section.bullets && section.bullets.length > 0 && (
                   <ul className="space-y-2 pl-4 list-disc marker:text-[#E11D48]">
                     {section.bullets.map((bullet, idx) => (
@@ -190,6 +173,12 @@ export function TermsView({
                       </li>
                     ))}
                   </ul>
+                )}
+
+                {section.note && (
+                  <p className="font-sans text-sm leading-relaxed text-[#6F6B72]">
+                    <FormattedText text={section.note} />
+                  </p>
                 )}
 
                 {section.items && section.items.length > 0 && (

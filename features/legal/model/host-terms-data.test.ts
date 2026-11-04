@@ -11,10 +11,11 @@ describe("hostTermsData", () => {
   });
 
   it("contains the 6 short version summary bullets", () => {
-    expect(hostTermsData.shortVersion.items.length).toBe(6);
-    expect(hostTermsData.shortVersion.items[0].text).toContain("You run the experience");
-    expect(hostTermsData.shortVersion.items[1].text).toContain("You keep **85%**. We take **15%**");
-    expect(hostTermsData.shortVersion.items[5].text).toBe("We never sell ranking or placement.");
+    expect(hostTermsData.shortVersion).toBeDefined();
+    expect(hostTermsData.shortVersion?.items.length).toBe(6);
+    expect(hostTermsData.shortVersion?.items[0].text).toContain("You run the experience");
+    expect(hostTermsData.shortVersion?.items[1].text).toContain("You keep **85%**. We take **15%**");
+    expect(hostTermsData.shortVersion?.items[5].text).toBe("We never sell ranking or placement.");
   });
 
   it("defines table of contents with all sections and schedules", () => {

@@ -158,4 +158,49 @@ describe("TermsView", () => {
     expect(screen.getByText("B1. The organiser is the seller.")).toBeInTheDocument();
     expect(screen.getByText("Cancelled:")).toBeInTheDocument();
   });
+
+  it("renders atAGlance card when present and section table when present", () => {
+    const dataWithAtAGlanceAndTable: TermsData = {
+      ...mockTermsData,
+      shortVersion: undefined,
+      companyAgreementText: "",
+      agreementNoticeText: "",
+      atAGlance: {
+        title: "At a glance",
+        items: [
+          {
+            question: "Who is responsible?",
+            answer: "MyJourny is responsible.",
+          },
+        ],
+      },
+      sections: [
+        {
+          id: "section-table-test",
+          title: "Data Table Section",
+          items: [],
+          table: {
+            headers: ["Col 1", "Col 2"],
+            rows: [["Val 1", "Val 2"]],
+            note: "Table note here",
+          },
+        },
+      ],
+    };
+
+    render(
+      <TermsView
+        {...defaultProps}
+        data={dataWithAtAGlanceAndTable}
+        activeSectionId="at-a-glance"
+      />
+    );
+
+    expect(screen.getByRole("heading", { level: 2, name: "At a glance" })).toBeInTheDocument();
+    expect(screen.getByText("Who is responsible?")).toBeInTheDocument();
+    expect(screen.getByText("MyJourny is responsible.")).toBeInTheDocument();
+    expect(screen.getByText("Col 1")).toBeInTheDocument();
+    expect(screen.getByText("Val 1")).toBeInTheDocument();
+    expect(screen.getByText("Table note here")).toBeInTheDocument();
+  });
 });

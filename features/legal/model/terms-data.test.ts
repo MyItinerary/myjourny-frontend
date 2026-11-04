@@ -11,8 +11,9 @@ describe("termsData", () => {
   });
 
   it("contains the short version summary bullets", () => {
-    expect(termsData.shortVersion.items.length).toBe(5);
-    expect(termsData.shortVersion.items[0].text).toContain("MyJourny is a marketplace");
+    expect(termsData.shortVersion).toBeDefined();
+    expect(termsData.shortVersion?.items.length).toBe(5);
+    expect(termsData.shortVersion?.items[0].text).toContain("MyJourny is a marketplace");
   });
 
   it("defines all table of contents items including Part II", () => {

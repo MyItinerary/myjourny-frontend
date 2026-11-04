@@ -171,7 +171,7 @@ export function Footer({ tone = "default" }: { tone?: "default" | "white" }) {
 
         <div className={cn("mt-6 flex flex-wrap items-center gap-2.5 border-t border-[#EBEBEB] pt-3 text-sm text-[#717171] lg:mt-10 lg:pt-6")}>
           <span>&copy; {new Date().getFullYear()} Myjourny, Inc.</span>
-          <Link href="#" className="hover:text-[#222222] hover:underline">
+          <Link href="/legal/privacy" className="hover:text-[#222222] hover:underline">
             Privacy
           </Link>
           <Link href="/legal/terms" className="hover:text-[#222222] hover:underline">
