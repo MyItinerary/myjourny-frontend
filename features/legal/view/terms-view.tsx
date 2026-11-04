@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import type { TermsViewModel } from "../view-model/use-terms-view-model";
+import { CancellationTiersChart } from "./cancellation-tiers-chart";
 
 export function FormattedText({ text }: { text: string }) {
   if (!text) return null;
@@ -178,6 +179,8 @@ export function TermsView({
                     <FormattedText text={section.intro} />
                   </p>
                 )}
+
+                {section.id === "schedule-3" && <CancellationTiersChart />}
 
                 {section.bullets && section.bullets.length > 0 && (
                   <ul className="space-y-2 pl-4 list-disc marker:text-[#E11D48]">

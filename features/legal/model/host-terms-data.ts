@@ -586,5 +586,51 @@ export const hostTermsData: TermsData = {
         "Get a parent's or guardian's consent before photographing a child.",
       ],
     },
+    {
+      id: "schedule-1-photo",
+      title: "Photography and filming",
+      items: [],
+      bullets: [
+        "Get consent before posting identifiable images of guests.",
+        "Stop and delete on request.",
+        "Never photograph guests in changing or private areas.",
+      ],
+    },
+    {
+      id: "schedule-2",
+      eyebrow: "SCHEDULE 2",
+      title: "Insurance by risk tier",
+      items: [
+        {
+          boldPrefix: "Tier 1, lower risk.",
+          text: "Workshops, classes, walks, tastings, indoor wellness, talks, and similar. Public liability insurance is strongly recommended. Required:.",
+        },
+        {
+          boldPrefix: "Tier 2, higher risk.",
+          text: "Water activities, boat trips, adventure and outdoor activities, cycling, high-intensity fitness, transport of guests, food service to groups, and small nightlife events. **Public liability insurance is required**, with cover of at least **[₦ AMOUNT]** per incident. Where you carry guests by water or vehicle, passenger liability cover is also required.",
+        },
+        {
+          boldPrefix: "Tier 3, events.",
+          text: "All ticketed events. **Public liability insurance is required**, with cover of at least **[₦ AMOUNT]** per event, set higher for events over **[NUMBER]** attendees. Event cancellation cover is recommended.",
+        },
+        {
+          text: "You must send us a valid certificate for Tiers 2 and 3 before your listing goes live, and again whenever it renews. We may ask for proof at any time. If your cover lapses, we may pause your listing.",
+        },
+      ],
+    },
+    {
+      id: "schedule-3",
+      eyebrow: "SCHEDULE 3",
+      title: "Cancellation tiers for experiences",
+      intro: "You choose one. Guests see it, with exact dates, before they pay. All times are in West Africa Time (WAT).",
+      items: [
+        {
+          text: "The default is **Flexible**. Our guests are trying out experiences run by people they have not met, and flexible policies help them say yes.",
+        },
+        {
+          text: "For the full rules, including the cases where guests always receive a full refund, see the [Cancellation and Refund Policy](/legal/cancellations).",
+        },
+      ],
+    },
   ],
 };

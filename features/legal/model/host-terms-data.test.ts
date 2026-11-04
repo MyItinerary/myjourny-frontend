@@ -26,11 +26,13 @@ describe("hostTermsData", () => {
     expect(hostTermsData.tableOfContents[14].label).toBe("14. Disputes and general");
     expect(hostTermsData.tableOfContents[15].label).toBe("SCHEDULE 1: MINIMUM SAFETY STANDARDS");
     expect(hostTermsData.tableOfContents[15].isPartHeading).toBe(true);
+    expect(hostTermsData.tableOfContents[25].label).toBe("SCHEDULE 2: INSURANCE BY RISK TIER");
+    expect(hostTermsData.tableOfContents[26].label).toBe("SCHEDULE 3: CANCELLATION TIERS FOR EXPERIENCES");
   });
 
-  it("contains populated sections 1 through 14 and Schedule 1 standards", () => {
-    // 14 numbered sections + Schedule 1 header + 8 subcategories = 23 sections
-    expect(hostTermsData.sections.length).toBe(23);
+  it("contains all populated sections, Schedule 1, Schedule 2, and Schedule 3", () => {
+    // 14 numbered sections + Schedule 1 header + 9 subcategories + Schedule 2 + Schedule 3 = 26 sections
+    expect(hostTermsData.sections.length).toBe(26);
 
     // Section 7: Cancellations
     const s7 = hostTermsData.sections.find((s) => s.id === "section-7");
@@ -44,34 +46,23 @@ describe("hostTermsData", () => {
     expect(s9?.items.length).toBe(4);
     expect(s9?.items[1].bullets?.length).toBe(5);
 
-    // Section 11: Curators
-    const s11 = hostTermsData.sections.find((s) => s.id === "section-11");
-    expect(s11).toBeDefined();
-    expect(s11?.items[0].text).toContain("Curators are independent people");
+    // Schedule 1: Photography and filming
+    const sPhoto = hostTermsData.sections.find((s) => s.id === "schedule-1-photo");
+    expect(sPhoto).toBeDefined();
+    expect(sPhoto?.bullets?.length).toBe(3);
 
-    // Section 12: Responsibility and indemnity
-    const s12 = hostTermsData.sections.find((s) => s.id === "section-12");
-    expect(s12).toBeDefined();
-    expect(s12?.items[1].boldPrefix).toBe("You will pay for and defend us against");
+    // Schedule 2: Insurance by risk tier
+    const sched2 = hostTermsData.sections.find((s) => s.id === "schedule-2");
+    expect(sched2).toBeDefined();
+    expect(sched2?.eyebrow).toBe("SCHEDULE 2");
+    expect(sched2?.items.length).toBe(4);
+    expect(sched2?.items[0].boldPrefix).toBe("Tier 1, lower risk.");
 
-    // Section 14: Disputes and general
-    const s14 = hostTermsData.sections.find((s) => s.id === "section-14");
-    expect(s14).toBeDefined();
-    expect(s14?.items.length).toBe(5);
-
-    // Schedule 1: Minimum safety standards
-    const sched1 = hostTermsData.sections.find((s) => s.id === "schedule-1");
-    expect(sched1).toBeDefined();
-    expect(sched1?.eyebrow).toBe("SCHEDULE 1");
-
-    // Schedule 1: Water activities
-    const sWater = hostTermsData.sections.find((s) => s.id === "schedule-1-water");
-    expect(sWater).toBeDefined();
-    expect(sWater?.bullets?.length).toBe(7);
-
-    // Schedule 1: Children and young people
-    const sChildren = hostTermsData.sections.find((s) => s.id === "schedule-1-children");
-    expect(sChildren).toBeDefined();
-    expect(sChildren?.bullets?.length).toBe(4);
+    // Schedule 3: Cancellation tiers for experiences
+    const sched3 = hostTermsData.sections.find((s) => s.id === "schedule-3");
+    expect(sched3).toBeDefined();
+    expect(sched3?.eyebrow).toBe("SCHEDULE 3");
+    expect(sched3?.intro).toContain("You choose one");
+    expect(sched3?.items.length).toBe(2);
   });
 });

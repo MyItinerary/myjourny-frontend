@@ -18,6 +18,7 @@ export {
   type HostTermsViewModel,
 } from "./view-model/use-host-terms-view-model";
 export { useTermsViewModel, type TermsViewModel } from "./view-model/use-terms-view-model";
+export { CancellationTiersChart } from "./view/cancellation-tiers-chart";
 export { CancellationView } from "./view/cancellation-view";
 export { HostTermsView } from "./view/host-terms-view";
 export { FormattedText, TermsView } from "./view/terms-view";
