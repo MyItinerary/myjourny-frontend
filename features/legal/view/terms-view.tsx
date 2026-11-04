@@ -164,9 +164,11 @@ export function TermsView({
             {data.sections.map((section) => (
               <section key={section.id} id={section.id} className="scroll-mt-24 space-y-4">
                 {section.eyebrow && (
-                  <p className="font-sans text-xs font-bold tracking-wider text-[#E11D48] uppercase">
-                    {section.eyebrow}
-                  </p>
+                  <div className="border-t border-[#EBEBEB] pt-8">
+                    <p className="font-sans text-xs font-bold tracking-wider text-[#E11D48] uppercase">
+                      {section.eyebrow}
+                    </p>
+                  </div>
                 )}
                 <h2 className="font-sans text-xl font-bold text-[#130404] sm:text-2xl">
                   {section.title}

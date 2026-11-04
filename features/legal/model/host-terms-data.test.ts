@@ -22,45 +22,56 @@ describe("hostTermsData", () => {
     expect(hostTermsData.tableOfContents[0].id).toBe("short-version");
     expect(hostTermsData.tableOfContents[1].label).toBe("1. Who can host");
     expect(hostTermsData.tableOfContents[6].label).toBe("6. Money");
+    expect(hostTermsData.tableOfContents[7].label).toBe("7. Cancellations");
+    expect(hostTermsData.tableOfContents[14].label).toBe("14. Disputes and general");
     expect(hostTermsData.tableOfContents[15].label).toBe("SCHEDULE 1: MINIMUM SAFETY STANDARDS");
     expect(hostTermsData.tableOfContents[15].isPartHeading).toBe(true);
   });
 
-  it("contains populated sections 1 through 6", () => {
-    expect(hostTermsData.sections.length).toBe(6);
+  it("contains populated sections 1 through 14 and Schedule 1 standards", () => {
+    // 14 numbered sections + Schedule 1 header + 8 subcategories = 23 sections
+    expect(hostTermsData.sections.length).toBe(23);
 
-    // Section 1: Who can host
-    const s1 = hostTermsData.sections.find((s) => s.id === "section-1");
-    expect(s1).toBeDefined();
-    expect(s1?.items.length).toBe(4);
-    expect(s1?.items[1].text).toContain("in your own name");
+    // Section 7: Cancellations
+    const s7 = hostTermsData.sections.find((s) => s.id === "section-7");
+    expect(s7).toBeDefined();
+    expect(s7?.items.length).toBe(4);
+    expect(s7?.items[2].bullets?.length).toBe(6);
 
-    // Section 2: Our role, and yours
-    const s2 = hostTermsData.sections.find((s) => s.id === "section-2");
-    expect(s2).toBeDefined();
-    expect(s2?.items.length).toBe(6);
-    expect(s2?.items[1].boldPrefix).toBe("You are an independent host.");
+    // Section 9: Data protection
+    const s9 = hostTermsData.sections.find((s) => s.id === "section-9");
+    expect(s9).toBeDefined();
+    expect(s9?.items.length).toBe(4);
+    expect(s9?.items[1].bullets?.length).toBe(5);
 
-    // Section 3: Your listing
-    const s3 = hostTermsData.sections.find((s) => s.id === "section-3");
-    expect(s3).toBeDefined();
-    expect(s3?.items.length).toBe(6);
+    // Section 11: Curators
+    const s11 = hostTermsData.sections.find((s) => s.id === "section-11");
+    expect(s11).toBeDefined();
+    expect(s11?.items[0].text).toContain("Curators are independent people");
 
-    // Section 4: Your legal and safety duties
-    const s4 = hostTermsData.sections.find((s) => s.id === "section-4");
-    expect(s4).toBeDefined();
-    expect(s4?.items.length).toBe(8);
-    expect(s4?.items[0].bullets?.length).toBe(6);
+    // Section 12: Responsibility and indemnity
+    const s12 = hostTermsData.sections.find((s) => s.id === "section-12");
+    expect(s12).toBeDefined();
+    expect(s12?.items[1].boldPrefix).toBe("You will pay for and defend us against");
 
-    // Section 5: Bookings and running the experience
-    const s5 = hostTermsData.sections.find((s) => s.id === "section-5");
-    expect(s5).toBeDefined();
-    expect(s5?.items.length).toBe(6);
+    // Section 14: Disputes and general
+    const s14 = hostTermsData.sections.find((s) => s.id === "section-14");
+    expect(s14).toBeDefined();
+    expect(s14?.items.length).toBe(5);
 
-    // Section 6: Money
-    const s6 = hostTermsData.sections.find((s) => s.id === "section-6");
-    expect(s6).toBeDefined();
-    expect(s6?.items.length).toBe(10);
-    expect(s6?.items[3].boldPrefix).toBe("When you are paid.");
+    // Schedule 1: Minimum safety standards
+    const sched1 = hostTermsData.sections.find((s) => s.id === "schedule-1");
+    expect(sched1).toBeDefined();
+    expect(sched1?.eyebrow).toBe("SCHEDULE 1");
+
+    // Schedule 1: Water activities
+    const sWater = hostTermsData.sections.find((s) => s.id === "schedule-1-water");
+    expect(sWater).toBeDefined();
+    expect(sWater?.bullets?.length).toBe(7);
+
+    // Schedule 1: Children and young people
+    const sChildren = hostTermsData.sections.find((s) => s.id === "schedule-1-children");
+    expect(sChildren).toBeDefined();
+    expect(sChildren?.bullets?.length).toBe(4);
   });
 });

@@ -302,5 +302,289 @@ export const hostTermsData: TermsData = {
         },
       ],
     },
+    {
+      id: "section-7",
+      number: "7.",
+      title: "7. Cancellations",
+      items: [
+        {
+          number: "7.1",
+          text: "For experiences, you choose one cancellation tier for each listing: **Flexible, Moderate, or Strict**, as described in Schedule 3 and the [Cancellation and Refund Policy](/legal/cancellations). The tier you choose is shown to guests before they pay, and it binds you.",
+        },
+        {
+          number: "7.2",
+          text: "For events, the event rules in the [Cancellation and Refund Policy](/legal/cancellations) apply.",
+        },
+        {
+          number: "7.3",
+          text: "Whatever tier you choose, guests receive a full refund when:",
+          bullets: [
+            "you cancel",
+            "the experience cannot go ahead safely",
+            "you do not deliver the experience, or deliver something materially different from the listing",
+            "the minimum group size is not met",
+            "a situation outside anyone's control stops the experience (see the [Cancellation and Refund Policy](/legal/cancellations))",
+            "the guest cancels within the 24-hour grace period described in the [Cancellation and Refund Policy](/legal/cancellations)",
+          ],
+        },
+        {
+          number: "7.4",
+          boldPrefix: "Host cancellations.",
+          text: "If you cancel a confirmed booking, except for a genuine safety reason, we may charge a cancellation fee of **[₦ AMOUNT]** , reduce your listing's visibility, and suspend your account if cancellations are repeated. We will help guests find alternatives.",
+        },
+      ],
+    },
+    {
+      id: "section-8",
+      number: "8.",
+      title: "8. Reviews",
+      items: [
+        {
+          number: "8.1",
+          text: "Guests review experiences they took part in. You cannot buy, offer something for, pressure, or edit reviews. You may reply publicly.",
+        },
+        {
+          number: "8.2",
+          text: "We may remove reviews that break our guidelines. We will not remove a review only because it is negative.",
+        },
+      ],
+    },
+    {
+      id: "section-9",
+      number: "9.",
+      title: "9. Data protection",
+      items: [
+        {
+          number: "9.1",
+          text: "We are a data controller for the personal data we collect through MyJourny. When we share a guest's contact and booking details with you, **you become an independent controller of that data** for your own purposes of running the booking.",
+        },
+        {
+          number: "9.2",
+          text: "You must follow the Nigeria Data Protection Act and these rules:",
+          bullets: [
+            "use guest data only to run the booking and keep guests safe",
+            "do not send marketing to guests unless they have agreed separately",
+            "keep the data secure, and share it only with people who need it to deliver the experience",
+            "delete the data when you no longer need it, normally within 30 days after the experience, unless the law requires you to keep it",
+            "do not sell guest data",
+          ],
+        },
+        {
+          number: "9.3",
+          text: "If you suffer a data breach involving MyJourny guests, tell us within 24 hours.",
+        },
+        {
+          number: "9.4",
+          text: "We may collect and check your ID, bank, and business details to verify you and prevent fraud. We explain this in our [Privacy Policy](/legal/privacy).",
+        },
+      ],
+    },
+    {
+      id: "section-10",
+      number: "10.",
+      title: "10. Content and intellectual property",
+      items: [
+        {
+          number: "10.1",
+          text: "You keep ownership of your listing content. You give us a free, worldwide licence to use it, including photos and descriptions, to run MyJourny and to promote you and your listing, in our own channels and with curators, for as long as your listing is live and for a reasonable time after for archival and legal use.",
+        },
+        {
+          number: "10.2",
+          text: "You promise you have the rights to what you upload, and that it does not infringe anyone's rights.",
+        },
+        {
+          number: "10.3",
+          text: "We own MyJourny's brand, platform, and content. You may not use our name or logo without our written permission, except to say you host on MyJourny.",
+        },
+      ],
+    },
+    {
+      id: "section-11",
+      number: "11.",
+      title: "11. Curators",
+      items: [
+        {
+          text: "Curators are independent people who recommend experiences. We do not control what they say. A curator's recommendation does not make us responsible for your experience. You must not pay curators for recommendations, and you must disclose any relationship if you are asked.",
+        },
+      ],
+    },
+    {
+      id: "section-12",
+      number: "12.",
+      title: "12. Responsibility and indemnity",
+      items: [
+        {
+          number: "12.1",
+          text: "You are responsible for your experience, your staff, your equipment, your premises, and anything you do or fail to do.",
+        },
+        {
+          number: "12.2",
+          boldPrefix: "You will pay for and defend us against",
+          text: "claims, losses, and costs (including reasonable legal fees) arising from: your experience, including injury, death, illness, or property damage; your breach of these terms or the law; false or misleading listing content; and your use of guest data. This does not apply to the extent a loss is caused by our own negligence or misconduct.",
+        },
+        {
+          number: "12.3",
+          text: "To the extent the law allows, our total liability to you is limited to the commission we received from your bookings in the 12 months before the claim. We are not liable for lost profits, lost opportunities, or indirect loss. Nothing in these terms limits liability that the law does not allow us to limit, including fraud.",
+        },
+        {
+          number: "12.4",
+          text: "We are not responsible for guests' actions or for the quality or safety of any experience.",
+        },
+      ],
+    },
+    {
+      id: "section-13",
+      number: "13.",
+      title: "13. Suspension and ending",
+      items: [
+        {
+          number: "13.1",
+          text: "You can close your listings and account at any time, but you must honour or properly cancel confirmed bookings first.",
+        },
+        {
+          number: "13.2",
+          text: "We may suspend or remove listings or your account if you break these terms or the law; if safety, fraud, or guest complaints are a concern; if you do not respond to bookings; if your insurance or permits lapse; or if we must by law. We will explain why, unless the law or safety prevents it.",
+        },
+        {
+          number: "13.3",
+          text: "If you are suspended or removed, we will honour or refund bookings already made, protect guests' money, and pay you for experiences you delivered, less amounts you owe us.",
+        },
+        {
+          number: "13.4",
+          text: "Clauses that should survive ending, such as clauses on money owed, indemnity, data protection, and disputes, continue to apply.",
+        },
+      ],
+    },
+    {
+      id: "section-14",
+      number: "14.",
+      title: "14. Disputes and general",
+      items: [
+        {
+          number: "14.1",
+          text: "Please contact us first at **[SUPPORT EMAIL]** . We will try to resolve problems fairly and quickly.",
+        },
+        {
+          number: "14.2",
+          text: "These terms are governed by Nigerian law. If we cannot resolve a dispute informally within 30 days, it will be referred to arbitration in Lagos under the Arbitration and Mediation Act 2023, with a single arbitrator. Either of us may go to court for urgent relief.",
+        },
+        {
+          number: "14.3",
+          text: "We may update these terms with at least 30 days' notice for significant changes. If you keep hosting after the change, you accept it. You may stop hosting if you do not.",
+        },
+        {
+          number: "14.4",
+          text: "If part of these terms is invalid, the rest still applies. A delay in enforcing a right is not a waiver. You may not transfer your rights without our consent. We may transfer ours to another company in a restructuring or sale.",
+        },
+        {
+          number: "14.5",
+          text: "These terms and the policies listed at the start are the whole agreement between us on this subject.",
+        },
+      ],
+    },
+    {
+      id: "schedule-1",
+      eyebrow: "SCHEDULE 1",
+      title: "Minimum safety standards",
+      intro: "These are minimums. Where the law or good practice asks for more, do more.",
+      items: [],
+    },
+    {
+      id: "schedule-1-all",
+      title: "All experiences",
+      items: [],
+      bullets: [
+        "Give every group a safety briefing at the start.",
+        "Carry a stocked first aid kit, and know the nearest clinic or hospital and the emergency numbers.",
+        "Count your group at the start, after any break, and at the end.",
+        "Ask guests about conditions, injuries, allergies, and disabilities that affect safety.",
+        "Never lead an activity while drunk or on drugs.",
+        "State the guide-to-guest ratio in your listing and keep to it.",
+        "Stop or change the activity if it becomes unsafe.",
+        "Report incidents under clause 4.7.",
+      ],
+    },
+    {
+      id: "schedule-1-water",
+      title: "Water activities (kayaks, boats, cruises, swimming, beaches)",
+      items: [],
+      bullets: [
+        "Everyone on the water wears an approved life jacket at all times.",
+        "Ask about swimming ability, and brief non-swimmers or decline to take them.",
+        "Boats and vessels must be licensed, inspected, and operated by a qualified person.",
+        "Check weather and water conditions before launching. Cancel if unsafe.",
+        "Keep a guide-to-guest ratio of no more than 1 to 8 on the water, unless the listing and your risk assessment justify a lower ratio.",
+        "Carry a working phone or radio and a clear rescue plan. Open-water groups need a support boat or shore cover.",
+        "No alcohol before or during water activities.",
+      ],
+    },
+    {
+      id: "schedule-1-food",
+      title: "Food and drink",
+      items: [],
+      bullets: [
+        "People who prepare or serve food hold valid food handler certification, where required.",
+        "Prepare and store food hygienically, and use safe water and ice.",
+        "Ask about allergies, and tell guests which allergens are present.",
+        "Serve alcohol only where licensed, only to adults, and never to anyone who is drunk.",
+        "If you host in your home or a private venue, make sure it is safe, clean, and permitted for the number of guests.",
+      ],
+    },
+    {
+      id: "schedule-1-fitness",
+      title: "Fitness and wellness",
+      items: [],
+      bullets: [
+        "Instructors have the training and experience for what they teach.",
+        "Ask guests about injuries and health conditions before starting, and offer easier options.",
+        "Do not make medical claims or promise health outcomes.",
+        "Massage, spa, and body treatments follow hygiene rules and any required licences.",
+      ],
+    },
+    {
+      id: "schedule-1-outdoor",
+      title: "Outdoor and adventure (hikes, cycling, climbing, and similar)",
+      items: [],
+      bullets: [
+        "Check the route beforehand. Brief guests on route, hazards, pace, and what to do if separated.",
+        "Check all equipment before use. Helmets are required for cycling and climbing.",
+        "A guide trained in first aid leads, and another person sweeps at the back of the group.",
+        "Plan around heat, darkness, and weather.",
+      ],
+    },
+    {
+      id: "schedule-1-nightlife",
+      title: "Nightlife and events",
+      items: [],
+      bullets: [
+        "Know your venue's capacity and never exceed it. Keep exits marked and clear.",
+        "Provide adequate security, first aid, and crowd control for the size of the event.",
+        "Check age at the door. Do not admit under-age guests to 18-and-over events.",
+        "Keep sound within legal limits and hold any noise permit required.",
+        "Register events and obtain any safety certificate required for your size and location. Lagos has rules for events above certain attendance levels.",
+        "Have a written emergency and evacuation plan, and brief your team on it.",
+      ],
+    },
+    {
+      id: "schedule-1-transport",
+      title: "Transport",
+      items: [],
+      bullets: [
+        "If you drive or arrange transport for guests, drivers hold valid licences and the vehicle is roadworthy and insured.",
+        "Everyone wears seatbelts. Do not overload the vehicle.",
+        "Arrange pickups through MyJourny messaging where possible, so there is a record.",
+      ],
+    },
+    {
+      id: "schedule-1-children",
+      title: "Children and young people",
+      items: [],
+      bullets: [
+        "Allow children only where the listing says so, and set the age limit clearly.",
+        "Children must be accompanied by a responsible adult unless the listing is a youth programme you are qualified to run.",
+        "Never be alone with a child you are not responsible for.",
+        "Get a parent's or guardian's consent before photographing a child.",
+      ],
+    },
   ],
 };
