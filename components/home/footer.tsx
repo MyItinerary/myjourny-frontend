@@ -157,7 +157,7 @@ export function Footer({ tone = "default" }: { tone?: "default" | "white" }) {
                 {column.links.map((link) => (
                   <li key={link} className="flex h-6 items-center">
                     <Link
-                      href={link === "Cancellation options" ? "/legal/cancellations" : "#"}
+                      href={link === "Cancellation options" ? "/legal/cancellations" : link === "Report a safety concern" || link === "Trust and safety" ? "/legal/safety" : "#"}
                       className="text-sm text-[#4a4540] hover:text-[#222222] hover:underline"
                     >
                       {link}

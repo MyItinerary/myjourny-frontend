@@ -10,9 +10,12 @@ export interface BulletItem {
 
 export interface TermsParagraph {
   number?: string;
+  subheading?: string;
   boldPrefix?: string;
   text: string;
   bullets?: Array<string | BulletItem>;
+  isChecklist?: boolean;
+  isNumberedList?: boolean;
 }
 
 export interface AtAGlanceItem {
