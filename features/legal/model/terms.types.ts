@@ -26,6 +26,11 @@ export interface SectionTable {
   note?: string;
 }
 
+export interface SectionActionCard {
+  label: string;
+  buttonText: string;
+}
+
 export interface TermsSection {
   id: string;
   number?: string;
@@ -36,12 +41,26 @@ export interface TermsSection {
   bullets?: string[];
   table?: SectionTable;
   note?: string;
+  actionCard?: SectionActionCard;
 }
 
 export interface TableOfContentsItem {
   id: string;
   label: string;
   isPartHeading?: boolean;
+}
+
+export interface ReadNextItem {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+}
+
+export interface DocumentQuestions {
+  text: string;
+  previousVersionsText?: string;
+  previousVersionsHref?: string;
 }
 
 export interface TermsData {
@@ -58,6 +77,11 @@ export interface TermsData {
     title: string;
     items: AtAGlanceItem[];
   };
+  readNext?: {
+    title?: string;
+    items: ReadNextItem[];
+  };
+  documentQuestions?: DocumentQuestions;
   tableOfContents: TableOfContentsItem[];
   sections: TermsSection[];
 }

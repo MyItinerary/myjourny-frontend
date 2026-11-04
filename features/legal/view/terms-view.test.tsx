@@ -203,4 +203,49 @@ describe("TermsView", () => {
     expect(screen.getByText("Val 1")).toBeInTheDocument();
     expect(screen.getByText("Table note here")).toBeInTheDocument();
   });
+
+  it("renders actionCard and readNext section when provided", () => {
+    const handleManagePreferences = vi.fn();
+    const dataWithActionAndReadNext: TermsData = {
+      ...mockTermsData,
+      sections: [
+        {
+          id: "section-action",
+          title: "Choices",
+          items: [],
+          actionCard: {
+            label: "Cookie choices",
+            buttonText: "Manage choices",
+          },
+        },
+      ],
+      readNext: {
+        title: "Read next",
+        items: [
+          {
+            eyebrow: "PRIVACY",
+            title: "Privacy Info",
+            description: "Details here",
+            href: "/legal/privacy",
+          },
+        ],
+      },
+    };
+
+    render(
+      <TermsView
+        {...defaultProps}
+        data={dataWithActionAndReadNext}
+        onManagePreferences={handleManagePreferences}
+      />
+    );
+
+    const btn = screen.getByRole("button", { name: "Manage choices" });
+    expect(btn).toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(handleManagePreferences).toHaveBeenCalledTimes(1);
+
+    expect(screen.getByRole("heading", { level: 2, name: "Read next" })).toBeInTheDocument();
+    expect(screen.getByText("Privacy Info")).toBeInTheDocument();
+  });
 });

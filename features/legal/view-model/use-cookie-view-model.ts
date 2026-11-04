@@ -1,0 +1,78 @@
+import { useCallback, useEffect, useState } from "react";
+
+import { cookieData } from "../model/cookie-data";
+import type { TermsData } from "../model/terms.types";
+
+export interface CookieViewModel {
+  data: TermsData;
+  activeSectionId: string;
+  backHref: string;
+  backLabel: string;
+  onSectionSelect: (id: string) => void;
+  onManagePreferences?: () => void;
+}
+
+export function useCookieViewModel(): CookieViewModel {
+  const [activeSectionId, setActiveSectionId] = useState<string>("section-1");
+
+  const onSectionSelect = useCallback((id: string) => {
+    setActiveSectionId(id);
+    if (typeof document !== "undefined") {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, []);
+
+  const onManagePreferences = useCallback(() => {
+    // Graceful callback: could dispatch custom event or open cookie preference dialog
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("open-cookie-preferences"));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const sectionIds = cookieData.tableOfContents
+      .filter((item) => !item.isPartHeading)
+      .map((item) => item.id);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter((entry) => entry.isIntersecting);
+        if (visibleEntries.length > 0) {
+          const topEntry = visibleEntries.reduce((prev, curr) =>
+            curr.boundingClientRect.top < prev.boundingClientRect.top ? curr : prev
+          );
+          setActiveSectionId(topEntry.target.id);
+        }
+      },
+      {
+        rootMargin: "-20% 0px -60% 0px",
+        threshold: 0,
+      }
+    );
+
+    for (const id of sectionIds) {
+      const element = document.getElementById(id);
+      if (element) {
+        observer.observe(element);
+      }
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return {
+    data: cookieData,
+    activeSectionId,
+    backHref: "/legal",
+    backLabel: "All legal documents",
+    onSectionSelect,
+    onManagePreferences,
+  };
+}

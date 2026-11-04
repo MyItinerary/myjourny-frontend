@@ -6,11 +6,18 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { TermsViewModel } from "../view-model/use-terms-view-model";
 import { CancellationTiersChart } from "./cancellation-tiers-chart";
+import { CookiePreferencesCard } from "./cookie-preferences-card";
 import { FormattedText } from "./formatted-text";
 import { LegalTable } from "./legal-table";
 import { PrivacyAtAGlance } from "./privacy-at-a-glance";
+import { ReadNextCards } from "./read-next-cards";
+import { TermsParagraphItem } from "./terms-paragraph-item";
 
 export { FormattedText };
+
+export interface TermsViewProps extends TermsViewModel {
+  onManagePreferences?: () => void;
+}
 
 export function TermsView({
   data,
@@ -18,7 +25,8 @@ export function TermsView({
   backHref,
   backLabel,
   onSectionSelect,
-}: TermsViewModel) {
+  onManagePreferences,
+}: TermsViewProps) {
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       {/* Page Title */}
@@ -175,6 +183,14 @@ export function TermsView({
                   </ul>
                 )}
 
+                {section.actionCard && (
+                  <CookiePreferencesCard
+                    label={section.actionCard.label}
+                    buttonText={section.actionCard.buttonText}
+                    onClick={onManagePreferences}
+                  />
+                )}
+
                 {section.note && (
                   <p className="font-sans text-sm leading-relaxed text-[#6F6B72]">
                     <FormattedText text={section.note} />
@@ -184,56 +200,20 @@ export function TermsView({
                 {section.items && section.items.length > 0 && (
                   <div className="space-y-4">
                     {section.items.map((item, index) => (
-                      <div key={`${section.id}-${index}`} className="space-y-2">
-                        <p className="font-sans text-base leading-relaxed text-[#333134]">
-                          {item.number && <span className="mr-2 font-normal">{item.number}</span>}
-                          {item.boldPrefix && (
-                            <strong className="mr-1.5 font-bold text-[#130404]">
-                              {item.boldPrefix}
-                            </strong>
-                          )}
-                          <span>
-                            <FormattedText text={item.text} />
-                          </span>
-                        </p>
-
-                        {item.bullets && item.bullets.length > 0 && (
-                          <ul className="space-y-2 pl-6 list-disc marker:text-[#E11D48]">
-                            {item.bullets.map((subBullet, subIdx) => {
-                              if (typeof subBullet === "string") {
-                                return (
-                                  <li
-                                    key={subIdx}
-                                    className="font-sans text-base leading-relaxed text-[#333134]"
-                                  >
-                                    <FormattedText text={subBullet} />
-                                  </li>
-                                );
-                              }
-                              return (
-                                <li
-                                  key={subIdx}
-                                  className="font-sans text-base leading-relaxed text-[#333134]"
-                                >
-                                  {subBullet.boldPrefix && (
-                                    <strong className="mr-1.5 font-bold text-[#130404]">
-                                      {subBullet.boldPrefix}
-                                    </strong>
-                                  )}
-                                  <span>
-                                    <FormattedText text={subBullet.text} />
-                                  </span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
-                      </div>
+                      <TermsParagraphItem key={`${section.id}-${index}`} item={item} />
                     ))}
                   </div>
                 )}
               </section>
             ))}
+
+            {data.readNext && (
+              <ReadNextCards
+                title={data.readNext.title}
+                items={data.readNext.items}
+                documentQuestions={data.documentQuestions}
+              />
+            )}
           </div>
         </main>
       </div>
