@@ -1,6 +1,6 @@
 import { Reveal } from "@/components/motion/reveal";
 import { NewsletterSection } from "@/components/home/newsletter-section";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 
 import { HOME_SECTION_IDS } from "../model/home-sections.types";
 import type { HomeViewModel } from "../view-model/use-home-view-model";
@@ -11,19 +11,19 @@ import { HomeRailView } from "./home-rail-view";
 import { HomeTasteQuizPopupView } from "./home-taste-quiz-popup-view";
 import { HomeWhyBookView } from "./home-why-book-view";
 
-// Figma "Home" (671:24717). Section order follows the design; rails with
+// Figma "Home" (2656:72985). Section order follows the design; rails with
 // nothing to show are left out. "Discover by categories" lives on the
 // experiences and events pages, not here.
 export function HomeView({
   hero,
-  happeningNear,
-  popularEvents,
-  topPicks,
-  exploreLagos,
-  cultureAndHistory,
+  pickUp,
+  basedOnSearch,
+  tonightAndThisWeekend,
+  pickedForYou,
   localFoodAndDrinks,
+  earlyBird,
+  newOnMyJourny,
   unforgettableTravel,
-  browsingHistory,
   tasteQuizPopup,
   cities,
 }: HomeViewModel) {
@@ -35,48 +35,40 @@ export function HomeView({
         <HomeWhyBookView />
       </Reveal>
 
-      {happeningNear.show && (
+      {pickUp.show && (
+        <Reveal>
+          <HomeRailView heading="Pick up where you left off" items={pickUp.items} isLoading={pickUp.isLoading} />
+        </Reveal>
+      )}
+
+      {basedOnSearch.show && (
         <Reveal>
           <HomeRailView
-            heading="Happening near you"
-            items={happeningNear.items}
-            isLoading={happeningNear.isLoading}
-            seeMoreHref="/popular-experiences"
+            heading={`Based on your search in ${basedOnSearch.area}`}
+            items={basedOnSearch.items}
+            isLoading={basedOnSearch.isLoading}
           />
         </Reveal>
       )}
 
-      {popularEvents.show && (
+      {tonightAndThisWeekend.show && (
         <Reveal>
           <HomeRailView
-            heading="Popular events you should check out"
-            items={popularEvents.items}
-            isLoading={popularEvents.isLoading}
+            heading="Tonight and this weekend"
+            items={tonightAndThisWeekend.items}
+            isLoading={tonightAndThisWeekend.isLoading}
             seeMoreHref="/events"
           />
         </Reveal>
       )}
 
-      {topPicks.show && (
-        <Reveal>
-          <HomeRailView heading="Top picks right now" items={topPicks.items} isLoading={topPicks.isLoading} />
-        </Reveal>
-      )}
-
-      {exploreLagos.show && (
-        <Reveal>
-          <HomeRailView heading="Explore Lagos intentionally" items={exploreLagos.items} isLoading={exploreLagos.isLoading} />
-        </Reveal>
-      )}
-
-      {cultureAndHistory.show && (
+      {pickedForYou.show && (
         <Reveal>
           <HomeRailView
-            mutedHeading="Culture & history"
-            heading="experiences"
-            items={cultureAndHistory.items}
-            isLoading={cultureAndHistory.isLoading}
-            seeMoreHref="/categories/culture-history"
+            heading="Picked for your taste"
+            items={pickedForYou.items}
+            isLoading={pickedForYou.isLoading}
+            seeMoreHref="/popular-experiences"
           />
         </Reveal>
       )}
@@ -84,8 +76,7 @@ export function HomeView({
       {localFoodAndDrinks.show && (
         <Reveal>
           <HomeRailView
-            mutedHeading="Local food & drinks"
-            heading="experiences"
+            heading="Dive deeper into Local food & drinks"
             items={localFoodAndDrinks.items}
             isLoading={localFoodAndDrinks.isLoading}
             seeMoreHref="/categories/local-food-drinks"
@@ -96,6 +87,18 @@ export function HomeView({
       {cities.show && (
         <Reveal>
           <HomeCitiesView cities={cities.cities} />
+        </Reveal>
+      )}
+
+      {earlyBird.show && (
+        <Reveal>
+          <HomeRailView heading="Early bird ending soon" items={earlyBird.items} isLoading={earlyBird.isLoading} />
+        </Reveal>
+      )}
+
+      {newOnMyJourny.show && (
+        <Reveal>
+          <HomeRailView heading="New on MyJourny" items={newOnMyJourny.items} isLoading={newOnMyJourny.isLoading} />
         </Reveal>
       )}
 
@@ -113,23 +116,13 @@ export function HomeView({
         </Reveal>
       )}
 
-      {browsingHistory.show && (
-        <Reveal>
-          <HomeRailView
-            heading="Based on your browsing history"
-            items={browsingHistory.items}
-            isLoading={browsingHistory.isLoading}
-          />
-        </Reveal>
-      )}
-
       <div id={HOME_SECTION_IDS.newsletter}>
         <Reveal>
           <NewsletterSection />
         </Reveal>
       </div>
       <Reveal>
-        <Footer tone="white" />
+        <Footer />
       </Reveal>
 
       <HomeTasteQuizPopupView {...tasteQuizPopup} />

@@ -6,7 +6,7 @@ import { renderWithProviders } from "@/test/utils/render";
 import { EventCategoryView } from "./event-category-view";
 
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav aria-label="Main" /> }));
-vi.mock("@/components/home/footer", () => ({ Footer: () => <footer>Footer</footer> }));
+vi.mock("@/features/footer", () => ({ Footer: () => <footer>Footer</footer> }));
 
 describe("EventCategoryView", () => {
   it("names the event category and says there are no events yet", () => {

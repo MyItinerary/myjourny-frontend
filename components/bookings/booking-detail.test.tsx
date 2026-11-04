@@ -8,7 +8,7 @@ import { BookingDetail } from "./booking-detail";
 const booking = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => null }));
-vi.mock("@/components/home/footer", () => ({ Footer: () => null }));
+vi.mock("@/features/footer", () => ({ Footer: () => null }));
 vi.mock("@/lib/auth/session-store", () => ({ useSession: () => ({ user: { id: "u-1" } }) }));
 vi.mock("@/features/experience-details", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/experience-details")>()),

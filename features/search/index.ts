@@ -45,3 +45,4 @@ export {
 
 export type { WhoGuestsDropdownViewProps } from "./view/who-guests-dropdown-view";
 export { WhoGuestsDropdownView } from "./view/who-guests-dropdown-view";
+export { readLastSearchArea, saveLastSearchArea, useLastSearchArea } from "./model/last-search-area";

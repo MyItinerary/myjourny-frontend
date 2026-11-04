@@ -12,7 +12,7 @@ const VISIBLE_COUNT = 10;
 
 // Figma "Discover by cities" (671:25808): a heading over rows of five 170px
 // tiles. The tiles come from the API; on a phone they scroll sideways in two rows.
-export function HomeCitiesView({ cities }: { cities: CityTile[] }) {
+export function HomeCitiesView({ cities, heading = "Discover by cities" }: { cities: CityTile[]; heading?: string }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? cities : cities.slice(0, VISIBLE_COUNT);
   const hasMore = cities.length > VISIBLE_COUNT;
@@ -21,7 +21,7 @@ export function HomeCitiesView({ cities }: { cities: CityTile[] }) {
     <section className="w-full overflow-x-clip bg-[#fcfcfc]">
       <div className="mx-auto flex w-full max-w-[1512px] flex-col gap-8 px-6 py-10 lg:gap-[53px] lg:px-32 lg:py-[53px]">
         <h2 className="font-sans text-[28px] font-extrabold leading-[120%] text-[#333134]">
-          Discover by cities
+          {heading}
         </h2>
 
         <div className="-mr-6 overflow-x-auto pr-6 lg:mr-0 lg:overflow-visible lg:pr-0">

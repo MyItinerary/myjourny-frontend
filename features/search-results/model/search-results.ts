@@ -21,14 +21,12 @@ import type {
   PriceRange,
   ResultsFilters,
   RowChip,
-  SubRow,
   TimeOfDay,
 } from "./search-results.types";
 
 export const PRICE_CEILING = 100_000;
 export const PRICE_STEP = 1_000;
 export const UNDER_15K: PriceRange = { min: null, max: 15_000 };
-export const MAX_SUB_ROWS = 2;
 
 export const EMPTY_FILTERS: ResultsFilters = {
   types: [],
@@ -126,12 +124,10 @@ function dropTypeSpecific(filters: ResultsFilters, type: ListingType): ResultsFi
   };
 }
 
-/** Subcategories need their category selected, and Genre needs Music or Parties. */
+/** Subcategories are filters of their own, but only experiences have them; Genre needs Music or Parties. */
 function normalize(filters: ResultsFilters): ResultsFilters {
-  const subcategories = filters.subcategories.filter((slug) => {
-    const parent = subcategoryBySlug.get(slug)?.parentSlug;
-    return parent !== undefined && filters.categories.includes(parent);
-  });
+  const subcategories =
+    activeType(filters) === "events" ? [] : filters.subcategories.filter((slug) => subcategoryBySlug.has(slug));
   const withSubs = { ...filters, subcategories };
   return isGenreVisible(withSubs) ? withSubs : { ...withSubs, groups: omit(withSubs.groups, ["genre"]) };
 }
@@ -204,27 +200,26 @@ function languagesLabel(filters: ResultsFilters): string | null {
 }
 
 /**
- * The row after "Filters": selected categories newest first, each followed by its
- * selected subcategories; active chips; the unselected dropdowns; then the other
- * categories, the guest's own first when they took the quiz. (The taste-quiz prompt
- * lives in the panel only.) Derived, so removing a chip puts it back in its slot.
+ * The row after "Filters": selected categories newest first, then selected subcategories; active chips;
+ * the unselected dropdowns; then the rest to pick from. After the taste quiz that is the subcategories
+ * on their own (events have none, so they keep their categories); otherwise it is the categories.
+ * (The taste-quiz prompt lives in the panel only.) Derived, so removing a chip puts it back in its slot.
  */
 export function buildRowChips(filters: ResultsFilters, { tookQuiz }: { tookQuiz: boolean }): RowChip[] {
   const type = activeType(filters);
+  const subcategoriesAsFilters = tookQuiz && type !== "events";
 
-  const selected: RowChip[] = filters.categories.flatMap((slug) => {
+  const selectedCategories: RowChip[] = filters.categories.flatMap((slug) => {
     const category = categoryBySlug.get(slug);
-    if (!category) return [];
-    const subs = tookQuiz
-      ? filters.subcategories.flatMap((s) => {
-          const sub = subcategoryBySlug.get(s);
-          return sub?.parentSlug === slug
-            ? [{ kind: "subcategory" as const, key: `sub-${s}`, slug: s, label: sub.label }]
-            : [];
-        })
-      : [];
-    return [{ kind: "category" as const, key: `cat-${slug}`, slug, label: category.label, selected: true, forYou: false }, ...subs];
+    return category ? [{ kind: "category" as const, key: `cat-${slug}`, slug, label: category.label, selected: true }] : [];
   });
+  const selectedSubcategories: RowChip[] = subcategoriesAsFilters
+    ? filters.subcategories.flatMap((slug) => {
+        const sub = subcategoryBySlug.get(slug);
+        return sub ? [{ kind: "subcategory" as const, key: `sub-${slug}`, slug, label: sub.label, selected: true }] : [];
+      })
+    : [];
+  const selected: RowChip[] = [...selectedCategories, ...selectedSubcategories];
 
   const dateLabel = hasDateRange(filters.dateRange) ? formatDateRange(filters.dateRange) : null;
   const durationLabel = DURATION_OPTIONS.find((o) => o.value === filters.duration)?.label ?? null;
@@ -250,18 +245,23 @@ export function buildRowChips(filters: ResultsFilters, { tookQuiz }: { tookQuiz:
       : []),
   ];
 
-  const pool: CatalogCategory[] = ROW_CATEGORIES.filter((c) => (!type || c.kind === type) && !filters.categories.includes(c.slug));
-  const ownFirst = tookQuiz
-    ? [...pool.filter((c) => FOR_YOU_CATEGORY_SLUGS.includes(c.slug)), ...pool.filter((c) => !FOR_YOU_CATEGORY_SLUGS.includes(c.slug))]
-    : pool;
-  const rest: RowChip[] = ownFirst.map((c) => ({
-    kind: "category",
-    key: `cat-${c.slug}`,
-    slug: c.slug,
-    label: c.label,
-    selected: false,
-    forYou: tookQuiz && FOR_YOU_CATEGORY_SLUGS.includes(c.slug),
-  }));
+  const rest: RowChip[] = subcategoriesAsFilters
+    ? SUBCATEGORIES.filter((sub) => !filters.subcategories.includes(sub.slug)).map((sub) => ({
+        kind: "subcategory" as const,
+        key: `sub-${sub.slug}`,
+        slug: sub.slug,
+        label: sub.label,
+        selected: false,
+      }))
+    : ROW_CATEGORIES.filter((c) => (!type || c.kind === type) && !filters.categories.includes(c.slug))
+        .sort((a, b) => Number(tookQuiz && FOR_YOU_CATEGORY_SLUGS.includes(b.slug)) - Number(tookQuiz && FOR_YOU_CATEGORY_SLUGS.includes(a.slug)))
+        .map((c) => ({
+          kind: "category" as const,
+          key: `cat-${c.slug}`,
+          slug: c.slug,
+          label: c.label,
+          selected: false,
+        }));
 
   return [
     ...selected,
@@ -269,30 +269,6 @@ export function buildRowChips(filters: ResultsFilters, { tookQuiz }: { tookQuiz:
     ...filterChips.filter((c) => !c.active).map((c) => c.chip),
     ...rest,
   ];
-}
-
-/** Sub-rows under the main row for selected categories that have subcategories (quiz taken), at most two. */
-export function buildSubRows(filters: ResultsFilters, tookQuiz: boolean): SubRow[] {
-  if (!tookQuiz) return [];
-  return filters.categories
-    .flatMap((parentSlug) => {
-      const subs = SUBCATEGORIES.filter((s) => s.parentSlug === parentSlug);
-      if (!subs.length) return [];
-      const picked = filters.subcategories.filter((s) => subs.some((x) => x.slug === s));
-      const items = [
-        ...picked.map((slug) => ({ slug, label: subcategoryBySlug.get(slug)?.label ?? slug, selected: true })),
-        ...subs.filter((s) => !picked.includes(s.slug)).map((s) => ({ slug: s.slug, label: s.label, selected: false })),
-      ];
-      return [
-        {
-          parentSlug,
-          title: categoryBySlug.get(parentSlug)?.label ?? parentSlug,
-          allSelected: picked.length === 0,
-          items,
-        },
-      ];
-    })
-    .slice(0, MAX_SUB_ROWS);
 }
 
 /** "Lagos" -> "Things to do in Lagos"; any other search is shown as typed. */

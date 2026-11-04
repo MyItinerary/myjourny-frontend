@@ -79,7 +79,7 @@ export const SUBCATEGORIES: CatalogSubcategory[] = [
   { slug: "parks-green-spaces", label: "Parks & green spaces", parentSlug: "nature-outdoors" },
 ];
 
-/** The categories this guest's taste profile puts first, marked with a "For you" dot. */
+/** The categories this guest's taste profile puts first. */
 export const FOR_YOU_CATEGORY_SLUGS = [
   "local-food-drinks",
   "music-live-shows",

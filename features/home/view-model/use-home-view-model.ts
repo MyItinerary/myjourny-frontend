@@ -9,9 +9,11 @@ import {
 } from "@/lib/queries/experiences";
 import type { ExperienceCardProps } from "@/components/experiences/experience-card";
 import { useDiscoverCitiesViewModel, type DiscoverCitiesViewModel } from "@/features/cities";
-import { useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
+import { useLastSearchArea } from "@/features/search";
+import { useTasteQuizAudience, useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
 
 import {
+  DUMMY_EARLY_BIRD,
   DUMMY_LOCAL_FOOD_AND_DRINKS,
   DUMMY_POPULAR_EVENTS,
   DUMMY_UNFORGETTABLE_TRAVEL,
@@ -28,35 +30,31 @@ export type HomeRail = {
 
 export type HomeViewModel = {
   hero: HomeHeroViewModel;
-  happeningNear: HomeRail;
-  popularEvents: HomeRail;
-  topPicks: HomeRail;
-  exploreLagos: HomeRail;
-  cultureAndHistory: HomeRail;
-  localFoodAndDrinks: HomeRail;
-  unforgettableTravel: HomeRail;
   /** Signed-in users only. */
-  browsingHistory: HomeRail;
+  pickUp: HomeRail;
+  /** "Based on your search in {area}": shows as soon as an area has been searched. */
+  basedOnSearch: HomeRail & { area: string | null };
+  tonightAndThisWeekend: HomeRail;
+  pickedForYou: HomeRail;
+  localFoodAndDrinks: HomeRail;
+  earlyBird: HomeRail;
+  newOnMyJourny: HomeRail;
+  unforgettableTravel: HomeRail;
   tasteQuizPopup: TasteQuizPopupViewModel;
   cities: DiscoverCitiesViewModel;
 };
 
 const RAIL_SIZE = 10;
-// "Explore Lagos intentionally": the design fixes the city for now.
-const HOME_CITY = "Lagos";
-const CULTURE_INTEREST = "culture-history";
 
 function rail(items: ExperienceCardProps[], isLoading: boolean): HomeRail {
   return { items, isLoading, show: isLoading || items.length > 0 };
 }
 
-/** Everything the home page shows. Guests get rails from the public listing (they have no profile to
- * personalise against); signed-in accounts get recommendations and their browsing history. */
+/** Everything the home page shows. Guests get the public rails; signed-in accounts also get their
+ * browsing history, and recommendations ("Picked for your taste") once they have done the taste quiz. */
 export function useHomeViewModel(): HomeViewModel {
   const { user, hydrated } = useSession();
   const isAccount = user !== null;
-  // Wait for the stored session so signed-in users don't fire guest queries.
-  const isGuest = hydrated && !isAccount;
 
   const geolocation = useGeolocation();
   const hasCoords = typeof geolocation === "object";
@@ -66,41 +64,42 @@ export function useHomeViewModel(): HomeViewModel {
   };
   // Recommendations wait for geolocation to settle (coordinates, or "unavailable").
   const accountReady = isAccount && geolocation !== "pending";
+  // "Picked for your taste" is built from the quiz, so it only shows once the quiz is done.
+  const quizDone = useTasteQuizAudience() === "taken";
 
-  const nearQuery = useRecommendedExperiences({ ...coords, offset: 0, limit: RAIL_SIZE, enabled: accountReady });
-  const picksQuery = useRecommendedExperiences({ ...coords, offset: RAIL_SIZE, limit: RAIL_SIZE, enabled: accountReady });
+  const picksQuery = useRecommendedExperiences({ ...coords, offset: 0, limit: RAIL_SIZE, enabled: accountReady && quizDone });
   const historyQuery = useBrowsingHistory(RAIL_SIZE);
-  const guestNearQuery = useFilteredExperiences({ sort: "rating_desc", limit: RAIL_SIZE, enabled: isGuest });
-  const guestPicksQuery = useFilteredExperiences({ sort: "created_at_desc", limit: RAIL_SIZE, enabled: isGuest });
-  // The same for everyone: they don't depend on a profile.
-  const lagosQuery = useFilteredExperiences({ city: HOME_CITY, sort: "rating_desc", limit: RAIL_SIZE, enabled: hydrated });
-  const cultureQuery = useFilteredExperiences({
-    interest: CULTURE_INTEREST,
-    sort: "rating_desc",
+  const searchedArea = useLastSearchArea();
+  const searchQuery = useFilteredExperiences({
+    search: searchedArea ?? undefined,
     limit: RAIL_SIZE,
-    enabled: hydrated,
+    enabled: hydrated && searchedArea !== null,
   });
+  // The same for everyone: they don't depend on a profile.
+  const newestQuery = useFilteredExperiences({ sort: "created_at_desc", limit: RAIL_SIZE, enabled: hydrated });
 
-  const happeningNear = isAccount
-    ? rail((nearQuery.data ?? []).map(experienceMatchToCardProps), geolocation === "pending" || nearQuery.isFetching)
-    : rail((guestNearQuery.data?.items ?? []).map(experienceListItemToCardProps), guestNearQuery.isPending);
-  const topPicks = isAccount
+  const pickedForYou = quizDone
     ? rail((picksQuery.data ?? []).map(experienceMatchToCardProps), geolocation === "pending" || picksQuery.isFetching)
-    : rail((guestPicksQuery.data?.items ?? []).map(experienceListItemToCardProps), guestPicksQuery.isPending);
-  const browsingHistory = isAccount
+    : { items: [], isLoading: false, show: false };
+  const pickUp = isAccount
     ? rail((historyQuery.data ?? []).map(experienceMatchToCardProps), historyQuery.isFetching)
     : { items: [], isLoading: false, show: false };
 
+  const basedOnSearch =
+    searchedArea === null
+      ? { items: [], isLoading: false, show: false, area: null }
+      : { ...rail((searchQuery.data?.items ?? []).map(experienceListItemToCardProps), searchQuery.isPending), area: searchedArea };
+
   return {
     hero: useHomeHeroViewModel(),
-    happeningNear,
-    popularEvents: rail(DUMMY_POPULAR_EVENTS, false),
-    topPicks,
-    exploreLagos: rail((lagosQuery.data?.items ?? []).map(experienceListItemToCardProps), lagosQuery.isPending),
-    cultureAndHistory: rail((cultureQuery.data?.items ?? []).map(experienceListItemToCardProps), cultureQuery.isPending),
+    pickUp,
+    basedOnSearch,
+    tonightAndThisWeekend: rail(DUMMY_POPULAR_EVENTS, false),
+    pickedForYou,
     localFoodAndDrinks: rail(DUMMY_LOCAL_FOOD_AND_DRINKS, false),
+    earlyBird: rail(DUMMY_EARLY_BIRD, false),
+    newOnMyJourny: rail((newestQuery.data?.items ?? []).map(experienceListItemToCardProps), newestQuery.isPending),
     unforgettableTravel: rail(DUMMY_UNFORGETTABLE_TRAVEL, false),
-    browsingHistory,
     tasteQuizPopup: useTasteQuizPopupViewModel(useTasteQuizCtaViewModel()),
     cities: useDiscoverCitiesViewModel(),
   };
