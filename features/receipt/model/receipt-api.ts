@@ -48,12 +48,21 @@ function formatSafeTime(dateString?: string | null): string | null {
     .toUpperCase();
 }
 
+function parseSafeAmount(value?: string | number | null): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "number") {
+    return isNaN(value) ? null : value;
+  }
+  const cleanStr = String(value).replace(/[^0-9.-]+/g, "");
+  if (!cleanStr) return null;
+  const parsed = parseFloat(cleanStr);
+  return isNaN(parsed) ? null : parsed;
+}
+
 export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
   const currency = booking.currency ?? null;
   const partySize = booking.party_size ?? null;
-  const total = typeof booking.price_total === "number"
-    ? booking.price_total
-    : parseFloat(String(booking.price_total || 0)) || 0;
+  const total = parseSafeAmount(booking.price_total);
 
   const rawStatus = booking.payment_status;
   const status: "paid" | "pending" | "refunded" | "unpaid" =
@@ -112,7 +121,7 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
     experienceImageUrl: null,
     sessionDateTimeFormatted,
     meetingLocation: location,
-    totalPriceFormatted: formatMoney(total, currency),
+    totalPriceFormatted: total !== null ? formatMoney(total, currency) : null,
     partySizeLabel: partySize ? `${partySize} guest${partySize === 1 ? "" : "s"}` : null,
     taxesAndFeesNote: null,
     receiptUrl: booking.receipt_url ?? null,

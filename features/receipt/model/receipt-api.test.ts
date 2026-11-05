@@ -55,5 +55,33 @@ describe("receipt-api", () => {
     expect(mapped.taxesAndFeesNote).toBeNull();
     expect(mapped.status).toBe("refunded");
     expect(mapped.paidAtFormatted).toBeNull();
+    expect(mapped.paidAmount).toBeNull();
+    expect(mapped.totalPriceFormatted).toBeNull();
+  });
+
+  it("maps missing or unparsable price_total to null instead of inventing zero amount", () => {
+    const nullPrice = mapBookingToReceipt({
+      id: "b-null-price",
+      currency: "USD",
+      price_total: null,
+    });
+    expect(nullPrice.paidAmount).toBeNull();
+    expect(nullPrice.totalPriceFormatted).toBeNull();
+
+    const invalidPrice = mapBookingToReceipt({
+      id: "b-invalid-price",
+      currency: "NGN",
+      price_total: "not-a-number",
+    });
+    expect(invalidPrice.paidAmount).toBeNull();
+    expect(invalidPrice.totalPriceFormatted).toBeNull();
+
+    const validZeroPrice = mapBookingToReceipt({
+      id: "b-zero-price",
+      currency: "USD",
+      price_total: 0,
+    });
+    expect(validZeroPrice.paidAmount).toBe(0);
+    expect(validZeroPrice.totalPriceFormatted).toBe("$0");
   });
 });

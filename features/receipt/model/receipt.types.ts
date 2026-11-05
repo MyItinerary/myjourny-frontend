@@ -10,7 +10,7 @@ export interface ReceiptData {
   orderNumber?: string | null;
   paymentReference?: string | null;
   billedTo?: string | null;
-  paidAmount: number;
+  paidAmount?: number | null;
   currency?: string | null;
   paidAtFormatted?: string | null;
   experienceTitle: string;
@@ -18,7 +18,7 @@ export interface ReceiptData {
   experienceImageUrl?: string | null;
   sessionDateTimeFormatted: string;
   meetingLocation?: string | null;
-  totalPriceFormatted: string;
+  totalPriceFormatted?: string | null;
   partySizeLabel?: string | null;
   taxesAndFeesNote?: string | null;
   receiptUrl?: string | null;

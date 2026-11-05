@@ -121,4 +121,19 @@ describe("ReceiptView", () => {
 
     expect(screen.queryByText("Order details")).not.toBeInTheDocument();
   });
+
+  it("renders placeholder dash when totalPriceFormatted is null", () => {
+    render(
+      <ReceiptView
+        {...defaultProps}
+        receipt={{
+          ...mockReceipt,
+          totalPriceFormatted: null,
+        }}
+      />
+    );
+
+    const dashes = screen.getAllByText("—");
+    expect(dashes.length).toBeGreaterThanOrEqual(1);
+  });
 });

@@ -110,7 +110,7 @@ export function ReceiptView({
               )}
             </div>
             <h2 className="mt-3 font-sans text-4xl font-extrabold tracking-tight text-[#130404] sm:text-5xl">
-              {receipt.totalPriceFormatted}
+              {receipt.totalPriceFormatted ?? "—"}
             </h2>
             {receipt.paidAtFormatted && (
               <p className="mt-2 font-sans text-xs text-[#6F6B72] sm:text-sm">
@@ -175,7 +175,7 @@ export function ReceiptView({
             <p className="font-sans text-xs font-medium text-[#6F6B72]">Total price</p>
             <div className="mt-1 flex items-baseline gap-2">
               <span className="font-sans text-2xl font-extrabold text-[#130404] sm:text-3xl">
-                {receipt.totalPriceFormatted}
+                {receipt.totalPriceFormatted ?? "—"}
               </span>
               {receipt.partySizeLabel && (
                 <span className="font-sans text-xs text-[#6F6B72] sm:text-sm">
