@@ -1,6 +1,7 @@
 export { cancellationData } from "./model/cancellation-data";
 export { communityGuidelinesData } from "./model/community-guidelines-data";
 export { cookieData } from "./model/cookie-data";
+export type { CookiePreferences } from "./model/cookie-preferences.types";
 export { hostTermsData } from "./model/host-terms-data";
 export { privacyData } from "./model/privacy-data";
 export { safetyData } from "./model/safety-data";
@@ -48,6 +49,7 @@ export { CancellationTiersChart } from "./view/cancellation-tiers-chart";
 export { CancellationView } from "./view/cancellation-view";
 export { CommunityGuidelinesView } from "./view/community-guidelines-view";
 export { CookiePreferencesCard } from "./view/cookie-preferences-card";
+export { CookiePreferencesDialog } from "./view/cookie-preferences-dialog";
 export { CookieView } from "./view/cookie-view";
 export { EnforcementStepsCard } from "./view/enforcement-steps-card";
 export { HostTermsView } from "./view/host-terms-view";

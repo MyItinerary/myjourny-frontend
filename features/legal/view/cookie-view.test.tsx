@@ -72,6 +72,19 @@ describe("CookieView", () => {
     backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
     onManagePreferences: vi.fn(),
+    isPreferencesOpen: false,
+    preferences: {
+      strictlyNecessary: true,
+      preferences: true,
+      analytics: false,
+      personalisation: false,
+    },
+    openPreferences: vi.fn(),
+    closePreferences: vi.fn(),
+    onTogglePreference: vi.fn(),
+    onAcceptAll: vi.fn(),
+    onRejectNonEssential: vi.fn(),
+    onSavePreferences: vi.fn(),
   };
 
   it("renders page title, last updated, and sections", () => {
@@ -95,6 +108,12 @@ describe("CookieView", () => {
     expect(manageBtn).toBeInTheDocument();
     fireEvent.click(manageBtn);
     expect(defaultProps.onManagePreferences).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders preferences dialog when isPreferencesOpen is true", () => {
+    render(<CookieView {...defaultProps} isPreferencesOpen={true} />);
+
+    expect(screen.getByRole("dialog", { name: "Cookie preferences" })).toBeInTheDocument();
   });
 
   it("renders Read next cards and questions footer", () => {

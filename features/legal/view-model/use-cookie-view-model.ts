@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { cookieData } from "../model/cookie-data";
+import {
+  type CookiePreferences,
+  getStoredCookiePreferences,
+  saveStoredCookiePreferences,
+} from "../model/cookie-preferences.types";
 import type { TermsData } from "../model/terms.types";
 
 export interface CookieViewModel {
@@ -9,11 +15,23 @@ export interface CookieViewModel {
   backHref: string;
   backLabel: string;
   onSectionSelect: (id: string) => void;
-  onManagePreferences?: () => void;
+  onManagePreferences: () => void;
+  isPreferencesOpen: boolean;
+  preferences: CookiePreferences;
+  openPreferences: () => void;
+  closePreferences: () => void;
+  onTogglePreference: (key: keyof Omit<CookiePreferences, "strictlyNecessary">) => void;
+  onAcceptAll: () => void;
+  onRejectNonEssential: () => void;
+  onSavePreferences: () => void;
 }
 
 export function useCookieViewModel(): CookieViewModel {
   const [activeSectionId, setActiveSectionId] = useState<string>("section-1");
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [preferences, setPreferences] = useState<CookiePreferences>(() =>
+    getStoredCookiePreferences()
+  );
 
   const onSectionSelect = useCallback((id: string) => {
     setActiveSectionId(id);
@@ -25,12 +43,58 @@ export function useCookieViewModel(): CookieViewModel {
     }
   }, []);
 
-  const onManagePreferences = useCallback(() => {
-    // Graceful callback: could dispatch custom event or open cookie preference dialog
+  const openPreferences = useCallback(() => {
+    setIsPreferencesOpen(true);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("open-cookie-preferences"));
     }
   }, []);
+
+  const closePreferences = useCallback(() => {
+    setIsPreferencesOpen(false);
+  }, []);
+
+  const onTogglePreference = useCallback(
+    (key: keyof Omit<CookiePreferences, "strictlyNecessary">) => {
+      setPreferences((prev) => ({
+        ...prev,
+        [key]: !prev[key],
+      }));
+    },
+    []
+  );
+
+  const onAcceptAll = useCallback(() => {
+    const next: CookiePreferences = {
+      strictlyNecessary: true,
+      preferences: true,
+      analytics: true,
+      personalisation: true,
+    };
+    setPreferences(next);
+    saveStoredCookiePreferences(next);
+    toast.success("All cookies accepted");
+    setIsPreferencesOpen(false);
+  }, []);
+
+  const onRejectNonEssential = useCallback(() => {
+    const next: CookiePreferences = {
+      strictlyNecessary: true,
+      preferences: false,
+      analytics: false,
+      personalisation: false,
+    };
+    setPreferences(next);
+    saveStoredCookiePreferences(next);
+    toast.success("Non-essential cookies rejected");
+    setIsPreferencesOpen(false);
+  }, []);
+
+  const onSavePreferences = useCallback(() => {
+    saveStoredCookiePreferences(preferences);
+    toast.success("Cookie preferences saved");
+    setIsPreferencesOpen(false);
+  }, [preferences]);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") {
@@ -73,6 +137,14 @@ export function useCookieViewModel(): CookieViewModel {
     backHref: "/legal",
     backLabel: "All legal documents",
     onSectionSelect,
-    onManagePreferences,
+    onManagePreferences: openPreferences,
+    isPreferencesOpen,
+    preferences,
+    openPreferences,
+    closePreferences,
+    onTogglePreference,
+    onAcceptAll,
+    onRejectNonEssential,
+    onSavePreferences,
   };
 }
