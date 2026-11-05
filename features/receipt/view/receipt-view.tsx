@@ -90,17 +90,33 @@ export function ReceiptView({
         <div className="rounded-[28px] border border-[#EBEBEB] bg-white p-6 shadow-xs sm:p-8 lg:col-span-7">
           <div className="text-center">
             <div className="flex justify-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F7F0] px-3.5 py-1 font-sans text-xs font-semibold text-[#02A078]">
-                <Check className="size-3.5 stroke-[3]" />
-                Paid
-              </span>
+              {receipt.status === "paid" ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F7F0] px-3.5 py-1 font-sans text-xs font-semibold text-[#02A078]">
+                  <Check className="size-3.5 stroke-[3]" />
+                  Paid
+                </span>
+              ) : receipt.status === "refunded" ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F4F4F5] px-3.5 py-1 font-sans text-xs font-semibold text-[#71717A]">
+                  Refunded
+                </span>
+              ) : receipt.status === "unpaid" ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE2E2] px-3.5 py-1 font-sans text-xs font-semibold text-[#DC2626]">
+                  Unpaid
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFBEB] px-3.5 py-1 font-sans text-xs font-semibold text-[#B45309]">
+                  Payment pending
+                </span>
+              )}
             </div>
             <h2 className="mt-3 font-sans text-4xl font-extrabold tracking-tight text-[#130404] sm:text-5xl">
               {receipt.totalPriceFormatted}
             </h2>
-            <p className="mt-2 font-sans text-xs text-[#6F6B72] sm:text-sm">
-              {receipt.paidAtFormatted}
-            </p>
+            {receipt.paidAtFormatted && (
+              <p className="mt-2 font-sans text-xs text-[#6F6B72] sm:text-sm">
+                {receipt.paidAtFormatted}
+              </p>
+            )}
           </div>
 
           <hr className="my-6 border-[#EBEBEB] sm:my-8" />
@@ -187,27 +203,35 @@ export function ReceiptView({
             {isDownloading ? "Downloading..." : "Download PDF"}
           </button>
 
-          <div className="mt-8 sm:mt-10">
-            <h3 className="font-sans text-base font-bold text-[#130404] sm:text-lg">
-              Order details
-            </h3>
-            <div className="mt-4 divide-y divide-[#EBEBEB]">
-              <div className="flex items-center justify-between py-3.5 text-xs sm:text-sm">
-                <span className="font-sans text-[#6F6B72]">Order number</span>
-                <span className="font-sans font-bold text-[#130404]">{receipt.orderNumber}</span>
-              </div>
-              <div className="flex items-center justify-between py-3.5 text-xs sm:text-sm">
-                <span className="font-sans text-[#6F6B72]">Payment reference</span>
-                <span className="font-sans font-bold text-[#130404]">
-                  {receipt.paymentReference}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3.5 text-xs sm:text-sm">
-                <span className="font-sans text-[#6F6B72]">Billed to</span>
-                <span className="font-sans font-bold text-[#130404]">{receipt.billedTo}</span>
+          {(receipt.orderNumber || receipt.paymentReference || receipt.billedTo) && (
+            <div className="mt-8 sm:mt-10">
+              <h3 className="font-sans text-base font-bold text-[#130404] sm:text-lg">
+                Order details
+              </h3>
+              <div className="mt-4 divide-y divide-[#EBEBEB]">
+                {receipt.orderNumber && (
+                  <div className="flex items-center justify-between py-3.5 text-xs sm:text-sm">
+                    <span className="font-sans text-[#6F6B72]">Order number</span>
+                    <span className="font-sans font-bold text-[#130404]">{receipt.orderNumber}</span>
+                  </div>
+                )}
+                {receipt.paymentReference && (
+                  <div className="flex items-center justify-between py-3.5 text-xs sm:text-sm">
+                    <span className="font-sans text-[#6F6B72]">Payment reference</span>
+                    <span className="font-sans font-bold text-[#130404]">
+                      {receipt.paymentReference}
+                    </span>
+                  </div>
+                )}
+                {receipt.billedTo && (
+                  <div className="flex items-center justify-between py-3.5 text-xs sm:text-sm">
+                    <span className="font-sans text-[#6F6B72]">Billed to</span>
+                    <span className="font-sans font-bold text-[#130404]">{receipt.billedTo}</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

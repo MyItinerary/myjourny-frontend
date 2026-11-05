@@ -4,12 +4,13 @@ import { formatMoney, type ReceiptData } from "./receipt.types";
 
 export interface ApiBookingResponse {
   id: string;
+  order_number?: string | null;
   paystack_reference?: string | null;
   experience_title?: string | null;
   party_size?: number | null;
   price_total?: string | number | null;
   currency?: string | null;
-  payment_status?: "paid" | "pending" | "refunded" | "unpaid";
+  payment_status?: "paid" | "pending" | "refunded" | "unpaid" | "partial";
   requested_datetime?: string | null;
   session_end_at?: string | null;
   created_at?: string | null;
@@ -48,18 +49,34 @@ function formatSafeTime(dateString?: string | null): string | null {
 }
 
 export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
-  const currency = booking.currency ?? "NGN";
+  const currency = booking.currency ?? null;
   const partySize = booking.party_size ?? null;
   const total = typeof booking.price_total === "number"
     ? booking.price_total
     : parseFloat(String(booking.price_total || 0)) || 0;
 
-  let paidAtFormatted = "Paid recently";
-  if (booking.created_at) {
-    const formattedDate = formatSafeDate(booking.created_at);
-    const formattedTime = formatSafeTime(booking.created_at);
-    if (formattedDate && formattedTime) {
-      paidAtFormatted = `Paid on ${formattedDate} at ${formattedTime}`;
+  const rawStatus = booking.payment_status;
+  const status: "paid" | "pending" | "refunded" | "unpaid" =
+    rawStatus === "paid"
+      ? "paid"
+      : rawStatus === "refunded"
+      ? "refunded"
+      : rawStatus === "unpaid"
+      ? "unpaid"
+      : "pending";
+
+  let paidAtFormatted: string | null = null;
+  if (status === "paid") {
+    if (booking.created_at) {
+      const formattedDate = formatSafeDate(booking.created_at);
+      const formattedTime = formatSafeTime(booking.created_at);
+      if (formattedDate && formattedTime) {
+        paidAtFormatted = `Paid on ${formattedDate} at ${formattedTime}`;
+      } else {
+        paidAtFormatted = "Paid";
+      }
+    } else {
+      paidAtFormatted = "Paid";
     }
   }
 
@@ -84,9 +101,9 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
   }
 
   return {
-    orderNumber: `MJ-EV-${booking.id.slice(0, 5).toUpperCase()}`,
-    paymentReference: booking.paystack_reference ?? `MJPAY-${booking.id.slice(0, 8).toUpperCase()}`,
-    billedTo: booking.user_full_name ?? "Guest",
+    orderNumber: booking.order_number ?? booking.id ?? null,
+    paymentReference: booking.paystack_reference ?? null,
+    billedTo: booking.user_full_name ?? null,
     paidAmount: total,
     currency,
     paidAtFormatted,
@@ -97,9 +114,9 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
     meetingLocation: location,
     totalPriceFormatted: formatMoney(total, currency),
     partySizeLabel: partySize ? `${partySize} guest${partySize === 1 ? "" : "s"}` : null,
-    taxesAndFeesNote: "Taxes and fees included",
+    taxesAndFeesNote: null,
     receiptUrl: booking.receipt_url ?? null,
-    status: booking.payment_status === "paid" ? "paid" : "pending",
+    status,
   };
 }
 

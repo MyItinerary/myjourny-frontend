@@ -25,11 +25,12 @@ describe("receipt-api", () => {
     });
 
     const data = await fetchReceipt("b-12345");
-    expect(data.orderNumber).toBe("MJ-EV-B-123");
+    expect(data.orderNumber).toBe("b-12345");
     expect(data.paymentReference).toBe("REF-123");
     expect(data.billedTo).toBe("Tunde Ednut");
     expect(data.totalPriceFormatted).toMatch(/32,000/);
     expect(data.partySizeLabel).toBe("2 guests");
+    expect(data.status).toBe("paid");
   });
 
   it("propagates error when API call fails", async () => {
@@ -37,15 +38,22 @@ describe("receipt-api", () => {
     await expect(fetchReceipt("invalid-id")).rejects.toThrow("404 Not Found");
   });
 
-  it("handles missing location and end time neutrally without inventing data", () => {
+  it("handles missing identifiers and statuses without inventing data", () => {
     const mapped = mapBookingToReceipt({
       id: "b-neutral",
       requested_datetime: "2026-11-14T09:00:00Z",
       meeting_point: null,
+      payment_status: "refunded",
     });
 
+    expect(mapped.orderNumber).toBe("b-neutral");
+    expect(mapped.paymentReference).toBeNull();
+    expect(mapped.billedTo).toBeNull();
     expect(mapped.meetingLocation).toBeNull();
     expect(mapped.sessionDateTimeFormatted).not.toContain("5:00 PM");
     expect(mapped.partySizeLabel).toBeNull();
+    expect(mapped.taxesAndFeesNote).toBeNull();
+    expect(mapped.status).toBe("refunded");
+    expect(mapped.paidAtFormatted).toBeNull();
   });
 });

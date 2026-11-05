@@ -7,12 +7,12 @@ export interface ReceiptLineItem {
 }
 
 export interface ReceiptData {
-  orderNumber: string;
-  paymentReference: string;
-  billedTo: string;
+  orderNumber?: string | null;
+  paymentReference?: string | null;
+  billedTo?: string | null;
   paidAmount: number;
-  currency: string;
-  paidAtFormatted: string;
+  currency?: string | null;
+  paidAtFormatted?: string | null;
   experienceTitle: string;
   experienceLocation?: string | null;
   experienceImageUrl?: string | null;
@@ -22,19 +22,41 @@ export interface ReceiptData {
   partySizeLabel?: string | null;
   taxesAndFeesNote?: string | null;
   receiptUrl?: string | null;
-  status?: "paid" | "pending" | "refunded";
+  status: "paid" | "pending" | "refunded" | "unpaid";
 }
 
-export function formatMoney(amount: number | string, currency = "NGN"): string {
+export function formatMoney(amount: number | string, currency?: string | null): string {
+  const code = (currency || "").toUpperCase();
   const num = typeof amount === "string" ? parseFloat(amount.replace(/[^0-9.-]+/g, "")) : amount;
-  if (isNaN(num)) return "₦0";
+  const locale = code === "NGN" ? "en-NG" : "en-US";
+
+  if (isNaN(num)) {
+    if (!code) return "0";
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: code,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(0);
+    } catch {
+      return `${code} 0`;
+    }
+  }
+
+  if (!code) {
+    return num.toLocaleString();
+  }
+
   try {
-    return new Intl.NumberFormat("en-NG", {
+    const isWholeNgn = code === "NGN" && num % 1 === 0;
+    return new Intl.NumberFormat(locale, {
       style: "currency",
-      currency: currency.toUpperCase(),
-      maximumFractionDigits: 0,
+      currency: code,
+      minimumFractionDigits: isWholeNgn ? 0 : (num % 1 === 0 ? 0 : 2),
+      maximumFractionDigits: 2,
     }).format(num);
   } catch {
-    return `${currency.toUpperCase()} ${num.toLocaleString()}`;
+    return `${code} ${num.toLocaleString()}`;
   }
 }

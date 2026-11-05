@@ -14,7 +14,10 @@ describe("receipt.types", () => {
 
   it("formats currency accurately using given currency code", () => {
     expect(formatMoney(24000, "NGN")).toMatch(/24,000/);
-    expect(formatMoney(100, "USD")).toMatch(/100/);
-    expect(formatMoney("invalid")).toBe("₦0");
+    expect(formatMoney(19.99, "USD")).toBe("$19.99");
+    expect(formatMoney(100, "USD")).toBe("$100");
+    expect(formatMoney("invalid", "NGN")).toMatch(/₦0/);
+    expect(formatMoney("invalid", "USD")).toBe("$0");
+    expect(formatMoney("invalid", null)).toBe("0");
   });
 });

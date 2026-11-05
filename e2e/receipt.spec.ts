@@ -39,6 +39,7 @@ test("confirmed receipt renders paid badge, pricing, and order details", async (
   await expect(page.getByRole("heading", { name: "Receipt" })).toBeVisible();
   await expect(page.getByText("Paid", { exact: true })).toBeVisible();
   await expect(page.getByText("Sunrise Kayaking at Tarkwa Bay")).toBeVisible();
+  await expect(page.getByText("b-receipt-1")).toBeVisible();
   await expect(page.getByText("MJPAY-7F3A91C2")).toBeVisible();
   await expect(page.getByText("Ireti George")).toBeVisible();
   await expect(page.getByRole("button", { name: /Download PDF/i })).toBeVisible();

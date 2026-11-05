@@ -87,4 +87,38 @@ describe("ReceiptView", () => {
     fireEvent.click(downloadBtn);
     expect(defaultProps.onDownloadPdf).toHaveBeenCalledTimes(1);
   });
+
+  it("renders non-paid status badges appropriately", () => {
+    const { rerender } = render(
+      <ReceiptView {...defaultProps} receipt={{ ...mockReceipt, status: "refunded", paidAtFormatted: null }} />
+    );
+    expect(screen.getByText("Refunded")).toBeInTheDocument();
+    expect(screen.queryByText("Paid")).not.toBeInTheDocument();
+
+    rerender(
+      <ReceiptView {...defaultProps} receipt={{ ...mockReceipt, status: "pending", paidAtFormatted: null }} />
+    );
+    expect(screen.getByText("Payment pending")).toBeInTheDocument();
+
+    rerender(
+      <ReceiptView {...defaultProps} receipt={{ ...mockReceipt, status: "unpaid", paidAtFormatted: null }} />
+    );
+    expect(screen.getByText("Unpaid")).toBeInTheDocument();
+  });
+
+  it("omits order details rows cleanly when backend identifiers are absent", () => {
+    render(
+      <ReceiptView
+        {...defaultProps}
+        receipt={{
+          ...mockReceipt,
+          orderNumber: null,
+          paymentReference: null,
+          billedTo: null,
+        }}
+      />
+    );
+
+    expect(screen.queryByText("Order details")).not.toBeInTheDocument();
+  });
 });
