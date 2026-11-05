@@ -2,15 +2,17 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { useReceiptQuery } from "../model/receipt-api";
-import { type ReceiptData, SAMPLE_RECEIPT } from "../model/receipt.types";
+import type { ReceiptData } from "../model/receipt.types";
 
 export interface ReceiptViewModel {
-  receipt: ReceiptData;
+  receipt: ReceiptData | null;
   isLoading: boolean;
-  isEmailing: boolean;
+  isError: boolean;
+  errorStatus: number | null;
+  bookingId?: string;
   isDownloading: boolean;
+  refetch: () => void;
   onDownloadPdf: () => void;
-  onEmailCopy: () => void;
 }
 
 export interface UseReceiptViewModelOptions {
@@ -20,49 +22,43 @@ export interface UseReceiptViewModelOptions {
 
 export function useReceiptViewModel(options?: UseReceiptViewModelOptions): ReceiptViewModel {
   const bookingId = options?.bookingId;
-  const { data, isLoading } = useReceiptQuery(bookingId);
-  const [isEmailing, setIsEmailing] = useState(false);
+  const { data, isLoading, isError, error, refetch } = useReceiptQuery(bookingId);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const receipt = options?.initialData ?? data ?? SAMPLE_RECEIPT;
+  const receipt = options?.initialData ?? data ?? null;
+
+  const errorStatus =
+    (error as { response?: { status?: number } } | null)?.response?.status ??
+    (isError ? 500 : null);
 
   const onDownloadPdf = useCallback(() => {
+    if (!receipt) return;
     setIsDownloading(true);
     try {
       if (typeof window !== "undefined") {
         if (receipt.receiptUrl) {
-          window.open(receipt.receiptUrl, "_blank");
+          window.open(receipt.receiptUrl, "_blank", "noopener,noreferrer");
+          toast.success("Opening receipt PDF...");
         } else {
           window.print();
+          toast.info("Print dialog opened");
         }
       }
-      toast.success("Opening receipt PDF...");
     } catch {
       toast.error("Could not download receipt. Please try printing the page.");
     } finally {
       setIsDownloading(false);
     }
-  }, [receipt.receiptUrl]);
-
-  const onEmailCopy = useCallback(async () => {
-    setIsEmailing(true);
-    try {
-      // Simulate network request for emailing copy
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      toast.success("Receipt emailed to your address");
-    } catch {
-      toast.error("Could not send receipt email. Please try again.");
-    } finally {
-      setIsEmailing(false);
-    }
-  }, []);
+  }, [receipt]);
 
   return {
     receipt,
     isLoading,
-    isEmailing,
+    isError: !receipt && (isError || !bookingId),
+    errorStatus: !bookingId ? 404 : errorStatus,
+    bookingId,
     isDownloading,
+    refetch,
     onDownloadPdf,
-    onEmailCopy,
   };
 }

@@ -1,9 +1,8 @@
 export { fetchReceipt, mapBookingToReceipt, useReceiptQuery } from "./model/receipt-api";
 export {
-  formatNaira,
+  formatMoney,
   type ReceiptData,
   type ReceiptLineItem,
-  SAMPLE_RECEIPT,
 } from "./model/receipt.types";
 export {
   useReceiptViewModel,

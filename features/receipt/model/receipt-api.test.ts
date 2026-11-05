@@ -2,44 +2,50 @@ import { describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "@/lib/api-client";
 import { fetchReceipt, mapBookingToReceipt } from "./receipt-api";
-import { SAMPLE_RECEIPT } from "./receipt.types";
 
 vi.mock("@/lib/api-client", () => ({
   apiClient: {
     get: vi.fn(),
-    post: vi.fn(),
   },
 }));
 
 describe("receipt-api", () => {
-  it("returns SAMPLE_RECEIPT for sample bookingId", async () => {
-    const data = await fetchReceipt("sample");
-    expect(data.orderNumber).toBe(SAMPLE_RECEIPT.orderNumber);
-    expect(data.experienceTitle).toBe(SAMPLE_RECEIPT.experienceTitle);
-  });
-
-  it("maps ApiBookingResponse to ReceiptData correctly", () => {
-    const mapped = mapBookingToReceipt({
-      id: "abcde-12345",
-      paystack_reference: "REF-999",
-      experience_title: "Kayaking Adventure",
-      party_size: 2,
-      price_total: "32000",
-      payment_status: "paid",
-      created_at: "2026-10-21T14:32:00Z",
-      user_full_name: "Tunde Ednut",
+  it("fetches booking by id and maps to ReceiptData", async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: {
+        id: "b-12345",
+        paystack_reference: "REF-123",
+        experience_title: "Kayaking Adventure",
+        party_size: 2,
+        price_total: "32000",
+        payment_status: "paid",
+        created_at: "2026-10-21T14:32:00Z",
+        user_full_name: "Tunde Ednut",
+      },
     });
 
-    expect(mapped.orderNumber).toBe("MJ-EV-ABCDE");
-    expect(mapped.paymentReference).toBe("REF-999");
-    expect(mapped.billedTo).toBe("Tunde Ednut");
-    expect(mapped.totalPriceFormatted).toMatch(/32,000/);
-    expect(mapped.partySizeLabel).toBe("2 Adults");
+    const data = await fetchReceipt("b-12345");
+    expect(data.orderNumber).toBe("MJ-EV-B-123");
+    expect(data.paymentReference).toBe("REF-123");
+    expect(data.billedTo).toBe("Tunde Ednut");
+    expect(data.totalPriceFormatted).toMatch(/32,000/);
+    expect(data.partySizeLabel).toBe("2 guests");
   });
 
-  it("handles fallback on API error", async () => {
-    vi.mocked(apiClient.get).mockRejectedValueOnce(new Error("Network error"));
-    const data = await fetchReceipt("custom-id-99");
-    expect(data.orderNumber).toBe("MJ-EV-CUSTO");
+  it("propagates error when API call fails", async () => {
+    vi.mocked(apiClient.get).mockRejectedValueOnce(new Error("404 Not Found"));
+    await expect(fetchReceipt("invalid-id")).rejects.toThrow("404 Not Found");
+  });
+
+  it("handles missing location and end time neutrally without inventing data", () => {
+    const mapped = mapBookingToReceipt({
+      id: "b-neutral",
+      requested_datetime: "2026-11-14T09:00:00Z",
+      meeting_point: null,
+    });
+
+    expect(mapped.meetingLocation).toBeNull();
+    expect(mapped.sessionDateTimeFormatted).not.toContain("5:00 PM");
+    expect(mapped.partySizeLabel).toBeNull();
   });
 });

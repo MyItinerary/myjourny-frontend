@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { formatNaira, SAMPLE_RECEIPT } from "./receipt.types";
+import { formatMoney } from "./receipt.types";
+import { SAMPLE_RECEIPT } from "./receipt.test-fixtures";
 
 describe("receipt.types", () => {
-  it("provides valid SAMPLE_RECEIPT data matching Figma design", () => {
+  it("provides valid SAMPLE_RECEIPT data for tests", () => {
     expect(SAMPLE_RECEIPT.orderNumber).toBe("MJ-EV-48213");
     expect(SAMPLE_RECEIPT.paymentReference).toBe("MJPAY-7F3A91C2");
     expect(SAMPLE_RECEIPT.billedTo).toBe("Ireti George");
-    expect(SAMPLE_RECEIPT.experienceTitle).toBe("Sunrise Kayaking at Tarkwa Bay");
-    expect(SAMPLE_RECEIPT.partySizeLabel).toBe("1 Adult");
-    expect(SAMPLE_RECEIPT.status).toBe("paid");
+    expect(SAMPLE_RECEIPT.paidAmount).toBe(24000);
+    expect(SAMPLE_RECEIPT.totalPriceFormatted).toBe("₦24,000");
   });
 
-  it("formats currency to Naira string", () => {
-    expect(formatNaira(24000)).toMatch(/24,000/);
-    expect(formatNaira("16000")).toMatch(/16,000/);
-    expect(formatNaira("invalid")).toMatch(/0/);
+  it("formats currency accurately using given currency code", () => {
+    expect(formatMoney(24000, "NGN")).toMatch(/24,000/);
+    expect(formatMoney(100, "USD")).toMatch(/100/);
+    expect(formatMoney("invalid")).toBe("₦0");
   });
 });

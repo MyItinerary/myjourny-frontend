@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { SAMPLE_RECEIPT } from "@/features/receipt";
 import { ReceiptContent } from "./content";
 
 vi.mock("@/components/home/home-nav", () => ({
@@ -14,19 +13,17 @@ vi.mock("@/components/home/footer", () => ({
 
 vi.mock("@/features/receipt", () => ({
   useReceiptViewModel: () => ({
-    receipt: SAMPLE_RECEIPT,
+    receipt: { orderNumber: "MJ-EV-48213" },
     isLoading: false,
+    isError: false,
+    errorStatus: null,
     isDownloading: false,
-    isEmailing: false,
+    refetch: vi.fn(),
     onDownloadPdf: vi.fn(),
-    onEmailCopy: vi.fn(),
   }),
-  ReceiptView: ({ receipt }: { receipt: { orderNumber: string } }) => (
-    <div data-testid="mock-receipt-view">{receipt.orderNumber}</div>
+  ReceiptView: ({ receipt }: { receipt: { orderNumber: string } | null }) => (
+    <div data-testid="mock-receipt-view">{receipt?.orderNumber}</div>
   ),
-  SAMPLE_RECEIPT: {
-    orderNumber: "MJ-EV-48213",
-  },
 }));
 
 describe("ReceiptContent", () => {

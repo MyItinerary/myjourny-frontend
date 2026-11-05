@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { formatNaira, type ReceiptData, SAMPLE_RECEIPT } from "./receipt.types";
+import { formatMoney, type ReceiptData } from "./receipt.types";
 
-interface ApiBookingResponse {
+export interface ApiBookingResponse {
   id: string;
   paystack_reference?: string | null;
   experience_title?: string | null;
@@ -22,63 +22,66 @@ interface ApiBookingResponse {
   } | null;
 }
 
+function formatSafeDate(dateString?: string | null): string | null {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatSafeTime(dateString?: string | null): string | null {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return null;
+  return date
+    .toLocaleTimeString("en-GB", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .toUpperCase();
+}
+
 export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
   const currency = booking.currency ?? "NGN";
-  const partySize = booking.party_size ?? 1;
-  const total = booking.price_total ? Number(booking.price_total) : 0;
-  const unitPrice = partySize > 0 ? total / partySize : total;
+  const partySize = booking.party_size ?? null;
+  const total = typeof booking.price_total === "number"
+    ? booking.price_total
+    : parseFloat(String(booking.price_total || 0)) || 0;
 
   let paidAtFormatted = "Paid recently";
   if (booking.created_at) {
-    try {
-      const date = new Date(booking.created_at);
-      paidAtFormatted = `Paid on ${date.toLocaleDateString("en-GB", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })} at ${date.toLocaleTimeString("en-GB", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      }).toUpperCase()}`;
-    } catch {
-      paidAtFormatted = "Paid recently";
+    const formattedDate = formatSafeDate(booking.created_at);
+    const formattedTime = formatSafeTime(booking.created_at);
+    if (formattedDate && formattedTime) {
+      paidAtFormatted = `Paid on ${formattedDate} at ${formattedTime}`;
     }
   }
 
   let sessionDateTimeFormatted = "Date to be confirmed";
   if (booking.requested_datetime) {
-    try {
-      const start = new Date(booking.requested_datetime);
-      const day = start.toLocaleDateString("en-GB", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-      const startTime = start.toLocaleTimeString("en-GB", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      }).toUpperCase();
-      let endTime = "5:00 PM";
-      if (booking.session_end_at) {
-        endTime = new Date(booking.session_end_at).toLocaleTimeString("en-GB", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        }).toUpperCase();
-      }
-      sessionDateTimeFormatted = `${day}. ${startTime} to ${endTime}`;
-    } catch {
-      sessionDateTimeFormatted = "Date to be confirmed";
+    const formattedDate = formatSafeDate(booking.requested_datetime);
+    const startTime = formatSafeTime(booking.requested_datetime);
+    const endTime = formatSafeTime(booking.session_end_at);
+
+    if (formattedDate && startTime) {
+      sessionDateTimeFormatted = endTime
+        ? `${formattedDate}. ${startTime} to ${endTime}`
+        : `${formattedDate} at ${startTime}`;
     }
   }
 
-  const location = booking.meeting_point?.city
-    ? `${booking.meeting_point.city}, ${booking.meeting_point.country ?? "Nigeria"}`
-    : "Tarkwa Bay, Lagos";
+  let location: string | null = null;
+  if (booking.meeting_point?.city) {
+    location = booking.meeting_point.country
+      ? `${booking.meeting_point.city}, ${booking.meeting_point.country}`
+      : booking.meeting_point.city;
+  }
 
   return {
     orderNumber: `MJ-EV-${booking.id.slice(0, 5).toUpperCase()}`,
@@ -92,9 +95,8 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
     experienceImageUrl: null,
     sessionDateTimeFormatted,
     meetingLocation: location,
-    totalPriceFormatted: formatNaira(total),
-    unitPriceFormatted: formatNaira(unitPrice),
-    partySizeLabel: `${partySize} Adult${partySize > 1 ? "s" : ""}`,
+    totalPriceFormatted: formatMoney(total, currency),
+    partySizeLabel: partySize ? `${partySize} guest${partySize === 1 ? "" : "s"}` : null,
     taxesAndFeesNote: "Taxes and fees included",
     receiptUrl: booking.receipt_url ?? null,
     status: booking.payment_status === "paid" ? "paid" : "pending",
@@ -102,25 +104,16 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
 }
 
 export async function fetchReceipt(bookingId: string): Promise<ReceiptData> {
-  if (!bookingId || bookingId === "sample" || bookingId === "MJ-EV-48213") {
-    return SAMPLE_RECEIPT;
-  }
-  try {
-    const res = await apiClient.get<ApiBookingResponse>(`/bookings/${bookingId}`);
-    return mapBookingToReceipt(res.data);
-  } catch {
-    // Graceful fallback to sample preview for non-existent / demo IDs
-    return {
-      ...SAMPLE_RECEIPT,
-      orderNumber: bookingId.startsWith("MJ-") ? bookingId : `MJ-EV-${bookingId.slice(0, 5).toUpperCase()}`,
-    };
-  }
+  const res = await apiClient.get<ApiBookingResponse>(`/bookings/${bookingId}`);
+  return mapBookingToReceipt(res.data);
 }
 
 export function useReceiptQuery(bookingId?: string) {
   return useQuery({
     queryKey: ["receipt", bookingId],
-    queryFn: () => fetchReceipt(bookingId ?? "sample"),
+    queryFn: () => fetchReceipt(bookingId!),
+    enabled: Boolean(bookingId),
+    retry: false,
     staleTime: 5 * 60 * 1000,
   });
 }
