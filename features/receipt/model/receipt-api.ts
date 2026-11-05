@@ -59,6 +59,17 @@ function parseSafeAmount(value?: string | number | null): number | null {
   return isNaN(parsed) ? null : parsed;
 }
 
+/** Only http(s) links get opened; anything else falls back to printing the page. */
+function safeReceiptUrl(value?: string | null): string | null {
+  if (!value) return null;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "https:" || protocol === "http:" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
   const currency = booking.currency ?? null;
   const partySize = booking.party_size ?? null;
@@ -73,21 +84,6 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
       : rawStatus === "unpaid"
       ? "unpaid"
       : "pending";
-
-  let paidAtFormatted: string | null = null;
-  if (status === "paid") {
-    if (booking.created_at) {
-      const formattedDate = formatSafeDate(booking.created_at);
-      const formattedTime = formatSafeTime(booking.created_at);
-      if (formattedDate && formattedTime) {
-        paidAtFormatted = `Paid on ${formattedDate} at ${formattedTime}`;
-      } else {
-        paidAtFormatted = "Paid";
-      }
-    } else {
-      paidAtFormatted = "Paid";
-    }
-  }
 
   let sessionDateTimeFormatted = "Date to be confirmed";
   if (booking.requested_datetime) {
@@ -110,12 +106,13 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
   }
 
   return {
-    orderNumber: booking.order_number ?? booking.id ?? null,
+    orderNumber: booking.order_number ?? null,
     paymentReference: booking.paystack_reference ?? null,
     billedTo: booking.user_full_name ?? null,
     paidAmount: total,
     currency,
-    paidAtFormatted,
+    // The API has no payment time, and created_at is only when the booking was made.
+    paidAtFormatted: null,
     experienceTitle: booking.experience_title ?? "Experience Booking",
     experienceLocation: location,
     experienceImageUrl: null,
@@ -124,7 +121,7 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
     totalPriceFormatted: total !== null ? formatMoney(total, currency) : null,
     partySizeLabel: partySize ? `${partySize} guest${partySize === 1 ? "" : "s"}` : null,
     taxesAndFeesNote: null,
-    receiptUrl: booking.receipt_url ?? null,
+    receiptUrl: safeReceiptUrl(booking.receipt_url),
     status,
   };
 }

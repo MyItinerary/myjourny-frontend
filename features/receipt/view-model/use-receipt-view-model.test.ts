@@ -45,6 +45,24 @@ vi.mock("../model/receipt-api", () => ({
         refetch: vi.fn(),
       };
     }
+    if (bookingId === "no-pdf-id") {
+      return {
+        data: { ...SAMPLE_RECEIPT, receiptUrl: null },
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: vi.fn(),
+      };
+    }
+    if (bookingId === "pdf-id") {
+      return {
+        data: { ...SAMPLE_RECEIPT, receiptUrl: "https://example.com/receipt.pdf" },
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: vi.fn(),
+      };
+    }
     return {
       data: undefined,
       isLoading: true,
@@ -96,11 +114,7 @@ describe("useReceiptViewModel", () => {
 
   it("triggers window.print and info toast when receiptUrl is null", () => {
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => {});
-    const { result } = renderHook(() =>
-      useReceiptViewModel({
-        initialData: { ...SAMPLE_RECEIPT, receiptUrl: null },
-      })
-    );
+    const { result } = renderHook(() => useReceiptViewModel({ bookingId: "no-pdf-id" }));
 
     act(() => {
       result.current.onDownloadPdf();
@@ -113,14 +127,7 @@ describe("useReceiptViewModel", () => {
 
   it("triggers window.open with noopener,noreferrer when receiptUrl exists", () => {
     const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
-    const { result } = renderHook(() =>
-      useReceiptViewModel({
-        initialData: {
-          ...SAMPLE_RECEIPT,
-          receiptUrl: "https://example.com/receipt.pdf",
-        },
-      })
-    );
+    const { result } = renderHook(() => useReceiptViewModel({ bookingId: "pdf-id" }));
 
     act(() => {
       result.current.onDownloadPdf();

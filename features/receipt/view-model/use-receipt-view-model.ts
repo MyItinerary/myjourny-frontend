@@ -17,7 +17,6 @@ export interface ReceiptViewModel {
 
 export interface UseReceiptViewModelOptions {
   bookingId?: string;
-  initialData?: ReceiptData;
 }
 
 export function useReceiptViewModel(options?: UseReceiptViewModelOptions): ReceiptViewModel {
@@ -25,7 +24,7 @@ export function useReceiptViewModel(options?: UseReceiptViewModelOptions): Recei
   const { data, isLoading, isError, error, refetch } = useReceiptQuery(bookingId);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const receipt = options?.initialData ?? data ?? null;
+  const receipt = data ?? null;
 
   const errorStatus =
     (error as { response?: { status?: number } } | null)?.response?.status ??

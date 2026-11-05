@@ -25,12 +25,22 @@ describe("receipt-api", () => {
     });
 
     const data = await fetchReceipt("b-12345");
-    expect(data.orderNumber).toBe("b-12345");
+    expect(data.orderNumber).toBeNull();
+    expect(data.paidAtFormatted).toBeNull();
     expect(data.paymentReference).toBe("REF-123");
     expect(data.billedTo).toBe("Tunde Ednut");
     expect(data.totalPriceFormatted).toMatch(/32,000/);
     expect(data.partySizeLabel).toBe("2 guests");
     expect(data.status).toBe("paid");
+  });
+
+  it("only keeps an http(s) receipt link", () => {
+    const withUrl = (receipt_url: string) => mapBookingToReceipt({ id: "b-1", receipt_url }).receiptUrl;
+
+    expect(withUrl("https://example.com/receipt.pdf")).toBe("https://example.com/receipt.pdf");
+    expect(withUrl("javascript:alert(1)")).toBeNull();
+    expect(withUrl("data:text/html,hi")).toBeNull();
+    expect(withUrl("not a url")).toBeNull();
   });
 
   it("propagates error when API call fails", async () => {
@@ -46,7 +56,7 @@ describe("receipt-api", () => {
       payment_status: "refunded",
     });
 
-    expect(mapped.orderNumber).toBe("b-neutral");
+    expect(mapped.orderNumber).toBeNull();
     expect(mapped.paymentReference).toBeNull();
     expect(mapped.billedTo).toBeNull();
     expect(mapped.meetingLocation).toBeNull();
