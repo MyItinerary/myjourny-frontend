@@ -319,8 +319,7 @@ export function useSearchBarViewModel({
         return;
       }
 
-      // Anything else typed in is a place they're looking around (an area like "Lekki").
-      saveLastSearchArea(rawQuery);
+      // Free text isn't remembered as an area: there's no list of areas yet to tell "Lekki" from "jazz brunch".
       router.push(withDate(`/search?q=${encodeURIComponent(rawQuery)}`, day, until));
     },
     [dateRange, destinations, handleClose, router, selectedType, selectedWhere, selectedWhereId],

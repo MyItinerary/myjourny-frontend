@@ -385,13 +385,13 @@ describe("useSearchBarViewModel", () => {
       expect(readLastSearchArea()).toBe("Lagos, Nigeria");
     });
 
-    it("remembers a place that is typed in and searched as text", () => {
+    it("does not remember free text as an area", () => {
       window.localStorage.clear();
-      const { result } = renderHookWithProviders(() => useSearchBarViewModel({ initialWhere: "Lekki phase one" }));
+      const { result } = renderHookWithProviders(() => useSearchBarViewModel({ initialWhere: "jazz brunch" }));
 
       act(() => result.current.onSearch());
 
-      expect(readLastSearchArea()).toBe("Lekki phase one");
+      expect(readLastSearchArea()).toBeNull();
     });
 
     it("remembers a destination tapped in the suggestions", () => {
