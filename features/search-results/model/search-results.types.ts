@@ -41,19 +41,10 @@ export type DropdownFilterId = "dates" | "duration" | "languages" | "age";
 export type ActiveChipId = "type" | "price" | "timeOfDay";
 
 export type RowChip =
-  | { kind: "category"; key: string; slug: string; label: string; selected: boolean; forYou: boolean }
-  | { kind: "subcategory"; key: string; slug: string; label: string }
+  | { kind: "category"; key: string; slug: string; label: string; selected: boolean }
+  | { kind: "subcategory"; key: string; slug: string; label: string; selected: boolean }
   | { kind: "dropdown"; key: string; id: DropdownFilterId; label: string; active: boolean }
   | { kind: "active"; key: string; id: ActiveChipId; label: string };
-
-/** A row of subcategories under the main row, for a selected category (taste quiz taken). */
-export interface SubRow {
-  parentSlug: string;
-  /** The parent's label, shown as the row's title. */
-  title: string;
-  allSelected: boolean;
-  items: { slug: string; label: string; selected: boolean }[];
-}
 
 export interface OptionChoice<T extends string> {
   value: T;
@@ -92,9 +83,11 @@ export interface PanelCategory {
 export interface PanelModel {
   types: { value: ListingType; label: string; selected: boolean }[];
   featured: { id: FeaturedId; label: string; selected: boolean }[];
+  /** Empty once the taste quiz is taken (see `subcategories`). */
   categoryGroups: { title: string | null; items: PanelCategory[] }[];
-  /** Taste quiz taken: subcategories under each selected category. */
-  subcategoryBlocks: { parentSlug: string; title: string; items: { slug: string; label: string; selected: boolean }[] }[];
+  /** Taste quiz taken: the subcategories on their own, instead of the categories. Null otherwise
+   * (events have no subcategories, so they keep their categories). */
+  subcategories: { slug: string; label: string; selected: boolean }[] | null;
   /** No quiz yet: the prompt that unlocks subcategories. */
   showQuizPrompt: boolean;
   collections: PanelGroup;

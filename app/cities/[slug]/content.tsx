@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { HomeNav } from "@/components/home/home-nav";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { CategoryResultsGrid } from "@/features/categories";
 import {
   EmptyResultsView,

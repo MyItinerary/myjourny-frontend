@@ -162,21 +162,15 @@ export function MoreFiltersDialogView(vm: MoreFiltersDialogViewProps) {
               </div>
             ))}
 
-            {panel.subcategoryBlocks.map((block) => (
-              <div key={block.parentSlug} className="flex flex-col gap-3 rounded-2xl bg-[#faf9f7] p-4">
-                <div className="flex items-center gap-2">
-                  <SubHeading>{block.title}</SubHeading>
-                  <span className="rounded-full bg-[#1f1c20] px-2 py-0.5 text-xs font-medium text-white">For you</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {block.items.map((s) => (
-                    <OptionChip key={s.slug} selected={s.selected} onClick={() => vm.toggleSubcategory(s.slug)}>
-                      {s.label}
-                    </OptionChip>
-                  ))}
-                </div>
+            {panel.subcategories && (
+              <div className="flex flex-wrap gap-2">
+                {panel.subcategories.map((s) => (
+                  <OptionChip key={s.slug} selected={s.selected} onClick={() => vm.toggleSubcategory(s.slug)}>
+                    {s.label}
+                  </OptionChip>
+                ))}
               </div>
-            ))}
+            )}
 
             {panel.showQuizPrompt && (
               <div className="flex items-center gap-3 rounded-2xl bg-[#f4f2ee] px-4 py-3.5">

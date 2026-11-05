@@ -1,5 +1,6 @@
 // TODO(backend): these two rails are placeholders until the API has them.
-//  - "Popular events you should check out" needs a popular-events listing endpoint.
+//  - "Tonight and this weekend" needs a popular-events listing endpoint.
+//  - "Early bird ending soon" needs events with early-bird pricing and an end date.
 //  - "Local food & drinks experiences" needs a category-filtered experiences
 //    endpoint (the existing filter listing takes no category slug yet).
 //  - "Unforgettable travel experiences" needs an endpoint that returns only
@@ -43,6 +44,14 @@ export const DUMMY_POPULAR_EVENTS: PlaceholderCard[] = [
   placeholder("Lagos street food festival", "FOOD", 5000),
   placeholder("Open-air art market and live painting", "ART", 7500),
   placeholder("Afrobeats beach party", "MUSIC", 12000),
+];
+
+export const DUMMY_EARLY_BIRD: PlaceholderCard[] = [
+  placeholder("Afro Futures Summit", "TALKS & CONFERENCES", 8000),
+  placeholder("Vinyl and Jollof, a rooftop listening night", "MUSIC", 7500),
+  placeholder("Laugh Lagos Late, stand-up comedy", "COMEDY", 5000),
+  placeholder("Lagos Design Week", "ART & DESIGN", 6000),
+  placeholder("Sunday jazz brunch", "MUSIC", 7500),
 ];
 
 export const DUMMY_LOCAL_FOOD_AND_DRINKS: PlaceholderCard[] = [

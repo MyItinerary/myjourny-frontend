@@ -4,13 +4,12 @@ import { useTasteQuizAudience, useTasteQuizCtaViewModel } from "@/features/taste
 import { apiErrorMessage } from "@/lib/api-error";
 import { experienceListItemToCardProps } from "@/lib/queries/experiences";
 
-import { ALL_CATEGORIES, FOR_YOU_CATEGORY_SLUGS, PRICE_QUICK_RANGES, SUBCATEGORIES } from "../model/filter-catalog";
+import { ALL_CATEGORIES, FOR_YOU_CATEGORY_SLUGS, PRICE_QUICK_RANGES } from "../model/filter-catalog";
 import { buildDropdownGroups, buildPanel, isTonight, isWeekend } from "../model/search-panel";
 import {
   activeType,
   buildResultsHeading,
   buildRowChips,
-  buildSubRows,
   countActiveFilters,
   dateRangeFromLink,
   EMPTY_FILTERS,
@@ -34,7 +33,6 @@ import type {
 } from "../model/search-results.types";
 
 const PAGE_SIZE = 16;
-const SUB_PARENT = new Map(SUBCATEGORIES.map((s) => [s.slug, s.parentSlug]));
 const MAX_GROUP_SIZE = 50;
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -108,16 +106,6 @@ export function useSearchResultsViewModel({ subject, city, interest, search, dat
       update((f) => ({
         ...f,
         subcategories: f.subcategories.includes(slug) ? f.subcategories.filter((s) => s !== slug) : [slug, ...f.subcategories],
-      })),
-    [update],
-  );
-
-  /** "All {category}": clears that category's subcategories. */
-  const selectAllSubcategories = useCallback(
-    (parentSlug: string) =>
-      update((f) => ({
-        ...f,
-        subcategories: f.subcategories.filter((s) => !(parentSlug && SUB_PARENT.get(s) === parentSlug)),
       })),
     [update],
   );
@@ -270,7 +258,6 @@ export function useSearchResultsViewModel({ subject, city, interest, search, dat
     tookQuiz,
     quizHref,
     rowChips: buildRowChips(filters, { tookQuiz }),
-    subRows: buildSubRows(filters, tookQuiz),
     dropdownGroups: buildDropdownGroups(filters),
     panel,
     clearedNote,
@@ -281,7 +268,6 @@ export function useSearchResultsViewModel({ subject, city, interest, search, dat
     priceCeiling: PRICE_CEILING,
     toggleCategory,
     toggleSubcategory,
-    selectAllSubcategories,
     toggleType,
     toggleDropdown,
     closeDropdown,

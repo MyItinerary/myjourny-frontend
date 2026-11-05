@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { HomeNav } from "@/components/home/home-nav";
 import { DetailActions, DetailBreadcrumbs } from "@/components/shared/detail-page-parts";
 import { SaveToCollectionModal } from "@/components/wishlists/save-to-collection-modal";

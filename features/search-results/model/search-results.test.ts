@@ -5,7 +5,6 @@ import {
   activeType,
   buildResultsHeading,
   buildRowChips,
-  buildSubRows,
   countActiveFilters,
   EMPTY_FILTERS,
   formatDateRange,
@@ -82,17 +81,50 @@ describe("buildRowChips", () => {
     expect(labels(f).join(" ")).not.toMatch(/taste quiz/i);
   });
 
-  it("puts the quiz taker's own categories first, marked For you", () => {
-    const chips = buildRowChips(EMPTY_FILTERS, { tookQuiz: true }).filter((c) => c.kind === "category");
-    expect(chips.slice(0, 5).every((c) => c.kind === "category" && c.forYou)).toBe(true);
-    expect(chips.slice(5).some((c) => c.kind === "category" && c.forYou)).toBe(false);
-    expect(buildRowChips(EMPTY_FILTERS, { tookQuiz: false }).some((c) => c.kind === "category" && c.forYou)).toBe(false);
+  it("puts the quiz taker's own categories first when the row shows categories (events)", () => {
+    const chips = buildRowChips(withFilters({ types: ["events"] }), { tookQuiz: true }).filter((c) => c.kind === "category");
+    expect(chips.slice(0, 2).map((c) => c.label)).toEqual(["Music & live shows", "Parties & nightlife"]);
   });
 
-  it("follows a selected category with its selected subcategories (quiz taken)", () => {
+  it("after the quiz, shows the subcategories as the only filters to pick from, not the categories", () => {
+    const chips = buildRowChips(EMPTY_FILTERS, { tookQuiz: true });
+    expect(chips.filter((c) => c.kind === "category")).toEqual([]);
+    expect(chips.filter((c) => c.kind === "subcategory").map((c) => c.label)).toEqual([
+      "Street food & markets",
+      "Bars & nightlife drinks",
+      "Cafés & coffee culture",
+      "Museums & heritage sites",
+      "Historic neighborhoods",
+      "Local traditions & festivals",
+      "Hiking & trails",
+      "Beaches & waterfronts",
+      "Parks & green spaces",
+    ]);
+  });
+
+  it("puts a selected subcategory first, on its own and dark, without needing its category", () => {
+    const f = withFilters({ subcategories: ["cafes-coffee-culture"] });
+    const chips = buildRowChips(f, { tookQuiz: true });
+    expect(chips[0]).toMatchObject({ kind: "subcategory", label: "Cafés & coffee culture", selected: true });
+    expect(chips.filter((c) => c.label === "Cafés & coffee culture")).toHaveLength(1);
+  });
+
+  it("keeps a selected category as an active chip after the quiz, followed by selected subcategories", () => {
     const f = withFilters({ categories: ["local-food-drinks"], subcategories: ["cafes-coffee-culture"] });
     expect(labels(f, true).slice(0, 2)).toEqual(["Local food & drinks", "Cafés & coffee culture"]);
-    expect(labels(f, false)).not.toContain("Cafés & coffee culture");
+  });
+
+  it("without the quiz, only categories: never subcategories", () => {
+    const f = withFilters({ categories: ["local-food-drinks"], subcategories: ["cafes-coffee-culture"] });
+    const chips = buildRowChips(f, { tookQuiz: false });
+    expect(chips.some((c) => c.kind === "subcategory")).toBe(false);
+    expect(chips.filter((c) => c.kind === "category").length).toBeGreaterThan(5);
+  });
+
+  it("keeps categories to pick from when only events are shown, as they have no subcategories", () => {
+    const chips = buildRowChips(withFilters({ types: ["events"] }), { tookQuiz: true });
+    expect(chips.some((c) => c.kind === "subcategory")).toBe(false);
+    expect(chips.some((c) => c.kind === "category")).toBe(true);
   });
 
   it("limits the row to the chosen type's categories and adds its dropdowns", () => {
@@ -112,28 +144,6 @@ describe("buildRowChips", () => {
       timeOfDay: "morning",
     });
     expect(labels(f).slice(0, 5)).toEqual(["Experiences", "12 Nov – 21 Nov", "Under ₦15,000", "Morning", "Duration"]);
-  });
-});
-
-describe("buildSubRows", () => {
-  it("is empty without the quiz or without subcategories to show", () => {
-    const f = withFilters({ categories: ["local-food-drinks"] });
-    expect(buildSubRows(f, false)).toEqual([]);
-    expect(buildSubRows(withFilters({ categories: ["street-life"] }), true)).toEqual([]);
-  });
-
-  it("starts with All selected and moves a chosen subcategory to the front", () => {
-    const f = withFilters({ categories: ["local-food-drinks"] });
-    expect(buildSubRows(f, true)[0]).toMatchObject({ title: "Local food & drinks", allSelected: true });
-
-    const picked = buildSubRows({ ...f, subcategories: ["cafes-coffee-culture"] }, true)[0];
-    expect(picked.allSelected).toBe(false);
-    expect(picked.items[0]).toEqual({ slug: "cafes-coffee-culture", label: "Cafés & coffee culture", selected: true });
-  });
-
-  it("stacks at most two rows", () => {
-    const f = withFilters({ categories: ["local-food-drinks", "culture-history", "nature-outdoors"] });
-    expect(buildSubRows(f, true)).toHaveLength(2);
   });
 });
 
@@ -259,12 +269,26 @@ describe("buildPanel", () => {
     expect(languages?.kind === "group" && languages.group.options.find((o) => o.value === "Hausa")?.disabled).toBe(true);
   });
 
-  it("swaps the quiz prompt for nested subcategories, and adds Picked for your taste, after the quiz", () => {
-    const panel = buildPanel(withFilters({ categories: ["local-food-drinks"] }), { tookQuiz: true });
+  it("after the quiz, swaps the quiz prompt and the categories for the subcategories alone, and adds Picked for your taste", () => {
+    const panel = buildPanel(withFilters({ subcategories: ["cafes-coffee-culture"] }), { tookQuiz: true });
     expect(panel.showQuizPrompt).toBe(false);
     expect(panel.featured[0].label).toBe("Picked for your taste");
-    expect(panel.subcategoryBlocks[0]).toMatchObject({ title: "Local food & drinks" });
-    expect(panel.subcategoryBlocks[0].items.map((i) => i.label)).toContain("Cafés & coffee culture");
+    expect(panel.categoryGroups).toEqual([]);
+    expect(panel.subcategories).toHaveLength(9);
+    expect(panel.subcategories?.find((s) => s.label === "Cafés & coffee culture")?.selected).toBe(true);
+    expect(panel.subcategories?.find((s) => s.label === "Hiking & trails")?.selected).toBe(false);
+  });
+
+  it("before the quiz there are only categories, never subcategories", () => {
+    const panel = buildPanel(withFilters({ categories: ["local-food-drinks"] }), { tookQuiz: false });
+    expect(panel.subcategories).toBeNull();
+    expect(panel.categoryGroups.length).toBeGreaterThan(0);
+  });
+
+  it("keeps the event categories after the quiz when only events are chosen, as events have no subcategories", () => {
+    const panel = buildPanel(withFilters({ types: ["events"] }), { tookQuiz: true });
+    expect(panel.subcategories).toBeNull();
+    expect(panel.categoryGroups).toHaveLength(1);
   });
 
   it("defaults Hide sold out on for Events", () => {

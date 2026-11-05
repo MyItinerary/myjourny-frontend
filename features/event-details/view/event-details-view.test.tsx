@@ -8,7 +8,7 @@ import type { EventDetailsViewModel } from "../view-model/use-event-details-view
 import { EventDetailsView } from "./event-details-view";
 
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav aria-label="Main" /> }));
-vi.mock("@/components/home/footer", () => ({ Footer: () => <footer>Footer</footer> }));
+vi.mock("@/features/footer", () => ({ Footer: () => <footer>Footer</footer> }));
 vi.mock("@/components/home/experience-rail-section", () => ({
   ExperienceRailSection: ({ heading }: { heading: string }) => <section aria-label={heading} />,
 }));

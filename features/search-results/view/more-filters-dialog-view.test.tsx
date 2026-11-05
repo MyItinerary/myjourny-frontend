@@ -85,7 +85,9 @@ describe("MoreFiltersDialogView", () => {
     rerender(<MoreFiltersDialogView {...open({ filters, tookQuiz: true })} />);
     expect(screen.queryByRole("link", { name: "Make it mine" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cafés & coffee culture" })).toBeInTheDocument();
-    expect(screen.getByText("For you")).toBeInTheDocument();
+    // The subcategories stand alone: no categories above them.
+    expect(screen.queryByRole("button", { name: "Culture & history" })).not.toBeInTheDocument();
+    expect(screen.queryByText("For you")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Picked for your taste" })).toBeInTheDocument();
   });
 
