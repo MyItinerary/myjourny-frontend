@@ -65,8 +65,6 @@ describe("CancellationView", () => {
       <CancellationView
         data={mockCancellationData}
         activeSectionId="short-version"
-        backHref="/legal"
-        backLabel="All legal documents"
         onSectionSelect={vi.fn()}
       />
     );
@@ -84,8 +82,6 @@ describe("CancellationView", () => {
       <CancellationView
         data={mockCancellationData}
         activeSectionId="short-version"
-        backHref="/legal"
-        backLabel="All legal documents"
         onSectionSelect={handleSelect}
       />
     );
@@ -94,21 +90,5 @@ describe("CancellationView", () => {
     fireEvent.click(section1Btn);
 
     expect(handleSelect).toHaveBeenCalledWith("section-1");
-  });
-
-  it("renders back link to all legal documents", () => {
-    render(
-      <CancellationView
-        data={mockCancellationData}
-        activeSectionId="short-version"
-        backHref="/legal"
-        backLabel="All legal documents"
-        onSectionSelect={vi.fn()}
-      />
-    );
-
-    const backLink = screen.getByRole("link", { name: /all legal documents/i });
-    expect(backLink).toBeInTheDocument();
-    expect(backLink).toHaveAttribute("href", "/legal");
   });
 });

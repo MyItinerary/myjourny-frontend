@@ -68,8 +68,6 @@ describe("CookieView", () => {
   const defaultProps = {
     data: mockCookieData,
     activeSectionId: "section-1",
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
     onManagePreferences: vi.fn(),
     isPreferencesOpen: false,

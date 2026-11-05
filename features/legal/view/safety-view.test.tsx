@@ -42,8 +42,6 @@ describe("SafetyView", () => {
   const defaultProps = {
     data: mockSafetyData,
     activeSectionId: "section-1",
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
   };
 

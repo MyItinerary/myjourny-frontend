@@ -34,14 +34,16 @@ export function getStoredCookiePreferences(): CookiePreferences {
   }
 }
 
-export function saveStoredCookiePreferences(prefs: CookiePreferences): void {
-  if (typeof window === "undefined") return;
+/** Returns whether the choice was stored; storage can be full or blocked. */
+export function saveStoredCookiePreferences(prefs: CookiePreferences): boolean {
+  if (typeof window === "undefined") return false;
   try {
     window.localStorage.setItem(
       COOKIE_PREFERENCES_STORAGE_KEY,
       JSON.stringify({ ...prefs, strictlyNecessary: true, updatedAt: new Date().toISOString() })
     );
+    return true;
   } catch {
-    // Ignore storage quota / restricted context errors
+    return false;
   }
 }

@@ -26,8 +26,6 @@ vi.mock("@/features/legal", () => ({
       sections: [],
     },
     activeSectionId: "at-a-glance",
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
   }),
   PrivacyView: ({ data }: { data: { title: string } }) => (

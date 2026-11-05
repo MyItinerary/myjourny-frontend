@@ -6,8 +6,6 @@ import type { TermsData } from "../model/terms.types";
 export interface PrivacyViewModel {
   data: TermsData;
   activeSectionId: string;
-  backHref: string;
-  backLabel: string;
   onSectionSelect: (id: string) => void;
 }
 
@@ -62,8 +60,6 @@ export function usePrivacyViewModel(): PrivacyViewModel {
   return {
     data: privacyData,
     activeSectionId,
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect,
   };
 }

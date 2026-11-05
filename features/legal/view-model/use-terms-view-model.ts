@@ -6,8 +6,6 @@ import type { TermsData } from "../model/terms.types";
 export interface TermsViewModel {
   data: TermsData;
   activeSectionId: string;
-  backHref: string;
-  backLabel: string;
   onSectionSelect: (id: string) => void;
 }
 
@@ -63,8 +61,6 @@ export function useTermsViewModel(): TermsViewModel {
   return {
     data: termsData,
     activeSectionId,
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect,
   };
 }

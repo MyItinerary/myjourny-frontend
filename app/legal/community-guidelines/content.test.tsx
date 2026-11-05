@@ -22,8 +22,6 @@ vi.mock("@/features/legal", () => ({
       sections: [],
     },
     activeSectionId: "short-version",
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
   }),
   CommunityGuidelinesView: ({ data }: { data: { title: string } }) => (

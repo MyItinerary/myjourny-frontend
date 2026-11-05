@@ -22,8 +22,6 @@ vi.mock("@/features/legal", () => ({
       sections: [],
     },
     activeSectionId: "section-1",
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
     onManagePreferences: vi.fn(),
   }),

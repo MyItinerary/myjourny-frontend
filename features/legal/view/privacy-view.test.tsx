@@ -56,8 +56,6 @@ describe("PrivacyView", () => {
   const defaultProps = {
     data: mockPrivacyData,
     activeSectionId: "at-a-glance",
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
   };
 
@@ -95,13 +93,5 @@ describe("PrivacyView", () => {
     fireEvent.click(tocButton);
 
     expect(onSectionSelect).toHaveBeenCalledWith("section-1");
-  });
-
-  it("renders the back navigation link", () => {
-    render(<PrivacyView {...defaultProps} />);
-
-    const backLink = screen.getByRole("link", { name: /all legal documents/i });
-    expect(backLink).toBeInTheDocument();
-    expect(backLink).toHaveAttribute("href", "/legal");
   });
 });

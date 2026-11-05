@@ -8,8 +8,6 @@ describe("useCancellationViewModel", () => {
     const { result } = renderHook(() => useCancellationViewModel());
 
     expect(result.current.activeSectionId).toBe("short-version");
-    expect(result.current.backHref).toBe("/legal");
-    expect(result.current.backLabel).toBe("All legal documents");
     expect(result.current.data.title).toBe("Cancellation and Refund Policy");
   });
 

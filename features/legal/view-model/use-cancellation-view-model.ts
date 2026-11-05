@@ -6,8 +6,6 @@ import type { TermsData } from "../model/terms.types";
 export interface CancellationViewModel {
   data: TermsData;
   activeSectionId: string;
-  backHref: string;
-  backLabel: string;
   onSectionSelect: (id: string) => void;
 }
 
@@ -62,8 +60,6 @@ export function useCancellationViewModel(): CancellationViewModel {
   return {
     data: cancellationData,
     activeSectionId,
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect,
   };
 }

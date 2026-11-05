@@ -8,8 +8,6 @@ describe("useSafetyViewModel", () => {
     const { result } = renderHook(() => useSafetyViewModel());
 
     expect(result.current.activeSectionId).toBe("section-1");
-    expect(result.current.backHref).toBe("/legal");
-    expect(result.current.backLabel).toBe("All legal documents");
     expect(result.current.data.title).toBe("Safety Guide");
   });
 

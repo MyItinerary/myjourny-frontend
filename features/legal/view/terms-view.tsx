@@ -1,7 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { TermsViewModel } from "../view-model/use-terms-view-model";
@@ -23,8 +22,6 @@ export interface TermsViewProps extends TermsViewModel {
 export function TermsView({
   data,
   activeSectionId,
-  backHref,
-  backLabel,
   onSectionSelect,
   onManagePreferences,
 }: TermsViewProps) {
@@ -80,18 +77,6 @@ export function TermsView({
                 );
               })}
             </nav>
-
-            {backHref && backLabel && (
-              <div className="mt-8 pt-4 border-t border-[#EBEBEB] lg:border-0 lg:pt-6">
-                <Link
-                  href={backHref}
-                  className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#6F6B72] transition-colors hover:text-[#130404]"
-                >
-                  <ChevronLeft className="size-4" />
-                  <span>{backLabel}</span>
-                </Link>
-              </div>
-            )}
           </div>
         </aside>
 

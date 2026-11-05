@@ -46,8 +46,6 @@ describe("CommunityGuidelinesView", () => {
   const defaultProps = {
     data: mockCommunityData,
     activeSectionId: "short-version",
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
   };
 

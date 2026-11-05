@@ -92,8 +92,6 @@ describe("TermsView", () => {
   const defaultProps = {
     data: mockTermsData,
     activeSectionId: "short-version",
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect: vi.fn(),
   };
 
@@ -113,10 +111,6 @@ describe("TermsView", () => {
       screen.getByRole("button", { name: "1. What MyJourny is, and what it is not" })
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "PART II: EVENTS AND TICKETS" })).toBeInTheDocument();
-
-    // Back link
-    const backLink = screen.getByRole("link", { name: "All legal documents" });
-    expect(backLink).toHaveAttribute("href", "/legal");
 
     // Click TOC item
     const button = screen.getByRole("button", { name: "2. Your account" });

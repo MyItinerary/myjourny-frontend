@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   COOKIE_PREFERENCES_STORAGE_KEY,
@@ -34,5 +34,16 @@ describe("cookie-preferences.types", () => {
     expect(retrieved.preferences).toBe(false);
     expect(retrieved.analytics).toBe(true);
     expect(retrieved.personalisation).toBe(true);
+  });
+
+  it("reports whether the choice was stored", () => {
+    const prefs = { strictlyNecessary: true, preferences: false, analytics: false, personalisation: false };
+    expect(saveStoredCookiePreferences(prefs)).toBe(true);
+
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    expect(saveStoredCookiePreferences(prefs)).toBe(false);
+    setItem.mockRestore();
   });
 });

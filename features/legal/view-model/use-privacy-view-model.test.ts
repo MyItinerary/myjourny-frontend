@@ -8,8 +8,6 @@ describe("usePrivacyViewModel", () => {
     const { result } = renderHook(() => usePrivacyViewModel());
 
     expect(result.current.activeSectionId).toBe("at-a-glance");
-    expect(result.current.backHref).toBe("/legal");
-    expect(result.current.backLabel).toBe("All legal documents");
     expect(result.current.data.title).toBe("Privacy Policy");
   });
 

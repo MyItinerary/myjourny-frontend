@@ -6,8 +6,6 @@ import type { TermsData } from "../model/terms.types";
 export interface SafetyViewModel {
   data: TermsData;
   activeSectionId: string;
-  backHref: string;
-  backLabel: string;
   onSectionSelect: (id: string) => void;
 }
 
@@ -62,8 +60,6 @@ export function useSafetyViewModel(): SafetyViewModel {
   return {
     data: safetyData,
     activeSectionId,
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect,
   };
 }

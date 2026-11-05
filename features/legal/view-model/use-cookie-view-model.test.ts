@@ -5,9 +5,11 @@ import { COOKIE_PREFERENCES_STORAGE_KEY } from "../model/cookie-preferences.type
 import { useCookieViewModel } from "./use-cookie-view-model";
 
 const toastSuccess = vi.fn();
+const toastError = vi.fn();
 vi.mock("sonner", () => ({
   toast: {
     success: (...args: unknown[]) => toastSuccess(...args),
+    error: (...args: unknown[]) => toastError(...args),
   },
 }));
 
@@ -15,14 +17,13 @@ describe("useCookieViewModel", () => {
   beforeEach(() => {
     window.localStorage.clear();
     toastSuccess.mockClear();
+    toastError.mockClear();
   });
 
   it("initializes with section-1 as default active section and Cookie Policy data", () => {
     const { result } = renderHook(() => useCookieViewModel());
 
     expect(result.current.activeSectionId).toBe("section-1");
-    expect(result.current.backHref).toBe("/legal");
-    expect(result.current.backLabel).toBe("All legal documents");
     expect(result.current.data.title).toBe("Cookie Policy");
     expect(result.current.isPreferencesOpen).toBe(false);
     expect(result.current.preferences.strictlyNecessary).toBe(true);
@@ -120,6 +121,25 @@ describe("useCookieViewModel", () => {
 
     expect(result.current.isPreferencesOpen).toBe(false);
     expect(toastSuccess).toHaveBeenCalledWith("Cookie preferences saved");
+  });
+
+  it("says so and stays open when the choice can't be stored", () => {
+    const { result } = renderHook(() => useCookieViewModel());
+    act(() => {
+      result.current.openPreferences();
+    });
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+
+    act(() => {
+      result.current.onSavePreferences();
+    });
+    setItem.mockRestore();
+
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalled();
+    expect(result.current.isPreferencesOpen).toBe(true);
   });
 
   it("loads stored preferences from localStorage when opening dialog to avoid hydration mismatch", () => {

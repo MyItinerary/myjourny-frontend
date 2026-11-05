@@ -13,8 +13,6 @@ import type { TermsData } from "../model/terms.types";
 export interface CookieViewModel {
   data: TermsData;
   activeSectionId: string;
-  backHref: string;
-  backLabel: string;
   onSectionSelect: (id: string) => void;
   onManagePreferences: () => void;
   isPreferencesOpen: boolean;
@@ -26,6 +24,8 @@ export interface CookieViewModel {
   onRejectNonEssential: () => void;
   onSavePreferences: () => void;
 }
+
+const SAVE_FAILED = "We couldn't save your cookie choices. Check your browser's storage settings and try again.";
 
 export function useCookieViewModel(): CookieViewModel {
   const [activeSectionId, setActiveSectionId] = useState<string>("section-1");
@@ -65,6 +65,17 @@ export function useCookieViewModel(): CookieViewModel {
     []
   );
 
+  // A failed save keeps the dialog open: this is a consent record, so never claim it was stored.
+  const persist = useCallback((next: CookiePreferences, savedMessage: string) => {
+    setPreferences(next);
+    if (!saveStoredCookiePreferences(next)) {
+      toast.error(SAVE_FAILED);
+      return;
+    }
+    toast.success(savedMessage);
+    setIsPreferencesOpen(false);
+  }, []);
+
   const onAcceptAll = useCallback(() => {
     const next: CookiePreferences = {
       strictlyNecessary: true,
@@ -72,11 +83,8 @@ export function useCookieViewModel(): CookieViewModel {
       analytics: true,
       personalisation: true,
     };
-    setPreferences(next);
-    saveStoredCookiePreferences(next);
-    toast.success("All cookies accepted");
-    setIsPreferencesOpen(false);
-  }, []);
+    persist(next, "All cookies accepted");
+  }, [persist]);
 
   const onRejectNonEssential = useCallback(() => {
     const next: CookiePreferences = {
@@ -85,17 +93,12 @@ export function useCookieViewModel(): CookieViewModel {
       analytics: false,
       personalisation: false,
     };
-    setPreferences(next);
-    saveStoredCookiePreferences(next);
-    toast.success("Non-essential cookies rejected");
-    setIsPreferencesOpen(false);
-  }, []);
+    persist(next, "Non-essential cookies rejected");
+  }, [persist]);
 
   const onSavePreferences = useCallback(() => {
-    saveStoredCookiePreferences(preferences);
-    toast.success("Cookie preferences saved");
-    setIsPreferencesOpen(false);
-  }, [preferences]);
+    persist(preferences, "Cookie preferences saved");
+  }, [persist, preferences]);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") {
@@ -135,8 +138,6 @@ export function useCookieViewModel(): CookieViewModel {
   return {
     data: cookieData,
     activeSectionId,
-    backHref: "/legal",
-    backLabel: "All legal documents",
     onSectionSelect,
     onManagePreferences: openPreferences,
     isPreferencesOpen,
