@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "@/lib/api-client";
-import { fetchReceipt, mapBookingToReceipt } from "./receipt-api";
+import { fetchReceipt, mapBookingToReceipt, type ApiBookingResponse } from "./receipt-api";
 
 vi.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -32,6 +32,22 @@ describe("receipt-api", () => {
     expect(data.totalPriceFormatted).toMatch(/32,000/);
     expect(data.partySizeLabel).toBe("2 guests");
     expect(data.status).toBe("paid");
+  });
+
+  it("keeps the API's payment status and never guesses a missing one", () => {
+    const status = (payment_status?: ApiBookingResponse["payment_status"]) =>
+      mapBookingToReceipt({ id: "b-1", payment_status }).status;
+
+    expect(status("pending")).toBe("pending");
+    expect(status("partial")).toBe("partial");
+    expect(status(undefined)).toBe("unknown");
+  });
+
+  it("shows the meeting point once, as the meeting location", () => {
+    const mapped = mapBookingToReceipt({ id: "b-1", meeting_point: { city: "Lagos", country: "Nigeria" } });
+
+    expect(mapped.meetingLocation).toBe("Lagos, Nigeria");
+    expect(mapped.experienceLocation).toBeNull();
   });
 
   it("only keeps an http(s) receipt link", () => {

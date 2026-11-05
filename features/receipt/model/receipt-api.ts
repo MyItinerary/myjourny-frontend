@@ -76,14 +76,14 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
   const total = parseSafeAmount(booking.price_total);
 
   const rawStatus = booking.payment_status;
-  const status: "paid" | "pending" | "refunded" | "unpaid" =
-    rawStatus === "paid"
-      ? "paid"
-      : rawStatus === "refunded"
-      ? "refunded"
-      : rawStatus === "unpaid"
-      ? "unpaid"
-      : "pending";
+  const status: ReceiptData["status"] =
+    rawStatus === "paid" ||
+    rawStatus === "pending" ||
+    rawStatus === "refunded" ||
+    rawStatus === "partial" ||
+    rawStatus === "unpaid"
+      ? rawStatus
+      : "unknown";
 
   let sessionDateTimeFormatted = "Date to be confirmed";
   if (booking.requested_datetime) {
@@ -114,7 +114,8 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
     // The API has no payment time, and created_at is only when the booking was made.
     paidAtFormatted: null,
     experienceTitle: booking.experience_title ?? "Experience Booking",
-    experienceLocation: location,
+    // The API only gives the meeting point, which is shown below as the meeting location.
+    experienceLocation: null,
     experienceImageUrl: null,
     sessionDateTimeFormatted,
     meetingLocation: location,

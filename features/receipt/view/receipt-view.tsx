@@ -103,11 +103,15 @@ export function ReceiptView({
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE2E2] px-3.5 py-1 font-sans text-xs font-semibold text-[#DC2626]">
                   Unpaid
                 </span>
-              ) : (
+              ) : receipt.status === "partial" ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F4F4F5] px-3.5 py-1 font-sans text-xs font-semibold text-[#71717A]">
+                  Partly refunded
+                </span>
+              ) : receipt.status === "pending" ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFBEB] px-3.5 py-1 font-sans text-xs font-semibold text-[#B45309]">
                   Payment pending
                 </span>
-              )}
+              ) : null}
             </div>
             <h2 className="mt-3 font-sans text-4xl font-extrabold tracking-tight text-[#130404] sm:text-5xl">
               {receipt.totalPriceFormatted ?? "—"}

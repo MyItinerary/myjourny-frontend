@@ -22,7 +22,7 @@ export interface ReceiptData {
   partySizeLabel?: string | null;
   taxesAndFeesNote?: string | null;
   receiptUrl?: string | null;
-  status: "paid" | "pending" | "refunded" | "unpaid";
+  status: "paid" | "pending" | "refunded" | "partial" | "unpaid" | "unknown";
 }
 
 export function formatMoney(amount: number | string, currency?: string | null): string {

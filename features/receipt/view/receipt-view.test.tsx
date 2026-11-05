@@ -88,6 +88,17 @@ describe("ReceiptView", () => {
     expect(defaultProps.onDownloadPdf).toHaveBeenCalledTimes(1);
   });
 
+  it("shows a partial refund, and no badge when the status is unknown", () => {
+    const { rerender } = render(
+      <ReceiptView {...defaultProps} receipt={{ ...mockReceipt, status: "partial" }} />
+    );
+    expect(screen.getByText("Partly refunded")).toBeInTheDocument();
+
+    rerender(<ReceiptView {...defaultProps} receipt={{ ...mockReceipt, status: "unknown" }} />);
+    expect(screen.queryByText("Partly refunded")).not.toBeInTheDocument();
+    expect(screen.queryByText("Payment pending")).not.toBeInTheDocument();
+  });
+
   it("renders non-paid status badges appropriately", () => {
     const { rerender } = render(
       <ReceiptView {...defaultProps} receipt={{ ...mockReceipt, status: "refunded", paidAtFormatted: null }} />
