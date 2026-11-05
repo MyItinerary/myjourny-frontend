@@ -89,8 +89,11 @@ export function buildPanel(filters: ResultsFilters, { tookQuiz }: { tookQuiz: bo
     selected: filters.categories.includes(c.slug),
   });
 
-  const categoryGroups: PanelModel["categoryGroups"] =
-    type === "experiences"
+  const subcategoriesAlone = tookQuiz && type !== "events";
+
+  const categoryGroups: PanelModel["categoryGroups"] = subcategoriesAlone
+    ? []
+    : type === "experiences"
       ? [{ title: null, items: EXPERIENCE_CATEGORIES.map(toCategory) }]
       : type === "events"
         ? [{ title: null, items: EVENT_CATEGORIES.map(toCategory) }]
@@ -99,15 +102,9 @@ export function buildPanel(filters: ResultsFilters, { tookQuiz }: { tookQuiz: bo
             { title: "Events", items: EVENT_CATEGORIES.map(toCategory) },
           ];
 
-  const subcategoryBlocks = tookQuiz
-    ? filters.categories.flatMap((parentSlug) => {
-        const subs = SUBCATEGORIES.filter((s) => s.parentSlug === parentSlug);
-        const parent = [...EXPERIENCE_CATEGORIES, ...EVENT_CATEGORIES].find((c) => c.slug === parentSlug);
-        return subs.length && parent
-          ? [{ parentSlug, title: parent.label, items: subs.map((s) => ({ slug: s.slug, label: s.label, selected: filters.subcategories.includes(s.slug) })) }]
-          : [];
-      })
-    : [];
+  const subcategories = subcategoriesAlone
+    ? SUBCATEGORIES.map((s) => ({ slug: s.slug, label: s.label, selected: filters.subcategories.includes(s.slug) }))
+    : null;
 
   return {
     types: TYPE_OPTIONS.map((t) => ({ ...t, selected: filters.types.includes(t.value) })),
@@ -121,7 +118,7 @@ export function buildPanel(filters: ResultsFilters, { tookQuiz }: { tookQuiz: bo
       { id: "under15k", label: "Under ₦15,000", selected: !filters.free && filters.price.min === null && filters.price.max === UNDER_15K.max },
     ],
     categoryGroups,
-    subcategoryBlocks,
+    subcategories,
     showQuizPrompt: !tookQuiz,
     collections: chipGroup(COLLECTIONS, filters),
     place: PLACE_GROUPS.map((g) => chipGroup(g, filters)),

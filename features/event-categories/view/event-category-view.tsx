@@ -1,4 +1,4 @@
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { HomeNav } from "@/components/home/home-nav";
 import { DetailBreadcrumbs } from "@/components/shared/detail-page-parts";
 import { EmptyStateView } from "@/features/empty-state";

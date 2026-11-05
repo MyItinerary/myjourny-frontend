@@ -20,7 +20,7 @@ const searchParams = vi.hoisted(() => ({ current: new URLSearchParams() }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => searchParams.current }));
 
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav data-testid="home-nav" /> }));
-vi.mock("@/components/home/footer", () => ({ Footer: () => <footer data-testid="footer" /> }));
+vi.mock("@/features/footer", () => ({ Footer: () => <footer data-testid="footer" /> }));
 vi.mock("@/components/home/experience-rail-section", () => ({ ExperienceRailSection: () => null }));
 vi.mock("@/features/taste-quiz-cta", () => ({
   TasteQuizCtaView: () => null,

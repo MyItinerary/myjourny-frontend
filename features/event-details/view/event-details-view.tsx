@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { HomeNav } from "@/components/home/home-nav";
 import { DetailActions, DetailBreadcrumbs } from "@/components/shared/detail-page-parts";
 import { Skeleton } from "@/components/ui/skeleton";
