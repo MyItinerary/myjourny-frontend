@@ -6,7 +6,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { HomeNav } from "@/components/home/home-nav";
 import { CitiesSection } from "@/components/home/cities-section";
 import { ExperienceRailSection } from "@/components/home/experience-rail-section";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { CategoryHeader, CategoryResultsGrid } from "@/features/categories";
 import { useDiscoverCitiesViewModel } from "@/features/cities";
 import {

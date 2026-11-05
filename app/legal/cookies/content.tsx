@@ -1,6 +1,6 @@
 "use client";
 
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { HomeNav } from "@/components/home/home-nav";
 import { CookieView, useCookieViewModel } from "@/features/legal";
 

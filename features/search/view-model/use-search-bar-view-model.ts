@@ -5,6 +5,7 @@ import { toCityDestination, useExperienceCities } from "@/features/cities";
 import { formatDateRange } from "@/lib/dates";
 import { categoriesBySlug } from "@/lib/mock-data/home";
 
+import { saveLastSearchArea } from "../model/last-search-area";
 import {
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
@@ -276,6 +277,7 @@ export function useSearchBarViewModel({
       }
 
       if (selectedType === "destination" && selectedWhereId) {
+        saveLastSearchArea(rawQuery);
         router.push(withDate(`/cities/${selectedWhereId}`, day, until));
         return;
       }
@@ -296,6 +298,7 @@ export function useSearchBarViewModel({
       );
 
       if (matchedDest && !matchedAct) {
+        saveLastSearchArea(matchedDest.city);
         router.push(withDate(`/cities/${matchedDest.id}`, day, until));
         return;
       }
@@ -306,6 +309,7 @@ export function useSearchBarViewModel({
       }
 
       if (matchedDest) {
+        saveLastSearchArea(matchedDest.city);
         router.push(withDate(`/cities/${matchedDest.id}`, day, until));
         return;
       }
@@ -315,6 +319,7 @@ export function useSearchBarViewModel({
         return;
       }
 
+      // Free text isn't remembered as an area: there's no list of areas yet to tell "Lekki" from "jazz brunch".
       router.push(withDate(`/search?q=${encodeURIComponent(rawQuery)}`, day, until));
     },
     [dateRange, destinations, handleClose, router, selectedType, selectedWhere, selectedWhereId],
@@ -323,6 +328,7 @@ export function useSearchBarViewModel({
   const onNavigateToDestination = useCallback(
     (dest: DestinationSuggestion) => {
       handleClose();
+      saveLastSearchArea(dest.city);
       router.push(`/cities/${dest.id}`);
     },
     [handleClose, router],

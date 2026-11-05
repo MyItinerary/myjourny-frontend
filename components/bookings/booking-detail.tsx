@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CalendarDays, ChevronLeft, Users } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/lib/auth/session-store";

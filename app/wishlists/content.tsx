@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { HomeNav } from "@/components/home/home-nav";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { useWishlists, useCreateWishlist } from "@/lib/queries/wishlists";
 import { useSession } from "@/lib/auth/session-store";
 import { formatUpdated } from "@/lib/wishlist-format";

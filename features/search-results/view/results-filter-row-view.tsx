@@ -44,12 +44,10 @@ function RemoveX({ label, onRemove }: { label: string; onRemove: (e: MouseEvent)
 export function ResultsFilterRowView(props: ResultsFilterRowViewProps) {
   const {
     rowChips,
-    subRows,
     filterCount,
     openDropdown,
     toggleCategory,
     toggleSubcategory,
-    selectAllSubcategories,
     toggleDropdown,
     closeDropdown,
     clearChip,
@@ -208,7 +206,7 @@ export function ResultsFilterRowView(props: ResultsFilterRowViewProps) {
             >
               {rowChips.map((chip) => {
                 const dark =
-                  chip.kind === "category"
+                  chip.kind === "category" || chip.kind === "subcategory"
                     ? chip.selected
                     : chip.kind === "dropdown"
                       ? chip.active
@@ -217,7 +215,7 @@ export function ResultsFilterRowView(props: ResultsFilterRowViewProps) {
                   <button
                     key={chip.key}
                     type="button"
-                    aria-pressed={chip.kind === "category" ? chip.selected : undefined}
+                    aria-pressed={chip.kind === "category" || chip.kind === "subcategory" ? chip.selected : undefined}
                     aria-expanded={chip.kind === "dropdown" ? openDropdown === chip.id : undefined}
                     onClick={(e) => onChip(chip, e)}
                     className={cn(CHIP, dark ? CHIP_DARK : CHIP_LIGHT)}
@@ -233,9 +231,6 @@ export function ResultsFilterRowView(props: ResultsFilterRowViewProps) {
                       />
                     )}
                     {chip.label}
-                    {chip.kind === "category" && chip.forYou && !chip.selected && (
-                      <span aria-label="For you" role="img" className="size-1.5 rounded-full bg-[#1f1c20]" />
-                    )}
                     {dark ? (
                       <RemoveX label={chip.label} onRemove={(e) => onRemove(chip, e)} />
                     ) : chip.kind === "dropdown" && chip.id !== "dates" ? (
@@ -268,36 +263,6 @@ export function ResultsFilterRowView(props: ResultsFilterRowViewProps) {
             )}
           </div>
         </div>
-
-        {/* Taste quiz taken: a sub-row slides in under the row for each selected category (two at most). */}
-        {subRows.map((row) => (
-          <div
-            key={row.parentSlug}
-            className="flex h-12 items-center gap-2 overflow-x-auto pb-1 animate-in fade-in slide-in-from-top-2 duration-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            <span className="shrink-0 truncate pl-1 pr-2 font-sans text-sm text-[#6f6b72]">{row.title}</span>
-            <button
-              type="button"
-              aria-pressed={row.allSelected}
-              onClick={() => selectAllSubcategories(row.parentSlug)}
-              className={cn(CHIP, "h-9 text-sm", row.allSelected ? CHIP_DARK : CHIP_LIGHT)}
-            >
-              All {row.title}
-            </button>
-            {row.items.map((item) => (
-              <button
-                key={item.slug}
-                type="button"
-                aria-pressed={item.selected}
-                onClick={() => toggleSubcategory(item.slug)}
-                className={cn(CHIP, "h-9 text-sm", item.selected ? CHIP_DARK : CHIP_LIGHT)}
-              >
-                {item.label}
-                {item.selected && <X className="-mr-1 size-4" />}
-              </button>
-            ))}
-          </div>
-        ))}
 
         {/* Dropdowns sit outside the scroller so its overflow can't clip them. On mobile the wrapper
             disappears and the date picker becomes a bottom sheet. */}

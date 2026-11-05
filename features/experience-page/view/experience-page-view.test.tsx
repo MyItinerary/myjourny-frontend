@@ -8,7 +8,7 @@ import type { ExperiencePageViewModel } from "../view-model/use-experience-page-
 import { ExperiencePageView } from "./experience-page-view";
 
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav aria-label="Main" /> }));
-vi.mock("@/components/home/footer", () => ({ Footer: () => <footer>Footer</footer> }));
+vi.mock("@/features/footer", () => ({ Footer: () => <footer>Footer</footer> }));
 vi.mock("@/components/home/experience-rail-section", () => ({
   ExperienceRailSection: ({ heading }: { heading: string }) => <section aria-label={heading} />,
 }));

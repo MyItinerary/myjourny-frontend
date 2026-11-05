@@ -7,7 +7,7 @@ vi.mock("@/components/home/home-nav", () => ({
   HomeNav: () => <nav data-testid="mock-home-nav">HomeNav</nav>,
 }));
 
-vi.mock("@/components/home/footer", () => ({
+vi.mock("@/features/footer", () => ({
   Footer: () => <footer data-testid="mock-footer">Footer</footer>,
 }));
 
