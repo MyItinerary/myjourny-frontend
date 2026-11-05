@@ -26,7 +26,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav data-testid="home-nav" /> }));
-vi.mock("@/components/home/footer", () => ({ Footer: () => <footer data-testid="footer" /> }));
+vi.mock("@/features/footer", () => ({ Footer: () => <footer data-testid="footer" /> }));
 vi.mock("@/components/wishlists/wishlist-dialogs", () => ({
   NameWishlistDialog: () => null,
   DeleteWishlistDialog: () => null,

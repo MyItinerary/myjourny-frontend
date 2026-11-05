@@ -8,12 +8,10 @@ export type {
   PriceRange,
   ResultsFilters,
   RowChip,
-  SubRow,
 } from "./model/search-results.types";
 export {
   buildResultsHeading,
   buildRowChips,
-  buildSubRows,
   countActiveFilters,
   EMPTY_FILTERS,
   formatResultsCount,

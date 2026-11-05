@@ -231,30 +231,29 @@ describe("useSearchResultsViewModel", () => {
     const { result } = setup("guest");
 
     act(() => result.current.toggleCategory("local-food-drinks"));
-    expect(result.current.subRows).toEqual([]);
+    expect(result.current.rowChips.some((c) => c.kind === "subcategory")).toBe(false);
     expect(result.current.rowChips.map((c) => c.kind)).not.toContain("unlock");
     expect(result.current.panel.showQuizPrompt).toBe(true);
     expect(result.current.quizHref).toBe("/onboarding");
   });
 
-  it("with the quiz: a sub-row opens under a selected category and a subcategory moves to its front", () => {
+  it("with the quiz: subcategories are the row's filters and are picked on their own", () => {
     mockApi();
     const { result } = setup("taken");
 
+    expect(result.current.rowChips.some((c) => c.kind === "category")).toBe(false);
+    act(() => result.current.toggleSubcategory("cafes-coffee-culture"));
+    expect(result.current.filters.subcategories).toEqual(["cafes-coffee-culture"]);
+    expect(result.current.filters.categories).toEqual([]);
+    expect(result.current.rowChips[0]).toMatchObject({ kind: "subcategory", slug: "cafes-coffee-culture", selected: true });
+    expect(result.current.filterCount).toBe(1);
+
+    // A category picked in the panel doesn't tie the subcategory to it.
     act(() => result.current.toggleCategory("local-food-drinks"));
-    expect(result.current.subRows[0]).toMatchObject({ title: "Local food & drinks", allSelected: true });
+    act(() => result.current.toggleCategory("local-food-drinks"));
+    expect(result.current.filters.subcategories).toEqual(["cafes-coffee-culture"]);
 
     act(() => result.current.toggleSubcategory("cafes-coffee-culture"));
-    expect(result.current.subRows[0].allSelected).toBe(false);
-    expect(result.current.subRows[0].items[0].slug).toBe("cafes-coffee-culture");
-    expect(result.current.filterCount).toBe(2);
-
-    act(() => result.current.selectAllSubcategories("local-food-drinks"));
-    expect(result.current.filters.subcategories).toEqual([]);
-
-    // Deselecting the category drops its subcategories.
-    act(() => result.current.toggleSubcategory("cafes-coffee-culture"));
-    act(() => result.current.toggleCategory("local-food-drinks"));
     expect(result.current.filters.subcategories).toEqual([]);
   });
 

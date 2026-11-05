@@ -50,12 +50,9 @@ describe("ResultsFilterRowView", () => {
     expect(toggleCategory).toHaveBeenCalledWith("culture-history");
   });
 
-  it("marks the quiz taker's own categories with a For you dot, and no one else's", () => {
-    const { rerender } = renderWithProviders(<ResultsFilterRowView {...buildResultsVm()} />);
+  it("shows no dot on any chip", () => {
+    renderWithProviders(<ResultsFilterRowView {...buildResultsVm({ tookQuiz: true })} />);
     expect(screen.queryAllByRole("img", { name: "For you" })).toHaveLength(0);
-
-    rerender(<ResultsFilterRowView {...buildResultsVm({ tookQuiz: true })} />);
-    expect(screen.getAllByRole("img", { name: "For you" }).length).toBeGreaterThan(0);
   });
 
   it("keeps the taste-quiz prompt out of the row, even with a category selected", () => {
@@ -85,26 +82,33 @@ describe("ResultsFilterRowView", () => {
     expect(clearChip).toHaveBeenCalledWith("dates");
   });
 
-  it("opens a sub-row under a selected category for quiz takers", async () => {
-    const selectAllSubcategories = vi.fn();
+  it("after the quiz, offers subcategories as the filters and toggles one on a click", async () => {
     const toggleSubcategory = vi.fn();
-    const filters = withFilters({ categories: ["local-food-drinks"] });
-    const { user } = renderWithProviders(
-      <ResultsFilterRowView {...buildResultsVm({ filters, tookQuiz: true, selectAllSubcategories, toggleSubcategory })} />,
-    );
+    const { user } = renderWithProviders(<ResultsFilterRowView {...buildResultsVm({ tookQuiz: true, toggleSubcategory })} />);
 
-    expect(screen.getByRole("button", { name: "All Local food & drinks", pressed: true })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Culture & history" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Cafés & coffee culture" }));
     expect(toggleSubcategory).toHaveBeenCalledWith("cafes-coffee-culture");
-    await user.click(screen.getByRole("button", { name: "All Local food & drinks" }));
-    expect(selectAllSubcategories).toHaveBeenCalledWith("local-food-drinks");
   });
 
-  it("has no sub-row without the quiz", () => {
+  it("shows a selected subcategory pressed, removable with its X, and never adds a second row", async () => {
+    const toggleSubcategory = vi.fn();
+    const filters = withFilters({ subcategories: ["cafes-coffee-culture"] });
+    const { user } = renderWithProviders(<ResultsFilterRowView {...buildResultsVm({ filters, tookQuiz: true, toggleSubcategory })} />);
+
+    expect(screen.getByRole("button", { name: /Cafés & coffee culture/, pressed: true })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^All / })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Remove Cafés & coffee culture" }));
+    expect(toggleSubcategory).toHaveBeenCalledWith("cafes-coffee-culture");
+  });
+
+  it("without the quiz, shows categories and never subcategories", () => {
     const filters = withFilters({ categories: ["local-food-drinks"] });
     renderWithProviders(<ResultsFilterRowView {...buildResultsVm({ filters })} />);
 
-    expect(screen.queryByRole("button", { name: "All Local food & drinks" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Culture & history" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cafés & coffee culture" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^All / })).not.toBeInTheDocument();
   });
 
   it("is the nav's glass on mobile from the start, so it's never see-through over the results", () => {

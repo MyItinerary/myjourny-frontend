@@ -6,6 +6,7 @@ import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
+import { readLastSearchArea } from "../model/last-search-area";
 import { useSearchBarViewModel } from "./use-search-bar-view-model";
 
 const mockPush = vi.fn();
@@ -371,5 +372,45 @@ describe("useSearchBarViewModel", () => {
       result.current.incrementGuest("infants");
     });
     expect(result.current.whoText).toBe("4 guests, 1 infant");
+  });
+
+  describe("remembering the searched area", () => {
+    it("remembers a searched destination", () => {
+      window.localStorage.clear();
+      const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+      act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "Beaches" }));
+      act(() => result.current.onSearch());
+
+      expect(readLastSearchArea()).toBe("Lagos, Nigeria");
+    });
+
+    it("does not remember free text as an area", () => {
+      window.localStorage.clear();
+      const { result } = renderHookWithProviders(() => useSearchBarViewModel({ initialWhere: "jazz brunch" }));
+
+      act(() => result.current.onSearch());
+
+      expect(readLastSearchArea()).toBeNull();
+    });
+
+    it("remembers a destination tapped in the suggestions", () => {
+      window.localStorage.clear();
+      const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+      act(() => result.current.onNavigateToDestination({ id: "abuja", city: "Abuja", description: "" }));
+
+      expect(readLastSearchArea()).toBe("Abuja");
+    });
+
+    it("does not remember an experience or an event as an area", () => {
+      window.localStorage.clear();
+      const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+      act(() => result.current.onSelectExperience({ id: "exp-1", title: "Nike Art Gallery Deep Dive" }));
+      act(() => result.current.onSearch());
+
+      expect(readLastSearchArea()).toBeNull();
+    });
   });
 });
