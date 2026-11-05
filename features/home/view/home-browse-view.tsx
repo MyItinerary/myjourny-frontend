@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { eventsEnabled } from "@/lib/feature-flags";
+
 const TILES = [
   {
     href: "/experiences",
@@ -25,7 +27,7 @@ export function HomeBrowseView() {
           Browse everything
         </h2>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {TILES.map((tile) => (
+          {TILES.filter((tile) => tile.href !== "/events" || eventsEnabled()).map((tile) => (
             <Link
               key={tile.href}
               href={tile.href}

@@ -1,4 +1,5 @@
 import { useSession } from "@/lib/auth/session-store";
+import { eventsEnabled } from "@/lib/feature-flags";
 import { useGeolocation } from "@/lib/hooks/use-geolocation";
 import {
   experienceListItemToCardProps,
@@ -94,7 +95,8 @@ export function useHomeViewModel(): HomeViewModel {
     hero: useHomeHeroViewModel(),
     pickUp,
     basedOnSearch,
-    tonightAndThisWeekend: rail(DUMMY_POPULAR_EVENTS, false),
+    // See more goes to /events, which is a 404 while events are off.
+    tonightAndThisWeekend: rail(eventsEnabled() ? DUMMY_POPULAR_EVENTS : [], false),
     pickedForYou,
     localFoodAndDrinks: rail(DUMMY_LOCAL_FOOD_AND_DRINKS, false),
     earlyBird: rail(DUMMY_EARLY_BIRD, false),
