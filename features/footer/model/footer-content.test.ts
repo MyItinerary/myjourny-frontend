@@ -9,7 +9,8 @@ describe("footer content", () => {
   });
 
   it("has the legal links and socials", () => {
-    expect(FOOTER_LEGAL_LINKS).toEqual(["Privacy policy", "Terms of use", "Cookie policy", "Cookie preferences"]);
+    expect(FOOTER_LEGAL_LINKS.map((l) => l.label)).toEqual(["Privacy policy", "Terms of use", "Cookie policy", "Cookie preferences"]);
+    expect(FOOTER_LEGAL_LINKS.every((l) => l.href.startsWith("/legal/"))).toBe(true);
     expect(FOOTER_SOCIAL_LINKS.map((s) => s.label)).toEqual(["LinkedIn", "X", "Instagram"]);
   });
 });

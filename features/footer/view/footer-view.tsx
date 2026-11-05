@@ -95,9 +95,9 @@ export function FooterView({
               <h3 className="text-sm font-semibold tracking-[0.14px] text-[#2a2420]">{column.heading}</h3>
               <ul className="flex flex-col gap-2.5">
                 {column.links.map((link) => (
-                  <li key={link} className="flex h-6 items-center">
-                    <Link href="#" className="text-sm text-[#4a4540] hover:text-[#0d0d0d] hover:underline">
-                      {link}
+                  <li key={link.label} className="flex h-6 items-center">
+                    <Link href={link.href} className="text-sm text-[#4a4540] hover:text-[#0d0d0d] hover:underline">
+                      {link.label}
                     </Link>
                   </li>
                 ))}
@@ -110,10 +110,10 @@ export function FooterView({
           <div className="flex flex-wrap items-center gap-2.5">
             <span>&copy; {year} Myjourny, Inc.</span>
             {legalLinks.map((link) => (
-              <span key={link} className="flex items-center gap-2.5">
+              <span key={link.label} className="flex items-center gap-2.5">
                 <Image src="/icons/footer/dot.svg" alt="" width={7} height={7} aria-hidden="true" />
-                <Link href="#" className="hover:text-[#0d0d0d] hover:underline">
-                  {link}
+                <Link href={link.href} className="hover:text-[#0d0d0d] hover:underline">
+                  {link.label}
                 </Link>
               </span>
             ))}
