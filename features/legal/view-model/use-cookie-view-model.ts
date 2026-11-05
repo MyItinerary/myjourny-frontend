@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { cookieData } from "../model/cookie-data";
 import {
   type CookiePreferences,
+  DEFAULT_COOKIE_PREFERENCES,
   getStoredCookiePreferences,
   saveStoredCookiePreferences,
 } from "../model/cookie-preferences.types";
@@ -29,9 +30,8 @@ export interface CookieViewModel {
 export function useCookieViewModel(): CookieViewModel {
   const [activeSectionId, setActiveSectionId] = useState<string>("section-1");
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-  const [preferences, setPreferences] = useState<CookiePreferences>(() =>
-    getStoredCookiePreferences()
-  );
+  const [preferences, setPreferences] =
+    useState<CookiePreferences>(DEFAULT_COOKIE_PREFERENCES);
 
   const onSectionSelect = useCallback((id: string) => {
     setActiveSectionId(id);
@@ -44,6 +44,7 @@ export function useCookieViewModel(): CookieViewModel {
   }, []);
 
   const openPreferences = useCallback(() => {
+    setPreferences(getStoredCookiePreferences());
     setIsPreferencesOpen(true);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("open-cookie-preferences"));

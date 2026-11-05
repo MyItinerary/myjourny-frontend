@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { COOKIE_PREFERENCES_STORAGE_KEY } from "../model/cookie-preferences.types";
 import { useCookieViewModel } from "./use-cookie-view-model";
 
 const toastSuccess = vi.fn();
@@ -119,5 +120,31 @@ describe("useCookieViewModel", () => {
 
     expect(result.current.isPreferencesOpen).toBe(false);
     expect(toastSuccess).toHaveBeenCalledWith("Cookie preferences saved");
+  });
+
+  it("loads stored preferences from localStorage when opening dialog to avoid hydration mismatch", () => {
+    window.localStorage.setItem(
+      COOKIE_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        strictlyNecessary: true,
+        preferences: false,
+        analytics: true,
+        personalisation: true,
+      })
+    );
+
+    const { result } = renderHook(() => useCookieViewModel());
+
+    // Starts with default preferences on first render to prevent hydration mismatches
+    expect(result.current.preferences.analytics).toBe(false);
+
+    // Reads persisted storage on opening the preferences dialog
+    act(() => {
+      result.current.openPreferences();
+    });
+
+    expect(result.current.preferences.preferences).toBe(false);
+    expect(result.current.preferences.analytics).toBe(true);
+    expect(result.current.preferences.personalisation).toBe(true);
   });
 });
