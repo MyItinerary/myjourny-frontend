@@ -127,7 +127,7 @@ export function mapBookingToReceipt(booking: ApiBookingResponse): ReceiptData {
 }
 
 export async function fetchReceipt(bookingId: string): Promise<ReceiptData> {
-  const res = await apiClient.get<ApiBookingResponse>(`/bookings/${bookingId}`);
+  const res = await apiClient.get<ApiBookingResponse>(`/bookings/${encodeURIComponent(bookingId)}`);
   return mapBookingToReceipt(res.data);
 }
 
