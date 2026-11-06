@@ -1,6 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { apiUrl } from "@/test/msw/handlers";
+import { server } from "@/test/msw/server";
+import { renderWithProviders } from "@/test/utils/render";
 import { BecomeAGuideContent } from "./content";
 
 vi.mock("next/navigation", () => ({
@@ -14,8 +18,15 @@ vi.mock("@/features/footer", () => ({
 }));
 
 describe("BecomeAGuideContent", () => {
+  beforeEach(() => {
+    server.use(
+      http.get(apiUrl("/experiences/filter"), () => {
+        return HttpResponse.json({ items: [] });
+      })
+    );
+  });
   it("renders the become a guide content wrapper", () => {
-    render(<BecomeAGuideContent />);
+    renderWithProviders(<BecomeAGuideContent />);
     expect(
       screen.getByRole("heading", { name: /You built the audience\. Start earning from it\./i })
     ).toBeInTheDocument();

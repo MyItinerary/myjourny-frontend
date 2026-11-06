@@ -2,7 +2,19 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { calculateEarnings, formatNgnCurrency, PROFESSIONS } from "../model/become-a-guide-calculator";
-import type { CalculatorOutputs, ProfessionOption } from "../model/become-a-guide.types";
+import { FAQ_ITEMS } from "../model/become-a-guide-faq";
+import { THREE_STEPS } from "../model/become-a-guide-steps";
+import type {
+  CalculatorOutputs,
+  FaqItem,
+  ProfessionOption,
+  SampleExperienceItem,
+  ThreeStepItem,
+} from "../model/become-a-guide.types";
+import {
+  DEFAULT_SAMPLE_EXPERIENCES,
+  useSampleExperiencesQuery,
+} from "../model/sample-experiences";
 
 export interface BecomeAGuideViewModel {
   professions: ProfessionOption[];
@@ -12,12 +24,18 @@ export interface BecomeAGuideViewModel {
   groupSize: number;
   sessionsPerMonth: number;
   earnings: CalculatorOutputs;
+  steps: ThreeStepItem[];
+  sampleExperiences: SampleExperienceItem[];
+  isLoadingExperiences: boolean;
+  faqItems: FaqItem[];
+  openFaqId: string | null;
   onSelectProfession: (id: string) => void;
   onPriceChange: (price: number) => void;
   onGroupSizeChange: (size: number) => void;
   onSessionsChange: (sessions: number) => void;
   onStartApplication: () => void;
   onScrollToHowItWorks: () => void;
+  onToggleFaq: (id: string) => void;
 }
 
 export function useBecomeAGuideViewModel(): BecomeAGuideViewModel {
@@ -58,7 +76,7 @@ export function useBecomeAGuideViewModel(): BecomeAGuideViewModel {
   }, []);
 
   const onStartApplication = useCallback(() => {
-    router.push("/host/dashboard/listings/new");
+    router.push("/become-a-guide/apply");
   }, [router]);
 
   const onScrollToHowItWorks = useCallback(() => {
@@ -70,6 +88,15 @@ export function useBecomeAGuideViewModel(): BecomeAGuideViewModel {
     }
   }, []);
 
+  const [openFaqId, setOpenFaqId] = useState<string | null>("cost-to-list");
+
+  const onToggleFaq = useCallback((id: string) => {
+    setOpenFaqId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const sampleExperiencesQuery = useSampleExperiencesQuery();
+  const sampleExperiences = sampleExperiencesQuery.data ?? DEFAULT_SAMPLE_EXPERIENCES;
+
   return {
     professions: PROFESSIONS,
     selectedProfessionId,
@@ -78,11 +105,17 @@ export function useBecomeAGuideViewModel(): BecomeAGuideViewModel {
     groupSize,
     sessionsPerMonth,
     earnings,
+    steps: THREE_STEPS,
+    sampleExperiences,
+    isLoadingExperiences: sampleExperiencesQuery.isLoading,
+    faqItems: FAQ_ITEMS,
+    openFaqId,
     onSelectProfession,
     onPriceChange,
     onGroupSizeChange,
     onSessionsChange,
     onStartApplication,
     onScrollToHowItWorks,
+    onToggleFaq,
   };
 }

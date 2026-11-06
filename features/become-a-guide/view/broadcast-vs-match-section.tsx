@@ -1,10 +1,10 @@
 import { ArrowRight, Check } from "lucide-react";
 
 export function BroadcastVsMatchSection() {
-  // 24 dots representing broadcast followers (mostly grey #D9D4CC, two golden #E8A93B)
-  const broadcastDots = Array.from({ length: 24 }).map((_, i) => ({
+  // 35 dots across 3 rows (14 + 14 + 7) representing broadcast followers (mostly grey #D9D4CC, two golden #E8A93B)
+  const broadcastDots = Array.from({ length: 35 }).map((_, i) => ({
     id: i,
-    isMatch: i === 5 || i === 14,
+    isMatch: i === 5 || i === 17,
   }));
 
   // 8 dots representing high-intent matched bookings (all golden #E8A93B)
@@ -40,11 +40,11 @@ export function BroadcastVsMatchSection() {
           </div>
 
           {/* Followers Dot Matrix */}
-          <div className="mt-6 flex flex-wrap gap-2 sm:gap-2.5">
+          <div className="mt-6 grid w-fit grid-cols-[repeat(14,11px)] gap-1.5 sm:grid-cols-[repeat(14,14px)] sm:gap-2">
             {broadcastDots.map((dot) => (
               <span
                 key={dot.id}
-                className={`size-3.5 rounded-[7px] ${
+                className={`size-[11px] rounded-[5px] sm:size-3.5 sm:rounded-[7px] ${
                   dot.isMatch ? "bg-[#E8A93B]" : "bg-[#D9D4CC]"
                 }`}
               />
@@ -84,9 +84,12 @@ export function BroadcastVsMatchSection() {
           </div>
 
           {/* Matched Dots */}
-          <div className="mt-6 flex flex-wrap gap-2 sm:gap-2.5">
+          <div className="mt-6 flex flex-wrap gap-1.5 sm:gap-2">
             {matchedDots.map((dot) => (
-              <span key={dot.id} className="size-3.5 rounded-[7px] bg-[#E8A93B]" />
+              <span
+                key={dot.id}
+                className="size-[11px] rounded-[5px] bg-[#E8A93B] sm:size-3.5 sm:rounded-[7px]"
+              />
             ))}
           </div>
 

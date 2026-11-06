@@ -41,7 +41,7 @@ export function HeroSection({ onStartApplication, onScrollToHowItWorks }: HeroSe
           </div>
         </div>
 
-        {/* Right Column: Hero Image with Floating Badge */}
+        {/* Right Column: Hero Image */}
         <div className="flex justify-center lg:col-span-6">
           <div className="relative aspect-[4/5] w-full max-w-[520px] overflow-hidden rounded-[28px] bg-[#EBEBEB] shadow-md">
             <Image
@@ -52,14 +52,6 @@ export function HeroSection({ onStartApplication, onScrollToHowItWorks }: HeroSe
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 520px"
             />
-
-            {/* Floating Avatar Badge */}
-            <div
-              aria-hidden="true"
-              className="absolute bottom-6 right-6 flex size-12 items-center justify-center rounded-full border-2 border-white bg-[#00875A] font-sans text-lg font-bold text-white shadow-lg"
-            >
-              N
-            </div>
           </div>
         </div>
       </div>
