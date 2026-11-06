@@ -99,4 +99,35 @@ describe("useGuideApplicationViewModel", () => {
 
     expect(result.current.step).toBe("review");
   });
+
+  it("stays on step 2 when registration fails", async () => {
+    server.use(
+      http.post(apiUrl("/auth/register"), () => {
+        return HttpResponse.json({ message: "Registration failed" }, { status: 400 });
+      })
+    );
+
+    const { result } = renderHook(() => useGuideApplicationViewModel());
+
+    act(() => {
+      result.current.setField("fullName", "Samuel Samuels");
+      result.current.setField("dateOfBirth", "15/08/1995");
+      result.current.setField("phoneNumber", "8012345678");
+    });
+
+    await act(async () => {
+      await result.current.handleContinue();
+    });
+
+    act(() => {
+      result.current.setField("email", "samuel@example.com");
+      result.current.setField("password", "strongpassword123");
+    });
+
+    await act(async () => {
+      await result.current.handleContinue();
+    });
+
+    expect(result.current.step).toBe(2);
+  });
 });

@@ -32,10 +32,8 @@ export async function submitGuideApplication(
         ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
         : undefined;
 
-    // Even if /auth/register fails with user already registered or route nuance,
-    // we return success: true for seamless client preview unless an unexpected fatal error occurs
     return {
-      success: true,
+      success: false,
       message: errorMsg,
     };
   }

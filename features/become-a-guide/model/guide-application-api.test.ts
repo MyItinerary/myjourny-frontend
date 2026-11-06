@@ -52,4 +52,20 @@ describe("guide-application-api", () => {
       verification_type: "business",
     });
   });
+
+  it("returns failure result with error message when registration fails", async () => {
+    server.use(
+      http.post(apiUrl("/auth/register"), async () => {
+        return HttpResponse.json({ message: "Email already registered" }, { status: 409 });
+      })
+    );
+
+    const result = await submitGuideApplication({
+      ...DEFAULT_APPLICATION_DATA,
+      email: "duplicate@example.com",
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("Email already registered");
+  });
 });
