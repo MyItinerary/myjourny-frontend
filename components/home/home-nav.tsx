@@ -415,7 +415,7 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
               </button>
 
               <Link
-                href="#"
+                href="/become-a-guide"
                 className="hidden text-base font-medium text-foreground transition-colors hover:text-brand xl:inline-block mr-1"
               >
                 Become a guide
@@ -558,7 +558,7 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                       <div className="my-3 h-px w-full bg-[#EEEEEE]" />
 
                       <MenuRow
-                        href="#"
+                        href="/become-a-guide"
                         onClick={() => setProfileMenuOpen(false)}
                         icon="/icons/nav/become-guide.png"
                         label="Become a guide"
