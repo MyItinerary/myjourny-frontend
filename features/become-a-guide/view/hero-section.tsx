@@ -45,7 +45,7 @@ export function HeroSection({ onStartApplication, onScrollToHowItWorks }: HeroSe
         <div className="flex justify-center lg:col-span-6">
           <div className="relative aspect-[4/5] w-full max-w-[520px] overflow-hidden rounded-[28px] bg-[#EBEBEB] shadow-md">
             <Image
-              src="/guides/homepage.png"
+              src="/guides/homepage.webp"
               alt="Real experiences hosted by real people"
               fill
               priority
