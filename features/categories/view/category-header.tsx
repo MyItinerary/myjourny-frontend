@@ -48,7 +48,7 @@ export function CategoryHeader({
         <span className="text-base font-medium text-foreground">{label}</span>
       </nav>
 
-      <p className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[40px]">
+      <p className="font-heading text-[32px] leading-[1.2] font-extrabold text-foreground lg:text-[32px]">
         {label}
         {countText && (
           <>

@@ -15,7 +15,7 @@ import {
   shortPrice,
   shortPriceOrFree,
 } from "../model/booking-card";
-import { formatSessionDay, formatSessionWhen } from "../model/format";
+import { formatPrice, formatSessionDay, formatSessionWhen, trimWholeAmount } from "../model/format";
 import { useBookingQuote, useExperiencePricing } from "../model/pricing";
 import { dateKey, useExperienceSessions } from "../model/sessions";
 import { type SessionChoice, useSessionChoice } from "./use-session-choice";
@@ -83,6 +83,10 @@ export type BookingPanelViewModel = Omit<TicketSelection, "guests" | "picked"> &
   seatsWarning: string | null;
   /** Null until the selection can be booked and is priced. */
   total: string | null;
+  /** The list-price total, shown the instant a ticket is added while the server's quote is still on its way. Null when nothing can be booked. */
+  totalEstimate: string | null;
+  /** The server is pricing the latest selection. */
+  totalUpdating: boolean;
   booking: { available: boolean; disabled: boolean; pending: boolean; label: string; onBook: () => void };
   card: BookingCardState;
 };
@@ -162,7 +166,8 @@ export function useBookingPanelViewModel({
   const pickedKey = JSON.stringify(picked);
   const selection: PricingSelection | null = useMemo(
     () =>
-      picked.items.length === 0 || !withinGroupSize
+      // Until the sessions arrive the request can only be a guessed date, which a scheduled experience rejects.
+      picked.items.length === 0 || !withinGroupSize || sessions.loading
         ? null
         : {
             experience_id: experienceId,
@@ -173,7 +178,7 @@ export function useBookingPanelViewModel({
     // `picked` and `request` are rebuilt every render; their JSON is the
     // stable dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [experienceId, pickedKey, requestKey, appliedPromo, withinGroupSize],
+    [experienceId, pickedKey, requestKey, appliedPromo, withinGroupSize, sessions.loading],
   );
   const { data: lastQuote, isFetching: quoting, isError: quoteFailed, error: quoteErrorCause, refetch: retryQuote } = useBookingQuote(selection);
   // The query keeps the previous quote while a new one loads; drop it once
@@ -376,6 +381,8 @@ export function useBookingPanelViewModel({
         ? `Only ${seatsLeft} spot${seatsLeft === 1 ? "" : "s"} left for this session.`
         : null,
     total,
+    totalEstimate: selection ? trimWholeAmount(formatPrice(estimateTotal(), currency)) : null,
+    totalUpdating: !!selection && quoting,
     card,
     booking: {
       available: !!guideId,

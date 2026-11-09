@@ -145,3 +145,23 @@
     @apply font-sans;
   }
 }
+/* Two stacked range inputs make the dual-thumb price slider; only the thumbs take pointer events. */
+.price-thumb::-webkit-slider-thumb {
+  pointer-events: auto;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid #f5032d;
+  cursor: pointer;
+}
+.price-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid #f5032d;
+  cursor: pointer;
+}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CalendarDays, ChevronLeft, Users } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/lib/auth/session-store";
 import { useBooking } from "@/lib/queries/bookings";
@@ -154,9 +154,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col">
-      <div className="hidden lg:block">
-        <HomeNav />
-      </div>
+      <HomeNav />
       <main className="mx-auto w-full max-w-[720px] px-6 py-8">
         <Link href="/" className="mb-6 inline-flex items-center gap-1 text-sm text-[#6F6B72] hover:text-[#130404]">
           <ChevronLeft className="size-4" /> Home

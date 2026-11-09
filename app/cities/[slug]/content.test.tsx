@@ -20,11 +20,12 @@ const searchParams = vi.hoisted(() => ({ current: new URLSearchParams() }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => searchParams.current }));
 
 vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav data-testid="home-nav" /> }));
-vi.mock("@/components/home/footer", () => ({ Footer: () => <footer data-testid="footer" /> }));
+vi.mock("@/features/footer", () => ({ Footer: () => <footer data-testid="footer" /> }));
 vi.mock("@/components/home/experience-rail-section", () => ({ ExperienceRailSection: () => null }));
 vi.mock("@/features/taste-quiz-cta", () => ({
   TasteQuizCtaView: () => null,
-  useTasteQuizCtaViewModel: () => ({ isVisible: false, onDismiss: vi.fn() }),
+  useTasteQuizCtaViewModel: () => ({ isVisible: false, onDismiss: vi.fn(), href: "/quiz" }),
+  useTasteQuizAudience: () => "guest",
 }));
 
 vi.mock("@/components/experiences/experience-card-vertical", () => ({
@@ -90,6 +91,13 @@ describe("CityContent", () => {
     searchParams.current = new URLSearchParams();
   });
 
+  it("keeps the last day of a range in the Dates chip, without narrowing to one day", () => {
+    searchParams.current = new URLSearchParams("date=2030-06-01&until=2030-06-03");
+    renderWithProviders(<CityContent cityName="Abuja" />);
+    expect(cityQueryState.lastFilters?.date).toBeUndefined();
+    searchParams.current = new URLSearchParams();
+  });
+
   it("shows just the city in the title, and skeletons in the grid, while pending", () => {
     cityQueryState.isPending = true;
     cityQueryState.isError = false;
@@ -97,7 +105,7 @@ describe("CityContent", () => {
 
     const { container } = renderWithProviders(<CityContent cityName="Lagos" country="Nigeria" />);
 
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/^Experiences in Lagos$/);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/^Things to do in Lagos$/);
     expect(screen.queryByText(/Loading experiences/i)).not.toBeInTheDocument();
     const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);

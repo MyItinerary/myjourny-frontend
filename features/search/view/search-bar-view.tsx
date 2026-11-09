@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 
-import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
+import { DateRangePanel } from "@/components/shared/date-range-panel";
 import { cn } from "@/lib/utils";
 
 import type { SearchBarViewModel } from "../view-model/use-search-bar-view-model";
@@ -20,16 +20,16 @@ export function SearchBarView({
   activeTab,
   selectedWhere,
   selectedWhen,
-  selectedDate,
-  minDate,
+  draftRange,
   whoText,
   guests,
   totalGuests,
-  allFieldsFilled,
+  canSearch,
   isSearchingExperiences,
   suggestedExperiences,
   filteredDestinations,
   filteredActivities,
+  filteredEvents,
   guestTypes,
   setActiveTab,
   setWhereInput,
@@ -37,7 +37,12 @@ export function SearchBarView({
   onSelectDestination,
   onSelectActivity,
   onSelectExperience,
-  onSelectDate,
+  onSelectEvent,
+  onPickDate,
+  onPickDatePreset,
+  onApplyDates,
+  onClearDates,
+  onAnyDate,
   incrementGuest,
   decrementGuest,
   onSearch,
@@ -65,7 +70,7 @@ export function SearchBarView({
     <div
       ref={searchBarRef}
       className={cn(
-        "relative flex flex-col gap-2 rounded-[28px] border border-[#c7c1ba] bg-white p-2 lg:flex-row lg:items-center lg:gap-[9px] lg:rounded-[57px] shadow-sm transition-all",
+        "relative flex flex-col gap-2 rounded-[28px] border border-[#c7c1ba] bg-white p-2 text-left lg:flex-row lg:items-center lg:gap-[9px] lg:rounded-[57px] shadow-sm transition-all",
         variant === "nav" && "shadow-lg border-[#E0DFDD] bg-white",
         className,
       )}
@@ -100,6 +105,9 @@ export function SearchBarView({
           />
         </div>
 
+        {/* Divider (side-by-side layout only; the stacked phone layout uses divide-y above) */}
+        <span aria-hidden="true" data-testid="search-field-divider" className="hidden h-[39px] w-px shrink-0 bg-[#E0DFDD] lg:block" />
+
         {/* When Tab */}
         <div
           onClick={() => {
@@ -125,6 +133,9 @@ export function SearchBarView({
             className="w-full border-0 bg-transparent p-0 font-sans text-base text-foreground placeholder:text-muted-foreground lg:text-sm outline-none focus:ring-0 leading-tight cursor-pointer"
           />
         </div>
+
+        {/* Divider (side-by-side layout only; the stacked phone layout uses divide-y above) */}
+        <span aria-hidden="true" data-testid="search-field-divider" className="hidden h-[39px] w-px shrink-0 bg-[#E0DFDD] lg:block" />
 
         {/* Who Tab */}
         <div
@@ -158,7 +169,7 @@ export function SearchBarView({
         <button
           type="button"
           aria-label="Search"
-          disabled={!allFieldsFilled}
+          disabled={!canSearch}
           onClick={() => onSearch()}
           className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-5 text-white transition-all hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-sm w-full lg:w-auto"
         >
@@ -169,7 +180,7 @@ export function SearchBarView({
         <button
           type="button"
           aria-label="Search"
-          disabled={!allFieldsFilled}
+          disabled={!canSearch}
           onClick={() => onSearch()}
           className="flex size-12 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto cursor-pointer"
         >
@@ -185,6 +196,7 @@ export function SearchBarView({
               destinations={filteredDestinations}
               activities={filteredActivities}
               experiences={suggestedExperiences}
+              events={filteredEvents}
               isSearchingExperiences={isSearchingExperiences}
               query={selectedWhere}
               onSelectDestination={(dest) => {
@@ -199,31 +211,33 @@ export function SearchBarView({
                 onSelectExperience(exp);
                 setTimeout(() => whenInputRef.current?.focus(), 80);
               }}
+              onSelectEvent={(ev) => {
+                onSelectEvent(ev);
+                setTimeout(() => whenInputRef.current?.focus(), 80);
+              }}
             />
           </div>
         </div>
       )}
 
-      {/* Calendar Dropdown Modal */}
+      {/* Dual-date picker: the same panel as the results page's Dates chip. */}
       {activeTab === "when" && (
         <div
-          className={cn(
-            "absolute z-50 flex w-[350px] max-w-[calc(100vw-32px)] flex-col items-start gap-3 rounded-[24px] border border-[#e0dfdd] bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
-            variant === "nav" ? "top-[calc(100%+8px)] left-1/2 -translate-x-1/2" : "top-[calc(100%+8px)] left-0 lg:left-[170px]",
-          )}
+          role="dialog"
+          aria-label="Dates"
+          className="absolute top-[calc(100%+8px)] left-1/2 z-50 w-[700px] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-[24px] border border-[#e0dfdd] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150"
         >
-          <DatePickerCalendar
-            selectedDate={selectedDate}
-            minDate={minDate}
-            presets={computeDatePresets()}
-            onSelect={(date) => {
-              const preset = computeDatePresets().find(
-                (p) => p.date.toDateString() === date.toDateString(),
-              );
-              onSelectDate(
-                date,
-                preset?.label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }),
-              );
+          <DateRangePanel
+            range={draftRange}
+            onPick={onPickDate}
+            onPreset={onPickDatePreset}
+            onAnyDate={() => {
+              onAnyDate();
+              setTimeout(() => whoInputRef.current?.focus(), 80);
+            }}
+            onClear={onClearDates}
+            onApply={() => {
+              onApplyDates();
               setTimeout(() => whoInputRef.current?.focus(), 80);
             }}
           />
@@ -236,7 +250,7 @@ export function SearchBarView({
           variant={variant}
           guests={guests}
           totalGuests={totalGuests}
-          allFieldsFilled={allFieldsFilled}
+          canSearch={canSearch}
           guestTypes={guestTypes}
           incrementGuest={incrementGuest}
           decrementGuest={decrementGuest}

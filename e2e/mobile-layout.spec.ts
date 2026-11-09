@@ -94,7 +94,8 @@ test("the booking sheet fits the phone and its guest buttons are easy to tap", a
   await stubApi(page);
   await page.goto("/experiences/exp-1");
 
-  await page.getByRole("button", { name: "Book now" }).last().click();
+  // The handle on the bar pulls the sheet up; "Book now" would start the booking instead.
+  await page.getByRole("button", { name: "Open booking" }).click();
   const plus = page.getByRole("button", { name: "Increase guests" }).last();
   const box = await plus.boundingBox();
   expect(box!.width).toBeGreaterThanOrEqual(40);
@@ -111,6 +112,7 @@ test("Share copies the experience link when there's no share sheet", async ({ pa
   await page.goto("/experiences/exp-1");
 
   await page.getByRole("button", { name: "Share" }).first().click();
+  await page.getByRole("button", { name: "Copy link" }).click();
   await expect(page.getByText("Link copied")).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("/experiences/exp-1");
 });

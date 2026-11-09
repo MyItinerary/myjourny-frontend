@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, User, X } from "lucide-react";
+import { Calendar, Check, User, X } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ export function BookingPanelView(props: Props) {
     <div
       className={cn(
         "relative flex w-full flex-col gap-5 border border-[#E7E7E7] bg-white px-7 py-8",
-        onClose ? "rounded-t-[32px] border-b-0 px-5 pt-3 pb-8" : "rounded-[32px]",
+        onClose ? "rounded-t-[24px] border-0 px-4 pt-2 pb-[34px]" : "rounded-[32px]",
         className,
       )}
     >
@@ -61,15 +61,22 @@ export function BookingPanelView(props: Props) {
         {card.headline.pill && (
           <span className="w-fit rounded-full bg-[#F4F2EE] px-2 py-0.5 text-xs text-[#333134]">{card.headline.pill}</span>
         )}
-        {card.notes.map((note) => (
-          <p key={note} className="text-sm leading-5 text-[#6F6B72]">
-            {note}
-          </p>
-        ))}
       </div>
 
       <div className="flex flex-col gap-3">
-        <SessionDateView sessions={sessions} label={card.dateField} locked={card.locked} open={datesOpen} onOpenChange={setDatesOpen} />
+        {sessions.scheduled && sessions.openDayCount === 1 ? (
+          // One bookable day: the date is fixed, so there is nothing to pick.
+          <PillRow className="px-4 py-3">
+            <span className="flex min-w-0 flex-1 items-center gap-2">
+              <Calendar aria-hidden className="size-6 shrink-0 text-[#333134]" />
+              <span data-testid="fixed-date" className="truncate text-base leading-6 text-[#333134]">
+                {card.dateField}
+              </span>
+            </span>
+          </PillRow>
+        ) : (
+          <SessionDateView sessions={sessions} label={card.dateField} locked={card.locked} open={datesOpen} onOpenChange={setDatesOpen} />
+        )}
         {!datesOpen && <SessionTimesView sessions={sessions} locked={card.locked} />}
         {urgent && <UrgencyBadge {...urgent} />}
 
@@ -129,7 +136,6 @@ export function BookingPanelView(props: Props) {
       )}
 
       <PromoCode {...props} />
-      <Breakdown {...props} />
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3">
@@ -138,8 +144,9 @@ export function BookingPanelView(props: Props) {
             <div className="flex min-h-9 items-center justify-between gap-3">
               <span className="text-xl font-medium text-[#333134]">Total</span>
               {card.total.amount ? (
-                <span aria-live="polite" className={cn("text-2xl font-semibold text-[#333134]", props.quote?.updating && "opacity-60")}>
-                  {card.total.amount}
+                // While the server prices a change, the list-price estimate shows at once, dimmed.
+                <span aria-live="polite" className={cn("text-2xl font-semibold text-[#333134]", props.totalUpdating && "opacity-60")}>
+                  {props.totalUpdating && props.totalEstimate ? props.totalEstimate : card.total.amount}
                 </span>
               ) : (
                 <span className="text-base text-[#6F6B72]">{card.total.muted}</span>
@@ -198,20 +205,5 @@ function PromoCode({ promo }: BookingPanelViewModel) {
         <p className={cn("text-[13px]", promo.message.ok ? "text-[#0B7A47]" : "text-[#6F6B72]")}>{promo.message.text}</p>
       )}
     </form>
-  );
-}
-
-/** The few rows above the total: add-ons, and what a group or promo code saved. */
-function Breakdown({ card, quote }: BookingPanelViewModel) {
-  if (card.breakdown.length === 0) return null;
-  return (
-    <dl className={cn("flex flex-col gap-1.5 text-[13px] leading-[18px]", quote?.updating && "opacity-60")}>
-      {card.breakdown.map((row) => (
-        <div key={row.key} className="flex items-center justify-between gap-3">
-          <dt className="text-[#6F6B72]">{row.label}</dt>
-          <dd className="text-[#6F6B72]">{row.amount}</dd>
-        </div>
-      ))}
-    </dl>
   );
 }

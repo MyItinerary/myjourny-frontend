@@ -3,52 +3,25 @@
 import { useSearchParams } from "next/navigation";
 
 import { CategoryContent } from "./content";
-import { apiErrorMessage } from "@/lib/api-error";
-import { ListingFiltersView, useListingFiltersViewModel } from "@/features/listing-filters";
-import { useSession } from "@/lib/auth/session-store";
-import { experienceListItemToCardProps, useInfiniteFilteredExperiences } from "@/lib/queries/experiences";
+import { useSearchResultsViewModel } from "@/features/search-results";
 import { findCategoryBySlug, useInterestCategories } from "@/lib/queries/categories";
 
-// One grid page: 4 rows of the 4-col layout.
-const PAGE_SIZE = 16;
-
-// The public listing filtered by this interest category or subcategory
-// (/experiences/filter?interest=<slug>), the same for guests and signed-in
-// users. The title comes from GET /categories (with subcategories).
+// Resolves the category title from GET /categories (with subcategories) and
+// lists it from the public listing (/experiences/filter?interest=<slug>), the
+// same for guests and accounts so the filter row can narrow it.
 export function CategoryPageContent({ slug, label }: { slug: string; label: string }) {
-  const { hydrated } = useSession();
-
   const categoriesQuery = useInterestCategories({ tree: true });
   const matchedCategory = categoriesQuery.data ? findCategoryBySlug(categoriesQuery.data, slug) : undefined;
   const resolvedLabel = matchedCategory ? matchedCategory.text : label;
 
-  // A day picked in the search bar narrows the results to that day.
-  const date = useSearchParams().get("date") ?? undefined;
-  const filters = useListingFiltersViewModel();
-  const query = useInfiniteFilteredExperiences({
+  // Dates picked in the search bar start the page's date filter.
+  const searchParams = useSearchParams();
+  const results = useSearchResultsViewModel({
+    subject: { kind: "category", label: resolvedLabel },
     interest: slug,
-    date,
-    ...filters.params,
-    pageSize: PAGE_SIZE,
-    enabled: hydrated,
+    date: searchParams.get("date") ?? undefined,
+    until: searchParams.get("until") ?? undefined,
   });
 
-  return (
-    <CategoryContent
-      label={resolvedLabel}
-      filters={<ListingFiltersView {...filters} />}
-      items={(query.data?.pages ?? []).flatMap((p) => p.items).map(experienceListItemToCardProps)}
-      total={query.data?.pages[0]?.total}
-      isLoading={!hydrated || query.isPending}
-      isError={query.isError}
-      errorMessage={query.isError ? apiErrorMessage(query.error, "Couldn't load experiences.") : undefined}
-      onRetry={() => query.refetch()}
-      loadMore={{
-        hasMore: query.hasNextPage,
-        isLoading: query.isFetchingNextPage,
-        isError: query.isFetchNextPageError,
-        onLoadMore: () => query.fetchNextPage(),
-      }}
-    />
-  );
+  return <CategoryContent label={resolvedLabel} items={results.items} results={results} />;
 }

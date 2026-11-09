@@ -90,6 +90,17 @@ describe("useSessionChoice", () => {
     expect(result.current.dateLabel).toBe("Select dates");
   });
 
+  it("counts the days that still have an open session", () => {
+    const one = renderHookWithProviders(() => useSessionChoice(scheduled([session(day(3), "08:00"), session(day(3), "13:00")])));
+    expect(one.result.current.openDayCount).toBe(1);
+    const several = renderHookWithProviders(() =>
+      useSessionChoice(
+        scheduled([session(day(3), "08:00"), session(day(4), "08:00"), session(day(5), "08:00", { sold_out: true, seats_left: 0 })]),
+      ),
+    );
+    expect(several.result.current.openDayCount).toBe(2);
+  });
+
   it("says the times are in the experience's zone", () => {
     const lagos = renderHookWithProviders(() => useSessionChoice(scheduled([])));
     expect(lagos.result.current.timezoneNote).toBe("Times are Lagos time.");

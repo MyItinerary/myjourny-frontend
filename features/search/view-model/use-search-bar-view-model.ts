@@ -2,21 +2,26 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { toCityDestination, useExperienceCities } from "@/features/cities";
+import { formatDateRange } from "@/lib/dates";
 import { categoriesBySlug } from "@/lib/mock-data/home";
 
+import { saveLastSearchArea } from "../model/last-search-area";
 import {
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
+  DEFAULT_EVENTS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
+  linkDates,
   startOfToday,
-  toIsoDay,
   useSearchExperiences,
   withDate,
 } from "../model/search";
 import type {
   ActivitySuggestion,
+  DateRange,
   DestinationSuggestion,
+  EventSuggestion,
   ExperienceSuggestion,
   ExperienceSuggestionRow,
   GuestCounts,
@@ -27,6 +32,8 @@ import type {
 export interface UseSearchBarViewModelOptions {
   variant?: SearchBarVariant;
   initialActiveTab?: SearchTab | null;
+  /** Prefills "Where", e.g. with what the current results page was searched for. */
+  initialWhere?: string;
   onClose?: () => void;
   debounceMs?: number;
 }
@@ -46,22 +53,22 @@ function formatGuestsText(counts: GuestCounts) {
 export function useSearchBarViewModel({
   variant = "hero",
   initialActiveTab = null,
+  initialWhere = "",
   onClose,
   debounceMs = 600,
 }: UseSearchBarViewModelOptions = {}) {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<SearchTab | null>(initialActiveTab);
-  const [selectedWhere, setSelectedWhere] = useState("");
-  const [debouncedWhere, setDebouncedWhere] = useState("");
+  const [selectedWhere, setSelectedWhere] = useState(initialWhere);
+  const [debouncedWhere, setDebouncedWhere] = useState(initialWhere);
   const [selectedWhereId, setSelectedWhereId] = useState("");
-  const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | null>(null);
+  const [selectedType, setSelectedType] = useState<"destination" | "activity" | "experience" | "event" | null>(null);
 
-  const [selectedWhen, setSelectedWhen] = useState("");
-  // Searches are for today or later: earlier days are greyed out, and no day
-  // is picked until the traveller chooses one.
-  const [minDate] = useState(startOfToday);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  // The dates in the bar, and the range being picked in the open calendar (applied on Apply).
+  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
+  const [draftRange, setDraftRange] = useState<DateRange>({ start: null, end: null });
+  const selectedWhen = formatDateRange(dateRange);
 
   // What they typed into "Who"; null once the steppers take over and the text
   // comes from the counts.
@@ -106,7 +113,7 @@ export function useSearchBarViewModel({
   );
 
   const totalGuests = guests.adults + guests.children + guests.infants;
-  const allFieldsFilled = !!selectedWhere.trim() && !!selectedWhen.trim() && totalGuests > 0;
+  const canSearch = !!selectedWhere.trim();
 
   const trimmedQuery = selectedWhere.trim().toLowerCase();
 
@@ -135,6 +142,14 @@ export function useSearchBarViewModel({
         act.label.toLowerCase().includes(trimmedQuery) ||
         act.id.toLowerCase().includes(trimmedQuery) ||
         act.subtitle.toLowerCase().includes(trimmedQuery),
+    );
+  }, [trimmedQuery]);
+
+  // Hardcoded for now: three to start with, then the ones matching what's typed.
+  const filteredEvents = useMemo(() => {
+    if (!trimmedQuery) return DEFAULT_EVENTS.slice(0, 3);
+    return DEFAULT_EVENTS.filter(
+      (ev) => ev.title.toLowerCase().includes(trimmedQuery) || ev.subtitle.toLowerCase().includes(trimmedQuery),
     );
   }, [trimmedQuery]);
 
@@ -193,21 +208,47 @@ export function useSearchBarViewModel({
     setActiveTab("when");
   }, []);
 
-  const onSelectDate = useCallback((date: Date, label?: string) => {
-    const target = new Date(date);
-    target.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (target < today) return;
-    setSelectedDate(date);
-    setSelectedWhen(label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }));
-    setActiveTab("who");
+  const onSelectEvent = useCallback((ev: EventSuggestion) => {
+    setSelectedWhere(ev.title);
+    setSelectedWhereId(ev.id);
+    setSelectedType("event");
+    setActiveTab("when");
   }, []);
+
+  const onPickDate = useCallback((date: Date) => {
+    if (date < startOfToday()) return;
+    setDraftRange((range) => {
+      // First tap sets the start, the second the end; the same day twice is one day.
+      if (!range.start || range.end) return { start: date, end: null };
+      return date < range.start ? { start: date, end: null } : { start: range.start, end: date };
+    });
+  }, []);
+
+  const onPickDatePreset = useCallback((start: Date, end: Date) => setDraftRange({ start, end }), []);
+
+  const onApplyDates = useCallback(() => {
+    if (!draftRange.start) return;
+    setDateRange({ start: draftRange.start, end: draftRange.end ?? draftRange.start });
+    setActiveTab("who");
+  }, [draftRange]);
+
+  const onClearDates = useCallback(() => {
+    setDraftRange({ start: null, end: null });
+    setDateRange({ start: null, end: null });
+  }, []);
+
+  /** "Any date": no dates, on to guests. */
+  const onAnyDate = useCallback(() => {
+    onClearDates();
+    setActiveTab("who");
+  }, [onClearDates]);
 
   const handleClose = useCallback(() => {
     setActiveTab(null);
+    // Dates picked but not applied are dropped.
+    setDraftRange(dateRange);
     onClose?.();
-  }, [onClose]);
+  }, [dateRange, onClose]);
 
   const onSearch = useCallback(
     (customQuery?: string) => {
@@ -216,8 +257,14 @@ export function useSearchBarViewModel({
       if (!trimmed) return;
 
       handleClose();
-      // The day they picked goes to city and category results.
-      const day = selectedWhen && selectedDate && selectedDate >= minDate ? toIsoDay(selectedDate) : null;
+      // The dates they picked go to every results page.
+      const { day, until } = linkDates(dateRange);
+
+      // There's no event page yet, so an event is searched for by name.
+      if (selectedType === "event") {
+        router.push(withDate(`/search?q=${encodeURIComponent(rawQuery)}`, day, until));
+        return;
+      }
 
       if (selectedType === "experience" && selectedWhereId) {
         router.push(`/experiences/${selectedWhereId}`);
@@ -225,12 +272,13 @@ export function useSearchBarViewModel({
       }
 
       if (selectedType === "activity" && selectedWhereId) {
-        router.push(withDate(`/categories/${selectedWhereId}`, day));
+        router.push(withDate(`/categories/${selectedWhereId}`, day, until));
         return;
       }
 
       if (selectedType === "destination" && selectedWhereId) {
-        router.push(withDate(`/cities/${selectedWhereId}`, day));
+        saveLastSearchArea(rawQuery);
+        router.push(withDate(`/cities/${selectedWhereId}`, day, until));
         return;
       }
 
@@ -250,33 +298,37 @@ export function useSearchBarViewModel({
       );
 
       if (matchedDest && !matchedAct) {
-        router.push(withDate(`/cities/${matchedDest.id}`, day));
+        saveLastSearchArea(matchedDest.city);
+        router.push(withDate(`/cities/${matchedDest.id}`, day, until));
         return;
       }
 
       if (matchedAct) {
-        router.push(withDate(`/categories/${matchedAct.id}`, day));
+        router.push(withDate(`/categories/${matchedAct.id}`, day, until));
         return;
       }
 
       if (matchedDest) {
-        router.push(withDate(`/cities/${matchedDest.id}`, day));
+        saveLastSearchArea(matchedDest.city);
+        router.push(withDate(`/cities/${matchedDest.id}`, day, until));
         return;
       }
 
       if (categoriesBySlug.has(trimmed)) {
-        router.push(withDate(`/categories/${trimmed}`, day));
+        router.push(withDate(`/categories/${trimmed}`, day, until));
         return;
       }
 
-      router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
+      // Free text isn't remembered as an area: there's no list of areas yet to tell "Lekki" from "jazz brunch".
+      router.push(withDate(`/search?q=${encodeURIComponent(rawQuery)}`, day, until));
     },
-    [destinations, handleClose, minDate, router, selectedDate, selectedType, selectedWhen, selectedWhere, selectedWhereId],
+    [dateRange, destinations, handleClose, router, selectedType, selectedWhere, selectedWhereId],
   );
 
   const onNavigateToDestination = useCallback(
     (dest: DestinationSuggestion) => {
       handleClose();
+      saveLastSearchArea(dest.city);
       router.push(`/cities/${dest.id}`);
     },
     [handleClose, router],
@@ -288,6 +340,15 @@ export function useSearchBarViewModel({
       router.push(`/categories/${act.id}`);
     },
     [handleClose, router],
+  );
+
+  const onNavigateToEvent = useCallback(
+    (ev: EventSuggestion) => {
+      handleClose();
+      const { day, until } = linkDates(dateRange);
+      router.push(withDate(`/search?q=${encodeURIComponent(ev.title)}`, day, until));
+    },
+    [dateRange, handleClose, router],
   );
 
   const onNavigateToExperience = useCallback(
@@ -304,16 +365,16 @@ export function useSearchBarViewModel({
     selectedWhere,
     debouncedWhere,
     selectedWhen,
-    selectedDate,
-    minDate,
+    draftRange,
     whoText,
     guests,
     totalGuests,
-    allFieldsFilled,
+    canSearch,
     isSearchingExperiences,
     suggestedExperiences,
     filteredDestinations,
     filteredActivities,
+    filteredEvents,
     guestTypes: GUEST_TYPES,
     setActiveTab,
     setWhereInput,
@@ -321,10 +382,16 @@ export function useSearchBarViewModel({
     onSelectDestination,
     onSelectActivity,
     onSelectExperience,
-    onSelectDate,
+    onSelectEvent,
+    onPickDate,
+    onPickDatePreset,
+    onApplyDates,
+    onClearDates,
+    onAnyDate,
     onNavigateToDestination,
     onNavigateToActivity,
     onNavigateToExperience,
+    onNavigateToEvent,
     updateGuests,
     incrementGuest,
     decrementGuest,

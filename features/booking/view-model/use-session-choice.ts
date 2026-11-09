@@ -22,6 +22,8 @@ export type SessionChoice = {
   /** Sessions are coming up, but every one is full. */
   allSoldOut: boolean;
   options: SessionOption[];
+  /** Days with a session still open. One means the date is fixed. */
+  openDayCount: number;
   session: ExperienceSession | null;
   /** The session to book: a start time (scheduled) or a local date
    * (unscheduled; the server picks noon in the experience's zone). Null
@@ -109,6 +111,7 @@ export function useSessionChoice(
     scheduled,
     noSessions: scheduled && byDate.size === 0,
     allSoldOut: scheduled && byDate.size > 0 && firstOpenDay === null,
+    openDayCount: [...byDate.keys()].filter(hasOpenSession).length,
     options: daySessions.map((s) => ({
       startsAt: s.starts_at,
       label: formatSessionTime(s.local_time),

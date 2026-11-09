@@ -42,7 +42,9 @@ describe("search model constants & mappers", () => {
   it("formats the searched day for links and the API", () => {
     expect(toIsoDay(new Date(2030, 0, 5))).toBe("2030-01-05");
     expect(withDate("/cities/lagos", "2030-01-05")).toBe("/cities/lagos?date=2030-01-05");
+    expect(withDate("/cities/lagos", "2030-01-05", "2030-01-07")).toBe("/cities/lagos?date=2030-01-05&until=2030-01-07");
     expect(withDate("/cities/lagos", null)).toBe("/cities/lagos");
+    expect(withDate("/search?q=jazz", "2030-01-05", "2030-01-07")).toBe("/search?q=jazz&date=2030-01-05&until=2030-01-07");
     expect(startOfToday(new Date(2030, 0, 5, 17, 30))).toEqual(new Date(2030, 0, 5));
   });
 

@@ -118,6 +118,18 @@ describe("useBookingPanelViewModel", () => {
     expect(result.current.booking).toMatchObject({ available: true, disabled: false, label: "Book now - ₦9,000" });
   });
 
+  it("waits for the sessions before quoting, so a scheduled experience is never quoted for a guessed date", async () => {
+    const quotes = stubApi();
+    const { result } = renderHookWithProviders(() => useBookingPanelViewModel(props));
+
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+    expect(quotes.length).toBeGreaterThan(0);
+    for (const quote of quotes) {
+      expect(quote).toHaveProperty("requested_datetime");
+      expect(quote).not.toHaveProperty("requested_date");
+    }
+  });
+
   it("calls a free booking Free and offers to book it for free", async () => {
     stubApi({
       quoteBody: quote({
