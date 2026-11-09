@@ -9,6 +9,7 @@ import {
   EXPERIENCE_FLAGS,
   FOR_YOU_CATEGORY_SLUGS,
   GENRE_CATEGORY_SLUGS,
+  isTypeShown,
   ROW_CATEGORIES,
   SUBCATEGORIES,
   TIME_OF_DAY_OPTIONS,
@@ -124,12 +125,21 @@ function dropTypeSpecific(filters: ResultsFilters, type: ListingType): ResultsFi
   };
 }
 
-/** Subcategories are filters of their own, but only experiences have them; Genre needs Music or Parties. */
-function normalize(filters: ResultsFilters): ResultsFilters {
+/**
+ * Subcategories are filters of their own, but only experiences have them; Genre needs Music or Parties.
+ * While events are hidden, the Events type is dropped too, since there's no chip to remove it with.
+ */
+function normalize(input: ResultsFilters): ResultsFilters {
+  const filters = isTypeShown("events") ? input : withoutEvents(input);
   const subcategories =
     activeType(filters) === "events" ? [] : filters.subcategories.filter((slug) => subcategoryBySlug.has(slug));
   const withSubs = { ...filters, subcategories };
   return isGenreVisible(withSubs) ? withSubs : { ...withSubs, groups: omit(withSubs.groups, ["genre"]) };
+}
+
+function withoutEvents(filters: ResultsFilters): ResultsFilters {
+  if (!filters.types.includes("events")) return filters;
+  return dropTypeSpecific({ ...filters, types: filters.types.filter((t) => t !== "events") }, "events");
 }
 
 /**
@@ -253,7 +263,7 @@ export function buildRowChips(filters: ResultsFilters, { tookQuiz }: { tookQuiz:
         label: sub.label,
         selected: false,
       }))
-    : ROW_CATEGORIES.filter((c) => (!type || c.kind === type) && !filters.categories.includes(c.slug))
+    : ROW_CATEGORIES.filter((c) => isTypeShown(c.kind) && (!type || c.kind === type) && !filters.categories.includes(c.slug))
         .sort((a, b) => Number(tookQuiz && FOR_YOU_CATEGORY_SLUGS.includes(b.slug)) - Number(tookQuiz && FOR_YOU_CATEGORY_SLUGS.includes(a.slug)))
         .map((c) => ({
           kind: "category" as const,

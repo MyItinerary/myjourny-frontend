@@ -8,6 +8,7 @@ import {
   EXPERIENCE_FLAGS,
   EXPERIENCE_GROUPS,
   FOR_YOU_CATEGORY_SLUGS,
+  isTypeShown,
   LANGUAGE_OPTIONS,
   PLACE_GROUPS,
   SUBCATEGORIES,
@@ -97,17 +98,19 @@ export function buildPanel(filters: ResultsFilters, { tookQuiz }: { tookQuiz: bo
       ? [{ title: null, items: EXPERIENCE_CATEGORIES.map(toCategory) }]
       : type === "events"
         ? [{ title: null, items: EVENT_CATEGORIES.map(toCategory) }]
-        : [
-            { title: "Experiences", items: EXPERIENCE_CATEGORIES.map(toCategory) },
-            { title: "Events", items: EVENT_CATEGORIES.map(toCategory) },
-          ];
+        : !isTypeShown("events")
+          ? [{ title: null, items: EXPERIENCE_CATEGORIES.map(toCategory) }]
+          : [
+              { title: "Experiences", items: EXPERIENCE_CATEGORIES.map(toCategory) },
+              { title: "Events", items: EVENT_CATEGORIES.map(toCategory) },
+            ];
 
   const subcategories = subcategoriesAlone
     ? SUBCATEGORIES.map((s) => ({ slug: s.slug, label: s.label, selected: filters.subcategories.includes(s.slug) }))
     : null;
 
   return {
-    types: TYPE_OPTIONS.map((t) => ({ ...t, selected: filters.types.includes(t.value) })),
+    types: TYPE_OPTIONS.filter((t) => isTypeShown(t.value)).map((t) => ({ ...t, selected: filters.types.includes(t.value) })),
     featured: [
       ...(tookQuiz
         ? [{ id: "pickedForYou" as const, label: "Picked for your taste", selected: FOR_YOU_CATEGORY_SLUGS.every((s) => filters.categories.includes(s) || !categoryAllowed(s, type)) && filters.categories.length > 0 }]
@@ -136,7 +139,7 @@ export function buildPanel(filters: ResultsFilters, { tookQuiz }: { tookQuiz: bo
 function categoryAllowed(slug: string, type: ReturnType<typeof activeType>): boolean {
   const all = [...EXPERIENCE_CATEGORIES, ...EVENT_CATEGORIES];
   const kind = all.find((c) => c.slug === slug)?.kind;
-  return type === null || kind === type;
+  return !!kind && isTypeShown(kind) && (type === null || kind === type);
 }
 
 /** The options behind the row's Duration, Languages and Age limit dropdowns. */

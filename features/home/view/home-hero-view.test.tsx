@@ -15,7 +15,7 @@ describe("HomeHeroView", () => {
     renderWithProviders(<HomeHeroView search={search} isScrolled={false} onOpenMobileSearch={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "Find things worth doing. Here or anywhere." })).toBeInTheDocument();
-    expect(screen.getByText("Experiences and events picked to match your taste.")).toBeInTheDocument();
+    expect(screen.getByText("Experiences picked to match your taste.")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
     expect(screen.getByTestId("hero-search")).toBeInTheDocument();
   });

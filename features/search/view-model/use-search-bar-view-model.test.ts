@@ -1,6 +1,6 @@
 import { act, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
@@ -13,6 +13,10 @@ const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
+
+// These cases cover events too; the events-off cases switch the flag back off.
+beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 describe("useSearchBarViewModel", () => {
   it("initializes with default values", () => {
@@ -41,6 +45,15 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.filteredEvents.map((e) => e.title)).toEqual(["Lagos Jazz Night"]);
 
     act(() => result.current.setWhereInput("zzzz"));
+    expect(result.current.filteredEvents).toEqual([]);
+  });
+
+  it("suggests no events while events are off", () => {
+    vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "");
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    expect(result.current.filteredEvents).toEqual([]);
+    act(() => result.current.setWhereInput("jazz"));
     expect(result.current.filteredEvents).toEqual([]);
   });
 
