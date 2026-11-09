@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildPanel } from "./search-panel";
 import {
@@ -20,6 +20,10 @@ import type { ResultsFilters } from "./search-results.types";
 const withFilters = (f: Partial<ResultsFilters>): ResultsFilters => ({ ...EMPTY_FILTERS, ...f });
 const labels = (f: ResultsFilters, tookQuiz = false) =>
   buildRowChips(f, { tookQuiz }).flatMap((c) => ("label" in c ? [c.label] : []));
+
+// These cases cover events too; the events-off cases switch the flag back off.
+beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 describe("buildResultsHeading", () => {
   it("words a city search as things to do", () => {
@@ -317,5 +321,29 @@ describe("dates and times the API takes", () => {
     expect(dateRangeFromLink("2030-06-01", "2030-05-01")).toEqual({ start: first, end: first });
     expect(dateRangeFromLink("not-a-day")).toEqual({ start: null, end: null });
     expect(dateRangeFromLink()).toEqual({ start: null, end: null });
+  });
+});
+
+describe("while events are off", () => {
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", ""));
+
+  it("offers only experience categories in the row", () => {
+    const l = labels(EMPTY_FILTERS);
+    expect(l.slice(0, 3)).toEqual(["Dates", "Local food & drinks", "Culture & history"]);
+    expect(l).not.toContain("Music & live shows");
+    expect(l).not.toContain("Parties & nightlife");
+  });
+
+  it("drops the Events type and the event categories from the panel", () => {
+    const panel = buildPanel(EMPTY_FILTERS, { tookQuiz: false });
+    expect(panel.types.map((t) => t.label)).toEqual(["Experiences"]);
+    expect(panel.categoryGroups).toHaveLength(1);
+    expect(panel.categoryGroups[0].title).toBeNull();
+    expect(panel.categoryGroups[0].items.every((c) => c.kind === "experiences")).toBe(true);
+  });
+
+  it("counts Picked for your taste as on with only its experience categories", () => {
+    const panel = buildPanel(withFilters({ categories: ["local-food-drinks", "culture-history", "art-creativity"] }), { tookQuiz: true });
+    expect(panel.featured[0]).toMatchObject({ id: "pickedForYou", selected: true });
   });
 });

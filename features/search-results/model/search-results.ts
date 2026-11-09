@@ -9,6 +9,7 @@ import {
   EXPERIENCE_FLAGS,
   FOR_YOU_CATEGORY_SLUGS,
   GENRE_CATEGORY_SLUGS,
+  isTypeShown,
   ROW_CATEGORIES,
   SUBCATEGORIES,
   TIME_OF_DAY_OPTIONS,
@@ -253,7 +254,7 @@ export function buildRowChips(filters: ResultsFilters, { tookQuiz }: { tookQuiz:
         label: sub.label,
         selected: false,
       }))
-    : ROW_CATEGORIES.filter((c) => (!type || c.kind === type) && !filters.categories.includes(c.slug))
+    : ROW_CATEGORIES.filter((c) => isTypeShown(c.kind) && (!type || c.kind === type) && !filters.categories.includes(c.slug))
         .sort((a, b) => Number(tookQuiz && FOR_YOU_CATEGORY_SLUGS.includes(b.slug)) - Number(tookQuiz && FOR_YOU_CATEGORY_SLUGS.includes(a.slug)))
         .map((c) => ({
           kind: "category" as const,

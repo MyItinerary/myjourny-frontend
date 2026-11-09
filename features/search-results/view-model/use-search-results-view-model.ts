@@ -4,7 +4,7 @@ import { useTasteQuizAudience, useTasteQuizCtaViewModel } from "@/features/taste
 import { apiErrorMessage } from "@/lib/api-error";
 import { experienceListItemToCardProps } from "@/lib/queries/experiences";
 
-import { ALL_CATEGORIES, FOR_YOU_CATEGORY_SLUGS, PRICE_QUICK_RANGES } from "../model/filter-catalog";
+import { ALL_CATEGORIES, FOR_YOU_CATEGORY_SLUGS, isTypeShown, PRICE_QUICK_RANGES } from "../model/filter-catalog";
 import { buildDropdownGroups, buildPanel, isTonight, isWeekend } from "../model/search-panel";
 import {
   activeType,
@@ -222,7 +222,7 @@ export function useSearchResultsViewModel({ subject, city, interest, search, dat
       const type = activeType(f);
       const own = FOR_YOU_CATEGORY_SLUGS.filter((s) => {
         const kind = ALL_CATEGORIES.find((c) => c.slug === s)?.kind;
-        return type === null || kind === type;
+        return !!kind && isTypeShown(kind) && (type === null || kind === type);
       });
       const allOn = own.every((s) => f.categories.includes(s));
       return {

@@ -240,7 +240,7 @@ export function SearchSuggestionList({
 
       {!hasDestinations && !hasActivities && !hasExperiences && !hasEvents && !isSearchingExperiences && (
         <p className="py-3 text-center text-sm text-muted-foreground">
-          No destinations, activities, experiences, or events found matching &ldquo;{query}&rdquo;
+          No destinations, activities or experiences found matching &ldquo;{query}&rdquo;
         </p>
       )}
     </div>

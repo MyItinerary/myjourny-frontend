@@ -99,7 +99,8 @@ export function useHomeViewModel(): HomeViewModel {
     tonightAndThisWeekend: rail(eventsEnabled() ? DUMMY_POPULAR_EVENTS : [], false),
     pickedForYou,
     localFoodAndDrinks: rail(DUMMY_LOCAL_FOOD_AND_DRINKS, false),
-    earlyBird: rail(DUMMY_EARLY_BIRD, false),
+    // Sample events, hidden while events are off.
+    earlyBird: rail(eventsEnabled() ? DUMMY_EARLY_BIRD : [], false),
     newOnMyJourny: rail((newestQuery.data?.items ?? []).map(experienceListItemToCardProps), newestQuery.isPending),
     unforgettableTravel: rail(DUMMY_UNFORGETTABLE_TRAVEL, false),
     tasteQuizPopup: useTasteQuizPopupViewModel(useTasteQuizCtaViewModel()),

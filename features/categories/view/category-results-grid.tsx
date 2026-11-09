@@ -109,7 +109,7 @@ export function CategoryResultsGrid({
           No experiences found in {categoryLabel || "this category"}
         </h3>
         <p className="mt-2 max-w-[420px] text-sm text-muted-foreground">
-          There are currently no events or experiences listed under this category. Explore other categories or discover exciting activities in popular cities below.
+          There are currently no experiences listed under this category. Explore other categories or discover exciting activities in popular cities below.
         </p>
       </div>
     );
