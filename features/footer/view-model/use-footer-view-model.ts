@@ -10,6 +10,7 @@ import {
 } from "../model/footer-content";
 import type {
   FooterLinkColumn,
+  FooterLink,
   FooterSocialLink,
   FooterSubcategory,
   FooterTab,
@@ -22,7 +23,7 @@ export type FooterViewModel = {
   subcategories: FooterSubcategory[];
   isLoadingSubcategories: boolean;
   columns: FooterLinkColumn[];
-  legalLinks: string[];
+  legalLinks: FooterLink[];
   socialLinks: FooterSocialLink[];
   year: number;
 };

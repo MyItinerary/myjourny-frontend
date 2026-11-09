@@ -8,8 +8,15 @@ describe("footer content", () => {
     expect(FOOTER_LINK_COLUMNS.every((c) => c.links.length > 0)).toBe(true);
   });
 
+  it("links to Experiences, with no mention of events while they're on hold", () => {
+    const links = FOOTER_LINK_COLUMNS.flatMap((c) => c.links);
+    expect(links).toContainEqual({ label: "Experiences", href: "/experiences" });
+    expect(links.some((l) => /events/i.test(l.label) && l.href !== "#")).toBe(false);
+  });
+
   it("has the legal links and socials", () => {
-    expect(FOOTER_LEGAL_LINKS).toEqual(["Privacy policy", "Terms of use", "Cookie policy", "Cookie preferences"]);
+    expect(FOOTER_LEGAL_LINKS.map((l) => l.label)).toEqual(["Privacy policy", "Terms of use", "Cookie policy", "Cookie preferences"]);
+    expect(FOOTER_LEGAL_LINKS.every((l) => l.href.startsWith("/legal/"))).toBe(true);
     expect(FOOTER_SOCIAL_LINKS.map((s) => s.label)).toEqual(["LinkedIn", "X", "Instagram"]);
   });
 });

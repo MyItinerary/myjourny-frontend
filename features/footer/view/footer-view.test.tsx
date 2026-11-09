@@ -15,8 +15,8 @@ const build = (over: Partial<FooterViewModel> = {}): FooterViewModel => ({
   onSelectTab: vi.fn(),
   subcategories: [{ id: 5, label: "Street food & markets", href: "/categories/street-food" }],
   isLoadingSubcategories: false,
-  columns: [{ heading: "Support", links: ["Help Center"] }],
-  legalLinks: ["Privacy policy"],
+  columns: [{ heading: "Support", links: [{ label: "Help Center", href: "/help" }] }],
+  legalLinks: [{ label: "Privacy policy", href: "/legal/privacy" }],
   socialLinks: [{ label: "LinkedIn", src: "/icons/footer/linkedin.svg", width: 18 }],
   year: 2026,
   ...over,
@@ -30,7 +30,8 @@ describe("FooterView", () => {
     expect(screen.getByText("Support")).toBeInTheDocument();
     expect(screen.getByText("Help Center")).toBeInTheDocument();
     expect(screen.getByText(/© 2026 Myjourny, Inc\./)).toBeInTheDocument();
-    expect(screen.getByText("Privacy policy")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Privacy policy" })).toHaveAttribute("href", "/legal/privacy");
+    expect(screen.getByRole("link", { name: "Help Center" })).toHaveAttribute("href", "/help");
     expect(screen.getByRole("link", { name: "LinkedIn" })).toBeInTheDocument();
   });
 
