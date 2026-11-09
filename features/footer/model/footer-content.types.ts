@@ -1,4 +1,6 @@
-export type FooterLinkColumn = { heading: string; links: string[] };
+export type FooterLink = { label: string; href: string };
+
+export type FooterLinkColumn = { heading: string; links: FooterLink[] };
 
 export type FooterSocialLink = { label: string; src: string; width: number };
 

@@ -35,7 +35,7 @@ New code follows **MVVM in feature folders** (`features/<feature>/{model,view-mo
 - **Ask for the AI review** by commenting `@myjourny` on the PR once it's ready. The bot posts inline comments and answers replies to them. The required `ai-review` check turns green when no 🔴 blockers are left unresolved. Every push resets it to pending. See [.github/helios/README.md](.github/helios/README.md).
 - **To merge**, a PR needs `ci`, `pr-format` and `ai-review` green, plus approval from a code-owner team.
 
-Other conventions: no `src/` dir, the `@/*` import alias, npm as the package manager (Node 22, see `.nvmrc`), and `components/providers.tsx` for app-wide providers.
+Other conventions: no `src/` dir, the `@/*` import alias, npm as the package manager (Node 26, see `.nvmrc`), and `components/providers.tsx` for app-wide providers.
 
 ## Getting Started
 
