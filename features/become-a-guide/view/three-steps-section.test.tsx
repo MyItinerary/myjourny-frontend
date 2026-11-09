@@ -26,6 +26,11 @@ const mockSteps: ThreeStepItem[] = [
 ];
 
 describe("ThreeStepsSection", () => {
+  it("is the How it works section that See how it works scrolls to", () => {
+    const { container } = render(<ThreeStepsSection steps={mockSteps} />);
+    expect(container.querySelector("section#how-it-works")).not.toBeNull();
+  });
+
   it("renders heading and all 3 step cards", () => {
     render(<ThreeStepsSection steps={mockSteps} />);
 

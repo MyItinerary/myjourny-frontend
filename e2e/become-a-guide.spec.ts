@@ -5,7 +5,7 @@ test.describe("become a guide application", () => {
     let capturedPayload: Record<string, unknown> | null = null;
 
     await mockApi(page, {
-      "POST /auth/register": async (route) => {
+      "POST /auth/register/guide": async (route) => {
         capturedPayload = route.request().postDataJSON() as Record<string, unknown>;
         return route.fulfill({
           status: 201,
@@ -39,14 +39,13 @@ test.describe("become a guide application", () => {
 
     expect(capturedPayload).toMatchObject({
       full_name: "Amara Okafor",
-      date_of_birth: "15/08/1995",
+      date_of_birth: "1995-08-15",
       phone_number: "+2348012345678",
-      verification_type: "individual",
+      applicant_type: "individual",
       website: "amara.guide",
       business_name: null,
       cac_number: null,
       email: "amara@example.com",
-      signup_type: "host",
     });
   });
 
@@ -54,7 +53,7 @@ test.describe("become a guide application", () => {
     let capturedPayload: Record<string, unknown> | null = null;
 
     await mockApi(page, {
-      "POST /auth/register": async (route) => {
+      "POST /auth/register/guide": async (route) => {
         capturedPayload = route.request().postDataJSON() as Record<string, unknown>;
         return route.fulfill({
           status: 201,
@@ -92,21 +91,21 @@ test.describe("become a guide application", () => {
 
     expect(capturedPayload).toMatchObject({
       full_name: "Tunde Adeleke",
-      verification_type: "business",
+      date_of_birth: "1990-05-20",
+      applicant_type: "business",
       business_name: "Lagos Cultural Tours Ltd",
       cac_number: "RC1234567",
       website: "lagostours.ng",
       email: "info@lagostours.ng",
-      signup_type: "host",
     });
   });
 
   test("displays error toast and stays on step 2 when registration fails", async ({ page }) => {
     await mockApi(page, {
-      "POST /auth/register": (route) =>
+      "POST /auth/register/guide": (route) =>
         route.fulfill({
           status: 409,
-          json: { message: "Email already registered" },
+          json: { detail: "Email already registered" },
         }),
     });
 

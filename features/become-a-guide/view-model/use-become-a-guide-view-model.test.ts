@@ -80,6 +80,19 @@ describe("useBecomeAGuideViewModel", () => {
     expect(result.current.earnings.monthlyEarnings).toBe(255000);
   });
 
+  it("scrolls See how it works to the three steps, not the earnings calculator", () => {
+    const steps = document.createElement("section");
+    steps.id = "how-it-works";
+    steps.scrollIntoView = vi.fn();
+    document.body.appendChild(steps);
+    const { result } = renderHookWithProviders(() => useBecomeAGuideViewModel());
+
+    act(() => result.current.onScrollToHowItWorks());
+
+    expect(steps.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth" });
+    steps.remove();
+  });
+
   it("navigates on start application", () => {
     const { result } = renderHookWithProviders(() => useBecomeAGuideViewModel());
 

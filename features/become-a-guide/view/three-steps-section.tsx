@@ -6,7 +6,7 @@ export interface ThreeStepsSectionProps {
 
 export function ThreeStepsSection({ steps }: ThreeStepsSectionProps) {
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 py-16 sm:px-8 sm:py-24">
+    <section id="how-it-works" className="mx-auto w-full max-w-[1360px] px-4 py-16 sm:px-8 sm:py-24">
       {/* Section Header */}
       <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#2C0101] sm:text-4xl lg:text-5xl">
         Three steps. The middle one is ours.

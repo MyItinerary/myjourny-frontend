@@ -6,6 +6,13 @@ import { toast } from "sonner";
 
 import { submitGuideApplication } from "../model/guide-application-api";
 import {
+  dateOfBirthToIso,
+  isOldEnoughToGuide,
+  isValidEmail,
+  isValidPhoneNumber,
+  MIN_GUIDE_AGE,
+} from "../model/guide-application-rules";
+import {
   DEFAULT_APPLICATION_DATA,
   NIGERIAN_CITIES,
   type ApplicationStep,
@@ -54,11 +61,18 @@ export function useGuideApplicationViewModel(): GuideApplicationViewModel {
     if (!formData.fullName.trim()) {
       newErrors.fullName = "Full legal name is required";
     }
+    const dateOfBirth = dateOfBirthToIso(formData.dateOfBirth);
     if (!formData.dateOfBirth.trim()) {
       newErrors.dateOfBirth = "Date of birth is required";
+    } else if (!dateOfBirth) {
+      newErrors.dateOfBirth = "Enter your date of birth as DD/MM/YYYY";
+    } else if (!isOldEnoughToGuide(dateOfBirth)) {
+      newErrors.dateOfBirth = `You need to be at least ${MIN_GUIDE_AGE} to guide on MyJourny`;
     }
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = "Phone number is required";
+    } else if (!isValidPhoneNumber(formData.countryCode, formData.phoneNumber)) {
+      newErrors.phoneNumber = "Please enter a valid phone number";
     }
 
     setErrors(newErrors);
@@ -79,7 +93,7 @@ export function useGuideApplicationViewModel(): GuideApplicationViewModel {
 
     if (!formData.email.trim()) {
       newErrors.email = "Email address is required";
-    } else if (!formData.email.includes("@")) {
+    } else if (!isValidEmail(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
 

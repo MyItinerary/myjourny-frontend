@@ -33,6 +33,53 @@ describe("useGuideApplicationViewModel", () => {
     expect(result.current.errors.phoneNumber).toBeDefined();
   });
 
+  it("refuses a date that isn't real, an applicant under 18 and a phone number that's too short", async () => {
+    const { result } = renderHook(() => useGuideApplicationViewModel());
+    const today = new Date();
+    const seventeen = `01/01/${today.getFullYear() - 17}`;
+
+    act(() => {
+      result.current.setField("fullName", "Samuel Samuels");
+      result.current.setField("dateOfBirth", "31/02/1995");
+      result.current.setField("phoneNumber", "801");
+    });
+    await act(async () => {
+      await result.current.handleContinue();
+    });
+    expect(result.current.step).toBe(1);
+    expect(result.current.errors.dateOfBirth).toBe("Enter your date of birth as DD/MM/YYYY");
+    expect(result.current.errors.phoneNumber).toBe("Please enter a valid phone number");
+
+    act(() => result.current.setField("dateOfBirth", seventeen));
+    await act(async () => {
+      await result.current.handleContinue();
+    });
+    expect(result.current.errors.dateOfBirth).toBe("You need to be at least 18 to guide on MyJourny");
+  });
+
+  it("refuses an email address without a domain on step 2", async () => {
+    const { result } = renderHook(() => useGuideApplicationViewModel());
+
+    act(() => {
+      result.current.setField("fullName", "Samuel Samuels");
+      result.current.setField("dateOfBirth", "15/08/1995");
+      result.current.setField("phoneNumber", "8012345678");
+    });
+    await act(async () => {
+      await result.current.handleContinue();
+    });
+    act(() => {
+      result.current.setField("email", "samuel@");
+      result.current.setField("password", "strongpassword123");
+    });
+    await act(async () => {
+      await result.current.handleContinue();
+    });
+
+    expect(result.current.step).toBe(2);
+    expect(result.current.errors.email).toBe("Please enter a valid email address");
+  });
+
   it("transitions to step 2 when step 1 is valid", async () => {
     const { result } = renderHook(() => useGuideApplicationViewModel());
 
@@ -71,7 +118,7 @@ describe("useGuideApplicationViewModel", () => {
 
   it("submits step 2 and moves to review on success", async () => {
     server.use(
-      http.post(apiUrl("/auth/register"), () => {
+      http.post(apiUrl("/auth/register/guide"), () => {
         return HttpResponse.json({ success: true });
       })
     );
@@ -102,8 +149,8 @@ describe("useGuideApplicationViewModel", () => {
 
   it("stays on step 2 when registration fails", async () => {
     server.use(
-      http.post(apiUrl("/auth/register"), () => {
-        return HttpResponse.json({ message: "Registration failed" }, { status: 400 });
+      http.post(apiUrl("/auth/register/guide"), () => {
+        return HttpResponse.json({ detail: "Registration failed" }, { status: 400 });
       })
     );
 

@@ -81,7 +81,7 @@ export function useBecomeAGuideViewModel(): BecomeAGuideViewModel {
 
   const onScrollToHowItWorks = useCallback(() => {
     if (typeof window !== "undefined") {
-      const element = document.getElementById("calculator");
+      const element = document.getElementById("how-it-works");
       if (element) {
         element.scrollIntoView({ behavior: "smooth" });
       }

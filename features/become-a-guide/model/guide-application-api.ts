@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { dateOfBirthToIso, fullPhoneNumber } from "./guide-application-rules";
 import type { GuideApplicationFormData } from "./guide-application.types";
 
 export interface GuideApplicationSubmissionResult {
@@ -6,35 +7,41 @@ export interface GuideApplicationSubmissionResult {
   message?: string;
 }
 
+/** FastAPI sends `detail` as a sentence, or as a list of field errors when validation fails. */
+function errorMessage(err: unknown): string | undefined {
+  const detail =
+    err && typeof err === "object" && "response" in err
+      ? (err as { response?: { data?: { detail?: unknown } } }).response?.data?.detail
+      : undefined;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    const first = detail[0] as { msg?: unknown } | undefined;
+    if (typeof first?.msg === "string") return first.msg.replace(/^Value error, /, "");
+  }
+  return undefined;
+}
+
 export async function submitGuideApplication(
   data: GuideApplicationFormData
 ): Promise<GuideApplicationSubmissionResult> {
+  const business = data.verificationType === "business";
   const payload = {
-    full_name: data.fullName,
-    date_of_birth: data.dateOfBirth,
-    phone_number: `${data.countryCode}${data.phoneNumber.replace(/^0+/, "")}`,
-    city: data.city,
-    verification_type: data.verificationType,
-    website: data.website || null,
-    business_name: data.verificationType === "business" ? data.businessName || null : null,
-    cac_number: data.verificationType === "business" ? data.cacNumber || null : null,
-    email: data.email,
+    email: data.email.trim(),
     password: data.password,
-    signup_type: "host",
+    full_name: data.fullName.trim(),
+    date_of_birth: dateOfBirthToIso(data.dateOfBirth),
+    phone_number: fullPhoneNumber(data.countryCode, data.phoneNumber),
+    city: data.city,
+    applicant_type: data.verificationType,
+    website: data.website.trim() || null,
+    business_name: business ? data.businessName?.trim() || null : null,
+    cac_number: business ? data.cacNumber?.trim() || null : null,
   };
 
   try {
-    await apiClient.post("/auth/register", payload);
+    await apiClient.post("/auth/register/guide", payload);
     return { success: true };
   } catch (err: unknown) {
-    const errorMsg =
-      err && typeof err === "object" && "response" in err
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-
-    return {
-      success: false,
-      message: errorMsg,
-    };
+    return { success: false, message: errorMessage(err) };
   }
 }
