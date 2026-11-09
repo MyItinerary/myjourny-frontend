@@ -17,11 +17,11 @@ describe("HomeBrowseView", () => {
     expect(screen.getByRole("link", { name: /Events/ })).toHaveAttribute("href", "/events");
   });
 
-  it("leaves out the events tile while events are off", () => {
+  it("hides the whole section while events are off", () => {
     vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "");
-    renderWithProviders(<HomeBrowseView />);
+    const { container } = renderWithProviders(<HomeBrowseView />);
 
-    expect(screen.getByRole("link", { name: /Experiences/ })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Events/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Browse everything" })).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
   });
 });
