@@ -34,7 +34,8 @@ test.describe("become a guide application", () => {
 
     // Confirmation screen
     await expect(page.getByRole("heading", { name: "You're in review" })).toBeVisible();
-    await expect(page.getByText("Step 1: Application received")).toBeVisible();
+    await expect(page.getByText("A real person checks this, not a bot.")).toBeVisible();
+    await expect(page.getByText(/your details are checked and matched/i)).toBeVisible();
 
     expect(capturedPayload).toMatchObject({
       full_name: "Amara Okafor",
@@ -86,7 +87,8 @@ test.describe("become a guide application", () => {
 
     // Confirmation screen
     await expect(page.getByRole("heading", { name: "You're in review" })).toBeVisible();
-    await expect(page.getByText("Step 2: Business & CAC verification")).toBeVisible();
+    await expect(page.getByText("A real person checks this, not a bot.")).toBeVisible();
+    await expect(page.getByText(/Details and business details are checked and matched/i)).toBeVisible();
 
     expect(capturedPayload).toMatchObject({
       full_name: "Tunde Adeleke",
