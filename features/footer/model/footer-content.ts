@@ -2,7 +2,7 @@ import type { FooterLink, FooterLinkColumn, FooterSocialLink } from "./footer-co
 
 // Figma: "Footer" (2656:72994). Static copy for the link columns and legal row.
 
-// Safety questions and concerns go straight to the team by email.
+// Safety concerns go straight to the team by email.
 export const SAFETY_MAILTO = "mailto:hello@myjourny.io";
 
 export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
@@ -10,7 +10,7 @@ export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
     heading: "Support",
     links: [
       { label: "Help Center", href: "#" },
-      { label: "Safety Guide", href: SAFETY_MAILTO },
+      { label: "Safety Guide", href: "/legal/safety" },
       { label: "Report a safety concern", href: SAFETY_MAILTO },
       { label: "Payment protection", href: "#" },
       { label: "Cancellation and Refund Policy", href: "/legal/cancellations" },
@@ -20,11 +20,10 @@ export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
   {
     heading: "Hosting and Curating",
     links: [
-      { label: "Become a host", href: "#" },
+      { label: "Become a guide", href: "/become-a-guide" },
       { label: "Host an event", href: "#" },
       { label: "How hosting pays", href: "#" },
       { label: "Host Terms", href: "/legal/hosts" },
-      { label: "Hosting responsibly", href: "#" },
     ],
   },
   {

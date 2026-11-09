@@ -20,12 +20,19 @@ describe("footer content", () => {
     expect(FOOTER_SOCIAL_LINKS.map((s) => s.label)).toEqual(["LinkedIn", "X", "Instagram"]);
   });
 
-  it("sends both safety links to the team by email", () => {
+  it("keeps the safety guide page and sends safety concerns to the team by email", () => {
     const support = FOOTER_LINK_COLUMNS.find((c) => c.heading === "Support");
     const href = (label: string) => support?.links.find((l) => l.label === label)?.href;
 
     expect(SAFETY_MAILTO).toBe("mailto:hello@myjourny.io");
-    expect(href("Safety Guide")).toBe(SAFETY_MAILTO);
+    expect(href("Safety Guide")).toBe("/legal/safety");
     expect(href("Report a safety concern")).toBe(SAFETY_MAILTO);
+  });
+
+  it("sends would-be hosts to the become-a-guide page", () => {
+    const hosting = FOOTER_LINK_COLUMNS.find((c) => c.heading === "Hosting and Curating");
+
+    expect(hosting?.links).toContainEqual({ label: "Become a guide", href: "/become-a-guide" });
+    expect(hosting?.links.map((l) => l.label)).not.toContain("Hosting responsibly");
   });
 });
