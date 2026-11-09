@@ -2,7 +2,7 @@ import type { TermsData } from "./terms.types";
 
 export const privacyData: TermsData = {
   title: "Privacy Policy",
-  lastUpdated: "[DATE]",
+  lastUpdated: "9 November 2026",
   companyAgreementText: "",
   agreementNoticeText: "",
   atAGlance: {
@@ -10,7 +10,7 @@ export const privacyData: TermsData = {
     items: [
       {
         question: "Who is responsible for your data?",
-        answer: "[COMPANY LEGAL NAME] , operating as MyJourny.",
+        answer: "Myjourny and Experiences LLC, operating as MyJourny.",
       },
       {
         question: "What do we collect?",
@@ -71,7 +71,7 @@ export const privacyData: TermsData = {
       title: "1. Who we are",
       items: [
         {
-          text: 'MyJourny is a service of [COMPANY LEGAL NAME] (RC [RC NUMBER] ), of [REGISTERED ADDRESS] . We help guests find and book experiences and events in Nigeria, run by hosts and organisers. In this policy, "we", "us", and "our" mean [COMPANY LEGAL NAME] .',
+          text: 'MyJourny is a service of Myjourny and Experiences LLC (RC 9460304), of The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos. We help guests find and book experiences and events in Nigeria, run by hosts and organisers. In this policy, "we", "us", and "our" mean Myjourny and Experiences LLC.',
         },
         {
           text: "We are the data controller of the personal data described here. This policy follows the Nigeria Data Protection Act 2023 and the regulations and directives made under it. Our Data Protection Officer is reachable at [DPO EMAIL] .",
@@ -128,7 +128,7 @@ export const privacyData: TermsData = {
           boldPrefix: "3.3 What we get from others",
           text: "",
           bullets: [
-            "**Our payment partner, [PAYMENT PARTNER] :** whether a payment succeeded, failed, or was refunded, a payment reference, and the masked card or bank details (for example, Mastercard ending 4821). We do not receive or store your full card number.",
+            "**Our payment partners, Paystack, Novac and Stripe:** whether a payment succeeded, failed, or was refunded, a payment reference, and the masked card or bank details (for example, Mastercard ending 4821). We do not receive or store your full card number.",
             "**Our verification provider, [ID VERIFICATION PROVIDER] :** whether your ID and bank details checked out.",
             "**Hosts and organisers:** their notes about a booking, such as a no-show, or a report about an incident.",
             "**Other users,** if they report a problem involving you.",
@@ -255,7 +255,7 @@ export const privacyData: TermsData = {
       intro: "We do not sell your data. We share it only with:",
       items: [],
       bullets: [
-        "**Our payment partner, [PAYMENT PARTNER]** , who processes and holds payments.",
+        "**Our payment partners, Paystack, Novac and Stripe**, who process and hold payments.",
         "**Our verification provider, [ID VERIFICATION PROVIDER]** .",
         "**Technology providers who work for us: [CLOUD PROVIDERS]** for hosting and storage, **[EMAIL AND MESSAGING PROVIDERS]** for email, SMS, and WhatsApp messages, **[ANALYTICS PROVIDER]** for analytics, and support tools to run our help desk. They may use your data only on our instructions, and we have contracts that require them to protect it.",
         "**WhatsApp**, which is run by Meta. When we message you there, WhatsApp handles the message under its own terms.",
@@ -402,7 +402,7 @@ export const privacyData: TermsData = {
       title: "16. Contact us",
       items: [
         {
-          text: "**[COMPANY LEGAL NAME]** , **[REGISTERED ADDRESS]** Data Protection Officer: **[DPO EMAIL]**",
+          text: "**Myjourny and Experiences LLC**, **The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos**. Data Protection Officer: **[DPO EMAIL]**",
         },
         {
           text: "Support: **[SUPPORT EMAIL]** or WhatsApp **[SUPPORT WHATSAPP NUMBER]**",

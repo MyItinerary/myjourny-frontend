@@ -5,7 +5,7 @@ import { cookieData } from "./cookie-data";
 describe("cookieData", () => {
   it("contains Cookie Policy title, lastUpdated, and 10 table of contents items", () => {
     expect(cookieData.title).toBe("Cookie Policy");
-    expect(cookieData.lastUpdated).toBe("[DATE]");
+    expect(cookieData.lastUpdated).toBe("9 November 2026");
     expect(cookieData.tableOfContents.length).toBe(10);
     expect(cookieData.tableOfContents[0].id).toBe("section-1");
     expect(cookieData.tableOfContents[9].id).toBe("section-10");

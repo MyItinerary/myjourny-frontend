@@ -5,8 +5,8 @@ import { hostTermsData } from "./host-terms-data";
 describe("hostTermsData", () => {
   it("contains Host Terms title, lastUpdated, and agreement text", () => {
     expect(hostTermsData.title).toBe("Host Terms");
-    expect(hostTermsData.lastUpdated).toBe("[DATE]");
-    expect(hostTermsData.companyAgreementText).toContain("COMPANY LEGAL NAME");
+    expect(hostTermsData.lastUpdated).toBe("9 November 2026");
+    expect(hostTermsData.companyAgreementText).toContain("Myjourny and Experiences LLC (RC 9460304)");
     expect(hostTermsData.agreementNoticeText).toContain("Terms of Use (Guests)");
   });
 

@@ -2,7 +2,7 @@ import type { TermsData } from "./terms.types";
 
 export const cookieData: TermsData = {
   title: "Cookie Policy",
-  lastUpdated: "[DATE]",
+  lastUpdated: "9 November 2026",
   companyAgreementText: "",
   agreementNoticeText: "",
   tableOfContents: [
@@ -24,7 +24,7 @@ export const cookieData: TermsData = {
       title: "1. What this policy covers",
       items: [
         {
-          text: 'This policy explains how **[COMPANY LEGAL NAME]** ("we", "us") uses cookies and similar technologies on MyJourny. It should be read with our [Privacy Policy](/legal/privacy), which explains how we handle personal data more widely.',
+          text: 'This policy explains how **Myjourny and Experiences LLC** ("we", "us") uses cookies and similar technologies on MyJourny. It should be read with our [Privacy Policy](/legal/privacy), which explains how we handle personal data more widely.',
         },
       ],
     },
@@ -113,7 +113,7 @@ export const cookieData: TermsData = {
           [
             "**[payment partner cookies]**",
             "Strictly necessary",
-            "**[PAYMENT PARTNER]**",
+            "**Paystack, Novac and Stripe**",
             "Secures your payment and prevents fraud on the payment page",
             "**[DURATION]**",
           ],
@@ -212,7 +212,7 @@ export const cookieData: TermsData = {
       title: "10. Contact us",
       items: [
         {
-          text: "Questions about cookies or this policy? Contact our Data Protection Officer at **[DPO EMAIL]** or write to us at **[REGISTERED ADDRESS]**. If you are not satisfied with how we handle your request, you can complain to the Nigeria Data Protection Commission (ndpc.gov.ng).",
+          text: "Questions about cookies or this policy? Contact our Data Protection Officer at **[DPO EMAIL]** or write to us at **The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos**. If you are not satisfied with how we handle your request, you can complain to the Nigeria Data Protection Commission (ndpc.gov.ng).",
         },
       ],
     },

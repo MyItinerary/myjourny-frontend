@@ -2,9 +2,9 @@ import type { TermsData } from "./terms.types";
 
 export const termsData: TermsData = {
   title: "Terms of Use",
-  lastUpdated: "[DATE]",
+  lastUpdated: "9 November 2026",
   companyAgreementText:
-    'These terms are an agreement between you and [COMPANY LEGAL NAME] (RC [RC NUMBER] ), registered at [REGISTERED ADDRESS] . We call ourselves "MyJourny", "we", or "us". You are "you" or "the guest".',
+    'These terms are an agreement between you and Myjourny and Experiences LLC (RC 9460304), registered at The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos. We call ourselves "MyJourny", "we", or "us". You are "you" or "the guest".',
   agreementNoticeText:
     "By creating an account or making a booking, you agree to these terms, our [Privacy Policy](/legal/privacy), and our [Cancellation and Refund Policy](/legal/cancellations). If you do not agree, please do not use MyJourny.",
   shortVersion: {
@@ -154,7 +154,7 @@ export const termsData: TermsData = {
       items: [
         {
           number: "4.1",
-          text: "You pay through MyJourny using the payment methods shown at checkout. Payments are processed by [PAYMENT PARTNER] , a licensed payment company. We do not store your full card details.",
+          text: "You pay through MyJourny using the payment methods shown at checkout. Payments are processed by Paystack, Novac and Stripe, licensed payment companies. We do not store your full card details.",
         },
         {
           number: "4.2",
@@ -422,7 +422,7 @@ export const termsData: TermsData = {
         },
         {
           number: "16.5",
-          text: "We send notices to the email or phone number on your account. You can write to us at [REGISTERED ADDRESS] or [SUPPORT EMAIL] .",
+          text: "We send notices to the email or phone number on your account. You can write to us at The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos or [SUPPORT EMAIL] .",
         },
       ],
     },

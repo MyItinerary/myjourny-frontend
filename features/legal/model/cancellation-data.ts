@@ -2,7 +2,7 @@ import type { TermsData } from "./terms.types";
 
 export const cancellationData: TermsData = {
   title: "Cancellation and Refund Policy",
-  lastUpdated: "[DATE]",
+  lastUpdated: "9 November 2026",
   companyAgreementText:
     "This policy is part of our Terms of Use. It tells you when you get your money back, how much, and how to ask. We have tried to keep it plain.",
   agreementNoticeText: "",

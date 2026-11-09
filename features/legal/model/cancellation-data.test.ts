@@ -5,7 +5,7 @@ import { cancellationData } from "./cancellation-data";
 describe("cancellationData", () => {
   it("contains the Cancellation and Refund Policy title and intro", () => {
     expect(cancellationData.title).toBe("Cancellation and Refund Policy");
-    expect(cancellationData.lastUpdated).toBe("[DATE]");
+    expect(cancellationData.lastUpdated).toBe("9 November 2026");
     expect(cancellationData.companyAgreementText).toContain("This policy is part of our Terms of Use.");
   });
 

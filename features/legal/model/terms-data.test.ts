@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { termsData } from "./terms-data";
 
 describe("termsData", () => {
-  it("contains the Terms of Use title and lastUpdated placeholder", () => {
+  it("contains the Terms of Use title, date and the company it is with", () => {
     expect(termsData.title).toBe("Terms of Use");
-    expect(termsData.lastUpdated).toBe("[DATE]");
-    expect(termsData.companyAgreementText).toContain("COMPANY LEGAL NAME");
+    expect(termsData.lastUpdated).toBe("9 November 2026");
+    expect(termsData.companyAgreementText).toContain("Myjourny and Experiences LLC (RC 9460304)");
     expect(termsData.agreementNoticeText).toContain("Privacy Policy");
   });
 

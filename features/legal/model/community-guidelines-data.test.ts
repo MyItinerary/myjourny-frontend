@@ -5,7 +5,7 @@ import { communityGuidelinesData } from "./community-guidelines-data";
 describe("communityGuidelinesData", () => {
   it("has correct page title and last updated string", () => {
     expect(communityGuidelinesData.title).toBe("Community Guidelines and Reviews Policy");
-    expect(communityGuidelinesData.lastUpdated).toBe("[DATE]");
+    expect(communityGuidelinesData.lastUpdated).toBe("9 November 2026");
   });
 
   it("contains numbered variant short version with 5 items", () => {

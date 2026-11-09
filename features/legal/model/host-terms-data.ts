@@ -2,9 +2,9 @@ import type { TermsData } from "./terms.types";
 
 export const hostTermsData: TermsData = {
   title: "Host Terms",
-  lastUpdated: "[DATE]",
+  lastUpdated: "9 November 2026",
   companyAgreementText:
-    'These terms are an agreement between [COMPANY LEGAL NAME] (RC [RC NUMBER] ), "MyJourny", "we", or "us", and you, the person or business that lists experiences or events on MyJourny, "the host" or "you". If you list as a business, the person accepting these terms confirms they have authority to bind it.',
+    'These terms are an agreement between Myjourny and Experiences LLC (RC 9460304), "MyJourny", "we", or "us", and you, the person or business that lists experiences or events on MyJourny, "the host" or "you". If you list as a business, the person accepting these terms confirms they have authority to bind it.',
   agreementNoticeText:
     "By applying to host, or by publishing a listing, you accept these terms, our [Terms of Use (Guests)](/legal/terms), our [Privacy Policy](/legal/privacy), and our [Cancellation and Refund Policy](/legal/cancellations). If these conflict, these Host Terms apply between you and us.",
   shortVersion: {
@@ -330,7 +330,7 @@ export const hostTermsData: TermsData = {
         {
           number: "7.4",
           boldPrefix: "Host cancellations.",
-          text: "If you cancel a confirmed booking, except for a genuine safety reason, we may charge a cancellation fee of **[₦ AMOUNT]** , reduce your listing's visibility, and suspend your account if cancellations are repeated. We will help guests find alternatives.",
+          text: "If you cancel a confirmed booking, except for a genuine safety reason, we may charge a cancellation fee of **15% of the booking value**, reduce your listing's visibility, and suspend your account if cancellations are repeated. We will help guests find alternatives.",
         },
       ],
     },
@@ -611,7 +611,7 @@ export const hostTermsData: TermsData = {
         },
         {
           boldPrefix: "Tier 3, events.",
-          text: "All ticketed events. **Public liability insurance is required**, with cover of at least **[₦ AMOUNT]** per event, set higher for events over **[NUMBER]** attendees. Event cancellation cover is recommended.",
+          text: "All ticketed events. **Public liability insurance is required**, with cover of at least **[₦ AMOUNT]** per event, set higher for events over **100** attendees. Event cancellation cover is recommended.",
         },
         {
           text: "You must send us a valid certificate for Tiers 2 and 3 before your listing goes live, and again whenever it renews. We may ask for proof at any time. If your cover lapses, we may pause your listing.",

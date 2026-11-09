@@ -5,7 +5,7 @@ import { privacyData } from "./privacy-data";
 describe("privacyData", () => {
   it("contains Privacy Policy title and At a glance items", () => {
     expect(privacyData.title).toBe("Privacy Policy");
-    expect(privacyData.lastUpdated).toBe("[DATE]");
+    expect(privacyData.lastUpdated).toBe("9 November 2026");
     expect(privacyData.atAGlance).toBeDefined();
     expect(privacyData.atAGlance?.items.length).toBe(8);
     expect(privacyData.atAGlance?.items[0].question).toBe("Who is responsible for your data?");

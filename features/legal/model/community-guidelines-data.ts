@@ -2,7 +2,7 @@ import type { TermsData } from "./terms.types";
 
 export const communityGuidelinesData: TermsData = {
   title: "Community Guidelines and Reviews Policy",
-  lastUpdated: "[DATE]",
+  lastUpdated: "9 November 2026",
   companyAgreementText:
     "MyJourny runs on trust between people who have never met: guests, hosts, organisers, and curators. These guidelines say what we expect from everyone, and how we deal with it when someone does not meet it. They form part of our Terms of Use and our Host Terms.",
   agreementNoticeText: "",
@@ -370,7 +370,7 @@ export const communityGuidelinesData: TermsData = {
       title: "B14. Contact",
       items: [
         {
-          text: "**[COMPANY LEGAL NAME]** . Reports and appeals: **[SUPPORT EMAIL]** or WhatsApp **[SUPPORT WHATSAPP NUMBER]** .",
+          text: "**Myjourny and Experiences LLC**. Reports and appeals: **[SUPPORT EMAIL]** or WhatsApp **[SUPPORT WHATSAPP NUMBER]** .",
         },
       ],
     },

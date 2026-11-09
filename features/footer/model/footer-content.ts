@@ -27,7 +27,7 @@ export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
     heading: "Myjourny",
     links: [
       { label: "Why book with us", href: "#" },
-      { label: "Experiences and events", href: "#" },
+      { label: "Experiences", href: "/experiences" },
       { label: "Blog", href: "#" },
       { label: "Investors", href: "#" },
       { label: "Gift cards", href: "#" },

@@ -2,7 +2,7 @@ import type { TermsData } from "./terms.types";
 
 export const safetyData: TermsData = {
   title: "Safety Guide",
-  lastUpdated: "[DATE]",
+  lastUpdated: "9 November 2026",
   companyAgreementText:
     "Most experiences on MyJourny go well. This guide helps keep it that way. It is for guests, for hosts, and for people who run events.",
   agreementNoticeText: "",
