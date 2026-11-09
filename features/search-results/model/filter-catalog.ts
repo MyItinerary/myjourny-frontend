@@ -3,6 +3,7 @@
 // Every option below is a placeholder until the backend exposes it. The
 // endpoints this needs are listed in docs/search-filters-backend.md. When they
 // exist, replace the exports here with query hooks that return the same shapes.
+import { eventsEnabled } from "@/lib/feature-flags";
 import type { ListingType } from "./search-results.types";
 
 export interface CatalogOption {
@@ -92,6 +93,11 @@ export const TYPE_OPTIONS: { value: ListingType; label: string }[] = [
   { value: "experiences", label: "Experiences" },
   { value: "events", label: "Events" },
 ];
+
+/** Events stay hidden until they launch: no Events type and no event categories. */
+export function isTypeShown(type: ListingType): boolean {
+  return type === "experiences" || eventsEnabled();
+}
 
 export const PRICE_QUICK_RANGES: { label: string; min: number | null; max: number | null }[] = [
   { label: "Under ₦5,000", min: null, max: 5_000 },

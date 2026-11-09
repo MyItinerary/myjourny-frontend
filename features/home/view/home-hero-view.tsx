@@ -42,7 +42,7 @@ export function HomeHeroView({ search, isScrolled, onOpenMobileSearch }: HomeHer
             variants={itemVariants}
             className="font-sans text-lg font-normal leading-[28px] text-[#6F6B72] lg:text-[24px] lg:leading-normal"
           >
-            Experiences and events picked to match your taste.
+            Experiences picked to match your taste.
           </motion.p>
         </div>
 

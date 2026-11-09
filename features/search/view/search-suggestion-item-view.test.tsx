@@ -101,7 +101,7 @@ describe("SearchSuggestionList", () => {
       />,
     );
 
-    expect(screen.getByText(/No destinations, activities, experiences, or events found/i)).toBeInTheDocument();
+    expect(screen.getByText(/No destinations, activities or experiences found/i)).toBeInTheDocument();
   });
 });
 

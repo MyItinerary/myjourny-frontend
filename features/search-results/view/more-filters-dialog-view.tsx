@@ -243,10 +243,14 @@ export function MoreFiltersDialogView(vm: MoreFiltersDialogViewProps) {
               <button type="button" onClick={() => vm.toggleType("experiences")} className="font-medium text-[#1f1c20] hover:underline cursor-pointer">
                 Experiences
               </button>{" "}
-              or{" "}
-              <button type="button" onClick={() => vm.toggleType("events")} className="font-medium text-[#1f1c20] hover:underline cursor-pointer">
-                Events
-              </button>{" "}
+              {panel.types.some((t) => t.value === "events") && (
+                <>
+                  or{" "}
+                  <button type="button" onClick={() => vm.toggleType("events")} className="font-medium text-[#1f1c20] hover:underline cursor-pointer">
+                    Events
+                  </button>{" "}
+                </>
+              )}
               above.
             </p>
           )}

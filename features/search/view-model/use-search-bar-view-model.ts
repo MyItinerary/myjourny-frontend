@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { toCityDestination, useExperienceCities } from "@/features/cities";
 import { formatDateRange } from "@/lib/dates";
+import { eventsEnabled } from "@/lib/feature-flags";
 import { categoriesBySlug } from "@/lib/mock-data/home";
 
 import { saveLastSearchArea } from "../model/last-search-area";
@@ -147,6 +148,7 @@ export function useSearchBarViewModel({
 
   // Hardcoded for now: three to start with, then the ones matching what's typed.
   const filteredEvents = useMemo(() => {
+    if (!eventsEnabled()) return [];
     if (!trimmedQuery) return DEFAULT_EVENTS.slice(0, 3);
     return DEFAULT_EVENTS.filter(
       (ev) => ev.title.toLowerCase().includes(trimmedQuery) || ev.subtitle.toLowerCase().includes(trimmedQuery),

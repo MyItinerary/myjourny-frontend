@@ -34,7 +34,7 @@ vi.mock("@/lib/queries/experiences", () => ({
 describe("useHomeViewModel", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("leaves out Tonight and this weekend while events are off", () => {
+  it("leaves out the event rails, Tonight and Early bird, while events are off", () => {
     vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "");
     session.user = null;
     guestList.query = { data: { items: [experience] }, isPending: false };
@@ -42,6 +42,7 @@ describe("useHomeViewModel", () => {
     const { result } = renderHookWithProviders(() => useHomeViewModel());
 
     expect(result.current.tonightAndThisWeekend.show).toBe(false);
+    expect(result.current.earlyBird.show).toBe(false);
   });
 
   it("gives guests rails from the public listing, no pick-up rail, and the placeholder rails", () => {
