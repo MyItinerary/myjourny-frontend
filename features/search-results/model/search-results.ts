@@ -125,12 +125,21 @@ function dropTypeSpecific(filters: ResultsFilters, type: ListingType): ResultsFi
   };
 }
 
-/** Subcategories are filters of their own, but only experiences have them; Genre needs Music or Parties. */
-function normalize(filters: ResultsFilters): ResultsFilters {
+/**
+ * Subcategories are filters of their own, but only experiences have them; Genre needs Music or Parties.
+ * While events are hidden, the Events type is dropped too, since there's no chip to remove it with.
+ */
+function normalize(input: ResultsFilters): ResultsFilters {
+  const filters = isTypeShown("events") ? input : withoutEvents(input);
   const subcategories =
     activeType(filters) === "events" ? [] : filters.subcategories.filter((slug) => subcategoryBySlug.has(slug));
   const withSubs = { ...filters, subcategories };
   return isGenreVisible(withSubs) ? withSubs : { ...withSubs, groups: omit(withSubs.groups, ["genre"]) };
+}
+
+function withoutEvents(filters: ResultsFilters): ResultsFilters {
+  if (!filters.types.includes("events")) return filters;
+  return dropTypeSpecific({ ...filters, types: filters.types.filter((t) => t !== "events") }, "events");
 }
 
 /**

@@ -9,6 +9,7 @@ import {
   EMPTY_FILTERS,
   formatDateRange,
   formatPriceRange,
+  normalizeFilters,
   formatResultsCount,
   resultsNoun,
   dateRangeFromLink,
@@ -340,6 +341,16 @@ describe("while events are off", () => {
     expect(panel.categoryGroups).toHaveLength(1);
     expect(panel.categoryGroups[0].title).toBeNull();
     expect(panel.categoryGroups[0].items.every((c) => c.kind === "experiences")).toBe(true);
+  });
+
+  it("drops an Events type that's already in the filters, with its event-only filters", () => {
+    const filters = normalizeFilters(
+      withFilters({ types: ["events"], groups: { seating: ["seated"] }, flags: { earlyBird: true } }),
+    );
+    expect(filters.types).toEqual([]);
+    expect(filters.groups).toEqual({});
+    expect(filters.flags).toEqual({});
+    expect(labels(filters)).not.toContain("Events");
   });
 
   it("counts Picked for your taste as on with only its experience categories", () => {
