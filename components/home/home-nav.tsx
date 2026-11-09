@@ -8,6 +8,7 @@ import { Bell } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { eventsEnabled } from "@/lib/feature-flags";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { useSession } from "@/lib/auth/session-store";
 import { useLogout } from "@/lib/queries/auth";
@@ -172,7 +173,7 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
       href: "/wishlists",
       icon: "/icons/nav/wishlist.png",
     },
-  ];
+  ].filter((item) => item.id !== "events" || eventsEnabled());
   const logout = useLogout();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -516,12 +517,14 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                           icon="/icons/nav/experiences.png"
                           label="Experiences"
                         />
-                        <MenuRow
-                          href="/events"
-                          onClick={() => setProfileMenuOpen(false)}
-                          icon="/icons/nav/events.png"
-                          label="Events"
-                        />
+                        {eventsEnabled() && (
+                          <MenuRow
+                            href="/events"
+                            onClick={() => setProfileMenuOpen(false)}
+                            icon="/icons/nav/events.png"
+                            label="Events"
+                          />
+                        )}
                         <MenuRow
                           href={user ? "/wishlists" : "/login"}
                           onClick={() => setProfileMenuOpen(false)}

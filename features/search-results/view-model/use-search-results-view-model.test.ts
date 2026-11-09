@@ -1,6 +1,6 @@
 import { act, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
@@ -35,6 +35,10 @@ function setup(quiz: "guest" | "taken" = "guest") {
     useSearchResultsViewModel({ subject: { kind: "city", label: "Lagos" }, city: "Lagos" }),
   );
 }
+
+// These cases cover events too; the events-off cases switch the flag back off.
+beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 describe("useSearchResultsViewModel", () => {
   it("words the heading from the search and shows the count once loaded", async () => {
@@ -321,5 +325,18 @@ describe("useSearchResultsViewModel", () => {
     expect(result.current.errorMessage).toBe("Pick today or a later date.");
     expect(result.current.isEmpty).toBe(false);
     expect(result.current.countLabel).toBe("(Failed to load)");
+  });
+});
+
+describe("useSearchResultsViewModel while events are off", () => {
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", ""));
+
+  it("picks only the experience categories with Picked for your taste", () => {
+    mockApi();
+    const { result } = setup("taken");
+
+    act(() => result.current.togglePickedForYou());
+    expect(result.current.filters.categories).toEqual(["art-creativity", "culture-history", "local-food-drinks"]);
+    expect(result.current.panel.featured[0].selected).toBe(true);
   });
 });

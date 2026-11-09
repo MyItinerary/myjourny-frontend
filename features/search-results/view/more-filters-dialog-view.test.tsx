@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
 import { buildResultsVm, withFilters } from "@/test/utils/search-results-vm";
@@ -7,6 +7,10 @@ import { buildResultsVm, withFilters } from "@/test/utils/search-results-vm";
 import { MoreFiltersDialogView } from "./more-filters-dialog-view";
 
 const open = (overrides = {}) => buildResultsVm({ panelOpen: true, ...overrides });
+
+// These cases cover events too; the events-off cases switch the flag back off.
+beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 describe("MoreFiltersDialogView", () => {
   it("renders nothing while closed", () => {
@@ -145,5 +149,18 @@ describe("MoreFiltersDialogView", () => {
     expect(closePanel).toHaveBeenCalled();
     await user.keyboard("{Escape}");
     expect(closePanel).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("MoreFiltersDialogView while events are off", () => {
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", ""));
+
+  it("offers Experiences only, with no Events type, group or hint", () => {
+    renderWithProviders(<MoreFiltersDialogView {...open()} />);
+
+    expect(screen.queryByRole("button", { name: "Events" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Events", { selector: "p" })).not.toBeInTheDocument();
+    const hint = screen.getByText(/Want more filters\? Choose/);
+    expect(hint).toHaveTextContent("Want more filters? Choose Experiences above.");
   });
 });

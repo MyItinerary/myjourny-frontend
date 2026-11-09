@@ -1,11 +1,15 @@
 import { screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
 import { buildResultsVm, withFilters } from "@/test/utils/search-results-vm";
 
 import { ResultsFilterRowView } from "./results-filter-row-view";
 
+
+// These cases cover events too; the events-off cases switch the flag back off.
+beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 describe("ResultsFilterRowView", () => {
   it("shows More filters, Dates and the categories, with no icons on the chips", () => {
