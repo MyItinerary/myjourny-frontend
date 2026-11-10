@@ -136,6 +136,15 @@ describe("a listing that isn't there", () => {
     expect(render("l1").current.notFound).toBe(true);
   });
 
+  it("edits and fixes a real listing in the builder", () => {
+    nav.preview = null;
+    data.real = { loading: false, found: true };
+    const result = render("e1");
+    expect(result.current.header.actions[0]).toMatchObject({ href: "/host/dashboard/listings/new?id=e1" });
+    act(() => result.current.actions[0].onClick());
+    expect(nav.push).toHaveBeenLastCalledWith("/host/dashboard/listings/new?id=e1");
+  });
+
   it("isn't 'not found' while the listing is still loading", () => {
     nav.preview = null;
     data.real = { loading: true, found: false };

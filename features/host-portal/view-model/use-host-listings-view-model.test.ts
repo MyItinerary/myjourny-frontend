@@ -276,6 +276,12 @@ describe("a guide's real listings", () => {
     expect(toast.info).toHaveBeenCalled();
   });
 
+  it("edits a real listing in the builder", () => {
+    const result = render();
+    act(() => result.current.onRowAction(kayak, "edit"));
+    expect(nav.push).toHaveBeenCalledWith("/host/dashboard/listings/new?id=e1");
+  });
+
   it("deletes the listing in itin and says so", () => {
     const result = render();
     act(() => result.current.onRowAction(kayak, "delete"));

@@ -40,13 +40,15 @@ export function useHostListingDetailViewModel(id: string): HostListingDetailView
   const router = useRouter();
   const preview = usePreviewMode();
   const { listing, detail, loading } = useHostListingDetail(id, preview);
+  // The design's sample listings aren't in itin, so they open an empty builder.
+  const editHref = preview === "full" ? `${BASE}/listings/new` : `${BASE}/listings/new?id=${id}`;
   const [tab, setTab] = useState<DetailTab>("About");
 
   const run = (action: DetailAction) => {
     switch (action) {
       case "edit":
       case "fix":
-        router.push(`${BASE}/listings/new`);
+        router.push(editHref);
         return;
       case "block-date":
       case "add-dates":
@@ -75,7 +77,7 @@ export function useHostListingDetailViewModel(id: string): HostListingDetailView
       title: listing?.title ?? "Listing",
       chip: listing?.status,
       subtitle: listing ? `${listing.cat} · ${listing.sub}` : "",
-      actions: listing && listing.status !== "Archived" ? [{ label: "Edit listing", href: `${BASE}/listings/new`, primary: true }] : [],
+      actions: listing && listing.status !== "Archived" ? [{ label: "Edit listing", href: editHref, primary: true }] : [],
     },
     notFound: !loading && (!listing || !detail),
     loading,

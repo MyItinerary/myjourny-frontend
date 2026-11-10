@@ -169,7 +169,8 @@ export function useHostListingsViewModel(): HostListingsViewModel {
         router.push(listingHref(listing, HOST_PORTAL_BASE));
         return;
       case "edit":
-        router.push(newListingHref);
+        // The design's sample listings aren't in itin, so they open an empty builder.
+        router.push(isSample(preview) ? newListingHref : `${newListingHref}?id=${listing.id}`);
         return;
       case "preview":
         window.open(`/experiences/${listing.id}`, "_blank", "noopener");

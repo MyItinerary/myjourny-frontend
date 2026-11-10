@@ -3,7 +3,7 @@ import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import type { HostListingBuilderViewModel } from "../view-model/use-host-listing-builder-view-model";
-import { Field, inputClass, LineList, Pill, StepHeading } from "./host-builder-parts";
+import { ChoiceCard, Field, inputClass, LineList, Pill, StepHeading } from "./host-builder-parts";
 
 type Props = { vm: HostListingBuilderViewModel };
 
@@ -62,14 +62,14 @@ export function StepWhen({ vm }: Props) {
               </div>
             </Field>
             <Field label="Repeat until" className="mb-0 flex-1">
-              <input value={draft.until} placeholder="e.g. 31 Dec 2026" onChange={(e) => onField("until", e.target.value)} className={inputClass} />
+              <input type="date" aria-label="Repeat until" value={draft.until} onChange={(e) => onField("until", e.target.value)} className={inputClass} />
             </Field>
           </div>
           <div className="mb-2.5 text-[13px] font-medium">Start times</div>
           <div className="flex flex-col gap-2">
             {draft.slots.map((t, i) => (
               <div key={i} className="flex items-center gap-2.5">
-                <input aria-label={`Start time ${i + 1}`} value={t} placeholder="16:00" onChange={(e) => onListSet("slots", i, e.target.value)} className={cn(inputClass, "h-11 w-[120px]")} />
+                <input type="time" aria-label={`Start time ${i + 1}`} value={t} onChange={(e) => onListSet("slots", i, e.target.value)} className={cn(inputClass, "h-11 w-[120px]")} />
                 <button type="button" aria-label={`Remove start time ${i + 1}`} onClick={() => onListDel("slots", i)} className="flex size-9 cursor-pointer items-center justify-center rounded-full text-[#6F6B72] hover:bg-[#F4F2EE]">
                   <X className="size-4" />
                 </button>
@@ -98,12 +98,13 @@ export function StepWhen({ vm }: Props) {
       {draft.whenType === "once" && (
         <div className="flex gap-3">
           <Field label="Date" className="mb-0 flex-1">
-            <input value={draft.until} placeholder="e.g. Sat 3 Oct 2026" onChange={(e) => onField("until", e.target.value)} className={inputClass} />
+            <input type="date" aria-label="Date" value={draft.date} onChange={(e) => onField("date", e.target.value)} className={inputClass} />
           </Field>
           <Field label="Start time" className="mb-0 flex-1">
             <input
+              type="time"
+              aria-label="Start time"
               value={draft.slots[0] ?? ""}
-              placeholder="16:00"
               onChange={(e) => onField("slots", [e.target.value])}
               className={inputClass}
             />
@@ -121,7 +122,7 @@ export function StepWhen({ vm }: Props) {
 }
 
 export function StepPrice({ vm }: Props) {
-  const { draft, derived, onField } = vm;
+  const { draft, derived, options, onField } = vm;
   const money = (key: "price" | "priv", label: string, hint?: string) => (
     <Field label={label} hint={hint}>
       <div className="relative">
@@ -159,6 +160,19 @@ export function StepPrice({ vm }: Props) {
           That is {derived.price.perSeat} per seat, in your bank within 24 hours of the walk finishing. No listing fee, nothing else taken.
         </p>
       </div>
+      <div className="mt-6 mb-2.5 text-[13px] font-medium">If a guest cancels</div>
+      <div className="mb-3 flex flex-col gap-2">
+        {options.refundPolicies.map((r) => (
+          <ChoiceCard key={r.key} radio selected={draft.refund === r.key} onClick={() => onField("refund", r.key)}>
+            <span className="text-[13.5px] font-medium">{r.label}</span>
+          </ChoiceCard>
+        ))}
+      </div>
+      {draft.refund === "full_refund_until" && (
+        <Field label="Hours before the start" hint="24 is usual. Guests who cancel later than this get nothing back.">
+          <input inputMode="numeric" value={draft.refundHours} onChange={(e) => onField("refundHours", numeric(e.target.value))} className={inputClass} />
+        </Field>
+      )}
     </div>
   );
 }
