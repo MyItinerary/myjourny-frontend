@@ -31,7 +31,9 @@ async function completeAuthUnlessChallenged(data: AuthResponse, placeholderEmail
   await completeAuth(data, placeholderEmail);
 }
 
-type MeResponse = {
+export type GuideStatus = "none" | "pending" | "approved" | "rejected";
+
+export type MeResponse = {
   id: string;
   email: string | null;
   full_name: string | null;
@@ -39,6 +41,10 @@ type MeResponse = {
   completed: boolean;
   /** False for a password signup until the emailed link is opened. */
   is_email_verified?: boolean;
+  /** "guide" for someone who signed up through become-a-guide. */
+  signup_type?: "traveller" | "guide";
+  /** Where their guide application is; "none" for travellers. */
+  guide_status?: GuideStatus;
 };
 
 function toSessionUser(me: MeResponse): SessionUser {
@@ -57,7 +63,7 @@ function notifySessionRoute() {
 // Register/login/google-auth all return tokens only, no user — set a
 // placeholder immediately (so `apiClient` is authorized for the follow-up
 // call) then fill in the real user from /auth/me.
-async function completeAuth(tokens: Tokens, placeholderEmail: string | null) {
+export async function completeAuth(tokens: Tokens, placeholderEmail: string | null) {
   // The onboarding quiz's localStorage draft is browser-scoped, not
   // account-scoped — clear it the moment a session becomes "about this
   // specific account" (register, login, or Google, whichever this is) so

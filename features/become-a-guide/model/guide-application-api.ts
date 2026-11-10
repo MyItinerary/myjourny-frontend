@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { completeAuth } from "@/lib/queries/auth";
 import { dateOfBirthToIso, fullPhoneNumber } from "./guide-application-rules";
 import type { GuideApplicationFormData } from "./guide-application.types";
 
@@ -39,7 +40,12 @@ export async function submitGuideApplication(
   };
 
   try {
-    await apiClient.post("/auth/register/guide", payload);
+    const { data: tokens } = await apiClient.post<{ access_token: string; refresh_token: string; token_type: string }>(
+      "/auth/register/guide",
+      payload
+    );
+    // Signed in straight away, so the dashboard can show where the application is.
+    await completeAuth(tokens, payload.email);
     return { success: true };
   } catch (err: unknown) {
     return { success: false, message: errorMessage(err) };

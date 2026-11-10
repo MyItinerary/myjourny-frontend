@@ -119,8 +119,9 @@ describe("rowActions", () => {
 });
 
 describe("reference data", () => {
-  it("has eight statuses, eight categories with five subcategories each, four rating options", () => {
-    expect(STATUS_OPTIONS).toHaveLength(8);
+  it("has ten statuses, eight categories with five subcategories each, four rating options", () => {
+    expect(STATUS_OPTIONS).toHaveLength(10);
+    expect(STATUS_OPTIONS.slice(0, 3)).toEqual(["Live", "Incomplete", "Taken down"]);
     expect(Object.keys(CATEGORY_TREE)).toHaveLength(8);
     expect(Object.values(CATEGORY_TREE).every((subs) => subs.length === 5)).toBe(true);
     expect(RATING_OPTIONS).toHaveLength(4);

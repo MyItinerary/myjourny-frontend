@@ -10,7 +10,7 @@ describe("GuideApplicationReview", () => {
 
     expect(screen.getByText("You're in review")).toBeInTheDocument();
     expect(screen.getByText(/your details are checked and matched/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Go to your dashboard" })).toBeInTheDocument();
   });
 
   it("renders business copy in step 2 for registered business verification", () => {
@@ -21,12 +21,12 @@ describe("GuideApplicationReview", () => {
     ).toBeInTheDocument();
   });
 
-  it("triggers onDone when Done button is clicked", async () => {
+  it("triggers onDone when dashboard button is clicked", async () => {
     const user = userEvent.setup();
     const onDone = vi.fn();
     render(<GuideApplicationReview verificationType="individual" onDone={onDone} />);
 
-    await user.click(screen.getByRole("button", { name: "Done" }));
+    await user.click(screen.getByRole("button", { name: "Go to your dashboard" }));
     expect(onDone).toHaveBeenCalledTimes(1);
   });
 });

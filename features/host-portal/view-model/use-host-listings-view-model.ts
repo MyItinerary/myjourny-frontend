@@ -2,6 +2,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { apiErrorMessage } from "@/lib/api-error";
+
 import {
   CATEGORY_TREE,
   filterListings,
@@ -16,7 +18,8 @@ import {
   sortListings,
   STATUS_OPTIONS,
 } from "../model/listing-table";
-import { useHostListings } from "../model/listings-data";
+import { useDeleteGuideExperience } from "../model/guide-listings-api";
+import { isSample, useHostListings } from "../model/listings-data";
 import type { FilterGroup } from "../model/filter-group.types";
 import type {
   BulkAction,
@@ -40,10 +43,14 @@ export type ListingRow = {
   href: string;
 };
 
-export type DeleteDialog = { kind: "blocked"; title: string; upcoming: number } | { kind: "ok"; title: string; rating: string | null };
+export type DeleteDialog =
+  | { kind: "blocked"; id: string; title: string; upcoming: number }
+  | { kind: "ok"; id: string; title: string; rating: string | null };
 
 export type HostListingsViewModel = {
   header: HostPageHeader;
+  /** Still fetching the host's listings. */
+  loading: boolean;
   /** A host with no listings at all. */
   isEmpty: boolean;
   newListingHref: string;
@@ -72,8 +79,10 @@ export type HostListingsViewModel = {
   onRowAction: (listing: HostListing, action: ListingRowAction) => void;
   dialog: DeleteDialog | null;
   onCloseDialog: () => void;
-  /** "Hide it instead", "Archive it instead" or the delete itself. */
+  /** "Hide it instead" or "Archive it instead". */
   onDialogConfirm: () => void;
+  /** Delete the listing for good. */
+  onDialogDelete: () => void;
 };
 
 const COLUMNS: { key: ListingSortKey; label: string }[] = [
@@ -93,7 +102,8 @@ const NOT_CONNECTED = "This will work once your listings are connected.";
 export function useHostListingsViewModel(): HostListingsViewModel {
   const router = useRouter();
   const preview = usePreviewMode();
-  const listings = useHostListings(preview);
+  const { listings, loading } = useHostListings(preview);
+  const remove = useDeleteGuideExperience();
 
   const [filters, setFilters] = useState<ListingFilters>(NO_FILTERS);
   const [sortKey, setSortKey] = useState<ListingSortKey>("next");
@@ -173,8 +183,8 @@ export function useHostListingsViewModel(): HostListingsViewModel {
       case "delete":
         setDialog(
           listing.future > 0
-            ? { kind: "blocked", title: listing.title, upcoming: listing.future }
-            : { kind: "ok", title: listing.title, rating: listing.rating === "-" ? null : listing.rating },
+            ? { kind: "blocked", id: listing.id, title: listing.title, upcoming: listing.future }
+            : { kind: "ok", id: listing.id, title: listing.title, rating: listing.rating === "-" ? null : listing.rating },
         );
         return;
       default:
@@ -185,10 +195,11 @@ export function useHostListingsViewModel(): HostListingsViewModel {
   return {
     header: {
       title: "Your listings",
-      subtitle: listingsSummary(listings),
+      subtitle: loading ? "" : listingsSummary(listings),
       actions: [{ label: "Start a new listing", href: newListingHref, primary: true }],
     },
-    isEmpty: listings.length === 0,
+    loading,
+    isEmpty: !loading && listings.length === 0,
     newListingHref,
     query: filters.q,
     onQuery: (q) => change({ q }),
@@ -228,6 +239,18 @@ export function useHostListingsViewModel(): HostListingsViewModel {
     onCloseDialog: () => setDialog(null),
     onDialogConfirm: () => {
       toast.info(NOT_CONNECTED);
+      setDialog(null);
+    },
+    onDialogDelete: () => {
+      // The sample host deletes nothing.
+      if (dialog?.kind !== "ok" || isSample(preview)) toast.info(NOT_CONNECTED);
+      else {
+        const { title } = dialog;
+        remove.mutate(dialog.id, {
+          onSuccess: () => toast.success(`${title} is deleted`),
+          onError: (error) => toast.error(apiErrorMessage(error, "Couldn't delete the listing. Please try again.")),
+        });
+      }
       setDialog(null);
     },
   };

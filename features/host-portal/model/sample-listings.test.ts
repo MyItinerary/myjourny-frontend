@@ -4,9 +4,11 @@ import { STATUS_OPTIONS } from "./listing-table";
 import { SAMPLE_LISTINGS } from "./sample-listings";
 
 describe("SAMPLE_LISTINGS", () => {
-  it("has eight listings, one in every status", () => {
+  it("has eight listings, one in every status the design draws", () => {
+    // "Incomplete" and "Taken down" come from itin, not the design.
+    const drawn = STATUS_OPTIONS.filter((s) => s !== "Incomplete" && s !== "Taken down");
     expect(SAMPLE_LISTINGS).toHaveLength(8);
-    expect(SAMPLE_LISTINGS.map((l) => l.status).sort()).toEqual([...STATUS_OPTIONS].sort());
+    expect(SAMPLE_LISTINGS.map((l) => l.status).sort()).toEqual([...drawn].sort());
   });
 
   it("has unique ids and a price on each", () => {
