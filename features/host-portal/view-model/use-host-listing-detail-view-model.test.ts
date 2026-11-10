@@ -10,10 +10,28 @@ vi.mock("next/navigation", () => ({
 }));
 const toast = vi.hoisted(() => ({ info: vi.fn(), success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
+// The design's samples for ?preview=full; `real` stands in for itin.
+const data = vi.hoisted(() => ({ real: null as null | { loading: boolean; found: boolean } }));
+vi.mock("../model/listing-detail-data", async () => {
+  const { SAMPLE_LISTINGS } = await import("../model/sample-listings");
+  const { SAMPLE_LISTING_DETAILS } = await import("../model/sample-listing-details");
+  return {
+    useHostListingDetail: (id: string, preview: string | null) => {
+      if (data.real) {
+        const found = data.real.found ? SAMPLE_LISTINGS[0] : null;
+        return { listing: found, detail: found ? SAMPLE_LISTING_DETAILS.l1 : null, loading: data.real.loading };
+      }
+      return preview === "full"
+        ? { listing: SAMPLE_LISTINGS.find((l) => l.id === id) ?? null, detail: SAMPLE_LISTING_DETAILS[id] ?? null, loading: false }
+        : { listing: null, detail: null, loading: false };
+    },
+  };
+});
 
 beforeEach(() => {
   window.localStorage.clear();
   nav.preview = "full";
+  data.real = null;
   nav.push.mockReset();
   Object.values(toast).forEach((t) => t.mockReset());
 });
@@ -116,5 +134,17 @@ describe("a listing that isn't there", () => {
     nav.preview = null;
     window.localStorage.clear();
     expect(render("l1").current.notFound).toBe(true);
+  });
+
+  it("isn't 'not found' while the listing is still loading", () => {
+    nav.preview = null;
+    data.real = { loading: true, found: false };
+    expect(render("e1").current).toMatchObject({ loading: true, notFound: false });
+
+    data.real = { loading: false, found: false };
+    expect(render("e1").current).toMatchObject({ loading: false, notFound: true });
+
+    data.real = { loading: false, found: true };
+    expect(render("e1").current.notFound).toBe(false);
   });
 });

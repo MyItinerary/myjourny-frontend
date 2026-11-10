@@ -11,10 +11,22 @@ vi.mock("next/navigation", () => ({
 }));
 const toast = vi.hoisted(() => ({ info: vi.fn(), success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
-vi.mock("../model/listings-data", () => ({ useHostListings: (preview: string | null) => (preview === "full" ? SAMPLE_LISTINGS : []) }));
+const data = vi.hoisted(() => ({ loading: false, real: null as unknown[] | null }));
+vi.mock("../model/listings-data", () => ({
+  isSample: (preview: string | null) => preview === "full",
+  useHostListings: (preview: string | null) => ({
+    listings: data.real ?? (preview === "full" ? SAMPLE_LISTINGS : []),
+    loading: data.loading,
+  }),
+}));
+const remove = vi.hoisted(() => ({ mutate: vi.fn() }));
+vi.mock("../model/guide-listings-api", () => ({ useDeleteGuideExperience: () => remove }));
 
 beforeEach(() => {
   nav.preview = "full";
+  data.loading = false;
+  data.real = null;
+  remove.mutate.mockReset();
   nav.push.mockReset();
   Object.values(toast).forEach((fn) => fn.mockReset());
 });
@@ -218,7 +230,7 @@ describe("row actions", () => {
   it("blocks deleting a listing that still has bookings to come", () => {
     const result = render();
     act(() => result.current.onRowAction(listing, "delete"));
-    expect(result.current.dialog).toEqual({ kind: "blocked", title: "Lagos Island Photowalk", upcoming: 4 });
+    expect(result.current.dialog).toEqual({ kind: "blocked", id: "l1", title: "Lagos Island Photowalk", upcoming: 4 });
 
     act(() => result.current.onCloseDialog());
     expect(result.current.dialog).toBeNull();
@@ -227,13 +239,60 @@ describe("row actions", () => {
   it("warns about what deleting loses when nothing is coming up", () => {
     const result = render();
     act(() => result.current.onRowAction(SAMPLE_LISTINGS[2], "delete"));
-    expect(result.current.dialog).toEqual({ kind: "ok", title: "Harmattan Portrait Session", rating: "4.9" });
+    expect(result.current.dialog).toEqual({ kind: "ok", id: "l3", title: "Harmattan Portrait Session", rating: "4.9" });
 
     act(() => result.current.onRowAction(SAMPLE_LISTINGS[3], "delete"));
     expect(result.current.dialog).toMatchObject({ kind: "ok", rating: null });
 
-    act(() => result.current.onDialogConfirm());
+    act(() => result.current.onDialogDelete());
     expect(toast.info).toHaveBeenCalled();
+    expect(remove.mutate).not.toHaveBeenCalled();
     expect(result.current.dialog).toBeNull();
+  });
+});
+
+describe("a guide's real listings", () => {
+  const kayak = { ...SAMPLE_LISTINGS[3], id: "e1", title: "Lagoon kayak", rating: "-", future: 0 };
+
+  beforeEach(() => {
+    nav.preview = null;
+    data.real = [kayak];
+  });
+
+  it("says nothing about emptiness while they load", () => {
+    data.real = [];
+    data.loading = true;
+    const { current } = render();
+    expect(current.loading).toBe(true);
+    expect(current.isEmpty).toBe(false);
+    expect(current.header.subtitle).toBe("");
+  });
+
+  it("archiving instead isn't connected yet, and deletes nothing", () => {
+    const result = render();
+    act(() => result.current.onRowAction(kayak, "delete"));
+    act(() => result.current.onDialogConfirm());
+    expect(remove.mutate).not.toHaveBeenCalled();
+    expect(toast.info).toHaveBeenCalled();
+  });
+
+  it("deletes the listing in itin and says so", () => {
+    const result = render();
+    act(() => result.current.onRowAction(kayak, "delete"));
+    act(() => result.current.onDialogDelete());
+
+    expect(remove.mutate).toHaveBeenCalledWith("e1", expect.any(Object));
+    remove.mutate.mock.calls[0][1].onSuccess();
+    expect(toast.success).toHaveBeenCalledWith("Lagoon kayak is deleted");
+    expect(result.current.dialog).toBeNull();
+  });
+
+  it("passes on itin's reason when it can't delete", () => {
+    const result = render();
+    act(() => result.current.onRowAction(kayak, "delete"));
+    act(() => result.current.onDialogDelete());
+
+    remove.mutate.mock.calls[0][1].onError({ response: { data: { detail: "This listing has bookings, so it can't be deleted." } } });
+    expect(toast.error).toHaveBeenCalledWith("This listing has bookings, so it can't be deleted.");
   });
 });

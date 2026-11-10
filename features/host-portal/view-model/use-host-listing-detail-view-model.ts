@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { BANNER_TONE, capitalise, DETAIL_TABS, dateFill, payout, RULE_LABELS, stars } from "../model/listing-detail";
 import { useHostListingDetail } from "../model/listing-detail-data";
 import type { DetailAction, DetailTab, ListingDetail } from "../model/listing-detail.types";
-import { useHostListings } from "../model/listings-data";
 import type { HostListing } from "../model/listings.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
@@ -15,6 +14,8 @@ export type HostListingDetailViewModel = {
   header: HostPageHeader;
   /** No such listing for this host. */
   notFound: boolean;
+  /** Still fetching the listing. */
+  loading: boolean;
   listingsHref: string;
   calendarHref: string;
   listing: HostListing | null;
@@ -38,8 +39,7 @@ const BASE = HOST_PORTAL_BASE;
 export function useHostListingDetailViewModel(id: string): HostListingDetailViewModel {
   const router = useRouter();
   const preview = usePreviewMode();
-  const listing = useHostListings(preview).find((l) => l.id === id) ?? null;
-  const detail = useHostListingDetail(id, preview);
+  const { listing, detail, loading } = useHostListingDetail(id, preview);
   const [tab, setTab] = useState<DetailTab>("About");
 
   const run = (action: DetailAction) => {
@@ -77,7 +77,8 @@ export function useHostListingDetailViewModel(id: string): HostListingDetailView
       subtitle: listing ? `${listing.cat} · ${listing.sub}` : "",
       actions: listing && listing.status !== "Archived" ? [{ label: "Edit listing", href: `${BASE}/listings/new`, primary: true }] : [],
     },
-    notFound: !listing || !detail,
+    notFound: !loading && (!listing || !detail),
+    loading,
     listingsHref: `${BASE}/listings`,
     calendarHref: `${BASE}/calendar`,
     listing,

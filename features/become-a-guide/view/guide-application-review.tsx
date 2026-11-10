@@ -80,14 +80,14 @@ export function GuideApplicationReview({ verificationType, onDone }: GuideApplic
         </ul>
       </div>
 
-      {/* Done Button */}
+      {/* Off to the host dashboard, which shows where the application is */}
       <div className="mt-8 w-full sm:w-auto">
         <button
           type="button"
           onClick={onDone}
           className="inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-full bg-[#F5032D] px-14 font-sans text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#D40226] sm:w-auto sm:min-w-[200px]"
         >
-          Done
+          Go to your dashboard
         </button>
       </div>
     </div>

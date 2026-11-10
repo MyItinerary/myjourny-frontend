@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { eventsEnabled } from "@/lib/feature-flags";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { useSession } from "@/lib/auth/session-store";
-import { useLogout } from "@/lib/queries/auth";
+import { useLogout, useMe } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { SearchBarView, useSearchBarViewModel } from "@/features/search";
@@ -128,6 +128,12 @@ export interface NavSearchSummary {
 
 export function HomeNav({ className, searchSummary }: { className?: string; searchSummary?: NavSearchSummary }) {
   const { user } = useSession();
+  // Guides get a way back to their dashboard where everyone else is invited to become one.
+  const { data: me } = useMe();
+  const guideLink =
+    me?.signup_type === "guide"
+      ? { href: "/host/dashboard", label: "Switch to host dashboard", sublabel: "Manage your listings and bookings" }
+      : { href: "/become-a-guide", label: "Become a guide", sublabel: "Make extra income from what you already love doing" };
   const router = useRouter();
   const pathname = usePathname();
   // "My experiences" lives in the account menu, not the pill bar, so its pages
@@ -416,10 +422,10 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
               </button>
 
               <Link
-                href="/become-a-guide"
+                href={guideLink.href}
                 className="hidden text-base font-medium text-foreground transition-colors hover:text-brand xl:inline-block mr-1"
               >
-                Become a guide
+                {guideLink.label}
               </Link>
 
               {user && (
@@ -561,11 +567,11 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                       <div className="my-3 h-px w-full bg-[#EEEEEE]" />
 
                       <MenuRow
-                        href="/become-a-guide"
+                        href={guideLink.href}
                         onClick={() => setProfileMenuOpen(false)}
                         icon="/icons/nav/become-guide.png"
-                        label="Become a guide"
-                        sublabel="Make extra income from what you already love doing"
+                        label={guideLink.label}
+                        sublabel={guideLink.sublabel}
                         accent
                       />
 

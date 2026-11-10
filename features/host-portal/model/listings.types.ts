@@ -19,6 +19,8 @@ export type HostListing = {
   rating: string;
   /** Bookings still to come; any block deleting. */
   future: number;
+  /** Why it isn't live: the note we took it down with, or what it still needs. */
+  note?: string;
 };
 
 export type ListingSortKey = "title" | "cat" | "status" | "price" | "next" | "bookings" | "rating";

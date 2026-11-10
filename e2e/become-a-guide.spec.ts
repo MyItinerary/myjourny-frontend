@@ -9,9 +9,11 @@ test.describe("become a guide application", () => {
         capturedPayload = route.request().postDataJSON() as Record<string, unknown>;
         return route.fulfill({
           status: 201,
-          json: { access_token: "mock-token", token_type: "bearer" },
+          json: { access_token: "mock-token", refresh_token: "mock-refresh", token_type: "bearer" },
         });
       },
+      "GET /auth/me": (route) =>
+        route.fulfill({ json: { id: "guide-1", email: "amara@example.com", signup_type: "guide", guide_status: "pending" } }),
     });
 
     await page.goto("/become-a-guide/apply");
@@ -47,6 +49,11 @@ test.describe("become a guide application", () => {
       cac_number: null,
       email: "amara@example.com",
     });
+
+    // Signed in already: straight on to the dashboard, which says the application is in review.
+    await page.getByRole("button", { name: "Go to your dashboard" }).click();
+    await expect(page).toHaveURL(/\/host\/dashboard$/);
+    await expect(page.getByRole("status")).toContainText("Your guide application is in review");
   });
 
   test("completes registered business application with CAC number", async ({ page }) => {

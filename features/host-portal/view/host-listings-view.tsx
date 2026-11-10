@@ -26,6 +26,8 @@ const CHIP: Record<ListingStatus, string> = {
   "Sold out": "text-[#3086FF] bg-[#F0F6FF]",
   Archived: "text-[#6F6B72] bg-[#F5F5F5]",
   Rejected: "text-[#F5032D] bg-[#FEF2F3]",
+  "Taken down": "text-[#F5032D] bg-[#FEF2F3]",
+  Incomplete: "text-[#6F6B72] bg-[#F5F5F5]",
 };
 
 // Column widths, shared by the header and every row so they line up.
@@ -136,11 +138,12 @@ function Table({ vm }: { vm: HostListingsViewModel }) {
             <Checkbox checked={row.selected} label={`Select ${row.listing.title}`} onChange={() => vm.selection.onToggleRow(row.listing.id)} />
             <Link href={row.href} className={cn(COL_WIDTH.title, "flex items-center gap-[11px]")}>
               <span className="relative h-[34px] w-11 shrink-0 overflow-hidden rounded-lg bg-muted">
-                <Image src={row.listing.imageUrl} alt="" fill sizes="44px" className="object-cover" />
+                {row.listing.imageUrl && <Image src={row.listing.imageUrl} alt="" fill sizes="44px" className="object-cover" />}
               </span>
               <div className="min-w-0">
                 <p className="truncate text-[13.5px] font-medium text-[#333134]">{row.listing.title}</p>
                 <p className="mt-px text-[11.5px] text-[#6F6B72]">{row.listing.sub}</p>
+                {row.listing.note && <p className="mt-0.5 line-clamp-2 text-[11.5px] text-[#B4021F]">{row.listing.note}</p>}
               </div>
             </Link>
             <span className={cn(COL_WIDTH.cat, "min-w-0")}>
@@ -201,7 +204,9 @@ function EmptyListings({ href }: { href: string }) {
 export function HostListingsView({ vm }: { vm: HostListingsViewModel }) {
   return (
     <div className="flex-1 overflow-y-auto bg-[#FCFCFC] px-7 pt-5 pb-[90px]">
-      {vm.isEmpty ? (
+      {vm.loading ? (
+        <p className="pt-3 text-sm text-[#6F6B72]">Loading your listings…</p>
+      ) : vm.isEmpty ? (
         <EmptyListings href={vm.newListingHref} />
       ) : (
         <>
@@ -210,7 +215,7 @@ export function HostListingsView({ vm }: { vm: HostListingsViewModel }) {
           <p className="mt-3.5 text-xs text-[#A09DA3]">Click a column to sort. Tick rows to hide, pause or archive several at once.</p>
         </>
       )}
-      <DeleteDialogView dialog={vm.dialog} onClose={vm.onCloseDialog} onConfirm={vm.onDialogConfirm} />
+      <DeleteDialogView dialog={vm.dialog} onClose={vm.onCloseDialog} onConfirm={vm.onDialogConfirm} onDelete={vm.onDialogDelete} />
     </div>
   );
 }

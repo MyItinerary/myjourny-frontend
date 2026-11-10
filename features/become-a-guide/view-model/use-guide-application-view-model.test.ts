@@ -119,8 +119,9 @@ describe("useGuideApplicationViewModel", () => {
   it("submits step 2 and moves to review on success", async () => {
     server.use(
       http.post(apiUrl("/auth/register/guide"), () => {
-        return HttpResponse.json({ success: true });
-      })
+        return HttpResponse.json({ access_token: "a", refresh_token: "r", token_type: "bearer" }, { status: 201 });
+      }),
+      http.get(apiUrl("/auth/me"), () => HttpResponse.json({ id: "u1", email: "samuel@example.com", signup_type: "guide" }))
     );
 
     const { result } = renderHook(() => useGuideApplicationViewModel());
@@ -176,5 +177,11 @@ describe("useGuideApplicationViewModel", () => {
     });
 
     expect(result.current.step).toBe(2);
+  });
+
+  it("takes the new guide to their dashboard when they're done", () => {
+    const { result } = renderHook(() => useGuideApplicationViewModel());
+    act(() => result.current.handleDone());
+    expect(mockPush).toHaveBeenCalledWith("/host/dashboard");
   });
 });

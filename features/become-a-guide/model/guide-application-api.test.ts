@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
@@ -21,13 +21,31 @@ function capture() {
   server.use(
     http.post(apiUrl("/auth/register/guide"), async ({ request }) => {
       sent.body = await request.json();
-      return HttpResponse.json({ access_token: "mock-token", token_type: "bearer" }, { status: 201 });
-    })
+      return HttpResponse.json({ access_token: "mock-token", refresh_token: "mock-refresh", token_type: "bearer" }, { status: 201 });
+    }),
+    http.get(apiUrl("/auth/me"), () =>
+      HttpResponse.json({ id: "u1", email: "jane@example.com", full_name: "Jane Doe", avatar_url: null, signup_type: "guide" })
+    )
   );
   return sent;
 }
 
+afterEach(() => window.localStorage.clear());
+
 describe("guide-application-api", () => {
+  it("signs the new guide in with the tokens it gets back", async () => {
+    capture();
+
+    await submitGuideApplication(individual);
+
+    const stored = JSON.parse(window.localStorage.getItem("myjourny:auth") ?? "null");
+    expect(stored).toMatchObject({
+      accessToken: "mock-token",
+      refreshToken: "mock-refresh",
+      user: { id: "u1", email: "jane@example.com", fullName: "Jane Doe" },
+    });
+  });
+
   it("sends the whole application to the guide registration endpoint", async () => {
     const sent = capture();
 

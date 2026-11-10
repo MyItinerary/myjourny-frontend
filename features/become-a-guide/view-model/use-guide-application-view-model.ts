@@ -147,7 +147,7 @@ export function useGuideApplicationViewModel(): GuideApplicationViewModel {
   }, [step, router]);
 
   const handleDone = useCallback(() => {
-    router.push("/");
+    router.push("/host/dashboard");
   }, [router]);
 
   return {
