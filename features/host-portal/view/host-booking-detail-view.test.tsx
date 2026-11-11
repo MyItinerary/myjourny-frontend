@@ -127,4 +127,10 @@ describe("BookingDetailView", () => {
     renderWithProviders(<BookingDetailView vm={vm({}, { tab: "Cancelled", isRequest: false, timeline: [{ title: "Cancelled", body: "By the guest." }], cancelNote: null })} />);
     expect(await screen.findByText("Cancelled")).toBeInTheDocument();
   });
+
+  it("leaves out the notes card when the guest left no notes", async () => {
+    renderWithProviders(<BookingDetailView vm={vm({}, { notes: "" })} />);
+    expect(await screen.findByText("Their phone number")).toBeInTheDocument();
+    expect(screen.queryByText("Food and access notes")).not.toBeInTheDocument();
+  });
 });

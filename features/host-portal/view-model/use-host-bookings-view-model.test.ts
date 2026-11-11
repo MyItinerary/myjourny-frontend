@@ -1,5 +1,10 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { apiUrl } from "@/test/msw/handlers";
+import { server } from "@/test/msw/server";
+import { renderHookWithProviders } from "@/test/utils/render";
 
 import { useHostBookingsViewModel } from "./use-host-bookings-view-model";
 
@@ -10,6 +15,7 @@ vi.mock("next/navigation", () => ({
 }));
 const toast = vi.hoisted(() => ({ info: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
+vi.mock("../model/host-access", () => ({ useHostAccess: () => "approved" }));
 
 // Today is Saturday 19 September 2026.
 beforeEach(() => {
@@ -21,7 +27,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-const render = () => renderHook(() => useHostBookingsViewModel()).result;
+const render = () => renderHookWithProviders(() => useHostBookingsViewModel()).result;
 const names = (result: { current: ReturnType<typeof useHostBookingsViewModel> }) => result.current.rows.map((r) => r.booking.name);
 
 describe("a link from Home", () => {
@@ -44,12 +50,17 @@ describe("the table", () => {
     expect(result.current.none).toBe(false);
   });
 
-  it("is empty with no bookings", () => {
+  it("is empty with no bookings, and offers no Requests filter outside the preview", async () => {
     nav.preview = null;
+    server.use(http.get(apiUrl("/bookings/guide"), () => HttpResponse.json([])));
+    vi.useRealTimers();
     const result = render();
+    expect(result.current.loading).toBe(true);
+    expect(result.current.none).toBe(false);
+    await waitFor(() => expect(result.current.none).toBe(true));
     expect(result.current.header.subtitle).toBe("No bookings yet");
     expect(result.current.rows).toEqual([]);
-    expect(result.current.none).toBe(true);
+    expect(result.current.groups[0].options.map((o) => o.value)).toEqual(["Upcoming", "Completed", "Cancelled"]);
     expect(result.current.groups[1].options).toEqual([]);
   });
 });

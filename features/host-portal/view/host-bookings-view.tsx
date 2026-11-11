@@ -108,6 +108,8 @@ export function HostBookingsView({ vm }: { vm: HostBookingsViewModel }) {
             </button>
           ))}
 
+          {vm.loading && <p className="px-6 py-10 text-center text-[13.5px] text-[#6F6B72]">Loading your bookings…</p>}
+
           {vm.none && (
             <div className="px-6 py-[54px] text-center">
               <p className="mb-2 font-heading text-lg font-extrabold text-[#333134]">No bookings here</p>
