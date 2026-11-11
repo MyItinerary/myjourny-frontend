@@ -34,6 +34,32 @@ describe("ExperienceSectionsView", () => {
     expect(screen.getByText("Please note itinerary is subject to change")).toBeInTheDocument();
   });
 
+  it("shows the host's tags and line only when they set them", () => {
+    const { unmount } = renderWithProviders(<ExperienceSectionsView content={content} details={details} />);
+    expect(screen.queryByRole("list", { name: "Tags" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("blockquote")).not.toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(
+      <ExperienceSectionsView
+        content={{ ...content, tags: ["Small group", "Golden hour"], host: { ...content.host, note: "See you at the jetty" } }}
+        details={details}
+      />,
+    );
+    expect(screen.getByRole("list", { name: "Tags" }).textContent).toBe("Small groupGolden hour");
+    expect(screen.getByText("“See you at the jetty”")).toBeInTheDocument();
+  });
+
+  it("shows swimming and dietary needs among the facts", () => {
+    const fit = [
+      { kind: "swim" as const, label: "Swimming", value: "No swimming needed", note: null },
+      { kind: "diet" as const, label: "Dietary needs", value: "Vegetarian, Halal", note: null },
+    ];
+    renderWithProviders(<ExperienceSectionsView content={content} details={{ ...details, fit }} />);
+    expect(screen.getByText("No swimming needed")).toBeInTheDocument();
+    expect(screen.getByText("Vegetarian, Halal")).toBeInTheDocument();
+  });
+
   it("doesn't double the full stop when a fit value already ends in one", () => {
     const fit = [{ kind: "accessibility" as const, label: "Accessibility", value: "Not confirmed. Ask the host before you book.", note: "Sandy paths" }];
     renderWithProviders(<ExperienceSectionsView content={content} details={{ ...details, fit }} />);

@@ -199,6 +199,8 @@ describe("fitAndLogistics", () => {
       min_age: 12,
       accessibility: "not_confirmed",
       languages: ["en", "yo", "pcm"],
+      swim_requirement: " You need to swim 50 metres ",
+      dietary_options: ["Vegetarian", " ", "Halal"],
       weather_dependent: true,
       pickup_available: true,
       pickup_note: "Free pickup on Victoria Island",
@@ -208,6 +210,8 @@ describe("fitAndLogistics", () => {
       ["Age", "Ages 12+", null],
       ["Accessibility", "Not confirmed. Ask the host before you book.", null],
       ["Languages", "English, Yoruba, Nigerian Pidgin", null],
+      ["Swimming", "You need to swim 50 metres", null],
+      ["Dietary needs", "Vegetarian, Halal", null],
       ["Weather dependent", WEATHER_LINE, null],
       ["Pickup available", "Free pickup on Victoria Island", null],
     ]);
@@ -231,21 +235,25 @@ describe("fitAndLogistics", () => {
   });
 
   it("leaves out fitness that doesn't apply, and anything unset", () => {
-    expect(fitAndLogistics({ ...base, fitness_level: "not_applicable", weather_dependent: false })).toEqual([]);
+    expect(
+      fitAndLogistics({ ...base, fitness_level: "not_applicable", weather_dependent: false, swim_requirement: " ", dietary_options: [] }),
+    ).toEqual([]);
   });
 });
 
 describe("listSections", () => {
-  it("lists the four sections in order, skipping empty ones and blank items", () => {
+  it("lists the sections in order, skipping empty ones and blank items", () => {
     const sections = listSections({
       ...base,
       highlights: ["Sunrise paddle", " "],
       what_to_bring_items: ["Sunscreen"],
+      what_to_wear_items: ["Clothes that can get wet", ""],
       know_before_you_go: ["The start is at 6:00am"],
     });
     expect(sections.map((s) => [s.title, s.items])).toEqual([
       ["Highlights", ["Sunrise paddle"]],
       ["What to bring", ["Sunscreen"]],
+      ["What to wear", ["Clothes that can get wet"]],
       ["Know before you go", ["The start is at 6:00am"]],
     ]);
   });
