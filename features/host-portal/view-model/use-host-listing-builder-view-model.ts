@@ -11,8 +11,6 @@ import { fetchListingForEdit, uploadPhoto, useInterestTree, usePlaceSearch, useS
 import {
   ACCESS_OPTIONS,
   AGE_POLICIES,
-  BOOK_TYPES,
-  bookLabel,
   CATEGORIES,
   checklistFor,
   COMMISSION_PERCENT,
@@ -51,7 +49,7 @@ import type {
   RefundPolicy,
   ToggleKey,
 } from "../model/listing-draft.types";
-import { draftFromExperience, toExperiencePayload } from "../model/listing-payload";
+import { draftFromExperience, privatePrice, toExperiencePayload } from "../model/listing-payload";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
 import { useToday } from "./use-today";
@@ -64,7 +62,6 @@ export type BuilderOptions = {
   weekDays: string[];
   whenTypes: typeof WHEN_TYPES;
   everyOptions: typeof EVERY_OPTIONS;
-  bookTypes: typeof BOOK_TYPES;
   fitnessLevels: Choice<FitnessLevel>[];
   agePolicies: Choice<AgePolicy>[];
   accessOptions: Choice<Accessibility>[];
@@ -139,7 +136,6 @@ export type HostListingBuilderViewModel = {
       description: string;
       included: string[];
       price: string;
-      bookLabel: string;
     };
   };
 };
@@ -188,7 +184,7 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
     enabled: loadForEdit && treeReady,
   });
   useEffect(() => {
-    if (loadForEdit && listing.data) update(() => draftFromExperience(listing.data.experience, tree, listing.data.price));
+    if (loadForEdit && listing.data) update(() => draftFromExperience(listing.data.experience, tree, listing.data.prices));
   }, [loadForEdit, listing.data, tree, update]);
   // A new listing never starts from an edit that wasn't finished.
   useEffect(() => {
@@ -237,7 +233,7 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
     if (!canPublish || !today) return;
     const editing = Boolean(draft.editingId);
     save.mutate(
-      { id: draft.editingId, payload: toExperiencePayload(draft, tree, today), price: Number(draft.price) },
+      { id: draft.editingId, payload: toExperiencePayload(draft, tree, today), price: Number(draft.price), privatePrice: privatePrice(draft) },
       {
         onSuccess: () => {
           clear();
@@ -295,7 +291,6 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
       weekDays: WEEK_DAYS,
       whenTypes: WHEN_TYPES,
       everyOptions: EVERY_OPTIONS,
-      bookTypes: BOOK_TYPES,
       fitnessLevels: FITNESS_LEVELS,
       agePolicies: AGE_POLICIES,
       accessOptions: ACCESS_OPTIONS,
@@ -368,7 +363,6 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
           draft.desc.length > 300 ? `${draft.desc.slice(0, 300).trim()}…` : draft.desc || "Your description will show here as you write it.",
         included,
         price: draft.price ? `₦${Number(draft.price).toLocaleString("en-US")}` : "Price not set",
-        bookLabel: bookLabel(draft.bookType),
       },
     },
   };

@@ -4,7 +4,7 @@ import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 import type { HostListingBuilderViewModel } from "../view-model/use-host-listing-builder-view-model";
-import { ChoiceCard, Field, inputClass, Pill, StepHeading } from "./host-builder-parts";
+import { Field, inputClass, Pill, StepHeading } from "./host-builder-parts";
 
 type Props = { vm: HostListingBuilderViewModel };
 
@@ -41,7 +41,7 @@ export function StepRequirements({ vm }: Props) {
         <div className="mb-[22px]" />
       )}
       <Field label="Do guests need to swim" hint="Only shown to guests on water and beach listings.">
-        <input value={draft.swim} onChange={(e) => onField("swim", e.target.value)} className={inputClass} />
+        <input value={draft.swim} maxLength={100} onChange={(e) => onField("swim", e.target.value)} className={inputClass} />
       </Field>
       <div className="mb-1 text-[13px] font-medium">Food you can work around</div>
       <div className="mb-2.5 text-xs text-[#6F6B72]">Pick nothing if food is not part of your listing.</div>
@@ -146,24 +146,13 @@ export function StepPhotos({ vm }: Props) {
 }
 
 export function StepReview({ vm }: Props) {
-  const { draft, options, derived, canPublish, onField, onStep, onPublish } = vm;
+  const { draft, derived, canPublish, onField, onStep, onPublish } = vm;
   return (
     <div>
-      <StepHeading eyebrow="Last look" title="Review and publish" intro="The panel on the right is exactly what a guest sees. Two things left, then you are done." />
-      <Field label="One line from you, in your own words" hint="This is the last thing a guest reads after they pay. Say the thing you would say to them at the gate.">
-        <input value={draft.quote} onChange={(e) => onField("quote", e.target.value)} className={inputClass} />
+      <StepHeading eyebrow="Last look" title="Review and publish" intro="The panel on the right is exactly what a guest sees. One line from you, if you like, then you are done." />
+      <Field label="One line from you, in your own words" hint="Optional. Guests see it next to your name on the listing. Say the thing you would say to them at the gate.">
+        <input value={draft.quote} maxLength={140} onChange={(e) => onField("quote", e.target.value)} className={inputClass} />
       </Field>
-      <div className="mb-2.5 text-[13px] font-medium">How guests book</div>
-      <div className="mb-6 flex flex-col gap-2">
-        {options.bookTypes.map((b) => (
-          <ChoiceCard key={b.key} radio selected={draft.bookType === b.key} onClick={() => onField("bookType", b.key)}>
-            <span>
-              <span className="mb-[3px] block text-[13.5px] font-medium">{b.label}</span>
-              <span className="block text-[12.5px] leading-normal text-[#6F6B72]">{b.sub}</span>
-            </span>
-          </ChoiceCard>
-        ))}
-      </div>
       <div className="mb-6 rounded-[14px] bg-white shadow-[inset_0_0_0_1px_#E7E7E7]">
         <div className="px-4 py-3 text-[13px] font-medium shadow-[inset_0_-1px_0_#E7E7E7]">Everything we need</div>
         <ul>

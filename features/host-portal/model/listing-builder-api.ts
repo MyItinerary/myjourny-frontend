@@ -5,7 +5,7 @@ import { type Category, useInterestCategories } from "@/lib/queries/categories";
 
 import type { GuideExperience } from "./guide-listings.types";
 import type { PlaceResult } from "./listing-draft.types";
-import type { ExperiencePayload } from "./listing-payload";
+import type { ExperiencePayload, ListingPrices } from "./listing-payload";
 
 /** The interest categories with their subcategories, for the builder's
  * pickers. `ready` once the request has finished, either way. */
@@ -60,40 +60,61 @@ export async function uploadPhoto(file: File): Promise<string> {
   return ((await response.json()) as { secure_url: string }).secure_url;
 }
 
-type Pricing = { prices: { id: string; amount: string | number }[] };
+type Ticket = { id: string; amount: string | number; pricing_unit?: string };
+type Pricing = { prices: Ticket[] };
 
-/** The listing and its ticket price, for editing. */
-export async function fetchListingForEdit(id: string): Promise<{ experience: GuideExperience; price: number | null }> {
+const PRIVATE = "per_booking";
+const adultTicket = (prices: Ticket[]) => prices.find((t) => t.pricing_unit !== PRIVATE);
+const privateTicket = (prices: Ticket[]) => prices.find((t) => t.pricing_unit === PRIVATE);
+const amountOf = (ticket: Ticket | undefined) => (ticket ? Number(ticket.amount) : null);
+
+/** The listing and its ticket prices, for editing. */
+export async function fetchListingForEdit(id: string): Promise<{ experience: GuideExperience; prices: ListingPrices }> {
   const [{ data: experience }, { data: pricing }] = await Promise.all([
     apiClient.get<GuideExperience>(`/guide/experiences/${id}`),
     apiClient.get<Pricing>(`/experiences/${id}/pricing`),
   ]);
-  const first = pricing.prices[0];
-  return { experience, price: first ? Number(first.amount) : null };
+  return {
+    experience,
+    prices: { price: amountOf(adultTicket(pricing.prices)), privatePrice: amountOf(privateTicket(pricing.prices)) },
+  };
 }
 
-/** An experience has one ticket, "Adult": the builder's single price. Editing
- * changes that ticket's amount, since `PUT /experiences/{id}` takes no prices. */
-async function savePrice(id: string, amount: number) {
+const newTickets = (price: number, privatePrice: number | null) => [
+  { label: "Adult", amount: price, pricing_unit: "per_person" },
+  ...(privatePrice ? [{ label: "Private group", amount: privatePrice, pricing_unit: PRIVATE }] : []),
+];
+
+/** An experience sells an "Adult" ticket per person and, if the host set one,
+ * a "Private group" ticket per booking. `PUT /experiences/{id}` takes no
+ * prices, so editing changes the tickets directly. A cleared private price
+ * archives its ticket, since past bookings still point at it. */
+async function savePrices(id: string, price: number, privatePrice: number | null) {
   const { data } = await apiClient.get<Pricing>(`/experiences/${id}/pricing`);
-  const ticket = data.prices[0];
-  if (!ticket) await apiClient.post(`/experiences/${id}/prices`, { label: "Adult", amount, pricing_unit: "per_person" });
-  else if (Number(ticket.amount) !== amount) await apiClient.patch(`/experiences/${id}/prices/${ticket.id}`, { amount });
+  const adult = adultTicket(data.prices);
+  if (!adult) await apiClient.post(`/experiences/${id}/prices`, newTickets(price, null)[0]);
+  else if (Number(adult.amount) !== price) await apiClient.patch(`/experiences/${id}/prices/${adult.id}`, { amount: price });
+
+  const group = privateTicket(data.prices);
+  if (privatePrice && !group) await apiClient.post(`/experiences/${id}/prices`, newTickets(price, privatePrice)[1]);
+  else if (privatePrice && group && Number(group.amount) !== privatePrice)
+    await apiClient.patch(`/experiences/${id}/prices/${group.id}`, { amount: privatePrice });
+  else if (!privatePrice && group) await apiClient.patch(`/experiences/${id}/prices/${group.id}`, { is_active: false });
 }
 
-export type SaveListing = { id: string | null; payload: ExperiencePayload; price: number };
+export type SaveListing = { id: string | null; payload: ExperiencePayload; price: number; privatePrice: number | null };
 
 /** Publishes a new listing, or saves changes to one already in itin. */
 export function useSaveListing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, payload, price }: SaveListing): Promise<GuideExperience> => {
+    mutationFn: async ({ id, payload, price, privatePrice }: SaveListing): Promise<GuideExperience> => {
       if (!id) {
-        const prices = [{ label: "Adult", amount: price, pricing_unit: "per_person" }];
+        const prices = newTickets(price, privatePrice);
         return (await apiClient.post<GuideExperience>("/experiences/", { ...payload, prices })).data;
       }
       const { data } = await apiClient.put<GuideExperience>(`/experiences/${id}`, payload);
-      await savePrice(id, price);
+      await savePrices(id, price, privatePrice);
       return data;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["guide", "experiences"] }),

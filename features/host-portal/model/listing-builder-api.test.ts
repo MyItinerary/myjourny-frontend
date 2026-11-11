@@ -60,12 +60,17 @@ describe("saving", () => {
   it("loads a listing and its price for editing", async () => {
     server.use(
       http.get(apiUrl("/guide/experiences/e1"), () => HttpResponse.json({ id: "e1", status: "ACTIVE", title: "Kayak" })),
-      http.get(apiUrl("/experiences/e1/pricing"), () => HttpResponse.json({ prices: [{ id: "p1", amount: "9000.00" }] })),
+      http.get(apiUrl("/experiences/e1/pricing"), () =>
+        HttpResponse.json({ prices: [{ id: "p2", amount: "60000.00", pricing_unit: "per_booking" }, { id: "p1", amount: "9000.00", pricing_unit: "per_person" }] }),
+      ),
     );
-    expect(await fetchListingForEdit("e1")).toEqual({ experience: { id: "e1", status: "ACTIVE", title: "Kayak" }, price: 9000 });
+    expect(await fetchListingForEdit("e1")).toEqual({
+      experience: { id: "e1", status: "ACTIVE", title: "Kayak" },
+      prices: { price: 9000, privatePrice: 60000 },
+    });
   });
 
-  it("creates a new listing with its Adult ticket", async () => {
+  it("creates a new listing with its Adult ticket and private group price", async () => {
     let sent: Record<string, unknown> = {};
     server.use(
       http.post(apiUrl("/experiences/"), async ({ request }) => {
@@ -74,8 +79,14 @@ describe("saving", () => {
       }),
     );
     const { result } = renderHookWithProviders(() => useSaveListing());
-    await act(() => result.current.mutateAsync({ id: null, payload, price: 15000 }));
-    expect(sent).toMatchObject({ title: "Lagoon kayak", prices: [{ label: "Adult", amount: 15000, pricing_unit: "per_person" }] });
+    await act(() => result.current.mutateAsync({ id: null, payload, price: 15000, privatePrice: 60000 }));
+    expect(sent).toMatchObject({
+      title: "Lagoon kayak",
+      prices: [
+        { label: "Adult", amount: 15000, pricing_unit: "per_person" },
+        { label: "Private group", amount: 60000, pricing_unit: "per_booking" },
+      ],
+    });
   });
 
   it("saves an edit, and changes the ticket only when the price changed", async () => {
@@ -93,11 +104,11 @@ describe("saving", () => {
       }),
     );
     const { result } = renderHookWithProviders(() => useSaveListing());
-    await act(() => result.current.mutateAsync({ id: "e1", payload, price: 15000 }));
+    await act(() => result.current.mutateAsync({ id: "e1", payload, price: 15000, privatePrice: null }));
     expect(calls).toEqual(["put"]);
 
     amount = "12000.00";
-    await act(() => result.current.mutateAsync({ id: "e1", payload, price: 15000 }));
+    await act(() => result.current.mutateAsync({ id: "e1", payload, price: 15000, privatePrice: null }));
     expect(calls).toEqual(["put", "put", "patch"]);
   });
 
@@ -112,7 +123,38 @@ describe("saving", () => {
       }),
     );
     const { result } = renderHookWithProviders(() => useSaveListing());
-    await act(() => result.current.mutateAsync({ id: "e1", payload, price: 15000 }));
+    await act(() => result.current.mutateAsync({ id: "e1", payload, price: 15000, privatePrice: null }));
     expect(created).toEqual({ label: "Adult", amount: 15000, pricing_unit: "per_person" });
+  });
+
+  it("adds, changes and archives the private group ticket as the host sets and clears it", async () => {
+    const calls: string[] = [];
+    let prices: Record<string, string>[] = [{ id: "p1", amount: "15000.00", pricing_unit: "per_person" }];
+    server.use(
+      http.put(apiUrl("/experiences/e1"), () => HttpResponse.json({ id: "e1", status: "ACTIVE", title: "Lagoon kayak" })),
+      http.get(apiUrl("/experiences/e1/pricing"), () => HttpResponse.json({ prices })),
+      http.post(apiUrl("/experiences/e1/prices"), async ({ request }) => {
+        calls.push(`post ${JSON.stringify(await request.json())}`);
+        return HttpResponse.json({}, { status: 201 });
+      }),
+      http.patch(apiUrl("/experiences/e1/prices/p2"), async ({ request }) => {
+        calls.push(`patch ${JSON.stringify(await request.json())}`);
+        return HttpResponse.json({});
+      }),
+    );
+    const { result } = renderHookWithProviders(() => useSaveListing());
+    const save = (privatePrice: number | null) => act(() => result.current.mutateAsync({ id: "e1", payload, price: 15000, privatePrice }));
+
+    await save(60000);
+    expect(calls).toEqual(['post {"label":"Private group","amount":60000,"pricing_unit":"per_booking"}']);
+
+    prices = [...prices, { id: "p2", amount: "60000.00", pricing_unit: "per_booking" }];
+    calls.length = 0;
+    await save(60000);
+    expect(calls).toEqual([]);
+    await save(55000);
+    expect(calls).toEqual(['patch {"amount":55000}']);
+    await save(null);
+    expect(calls).toEqual(['patch {"amount":55000}', 'patch {"is_active":false}']);
   });
 });

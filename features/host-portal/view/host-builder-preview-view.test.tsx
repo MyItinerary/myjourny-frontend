@@ -36,7 +36,7 @@ describe("the guest preview", () => {
     expect(screen.getByText("Your title goes here")).toBeInTheDocument();
     expect(screen.getByText("Your cover photo shows here")).toBeInTheDocument();
     expect(screen.getByText("Price not set")).toBeInTheDocument();
-    expect(screen.getByText("How they book, not set")).toBeInTheDocument();
+    expect(screen.getByText("Book now")).toBeInTheDocument();
   });
 
   it("fills in the title, the host's line and what's included as they are written", async () => {

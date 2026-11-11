@@ -46,6 +46,13 @@ export type GuideExperience = {
   event_start_date?: string | null;
   recurrence_interval?: number | null;
   recurrence_end_date?: string | null;
+  area?: string | null;
+  // Optional extras; guests see each only when it is set.
+  tags?: string[] | null;
+  swim_requirement?: string | null;
+  dietary_options?: string[] | null;
+  what_to_wear_items?: string[] | null;
+  host_note?: string | null;
 };
 
 /** Interest category slug -> its name, for the Category column. */

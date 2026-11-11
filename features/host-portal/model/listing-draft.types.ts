@@ -1,5 +1,4 @@
 export type WhenType = "once" | "recurring" | "request";
-export type BookType = "instant" | "request";
 export type ListKey = "inc" | "exc" | "bring" | "wear" | "slots";
 export type ToggleKey = "tags" | "days" | "diet";
 /** itin's values for fit and refunds. */
@@ -56,8 +55,8 @@ export type ListingDraft = {
   weather: boolean;
   photos: string[];
   cover: number;
+  /** The host's one line to guests. */
   quote: string;
-  bookType: BookType | "";
   /** The itin listing being edited, or null for a new one. */
   editingId: string | null;
 };

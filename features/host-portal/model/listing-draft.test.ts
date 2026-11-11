@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ListingDraft } from "./listing-draft.types";
 import {
-  blankDraft, bookLabel, checklistFor, doneCountOf, metaLine, photoHint, photoLabel,
+  blankDraft, checklistFor, doneCountOf, metaLine, photoHint, photoLabel,
   isChoice, FITNESS_LEVELS, needsAge, priceBreakdown, sectionsDone, slotSummary, upcomingDates, wordCount,
 } from "./listing-draft";
 
@@ -110,6 +110,5 @@ describe("helpers", () => {
     expect(photoHint(0)).toMatch(/at least four to publish/);
     expect(photoHint(2)).toBe("You need at least four. You have 2.");
     expect(photoHint(4)).toMatch(/Enough to publish/);
-    expect([bookLabel("instant"), bookLabel("request"), bookLabel("")]).toEqual(["Book now", "Request to book", "How they book, not set"]);
   });
 });

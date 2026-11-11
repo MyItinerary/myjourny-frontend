@@ -68,7 +68,7 @@ export function HostBuilderPreviewView({ vm }: { vm: HostListingBuilderViewModel
             <div className={`font-heading text-lg font-extrabold ${draft.price ? "text-[#333134]" : faint}`}>{p.price}</div>
             <div className="text-xs text-[#6F6B72]">per person</div>
           </div>
-          <span className="ml-auto rounded-full bg-[#F5032D] px-[18px] py-2.5 text-sm font-medium text-white">{p.bookLabel}</span>
+          <span className="ml-auto rounded-full bg-[#F5032D] px-[18px] py-2.5 text-sm font-medium text-white">Book now</span>
         </div>
       </div>
       <p className="mt-3 text-xs text-[#6F6B72]">This panel is the guest&apos;s view of your listing. It changes as you type.</p>
