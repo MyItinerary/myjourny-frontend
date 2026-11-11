@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
 
+import type { ListingDraft } from "./listing-draft.types";
 import {
   blankDraft, bookLabel, checklistFor, doneCountOf, metaLine, photoHint, photoLabel,
-  priceBreakdown, searchPlaces, sectionsDone, slotSummary, upcomingDates, wordCount,
+  isChoice, FITNESS_LEVELS, needsAge, priceBreakdown, sectionsDone, slotSummary, upcomingDates, wordCount,
 } from "./listing-draft";
 
-const complete = () => ({
+const complete = (): ListingDraft => ({
   ...blankDraft(),
   title: "Lagos Island Photowalk", hook: "Three hours", desc: "x".repeat(81),
-  cat: "Art & creativity", tags: ["a", "b", "c"], cue: "The yellow gate", meetPhoto: "blob:m",
+  cat: "Art & creativity", tags: ["a", "b", "c"], cue: "The yellow gate", meetPhoto: "https://res.cloudinary.com/m.jpg",
+  landmark: "Freedom Park", lat: 6.45, lng: 3.39,
   whenType: "recurring" as const, days: ["Sat"], slots: ["16:00"],
-  price: "9000", maxG: "8", inc: ["Photos"], exc: ["Lunch"], fitness: "Easy", ageMin: "12",
+  price: "9000", maxG: "8", refund: "full_refund_until", refundHours: "24", inc: ["Photos"], exc: ["Lunch"],
+  fitness: "easy", agePolicy: "minimum_age", ageMin: "12", access: "not_confirmed",
   photos: ["a", "b", "c", "d"],
 });
 
@@ -24,14 +27,42 @@ describe("sectionsDone", () => {
     expect(checklistFor(complete()).every((c) => c.ok)).toBe(true);
   });
 
-  it("needs three tags, an 80-character description and four photos", () => {
-    const d = { ...complete(), tags: ["a", "b"], desc: "short", photos: ["a"] };
+  it("needs a category, an 80-character description and four photos", () => {
+    const d = { ...complete(), cat: "", desc: "short", photos: ["a"] };
     expect(sectionsDone(d)).toMatchObject({ 1: false, 2: false, 8: false });
+  });
+
+  it("doesn't need tags, which itin can't store yet", () => {
+    expect(sectionsDone({ ...complete(), tags: [] })[2]).toBe(true);
   });
 
   it("lets an on-request listing skip start times", () => {
     expect(sectionsDone({ ...complete(), whenType: "request", slots: [] })[4]).toBe(true);
     expect(sectionsDone({ ...complete(), whenType: "once", slots: [] })[4]).toBe(false);
+  });
+
+  it("needs a one-off's date and a repeating schedule's days", () => {
+    expect(sectionsDone({ ...complete(), whenType: "once", date: "", slots: ["16:00"] })[4]).toBe(false);
+    expect(sectionsDone({ ...complete(), whenType: "once", date: "2026-12-05", slots: ["16:00"] })[4]).toBe(true);
+    expect(sectionsDone({ ...complete(), days: [] })[4]).toBe(false);
+  });
+
+  it("needs the landmark pinned on the map", () => {
+    expect(sectionsDone({ ...complete(), lat: null, lng: null })[3]).toBe(false);
+  });
+
+  it("needs a refund policy, with hours for a full refund", () => {
+    expect(sectionsDone({ ...complete(), refund: "" })[5]).toBe(false);
+    expect(sectionsDone({ ...complete(), refundHours: "" })[5]).toBe(false);
+    expect(sectionsDone({ ...complete(), refund: "non_refundable", refundHours: "" })[5]).toBe(true);
+  });
+
+  it("needs real choices for fit, and an age only when the policy has one", () => {
+    expect(sectionsDone({ ...complete(), ageMin: "" })[7]).toBe(false);
+    expect(sectionsDone({ ...complete(), agePolicy: "all_ages", ageMin: "" })[7]).toBe(true);
+    // A draft saved when these were free text doesn't count.
+    expect(sectionsDone({ ...complete(), fitness: "Easy, light walking" as ListingDraft["fitness"] })[7]).toBe(false);
+    expect(sectionsDone({ ...complete(), access: "" })[7]).toBe(false);
   });
 });
 
@@ -41,9 +72,10 @@ describe("helpers", () => {
     expect(wordCount("")).toBe(0);
   });
 
-  it("finds landmarks by name and returns none for an empty search", () => {
-    expect(searchPlaces("freedom").map((p) => p.name)).toEqual(["Freedom Park"]);
-    expect(searchPlaces("  ")).toEqual([]);
+  it("knows itin's choices from free text, and which age policies need an age", () => {
+    expect(isChoice(FITNESS_LEVELS, "moderate")).toBe(true);
+    expect(isChoice(FITNESS_LEVELS, "Moderate")).toBe(false);
+    expect([needsAge("minimum_age"), needsAge("adult_required_under"), needsAge("all_ages"), needsAge("")]).toEqual([true, true, false, false]);
   });
 
   it("lists the next five Saturdays at the first start time", () => {

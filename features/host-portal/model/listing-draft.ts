@@ -1,12 +1,16 @@
 import { COMMISSION_RATE } from "./earnings";
 import { formatNaira } from "./money";
 import type {
+  Accessibility,
+  AgePolicy,
   BookType,
   BuilderStepNumber,
   ChecklistItem,
+  Choice,
+  FitnessLevel,
   ListingDraft,
-  PlaceResult,
   PriceBreakdown,
+  RefundPolicy,
   WhenType,
 } from "./listing-draft.types";
 
@@ -73,27 +77,48 @@ export const BOOK_TYPES: { key: BookType; label: string; sub: string }[] = [
   },
 ];
 
-const PLACES: PlaceResult[] = [
-  { name: "Freedom Park", area: "Lagos Island · Old Broad Street" },
-  { name: "Tafawa Balewa Square", area: "Lagos Island" },
-  { name: "National Museum Lagos", area: "Onikan, Lagos Island" },
-  { name: "Lekki Conservation Centre", area: "Lekki Peninsula" },
-  { name: "Nike Art Gallery", area: "Lekki Phase 1" },
-  { name: "Balogun Market main gate", area: "Lagos Island" },
-  { name: "Elegushi Beach entrance", area: "Lekki" },
-  { name: "Falomo Bridge roundabout", area: "Ikoyi" },
-  { name: "Terra Kulture", area: "Victoria Island" },
-  { name: "Jazzhole", area: "Ikoyi · Awolowo Road" },
+export const FITNESS_LEVELS: Choice<FitnessLevel>[] = [
+  { key: "easy", label: "Easy" },
+  { key: "moderate", label: "Moderate" },
+  { key: "high", label: "High" },
+  { key: "very_high", label: "Very high" },
+  { key: "not_applicable", label: "Not physical" },
 ];
+
+export const AGE_POLICIES: Choice<AgePolicy>[] = [
+  { key: "all_ages", label: "All ages" },
+  { key: "minimum_age", label: "From a set age" },
+  { key: "adult_required_under", label: "Under a set age with an adult" },
+  { key: "adults_only", label: "Adults only" },
+];
+
+export const ACCESS_OPTIONS: Choice<Accessibility>[] = [
+  { key: "wheelchair_accessible", label: "Wheelchair accessible" },
+  { key: "partly_accessible", label: "Partly accessible" },
+  { key: "not_suitable", label: "Not suitable for wheelchairs" },
+  { key: "not_confirmed", label: "Not sure yet" },
+];
+
+export const REFUND_POLICIES: Choice<RefundPolicy>[] = [
+  { key: "full_refund_until", label: "Full refund up to a set time before" },
+  { key: "non_refundable", label: "No refunds" },
+];
+
+/** True for one of the choices; a draft saved before these were choices may hold free text. */
+export const isChoice = <T extends string>(choices: Choice<T>[], value: string): value is T => choices.some((c) => c.key === value);
+
+/** Policies that need an age typed in. */
+export const needsAge = (policy: ListingDraft["agePolicy"]) => policy === "minimum_age" || policy === "adult_required_under";
 
 export const blankDraft = (): ListingDraft => ({
   title: "", hook: "", desc: "", cat: "", sub: "", tags: [],
-  city: "Lagos", area: "", landmark: "", cue: "", meetPhoto: "",
-  whenType: "", days: [], every: 1, until: "", slots: [], dur: "",
+  city: "Lagos", area: "", landmark: "", cue: "", meetPhoto: "", lat: null, lng: null,
+  whenType: "", date: "", days: [], every: 1, until: "", slots: [], dur: "",
   minG: "", maxG: "", price: "", priv: "",
   inc: [""], exc: [""], bring: [""], wear: [""],
-  ageMin: "", fitness: "", swim: "", diet: [], access: "",
-  weather: false, photos: [], cover: 0, quote: "", bookType: "",
+  agePolicy: "", ageMin: "", fitness: "", swim: "", diet: [], access: "", accessNote: "",
+  refund: "", refundHours: "",
+  weather: false, photos: [], cover: 0, quote: "", bookType: "", editingId: null,
 });
 
 const filled = (lines: string[]) => lines.filter((line) => line.trim());
@@ -102,12 +127,22 @@ const filled = (lines: string[]) => lines.filter((line) => line.trim());
 export function sectionsDone(d: ListingDraft): Record<number, boolean> {
   return {
     1: Boolean(d.title && d.hook && d.desc.length > 80),
-    2: Boolean(d.cat && d.tags.length >= 3),
-    3: Boolean(d.city && d.cue && d.meetPhoto),
-    4: Boolean(d.whenType && (d.whenType === "request" || filled(d.slots).length)),
-    5: Boolean(Number(d.price) && Number(d.maxG)),
+    // Tags have nowhere to live in itin yet, so they can't be required.
+    2: Boolean(d.cat),
+    3: Boolean(d.city && d.landmark && d.lat !== null && d.lng !== null && d.cue && d.meetPhoto),
+    4: Boolean(
+      d.whenType === "request" ||
+        (d.whenType === "once" && d.date && filled(d.slots).length) ||
+        (d.whenType === "recurring" && d.days.length && filled(d.slots).length),
+    ),
+    5: Boolean(Number(d.price) && Number(d.maxG) && d.refund && (d.refund !== "full_refund_until" || d.refundHours)),
     6: filled(d.inc).length > 0 && filled(d.exc).length > 0,
-    7: Boolean(d.fitness && d.ageMin),
+    7: Boolean(
+      isChoice(FITNESS_LEVELS, d.fitness) &&
+        isChoice(AGE_POLICIES, d.agePolicy) &&
+        (!needsAge(d.agePolicy) || d.ageMin) &&
+        isChoice(ACCESS_OPTIONS, d.access),
+    ),
     8: d.photos.length >= 4,
   };
 }
@@ -116,10 +151,10 @@ export const doneCountOf = (d: ListingDraft) => Object.values(sectionsDone(d)).f
 
 const CHECKLIST: [BuilderStepNumber, string][] = [
   [1, "Title, one line and description"],
-  [2, "Category and at least three tags"],
-  [3, "Meeting point with a photo"],
+  [2, "A category"],
+  [3, "Meeting point on the map, with a photo"],
   [4, "When it runs"],
-  [5, "Group size and price"],
+  [5, "Group size, price and refunds"],
   [6, "What is and is not included"],
   [7, "Requirements and safety"],
   [8, "Four photos or more"],
@@ -131,11 +166,6 @@ export function checklistFor(d: ListingDraft): ChecklistItem[] {
 }
 
 export const wordCount = (text: string) => (text.trim() ? text.trim().split(/\s+/).length : 0);
-
-export function searchPlaces(query: string): PlaceResult[] {
-  const q = query.trim().toLowerCase();
-  return q ? PLACES.filter((p) => p.name.toLowerCase().includes(q)) : [];
-}
 
 const DAY_INDEX: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
 

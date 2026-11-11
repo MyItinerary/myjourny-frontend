@@ -2,13 +2,16 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { builderHandlers } from "@/test/msw/host-builder";
+import { server } from "@/test/msw/server";
 import { renderWithProviders } from "@/test/utils/render";
 
 import { useHostListingBuilderViewModel } from "../view-model/use-host-listing-builder-view-model";
 import { StepIncluded, StepPrice, StepWhen } from "./host-builder-steps-b";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("sonner", () => ({ toast: { info: vi.fn(), success: vi.fn() } }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), useSearchParams: () => new URLSearchParams() }));
+vi.mock("../model/host-access", () => ({ useHostAccess: () => "approved" }));
+vi.mock("sonner", () => ({ toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() } }));
 
 function Harness({ which }: { which: "when" | "price" | "included" }) {
   const vm = useHostListingBuilderViewModel();
@@ -16,6 +19,7 @@ function Harness({ which }: { which: "when" | "price" | "included" }) {
 }
 
 beforeEach(() => {
+  server.use(...builderHandlers());
   window.localStorage.clear();
 });
 

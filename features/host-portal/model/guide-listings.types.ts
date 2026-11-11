@@ -33,6 +33,19 @@ export type GuideExperience = {
   age_policy?: string | null;
   min_age?: number | null;
   weather_dependent?: boolean;
+  // Read back into the builder when the guide edits it.
+  latitude?: number | null;
+  longitude?: number | null;
+  meeting_photo_url?: string | null;
+  images?: string[] | null;
+  accessibility?: string | null;
+  accessibility_note?: string | null;
+  what_to_bring_items?: string[] | null;
+  refund_policy?: string | null;
+  free_cancellation_hours?: number | null;
+  event_start_date?: string | null;
+  recurrence_interval?: number | null;
+  recurrence_end_date?: string | null;
 };
 
 /** Interest category slug -> its name, for the Category column. */

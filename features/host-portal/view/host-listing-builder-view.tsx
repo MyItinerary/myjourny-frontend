@@ -19,6 +19,10 @@ export function HostListingBuilderView({ vm }: { vm: HostListingBuilderViewModel
     9: <StepReview vm={vm} />,
   }[vm.step];
 
+  if (vm.loadingListing) {
+    return <p className="flex-1 px-7 pt-8 text-sm text-[#6F6B72]">Loading your listing…</p>;
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       <nav aria-label="Listing sections" className="flex shrink-0 gap-1 overflow-x-auto bg-[#FCFCFC] p-3 shadow-[inset_0_-1px_0_#E7E7E7] lg:w-[196px] lg:flex-col lg:gap-px lg:overflow-visible lg:px-3.5 lg:py-[18px] lg:shadow-[inset_-1px_0_0_#E7E7E7]">

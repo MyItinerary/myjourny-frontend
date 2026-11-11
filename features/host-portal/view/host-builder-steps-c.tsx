@@ -9,7 +9,7 @@ import { ChoiceCard, Field, inputClass, Pill, StepHeading } from "./host-builder
 type Props = { vm: HostListingBuilderViewModel };
 
 export function StepRequirements({ vm }: Props) {
-  const { draft, options, onField, onToggle } = vm;
+  const { draft, derived, options, onField, onToggle } = vm;
   return (
     <div>
       <StepHeading
@@ -17,14 +17,29 @@ export function StepRequirements({ vm }: Props) {
         title="Requirements and safety"
         intro="Say who this is not for. It reads harsh and it saves you the guest who turns up in slippers."
       />
-      <div className="flex gap-3">
-        <Field label="Youngest age allowed" className="flex-1">
+      <div className="mb-2.5 text-[13px] font-medium">How physical it is</div>
+      <div className="mb-[22px] flex flex-wrap gap-2">
+        {options.fitnessLevels.map((f) => (
+          <Pill key={f.key} on={draft.fitness === f.key} onClick={() => onField("fitness", f.key)}>
+            {f.label}
+          </Pill>
+        ))}
+      </div>
+      <div className="mb-2.5 text-[13px] font-medium">Who can come</div>
+      <div className="mb-3 flex flex-wrap gap-2">
+        {options.agePolicies.map((a) => (
+          <Pill key={a.key} on={draft.agePolicy === a.key} onClick={() => onField("agePolicy", a.key)}>
+            {a.label}
+          </Pill>
+        ))}
+      </div>
+      {derived.needsAge ? (
+        <Field label={draft.agePolicy === "minimum_age" ? "Youngest age allowed" : "Age below which an adult must come"}>
           <input inputMode="numeric" value={draft.ageMin} onChange={(e) => onField("ageMin", e.target.value.replace(/\D/g, ""))} className={inputClass} />
         </Field>
-        <Field label="How physical it is" className="flex-1">
-          <input value={draft.fitness} placeholder="e.g. Easy, light walking" onChange={(e) => onField("fitness", e.target.value)} className={inputClass} />
-        </Field>
-      </div>
+      ) : (
+        <div className="mb-[22px]" />
+      )}
       <Field label="Do guests need to swim" hint="Only shown to guests on water and beach listings.">
         <input value={draft.swim} onChange={(e) => onField("swim", e.target.value)} className={inputClass} />
       </Field>
@@ -37,8 +52,16 @@ export function StepRequirements({ vm }: Props) {
           </Pill>
         ))}
       </div>
-      <Field label="Getting around" hint="Stairs, sand, uneven ground, how far the walk is. Say it plainly.">
-        <input value={draft.access} onChange={(e) => onField("access", e.target.value)} className={inputClass} />
+      <div className="mb-2.5 text-[13px] font-medium">Wheelchairs and getting around</div>
+      <div className="mb-3 flex flex-wrap gap-2">
+        {options.accessOptions.map((a) => (
+          <Pill key={a.key} on={draft.access === a.key} onClick={() => onField("access", a.key)}>
+            {a.label}
+          </Pill>
+        ))}
+      </div>
+      <Field label="Anything else about getting around, optional" hint="Stairs, sand, uneven ground, how far the walk is. Say it plainly.">
+        <input value={draft.accessNote} maxLength={100} onChange={(e) => onField("accessNote", e.target.value)} className={inputClass} />
       </Field>
       <div className="mb-6 rounded-[14px] bg-white p-4 shadow-[inset_0_0_0_1px_#E7E7E7]">
         <div className="flex items-center gap-3.5">
@@ -82,7 +105,7 @@ export function StepPhotos({ vm }: Props) {
       />
       <div className="mb-3.5 flex items-baseline gap-2.5 text-[13px]">
         <span className="font-medium">{derived.photoLabel}</span>
-        <span className="text-[#6F6B72]">{derived.photoHint}</span>
+        <span className="text-[#6F6B72]">{vm.uploading > 0 ? `Uploading ${vm.uploading}…` : derived.photoHint}</span>
       </div>
       {draft.photos.length > 1 && <div className="mb-3 text-[12.5px] text-[#6F6B72]">This is the order guests swipe through. The first one is your cover.</div>}
       <div className="grid grid-cols-3 gap-2.5">
@@ -159,15 +182,18 @@ export function StepReview({ vm }: Props) {
           ))}
         </ul>
       </div>
+      {vm.publishBlock && <p className="mb-3 rounded-xl bg-[#FDF7EB] px-3.5 py-2.5 text-[13px] text-[#8A5A07]">{vm.publishBlock}</p>}
       <button
         type="button"
         disabled={!canPublish}
         onClick={onPublish}
         className="h-12 cursor-pointer rounded-full bg-[#F5032D] px-[22px] text-[15px] font-medium text-white disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#BDBDBD]"
       >
-        Publish this listing
+        {vm.publishing ? "Publishing…" : vm.editing ? "Save and publish" : "Publish this listing"}
       </button>
-      <p className="mt-2.5 text-xs text-[#6F6B72]">We look at new listings within 48 hours. You will get a WhatsApp either way.</p>
+      <p className="mt-2.5 text-xs text-[#6F6B72]">
+        It goes live straight away. We look over new listings and will email you if anything needs to change.
+      </p>
     </div>
   );
 }
