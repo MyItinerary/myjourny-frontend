@@ -9,6 +9,8 @@ import {
   Languages,
   Smile,
   Users,
+  Utensils,
+  Waves,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -32,6 +34,8 @@ const FIT_ICONS: Record<FitKind, LucideIcon> = {
   age: Smile,
   accessibility: Accessibility,
   languages: Languages,
+  swim: Waves,
+  diet: Utensils,
   weather: CloudRain,
   pickup: Car,
 };
@@ -61,9 +65,18 @@ export function ExperienceSectionsView({ content, details }: Props) {
 
   return (
     <>
-      {description.paragraphs.length > 0 && (
+      {(description.paragraphs.length > 0 || content.tags.length > 0) && (
         <section className="flex flex-col gap-5">
           <DetailSectionHeading size="md">About this experience</DetailSectionHeading>
+          {content.tags.length > 0 && (
+            <ul aria-label="Tags" className="flex flex-wrap gap-2">
+              {content.tags.map((tag) => (
+                <li key={tag} className="rounded-full bg-muted px-3 py-1 text-sm text-foreground">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="flex flex-col gap-3 font-sans text-base leading-[26px] text-[#6F6B72]">
             {description.paragraphs.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
@@ -89,6 +102,9 @@ export function ExperienceSectionsView({ content, details }: Props) {
         placeName={content.place.name}
         placeDetail={content.place.detail}
       />
+      {content.host.note && (
+        <blockquote className="font-sans text-base leading-7 text-[#333134] italic">&ldquo;{content.host.note}&rdquo;</blockquote>
+      )}
       <DetailDivider />
 
       {facts.length > 0 && (

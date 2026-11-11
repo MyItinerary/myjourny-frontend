@@ -10,7 +10,10 @@ export type ExperiencePageContent = {
   rating: number | null;
   /** "Tarkwa Bay, Lagos". */
   location: string;
-  host: { id: string | null; name: string; verified: boolean; blurb: string };
+  /** `note` is the host's own line to guests, null when they wrote none. */
+  host: { id: string | null; name: string; verified: boolean; blurb: string; note: string | null };
+  /** The host's tags, e.g. "Small group"; empty when they picked none. */
+  tags: string[];
   place: { name: string; detail: string | null };
   included: string[];
   notIncluded: string[];

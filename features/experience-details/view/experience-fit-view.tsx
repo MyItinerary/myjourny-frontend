@@ -1,5 +1,5 @@
 import type { ComponentType, SVGProps } from "react";
-import { Accessibility, Bus, CloudSun, HeartPulse, Languages, Users } from "lucide-react";
+import { Accessibility, Bus, CloudSun, HeartPulse, Languages, Users, Utensils, Waves } from "lucide-react";
 
 import type { FitItem, FitKind } from "../model/experience-details.types";
 
@@ -8,11 +8,13 @@ const ICONS: Record<FitKind, ComponentType<SVGProps<SVGSVGElement>>> = {
   age: Users,
   accessibility: Accessibility,
   languages: Languages,
+  swim: Waves,
+  diet: Utensils,
   weather: CloudSun,
   pickup: Bus,
 };
 
-/** Fitness, age, accessibility, languages, weather and pickup; nothing when none are set. */
+/** Fitness, age, accessibility, languages, swimming, diet, weather and pickup; nothing when none are set. */
 export function ExperienceFitView({ items }: { items: FitItem[] }) {
   if (!items.length) return null;
   return (

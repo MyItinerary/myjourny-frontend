@@ -21,6 +21,20 @@ describe("ExperienceFitView", () => {
     expect(screen.getByText("Not confirmed. Ask the host before you book.")).toBeInTheDocument();
   });
 
+  it("shows swimming and dietary needs", () => {
+    renderWithProviders(
+      <ExperienceFitView
+        items={[
+          { kind: "swim", label: "Swimming", value: "You need to swim 50 metres", note: null },
+          { kind: "diet", label: "Dietary needs", value: "Vegetarian, Halal", note: null },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Swimming")).toBeInTheDocument();
+    expect(screen.getByText("You need to swim 50 metres")).toBeInTheDocument();
+    expect(screen.getByText("Vegetarian, Halal")).toBeInTheDocument();
+  });
+
   it("shows nothing when no details are set", () => {
     const { container } = renderWithProviders(<ExperienceFitView items={[]} />);
     expect(container).toBeEmptyDOMElement();

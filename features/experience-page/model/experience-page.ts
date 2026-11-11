@@ -30,7 +30,9 @@ export function buildExperiencePage(experience: ExperienceDetail, durationLabel:
       verified: !!experience.host?.is_verified,
       // HARD-CODED fallback line. TODO(backend/admin): hosts need a short bio the admin can set.
       blurb: experience.host?.headline?.trim() || "Your safety and satisfaction are well guaranteed",
+      note: experience.host_note?.trim() || null,
     },
+    tags: clean(experience.tags),
     place: { name: experience.city?.trim() || "Location", detail: location || experience.country || null },
     included: clean(experience.whats_included),
     notIncluded: clean(experience.whats_not_included),

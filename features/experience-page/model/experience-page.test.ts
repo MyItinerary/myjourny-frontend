@@ -46,7 +46,14 @@ describe("buildExperiencePage", () => {
       { ...base, host: { id: "h1", display_name: "Kayak Thrills", is_verified: true, headline: "Eight years on the bay" } },
       "1 hour",
     );
-    expect(content.host).toEqual({ id: "h1", name: "Kayak Thrills", verified: true, blurb: "Eight years on the bay" });
+    expect(content.host).toEqual({ id: "h1", name: "Kayak Thrills", verified: true, blurb: "Eight years on the bay", note: null });
+  });
+
+  it("carries the host's own line and tags only when they set them", () => {
+    const content = buildExperiencePage({ ...base, host_note: " See you at the jetty ", tags: ["Small group", " ", "Golden hour"] }, "1 hour");
+    expect(content.host.note).toBe("See you at the jetty");
+    expect(content.tags).toEqual(["Small group", "Golden hour"]);
+    expect(buildExperiencePage({ ...base, host_note: " " }, "1 hour")).toMatchObject({ host: { note: null }, tags: [] });
   });
 
   it("offers experience categories, not event categories", () => {
