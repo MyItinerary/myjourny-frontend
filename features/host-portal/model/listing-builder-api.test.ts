@@ -39,7 +39,7 @@ describe("place search", () => {
 
 describe("uploads", () => {
   it("signs with itin and returns the Cloudinary link", async () => {
-    expect(await uploadPhoto(new File(["kayak.jpg"], "kayak.jpg", { type: "image/jpeg" }))).toBe(`${CLOUDINARY}kayak.jpg`);
+    expect(await uploadPhoto(new File(["kayak.jpg"], "kayak.jpg", { type: "image/jpeg" }))).toBe(`${CLOUDINARY}photo-1.jpg`);
   });
 
   it("fails when Cloudinary refuses", async () => {

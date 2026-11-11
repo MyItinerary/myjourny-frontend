@@ -67,10 +67,10 @@ describe("photos", () => {
     await userEvent.upload(input, [jpg("a.jpg"), jpg("b.jpg")]);
     expect(await screen.findByText("2 photos")).toBeInTheDocument();
     expect(screen.getByText("Cover")).toBeInTheDocument();
-    expect(within(screen.getByRole("complementary")).getByAltText("Cover")).toHaveAttribute("src", `${CLOUDINARY}a.jpg`);
+    expect(within(screen.getByRole("complementary")).getByAltText("Cover")).toHaveAttribute("src", `${CLOUDINARY}photo-1.jpg`);
 
     await userEvent.click(screen.getByRole("button", { name: "Make cover" }));
-    expect(within(screen.getByRole("complementary")).getByAltText("Cover")).toHaveAttribute("src", `${CLOUDINARY}b.jpg`);
+    expect(within(screen.getByRole("complementary")).getByAltText("Cover")).toHaveAttribute("src", `${CLOUDINARY}photo-2.jpg`);
 
     await userEvent.click(screen.getByRole("button", { name: "Move photo 1 later" }));
     await userEvent.click(screen.getByRole("button", { name: "Remove photo 1" }));

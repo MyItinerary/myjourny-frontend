@@ -112,25 +112,25 @@ describe("filling it in", () => {
 });
 
 describe("photos", () => {
-  // Each upload comes back as a Cloudinary link named after what's in the file.
+  // Uploads come back numbered in the order they arrive (see builderHandlers).
   const file = (name: string, type = "image/jpeg") => new File([name], name, { type });
 
   it("uploads only images, in the order picked, then reorders, moves the cover and deletes", async () => {
     const { result } = render();
     act(() => result.current.onAddPhotos([file("a.jpg"), file("b.jpg"), file("notes.pdf", "application/pdf")]));
     expect(result.current.uploading).toBe(2);
-    await waitFor(() => expect(result.current.draft.photos).toEqual([`${CLOUDINARY}a.jpg`, `${CLOUDINARY}b.jpg`]));
+    await waitFor(() => expect(result.current.draft.photos).toEqual([`${CLOUDINARY}photo-1.jpg`, `${CLOUDINARY}photo-2.jpg`]));
     expect(result.current.uploading).toBe(0);
     expect(result.current.derived.photoLabel).toBe("2 photos");
 
     act(() => result.current.onMovePhoto(0, 1));
-    expect(result.current.draft.photos).toEqual([`${CLOUDINARY}b.jpg`, `${CLOUDINARY}a.jpg`]);
+    expect(result.current.draft.photos).toEqual([`${CLOUDINARY}photo-2.jpg`, `${CLOUDINARY}photo-1.jpg`]);
     expect(result.current.draft.cover).toBe(1);
     act(() => result.current.onMovePhoto(0, -1));
-    expect(result.current.draft.photos[0]).toBe(`${CLOUDINARY}b.jpg`);
+    expect(result.current.draft.photos[0]).toBe(`${CLOUDINARY}photo-2.jpg`);
 
     act(() => result.current.onDeletePhoto(0));
-    expect(result.current.draft.photos).toEqual([`${CLOUDINARY}a.jpg`]);
+    expect(result.current.draft.photos).toEqual([`${CLOUDINARY}photo-1.jpg`]);
   });
 
   it("uploads the meeting point photo", async () => {
@@ -138,7 +138,7 @@ describe("photos", () => {
     act(() => result.current.onMeetPhoto(undefined));
     expect(result.current.draft.meetPhoto).toBe("");
     act(() => result.current.onMeetPhoto(file("gate.jpg")));
-    await waitFor(() => expect(result.current.draft.meetPhoto).toBe(`${CLOUDINARY}gate.jpg`));
+    await waitFor(() => expect(result.current.draft.meetPhoto).toBe(`${CLOUDINARY}photo-1.jpg`));
   });
 
   it("says when a photo couldn't be uploaded, and keeps the rest", async () => {
