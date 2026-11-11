@@ -79,14 +79,15 @@ describe("photos", () => {
 });
 
 describe("review and publish", () => {
-  it("lists what is missing, takes the host's line and booking type, and keeps publish locked", async () => {
+  it("lists what is missing, takes the host's line, and keeps publish locked", async () => {
     renderWithProviders(<Harness which="review" />);
     expect(screen.getAllByRole("button", { name: "Finish this" })).toHaveLength(8);
 
     await userEvent.type(screen.getByLabelText(/One line from you/), "See you at the gate");
     expect(screen.getByText("“See you at the gate”")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /Instant book/ }));
+    // Every listing books instantly for now, so there's nothing to choose.
+    expect(screen.queryByText("How guests book")).not.toBeInTheDocument();
     expect(within(screen.getByRole("complementary")).getByText("Book now")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Publish this listing" })).toBeDisabled();
   });

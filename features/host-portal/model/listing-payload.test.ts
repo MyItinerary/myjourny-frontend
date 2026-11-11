@@ -4,7 +4,7 @@ import type { Category } from "@/lib/queries/categories";
 
 import { blankDraft } from "./listing-draft";
 import type { ListingDraft } from "./listing-draft.types";
-import { draftFromExperience, interestTags, orderedPhotos, toExperiencePayload } from "./listing-payload";
+import { draftFromExperience, interestTags, orderedPhotos, privatePrice, toExperiencePayload } from "./listing-payload";
 
 const cat = (id: number, slug: string, text: string, children: Category[] = []): Category => ({
   id, parent_id: null, slug, text, category_type: "interest", is_active: true, children,
@@ -45,6 +45,12 @@ const draft = (over: Partial<ListingDraft> = {}): ListingDraft => ({
   weather: true,
   photos: ["a", "b", "c"],
   cover: 1,
+  area: "Lekki",
+  tags: ["Golden hour", "Small group"],
+  swim: "You need to swim 50 metres",
+  diet: ["Halal"],
+  wear: ["Clothes that can get wet", " "],
+  quote: "I'll be in the yellow life jacket",
   ...over,
 });
 
@@ -89,7 +95,22 @@ describe("toExperiencePayload", () => {
       weather_dependent: true,
       refund_policy: "full_refund_until",
       free_cancellation_hours: 24,
+      area: "Lekki",
+      tags: ["Golden hour", "Small group"],
+      swim_requirement: "You need to swim 50 metres",
+      dietary_options: ["Halal"],
+      what_to_wear_items: ["Clothes that can get wet"],
+      host_note: "I'll be in the yellow life jacket",
     });
+  });
+
+  it("sends the optional extras as empty when the host skipped them", () => {
+    const payload = toExperiencePayload(draft({ area: "", tags: [], swim: " ", diet: [], wear: [""], quote: "" }), TREE, "2026-11-10");
+    expect(payload).toMatchObject({ area: null, tags: [], swim_requirement: null, dietary_options: [], what_to_wear_items: [], host_note: null });
+  });
+
+  it("has a private group price only when the host set one", () => {
+    expect([privatePrice({ priv: "60000" }), privatePrice({ priv: "" }), privatePrice({ priv: "0" })]).toEqual([60000, null, null]);
   });
 
   it("sends a one-off's date, and stops a repeating schedule on its end date", () => {
@@ -162,9 +183,15 @@ describe("draftFromExperience", () => {
         refund_policy: "full_refund_until",
         free_cancellation_hours: 48,
         images: ["a", "b"],
+        area: "Lekki",
+        tags: ["Golden hour"],
+        swim_requirement: "No swimming needed",
+        dietary_options: ["Vegetarian"],
+        what_to_wear_items: ["Sandals"],
+        host_note: "See you at the jetty",
       },
       TREE,
-      15000,
+      { price: 15000, privatePrice: 60000 },
     );
     expect(d).toMatchObject({
       editingId: "e1",
@@ -179,6 +206,13 @@ describe("draftFromExperience", () => {
       dur: "1.5",
       maxG: "8",
       price: "15000",
+      priv: "60000",
+      area: "Lekki",
+      tags: ["Golden hour"],
+      swim: "No swimming needed",
+      diet: ["Vegetarian"],
+      wear: ["Sandals"],
+      quote: "See you at the jetty",
       inc: ["Breakfast"],
       exc: [""],
       fitness: "moderate",
@@ -192,7 +226,7 @@ describe("draftFromExperience", () => {
   });
 
   it("treats a listing with no schedule as on request, and ignores values the builder doesn't offer", () => {
-    const d = draftFromExperience({ id: "e2", status: "ACTIVE", title: "Pottery", fitness_level: "extreme", cover_image_url: "c" }, [], null);
-    expect(d).toMatchObject({ whenType: "request", fitness: "", price: "", photos: ["c"], cat: "" });
+    const d = draftFromExperience({ id: "e2", status: "ACTIVE", title: "Pottery", fitness_level: "extreme", cover_image_url: "c" }, [], { price: null, privatePrice: null });
+    expect(d).toMatchObject({ whenType: "request", fitness: "", price: "", priv: "", photos: ["c"], cat: "", tags: [], wear: [""], quote: "" });
   });
 });

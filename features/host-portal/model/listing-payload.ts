@@ -44,7 +44,16 @@ export type ExperiencePayload = {
   weather_dependent: boolean;
   refund_policy: string | null;
   free_cancellation_hours: number | null;
+  area: string | null;
+  tags: string[];
+  swim_requirement: string | null;
+  dietary_options: string[];
+  what_to_wear_items: string[];
+  host_note: string | null;
 };
+
+/** The builder's two ticket prices, as itin stores them. */
+export type ListingPrices = { price: number | null; privatePrice: number | null };
 
 const lines = (list: string[], max: number) =>
   list
@@ -116,15 +125,24 @@ export function toExperiencePayload(d: ListingDraft, tree: Category[], today: st
     weather_dependent: d.weather,
     refund_policy: refund,
     free_cancellation_hours: refund === "full_refund_until" ? number(d.refundHours) : null,
+    area: text(d.area, 120),
+    tags: d.tags.slice(0, 12),
+    swim_requirement: text(d.swim, 100),
+    dietary_options: d.diet.slice(0, 10),
+    what_to_wear_items: lines(d.wear, 10),
+    host_note: text(d.quote, 140),
   };
 }
+
+/** The private group price, or null when the host left it blank. */
+export const privatePrice = (d: Pick<ListingDraft, "priv">) => (Number(d.priv) > 0 ? Number(d.priv) : null);
 
 const DAY_LABEL: Record<string, string> = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
 const orBlank = (list: string[] | null | undefined) => (list?.length ? list : [""]);
 const asText = (value: number | null | undefined) => (value == null ? "" : String(value));
 
-/** A draft for editing one of the guide's listings. `price` is its ticket's amount. */
-export function draftFromExperience(exp: GuideExperience, tree: Category[], price: number | null): ListingDraft {
+/** A draft for editing one of the guide's listings, with its ticket prices. */
+export function draftFromExperience(exp: GuideExperience, tree: Category[], prices: ListingPrices): ListingDraft {
   const [catSlug, subSlug] = exp.interest_tags ?? [];
   const parent = tree.find((c) => c.slug === catSlug);
   const photos = exp.images?.length ? exp.images : exp.cover_image_url ? [exp.cover_image_url] : [];
@@ -138,6 +156,7 @@ export function draftFromExperience(exp: GuideExperience, tree: Category[], pric
     cat: parent?.text ?? "",
     sub: parent?.children?.find((c) => c.slug === subSlug)?.text ?? "",
     city: exp.city ?? "Lagos",
+    area: exp.area ?? "",
     landmark: exp.meeting_landmark ?? "",
     cue: exp.meeting_instructions ?? "",
     meetPhoto: exp.meeting_photo_url ?? "",
@@ -152,7 +171,8 @@ export function draftFromExperience(exp: GuideExperience, tree: Category[], pric
     dur: exp.duration_minutes ? String(exp.duration_minutes / 60) : "",
     minG: asText(exp.group_size_min),
     maxG: asText(exp.group_size_max),
-    price: asText(price),
+    price: asText(prices.price),
+    priv: asText(prices.privatePrice),
     inc: orBlank(exp.whats_included),
     exc: orBlank(exp.whats_not_included),
     bring: orBlank(exp.what_to_bring_items),
@@ -164,6 +184,11 @@ export function draftFromExperience(exp: GuideExperience, tree: Category[], pric
     refund: isChoice(REFUND_POLICIES, exp.refund_policy ?? "") ? (exp.refund_policy as ListingDraft["refund"]) : "",
     refundHours: asText(exp.free_cancellation_hours),
     weather: Boolean(exp.weather_dependent),
+    tags: exp.tags ?? [],
+    swim: exp.swim_requirement ?? "",
+    diet: exp.dietary_options ?? [],
+    wear: orBlank(exp.what_to_wear_items),
+    quote: exp.host_note ?? "",
     photos,
     cover: 0,
   };

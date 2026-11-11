@@ -200,7 +200,6 @@ describe("review and publish", () => {
     const { result } = render();
     act(() => result.current.helper.onToggle());
     expect(result.current.helper.open).toBe(true);
-    expect(result.current.derived.preview.bookLabel).toBe("How they book, not set");
     expect(result.current.derived.preview.price).toBe("Price not set");
   });
 

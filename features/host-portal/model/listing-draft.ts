@@ -3,7 +3,6 @@ import { formatNaira } from "./money";
 import type {
   Accessibility,
   AgePolicy,
-  BookType,
   BuilderStepNumber,
   ChecklistItem,
   Choice,
@@ -68,15 +67,6 @@ export const EVERY_OPTIONS = [
   { value: 4, label: "Once a month" },
 ];
 
-export const BOOK_TYPES: { key: BookType; label: string; sub: string }[] = [
-  { key: "instant", label: "Instant book", sub: "Guests book and pay straight away. You get more bookings, and you cannot say no." },
-  {
-    key: "request",
-    label: "Request to book",
-    sub: "You see who is asking before you accept. You must reply within 24 hours or it hurts where you show up in search.",
-  },
-];
-
 export const FITNESS_LEVELS: Choice<FitnessLevel>[] = [
   { key: "easy", label: "Easy" },
   { key: "moderate", label: "Moderate" },
@@ -118,7 +108,7 @@ export const blankDraft = (): ListingDraft => ({
   inc: [""], exc: [""], bring: [""], wear: [""],
   agePolicy: "", ageMin: "", fitness: "", swim: "", diet: [], access: "", accessNote: "",
   refund: "", refundHours: "",
-  weather: false, photos: [], cover: 0, quote: "", bookType: "", editingId: null,
+  weather: false, photos: [], cover: 0, quote: "", editingId: null,
 });
 
 const filled = (lines: string[]) => lines.filter((line) => line.trim());
@@ -213,6 +203,3 @@ export const photoHint = (count: number) =>
     : count === 0
       ? "You need at least four to publish."
       : `You need at least four. You have ${count}.`;
-
-export const bookLabel = (type: ListingDraft["bookType"]) =>
-  type === "instant" ? "Book now" : type === "request" ? "Request to book" : "How they book, not set";
