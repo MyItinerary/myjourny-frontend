@@ -41,9 +41,9 @@ export function filterBookings(bookings: HostBooking[], f: BookingFilters): Host
     .sort((a, b) => TAB_ORDER[a.tab] - TAB_ORDER[b.tab]);
 }
 
-/** "All 6 bookings", "1 booking", "3 bookings" */
+/** "All 6 bookings", "1 booking" (never "All 1 bookings"), "3 bookings" */
 export function bookingsResultLine(shown: number, total: number): string {
-  if (shown === total) return `All ${total} bookings`;
+  if (shown === total && total !== 1) return `All ${total} bookings`;
   return shown === 1 ? "1 booking" : `${shown} bookings`;
 }
 
@@ -57,7 +57,9 @@ export function bookingsSummary(bookings: HostBooking[]): string {
 
 /** The status chip reuses the listing chip colours: confirmed is green, waiting is amber, cancelled is red, the rest grey. */
 export function bookingChip(status: BookingStatusLabel): ListingStatus {
-  return status === "Confirmed" ? "Live" : status === "Waiting on you" ? "In review" : status === "Cancelled by guest" ? "Rejected" : "Draft";
+  if (status === "Confirmed") return "Live";
+  if (status === "Waiting on you") return "In review";
+  return status === "Cancelled by guest" || status === "Cancelled" ? "Rejected" : "Draft";
 }
 
 export const uniqueListings = (bookings: HostBooking[]) => [...new Set(bookings.map((b) => b.listing))];

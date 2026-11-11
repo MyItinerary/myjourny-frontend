@@ -38,6 +38,7 @@ const vm = (over: Partial<HostBookingsViewModel> = {}): HostBookingsViewModel =>
   query: "",
   onQuery: vi.fn(),
   resultLine: "All 2 bookings",
+  loading: false,
   hasFilters: false,
   onClearFilters: vi.fn(),
   groups: [{ key: "status", label: "Status", current: "Any", active: false, anyValue: "All", anyLabel: "Any status", options: [{ value: "Upcoming", label: "Upcoming", selected: false, subs: [] }] }],
@@ -82,6 +83,12 @@ describe("HostBookingsView, the table", () => {
 
     await user.click(screen.getByRole("row", { name: /Yemi Balogun/ }));
     expect(props.onOpen).toHaveBeenCalledWith("b6");
+  });
+
+  it("says it is loading, without claiming there are no bookings", () => {
+    renderWithProviders(<HostBookingsView vm={vm({ rows: [], loading: true, none: false })} />);
+    expect(screen.getByText("Loading your bookings…")).toBeInTheDocument();
+    expect(screen.queryByText("No bookings here")).not.toBeInTheDocument();
   });
 
   it("says there are no bookings, and offers to show everything", async () => {

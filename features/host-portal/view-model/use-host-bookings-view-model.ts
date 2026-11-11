@@ -15,6 +15,7 @@ import {
 } from "../model/booking-table";
 import type { BookingFilters, BookingWhenFilter, HostBooking } from "../model/bookings.types";
 import { useHostBookings } from "../model/bookings-data";
+import { isSample } from "../model/listings-data";
 import type { FilterGroup } from "../model/filter-group.types";
 import type { ListingStatus } from "../model/home.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
@@ -45,6 +46,8 @@ export type HostBookingsViewModel = {
   onPick: (key: string, value: string) => void;
   scanHref: string;
   rows: BookingRow[];
+  /** Waiting for the guide's bookings to load. */
+  loading: boolean;
   /** Nothing to show: no bookings yet, or the filters took them all away. */
   none: boolean;
   onShowEverything: () => void;
@@ -56,13 +59,17 @@ export type HostBookingsViewModel = {
   onReportNoShow: () => void;
 };
 
-// Nothing is sent to itin from here yet; these say so rather than pretending.
+// Requests, ticket scanning and no-shows only exist in the design preview so
+// far; these say so rather than pretending.
 const NOT_CONNECTED = "This will work once your bookings are connected.";
 
 export function useHostBookingsViewModel(): HostBookingsViewModel {
   const preview = usePreviewMode();
   const today = useToday();
-  const bookings = useHostBookings(preview, today);
+  const { bookings, loading } = useHostBookings(preview, today);
+  const sample = isSample(preview);
+  // Every real booking is instant, so there are no requests to filter by.
+  const statusOptions = sample ? BOOKING_STATUS_OPTIONS : BOOKING_STATUS_OPTIONS.filter((o) => o !== "Requests");
 
   const [filters, setFilters] = useState<BookingFilters>(NO_BOOKING_FILTERS);
   // ?booking=<id> opens that booking (Home's "needs you" links land here).
@@ -102,14 +109,15 @@ export function useHostBookingsViewModel(): HostBookingsViewModel {
     hasFilters: hasActiveBookingFilters(filters),
     onClearFilters: () => setFilters(NO_BOOKING_FILTERS),
     groups: [
-      group("status", "Status", "All", "Any status", filters.status, BOOKING_STATUS_OPTIONS),
+      group("status", "Status", "All", "Any status", filters.status, statusOptions),
       group("listing", "Listing", "All", "Any listing", filters.listing, uniqueListings(bookings)),
       group("when", "When", "All dates", "All dates", filters.when, BOOKING_WHEN_OPTIONS),
     ],
     onPick,
     scanHref: `${HOST_PORTAL_BASE}/bookings/scan`,
     rows: shown.map((booking) => ({ booking, chip: bookingChip(booking.status) })),
-    none: shown.length === 0,
+    loading,
+    none: !loading && shown.length === 0,
     onShowEverything: () => setFilters(NO_BOOKING_FILTERS),
     onOpen: setOpenId,
     detail: open
@@ -117,7 +125,7 @@ export function useHostBookingsViewModel(): HostBookingsViewModel {
           booking: open,
           chip: bookingChip(open.status),
           acceptLabel: `Accept, ${open.guests} ${open.guests === 1 ? "place" : "places"}`,
-          canCheckIn: open.tab === "Upcoming",
+          canCheckIn: sample && open.tab === "Upcoming",
           scanHref: `${HOST_PORTAL_BASE}/bookings/scan`,
         }
       : null,
