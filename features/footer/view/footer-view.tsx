@@ -89,7 +89,7 @@ export function FooterView({
               ))}
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-4 pt-8 sm:grid-cols-3 lg:mt-[72px] lg:min-h-[268px] lg:gap-8 lg:pt-0">
+        <div className="mt-12 grid grid-cols-1 gap-4 pt-8 sm:grid-cols-2 lg:mt-[72px] lg:min-h-[268px] lg:gap-8 lg:pt-0">
           {columns.map((column) => (
             <div key={column.heading} className="flex flex-col gap-4">
               <h3 className="text-sm font-semibold tracking-[0.14px] text-[#2a2420]">{column.heading}</h3>

@@ -9,32 +9,22 @@ export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
   {
     heading: "Support",
     links: [
-      { label: "Help Center", href: "#" },
-      { label: "Safety Guide", href: SAFETY_MAILTO },
+      { label: "Safety Guide", href: "/legal/safety" },
       { label: "Report a safety concern", href: SAFETY_MAILTO },
-      { label: "Payment protection", href: "#" },
       { label: "Cancellation and Refund Policy", href: "/legal/cancellations" },
-      { label: "Contact us", href: "#" },
+      { label: "Terms of use", href: "/legal/terms" },
+      { label: "Cookie policy", href: "/legal/cookies" },
+      { label: "Privacy policy", href: "/legal/privacy" },
+      { label: "Community guidelines and review policy", href: "/legal/community-guidelines" },
+      { label: "Blog", href: "#" },
+      { label: "Contact us", href: SAFETY_MAILTO },
     ],
   },
   {
     heading: "Hosting and Curating",
     links: [
       { label: "Become a host", href: "#" },
-      { label: "Host an event", href: "#" },
-      { label: "How hosting pays", href: "#" },
       { label: "Host Terms", href: "/legal/hosts" },
-      { label: "Hosting responsibly", href: "#" },
-    ],
-  },
-  {
-    heading: "Myjourny",
-    links: [
-      { label: "Why book with us", href: "#" },
-      { label: "Experiences", href: "/experiences" },
-      { label: "Blog", href: "#" },
-      { label: "Investors", href: "#" },
-      { label: "Gift cards", href: "#" },
     ],
   },
 ];

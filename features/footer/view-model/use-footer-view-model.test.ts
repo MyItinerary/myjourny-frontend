@@ -52,7 +52,7 @@ describe("useFooterViewModel", () => {
   it("carries the static link content and current year", () => {
     state.categories = { data: [], isLoading: false };
     const { result } = renderHook(() => useFooterViewModel());
-    expect(result.current.columns).toHaveLength(3);
+    expect(result.current.columns).toHaveLength(2);
     expect(result.current.year).toBe(new Date().getFullYear());
   });
 });
