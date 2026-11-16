@@ -20,13 +20,17 @@ vi.mock("../model/listings-data", () => ({
   }),
 }));
 const remove = vi.hoisted(() => ({ mutate: vi.fn() }));
-vi.mock("../model/guide-listings-api", () => ({ useDeleteGuideExperience: () => remove }));
+const fetchGuidePreviewToken = vi.hoisted(() => vi.fn());
+vi.mock("../model/guide-listings-api", () => ({ useDeleteGuideExperience: () => remove, fetchGuidePreviewToken }));
+const openExperiencePreview = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/experience-preview", () => ({ openExperiencePreview }));
 
 beforeEach(() => {
   nav.preview = "full";
   data.loading = false;
   data.real = null;
   remove.mutate.mockReset();
+  openExperiencePreview.mockReset();
   nav.push.mockReset();
   Object.values(toast).forEach((fn) => fn.mockReset());
 });
@@ -193,12 +197,32 @@ describe("row actions", () => {
     expect(nav.push).toHaveBeenCalledWith("/host/dashboard/listings/new");
   });
 
-  it("previews the guest page in a new tab", () => {
+  it("opens a sample listing's guest page in a new tab", () => {
     const open = vi.spyOn(window, "open").mockReturnValue(null);
     const result = render();
     act(() => result.current.onRowAction(listing, "preview"));
     expect(open).toHaveBeenCalledWith("/experiences/l1", "_blank", "noopener");
+    expect(openExperiencePreview).not.toHaveBeenCalled();
     open.mockRestore();
+  });
+
+  it("previews a real listing, live or not, with a token for it", async () => {
+    nav.preview = null;
+    data.real = [listing];
+    openExperiencePreview.mockResolvedValueOnce(undefined);
+    const result = render();
+    await act(async () => result.current.onRowAction(listing, "preview"));
+    expect(openExperiencePreview).toHaveBeenCalledWith("l1", fetchGuidePreviewToken);
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("says so when the preview can't be opened", async () => {
+    nav.preview = null;
+    data.real = [listing];
+    openExperiencePreview.mockRejectedValueOnce(new Error("404"));
+    const result = render();
+    await act(async () => result.current.onRowAction(listing, "preview"));
+    expect(toast.error).toHaveBeenCalledWith("Couldn't open the preview. Try again.");
   });
 
   it("copies the guest link", async () => {

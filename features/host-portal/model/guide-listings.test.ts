@@ -104,7 +104,7 @@ describe("toListingDetail", () => {
       "Moderate",
       "We may move or cancel it",
     ]);
-    expect(detail.actions.map((a) => a.action)).toEqual(["edit", "copy-link"]);
+    expect(detail.actions.map((a) => a.action)).toEqual(["edit", "preview", "copy-link"]);
     expect(detail.banner).toBeUndefined();
   });
 
@@ -112,7 +112,7 @@ describe("toListingDetail", () => {
     const detail = toListingDetail(exp({ status: "INACTIVE", review_note: "Use a photo from the trip." }));
     expect(detail.banner).toMatchObject({ kind: "rejected", title: "We took this listing down" });
     expect(detail.banner?.body).toContain("Use a photo from the trip.");
-    expect(detail.actions.map((a) => a.action)).toEqual(["edit"]);
+    expect(detail.actions.map((a) => a.action)).toEqual(["edit", "preview"]);
   });
 
   it("tells an incomplete listing what to add", () => {

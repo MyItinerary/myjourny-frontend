@@ -54,6 +54,7 @@ function vm(overrides: Partial<ExperiencePageViewModel> = {}): ExperiencePageVie
     onShare: vi.fn(),
     share: { open: false } as never,
     similar: [],
+    preview: null,
     ...overrides,
   };
 }
@@ -133,5 +134,23 @@ describe("ExperiencePageView", () => {
     );
     expect(screen.getByRole("region", { name: "Similar experiences" })).toBeInTheDocument();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("shows a preview with its banner, and nothing to save or share", () => {
+    renderWithProviders(
+      <ExperiencePageView {...vm({ saveModalOpen: true, preview: { status: "Not live", onClose: vi.fn() } })} />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Preview · Not live");
+    expect(screen.getByRole("heading", { level: 1, name: "Sunrise Kayaking" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add to wishlist" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Share" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("says a preview link has expired when it can't load", () => {
+    renderWithProviders(
+      <ExperiencePageView {...vm({ status: "error", content: null, preview: { status: "", onClose: vi.fn() } })} />,
+    );
+    expect(screen.getByText("This preview link has expired")).toBeInTheDocument();
   });
 });
