@@ -157,3 +157,38 @@ test.describe("a guide's listings", () => {
     await expect(page.getByText(/Use a photo from the walk, not a stock image\./)).toBeVisible();
   });
 });
+
+test.describe("host bookings", () => {
+  const BOOKING = {
+    id: "ab12cd34-0000-4000-8000-000000000001",
+    status: "confirmed",
+    payment_status: "paid",
+    payout_status: "pending",
+    experience_id: KAYAK.id,
+    experience_title: KAYAK.title,
+    requested_datetime: "2099-03-07T07:30:00",
+    party_size: 2,
+    price_total: "30000.00",
+    guide_earnings_amount: "25500.00",
+    line_items: [{ label: "Adult", quantity: 2 }],
+    guest: { name: "Amaka Eze", avatar_url: null, phone: "+2348012345678" },
+    created_at: "2026-11-01T10:00:00",
+  };
+  const ABANDONED = { ...BOOKING, id: "ab12cd34-0000-4000-8000-000000000002", status: "pending", payment_status: "unpaid", guest: { name: "Chidi Okafor" } };
+
+  test("lists the guide's paid bookings and opens one with the guest's phone", async ({ page }) => {
+    await openAsGuide(page, "/host/dashboard/bookings", {
+      "GET /bookings/guide": (r) => r.fulfill({ json: [BOOKING, ABANDONED] }),
+    });
+
+    await expect(page.getByText("1 booking", { exact: true })).toBeVisible();
+    await expect(page.getByText("Chidi Okafor")).toHaveCount(0);
+    await page.getByRole("row", { name: /Amaka Eze/ }).click();
+
+    const panel = page.getByRole("dialog");
+    await expect(panel.getByText("AB12CD34 · Lagoon kayak and breakfast · Sat 7 Mar, 07:30 · 2 places · ₦30,000")).toBeVisible();
+    await expect(panel.getByText("+2348012345678")).toBeVisible();
+    await expect(panel.getByText("₦25,500")).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Report a no show" })).toHaveCount(0);
+  });
+});
