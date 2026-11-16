@@ -3,18 +3,33 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { FOOTER_LEGAL_LINKS, FOOTER_LINK_COLUMNS, FOOTER_SOCIAL_LINKS, SAFETY_MAILTO } from "./footer-content";
+import { FOOTER_LEGAL_LINKS, FOOTER_LINK_COLUMNS, FOOTER_SOCIAL_LINKS, CONTACT_MAILTO } from "./footer-content";
 
 describe("footer content", () => {
-  it("lists the three link columns from the design in order", () => {
-    expect(FOOTER_LINK_COLUMNS.map((c) => c.heading)).toEqual(["Support", "Hosting and Curating", "Myjourny"]);
-    expect(FOOTER_LINK_COLUMNS.every((c) => c.links.length > 0)).toBe(true);
+  const column = (heading: string) => FOOTER_LINK_COLUMNS.find((c) => c.heading === heading)?.links.map((l) => l.label);
+
+  it("lists the Support, Hosting and Legal columns in order", () => {
+    expect(FOOTER_LINK_COLUMNS.map((c) => c.heading)).toEqual(["Support", "Hosting and Curating", "Legal"]);
+    expect(column("Support")).toEqual(["Safety Guide", "Report a safety concern", "Cancellation and Refund Policy", "Contact us", "Blog"]);
+    expect(column("Hosting and Curating")).toEqual(["Become a host", "Host Terms"]);
   });
 
-  it("links to Experiences, with no mention of events while they're on hold", () => {
-    const links = FOOTER_LINK_COLUMNS.flatMap((c) => c.links);
-    expect(links).toContainEqual({ label: "Experiences", href: "/experiences" });
-    expect(links.some((l) => /events/i.test(l.label) && l.href !== "#")).toBe(false);
+  it("drops the links QA asked to remove, including anything about events while they're on hold", () => {
+    const labels = FOOTER_LINK_COLUMNS.flatMap((c) => c.links.map((l) => l.label));
+    for (const removed of ["Payment protection", "Help Center", "Host an event", "How hosting pays", "Hosting responsibly", "Why book with us", "Experiences"]) {
+      expect(labels).not.toContain(removed);
+    }
+    expect(labels.some((l) => /events?\b/i.test(l))).toBe(false);
+  });
+
+  it("puts the policies in the Legal column", () => {
+    const legal = FOOTER_LINK_COLUMNS.find((c) => c.heading === "Legal")?.links;
+    expect(legal).toEqual([
+      { label: "Terms of use", href: "/legal/terms" },
+      { label: "Cookie policy", href: "/legal/cookies" },
+      { label: "Privacy policy", href: "/legal/privacy" },
+      { label: "Community guidelines and review policy", href: "/legal/community-guidelines" },
+    ]);
   });
 
   it("has the legal links and socials", () => {
@@ -23,13 +38,14 @@ describe("footer content", () => {
     expect(FOOTER_SOCIAL_LINKS.map((s) => s.label)).toEqual(["LinkedIn", "X", "Instagram"]);
   });
 
-  it("opens the Safety Guide page and sends safety concerns to the team by email", () => {
+  it("opens the Safety Guide page and sends safety concerns and Contact us to the team by email", () => {
     const support = FOOTER_LINK_COLUMNS.find((c) => c.heading === "Support");
     const href = (label: string) => support?.links.find((l) => l.label === label)?.href;
 
-    expect(SAFETY_MAILTO).toBe("mailto:hello@myjourny.io");
+    expect(CONTACT_MAILTO).toBe("mailto:hello@myjourny.io");
     expect(href("Safety Guide")).toBe("/legal/safety");
-    expect(href("Report a safety concern")).toBe(SAFETY_MAILTO);
+    expect(href("Report a safety concern")).toBe(CONTACT_MAILTO);
+    expect(href("Contact us")).toBe(CONTACT_MAILTO);
   });
 
   it("sends Become a host to the guide sign-up page", () => {

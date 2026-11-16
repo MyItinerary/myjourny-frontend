@@ -2,39 +2,34 @@ import type { FooterLink, FooterLinkColumn, FooterSocialLink } from "./footer-co
 
 // Figma: "Footer" (2656:72994). Static copy for the link columns and legal row.
 
-// Safety concerns go straight to the team by email; the guide itself is a page.
-export const SAFETY_MAILTO = "mailto:hello@myjourny.io";
+// Safety concerns and general questions go straight to the team by email.
+export const CONTACT_MAILTO = "mailto:hello@myjourny.io";
 
 export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
   {
     heading: "Support",
     links: [
-      { label: "Help Center", href: "#" },
       { label: "Safety Guide", href: "/legal/safety" },
-      { label: "Report a safety concern", href: SAFETY_MAILTO },
-      { label: "Payment protection", href: "#" },
+      { label: "Report a safety concern", href: CONTACT_MAILTO },
       { label: "Cancellation and Refund Policy", href: "/legal/cancellations" },
-      { label: "Contact us", href: "#" },
+      { label: "Contact us", href: CONTACT_MAILTO },
+      { label: "Blog", href: "#" },
     ],
   },
   {
     heading: "Hosting and Curating",
     links: [
       { label: "Become a host", href: "/become-a-guide" },
-      { label: "Host an event", href: "#" },
-      { label: "How hosting pays", href: "#" },
       { label: "Host Terms", href: "/legal/hosts" },
-      { label: "Hosting responsibly", href: "#" },
     ],
   },
   {
-    heading: "Myjourny",
+    heading: "Legal",
     links: [
-      { label: "Why book with us", href: "#" },
-      { label: "Experiences", href: "/experiences" },
-      { label: "Blog", href: "#" },
-      { label: "Investors", href: "#" },
-      { label: "Gift cards", href: "#" },
+      { label: "Terms of use", href: "/legal/terms" },
+      { label: "Cookie policy", href: "/legal/cookies" },
+      { label: "Privacy policy", href: "/legal/privacy" },
+      { label: "Community guidelines and review policy", href: "/legal/community-guidelines" },
     ],
   },
 ];
