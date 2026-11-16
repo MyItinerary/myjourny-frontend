@@ -9,12 +9,12 @@ describe("ExperienceLocationView", () => {
   it("shows a real map of the area and says the exact spot comes after booking", () => {
     renderWithProviders(
       <ExperienceLocationView
-        location={{ mode: "approximate", label: "Lagos, Nigeria", embedUrl: "https://www.openstreetmap.org/export/embed.html?bbox=1" }}
+        location={{ mode: "approximate", label: "Lagos, Nigeria", embedUrl: "https://www.google.com/maps/embed/v1/view?key=k&center=6.5,3.39" }}
       />,
     );
     expect(screen.getByTitle("Map of Lagos, Nigeria")).toHaveAttribute(
       "src",
-      "https://www.openstreetmap.org/export/embed.html?bbox=1",
+      "https://www.google.com/maps/embed/v1/view?key=k&center=6.5,3.39",
     );
     expect(screen.getByText(/general area.*Exact meeting point shared after booking/)).toBeInTheDocument();
   });
@@ -29,7 +29,7 @@ describe("ExperienceLocationView", () => {
           latitude: 6.49,
           longitude: 3.39,
           instructions: "Blue gate at the jetty",
-          embedUrl: "https://www.openstreetmap.org/export/embed.html?marker=6.49,3.39",
+          embedUrl: "https://www.google.com/maps/embed/v1/place?key=k&q=6.49,3.39",
           directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=6.49,3.39",
         }}
       />,
@@ -55,7 +55,7 @@ describe("ExperienceLocationView", () => {
           latitude: 6.49,
           longitude: 3.39,
           instructions: "Blue gate at the jetty",
-          embedUrl: "https://www.openstreetmap.org/export/embed.html?marker=6.49,3.39",
+          embedUrl: "https://www.google.com/maps/embed/v1/place?key=k&q=6.49,3.39",
           directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=6.49,3.39",
         }}
       />,
@@ -85,7 +85,7 @@ describe("ExperienceLocationView", () => {
   it("shows the landmark and its photo above the map", () => {
     renderWithProviders(
       <ExperienceLocationView
-        location={{ mode: "approximate", label: "Lagos, Nigeria", embedUrl: "https://www.openstreetmap.org/export/embed.html?bbox=1" }}
+        location={{ mode: "approximate", label: "Lagos, Nigeria", embedUrl: "https://www.google.com/maps/embed/v1/view?key=k&center=6.5,3.39" }}
         landmark={{ text: "The blue gate opposite the jetty", photoUrl: "https://img.example/gate.jpg" }}
       />,
     );

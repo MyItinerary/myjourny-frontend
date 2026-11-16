@@ -62,7 +62,7 @@ function bookingApi(status: string, extra: Record<string, (r: Route) => unknown>
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.route("https://www.openstreetmap.org/**", (route) =>
+  await page.route("https://www.google.com/maps/embed/**", (route) =>
     route.fulfill({ contentType: "text/html", body: "<html><body>map</body></html>" }),
   );
 });

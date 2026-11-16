@@ -52,8 +52,8 @@ async function signIn(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  // The map is an OpenStreetMap embed; keep the test off the real network.
-  await page.route("https://www.openstreetmap.org/**", (route) =>
+  // The map is a Google Maps embed (when the site has a key); keep the test off the real network.
+  await page.route("https://www.google.com/maps/embed/**", (route) =>
     route.fulfill({ contentType: "text/html", body: "<html><body>map</body></html>" }),
   );
 });
@@ -113,7 +113,13 @@ test("a booked traveller sees the exact meeting point on the experience page", a
 
   await expect(page.getByText("You're booked. Here's where to meet.")).toBeVisible();
   await expect(page.getByText(MEETING_POINT.instructions)).toBeVisible();
-  await expect(page.getByTitle("Meeting point map")).toHaveAttribute("src", /marker=6\.495852%2C3\.392337/);
+  // CI has no Google Maps key, so the map gives way to the place's name; with
+  // a key it's a Google embed pinned on the meeting point.
+  const map = page.getByTitle("Meeting point map");
+  if (await map.count()) {
+    await expect(map).toHaveAttribute("src", /^https:\/\/www\.google\.com\/maps\/embed\/v1\/place\?.*q=6\.495852%2C3\.392337/);
+  }
+  await expect(page.locator('iframe[src*="openstreetmap"]')).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Get directions" })).toHaveAttribute(
     "href",
     "https://www.google.com/maps/dir/?api=1&destination=6.495852,3.392337",

@@ -72,8 +72,11 @@ export type BuilderStep = {
 
 export type ChecklistItem = { step: BuilderStepNumber; label: string; ok: boolean };
 
-/** A place search result, with its map pin. */
-export type PlaceResult = { name: string; area: string; lat: number; lng: number };
+/** A place search suggestion; its map pin is looked up once it's picked. */
+export type PlaceResult = { placeId: string; name: string; area: string };
+
+/** Where a picked place is. */
+export type PlacePin = { lat: number; lng: number };
 
 export type PriceBreakdown = {
   line: string;

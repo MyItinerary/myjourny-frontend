@@ -53,15 +53,18 @@ export function ExperienceLocationView({
 function LocationMap({ location, mapOnly }: { location: ExperienceLocation; mapOnly: boolean }) {
   return (
     <>
-      {(location.mode === "exact" || location.mode === "approximate") && (
+      {(location.mode === "exact" || location.mode === "approximate") && location.embedUrl && (
         <iframe
           title={location.mode === "exact" ? "Meeting point map" : `Map of ${location.label}`}
           src={location.embedUrl}
           loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
           className="mt-4 h-[280px] w-full rounded-2xl border-0 bg-muted"
         />
       )}
-      {(location.mode === "label" || location.mode === "exact-text") && (
+      {(location.mode === "label" ||
+        location.mode === "exact-text" ||
+        ((location.mode === "exact" || location.mode === "approximate") && !location.embedUrl)) && (
         <div className="mt-4 flex h-[120px] w-full items-center justify-center gap-2 rounded-2xl bg-muted text-sm font-medium text-foreground">
           <MapPin className="size-5 text-brand" aria-hidden />
           {location.label}

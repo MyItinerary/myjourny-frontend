@@ -120,9 +120,10 @@ export type ExperienceLocation =
       latitude: number;
       longitude: number;
       instructions: string | null;
-      embedUrl: string;
+      /** Null when the site has no Google Maps key: the label shows instead. */
+      embedUrl: string | null;
       directionsUrl: string;
     }
   | { mode: "exact-text"; label: string; instructions: string }
-  | { mode: "approximate"; label: string; embedUrl: string }
+  | { mode: "approximate"; label: string; embedUrl: string | null }
   | { mode: "label"; label: string };

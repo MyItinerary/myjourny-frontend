@@ -48,7 +48,7 @@ Redirect-to-hosted-checkout, not an embedded payment element: booking creation r
 
 ## Configuration (env var names only)
 
-`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (the same client ID shared with `mobile-app`).
+`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (the same client ID shared with `mobile-app`), `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY` (Maps Embed API, restricted to the site's domains; without it the location section shows the place name instead of a map).
 
 **One config choice worth a second look:** `next.config.ts` allows images from any HTTPS host (`hostname: "**"`), because experience cover images are guide-uploaded to arbitrary CDNs rather than a fixed allowlist. Intentional, but broad.
 

@@ -158,8 +158,38 @@ describe("the landmark search", () => {
     await waitFor(() => expect(result.current.place.results.map((r) => r.name)).toEqual(["Freedom Park"]));
     expect(result.current.place.open).toBe(true);
     act(() => result.current.place.onPick(result.current.place.results[0]));
-    expect(result.current.draft).toMatchObject({ landmark: "Freedom Park", lat: FREEDOM_PARK.lat, lng: FREEDOM_PARK.lng });
-    expect(result.current.place).toMatchObject({ open: false, pinned: true });
+    // The name is in straight away; the pin follows from Google.
+    expect(result.current.draft).toMatchObject({ landmark: "Freedom Park", lat: null, lng: null });
+    expect(result.current.place.open).toBe(false);
+    await waitFor(() => expect(result.current.draft).toMatchObject({ lat: FREEDOM_PARK.lat, lng: FREEDOM_PARK.lng }));
+    expect(result.current.place.pinned).toBe(true);
+  });
+
+  it("says so when a picked place can't be pinned, and keeps its name", async () => {
+    server.use(http.get(apiUrl(`/geo/places/${FREEDOM_PARK.placeId}`), () => new HttpResponse(null, { status: 503 })));
+    const { result } = render();
+    act(() => result.current.place.onQuery("freedom"));
+    await waitFor(() => expect(result.current.place.results).toHaveLength(1));
+    act(() => result.current.place.onPick(result.current.place.results[0]));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't put that place on the map. Pick it again."));
+    expect(result.current.draft).toMatchObject({ landmark: "Freedom Park", lat: null, lng: null });
+  });
+
+  it("doesn't pin a place the host has already moved on from", async () => {
+    let answer: () => void = () => {};
+    server.use(
+      http.get(apiUrl(`/geo/places/${FREEDOM_PARK.placeId}`), async () => {
+        await new Promise<void>((resolve) => (answer = resolve));
+        return HttpResponse.json({ place_id: FREEDOM_PARK.placeId, latitude: 1, longitude: 1 });
+      }),
+    );
+    const { result } = render();
+    act(() => result.current.place.onQuery("freedom"));
+    await waitFor(() => expect(result.current.place.results).toHaveLength(1));
+    act(() => result.current.place.onPick(result.current.place.results[0]));
+    act(() => result.current.place.onClear());
+    await act(async () => answer());
+    expect(result.current.draft).toMatchObject({ landmark: "", lat: null, lng: null });
   });
 
   it("lets the host use their own words when nothing matches, with no pin, and change it later", async () => {
