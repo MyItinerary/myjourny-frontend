@@ -32,9 +32,14 @@ describe("footer content", () => {
     ]);
   });
 
-  it("has the legal links and socials", () => {
-    expect(FOOTER_LEGAL_LINKS.map((l) => l.label)).toEqual(["Privacy policy", "Terms of use", "Cookie policy", "Cookie preferences"]);
-    expect(FOOTER_LEGAL_LINKS.every((l) => l.href.startsWith("/legal/"))).toBe(true);
+  it("keeps only Cookie preferences in the bottom row, so no policy is listed twice", () => {
+    expect(FOOTER_LEGAL_LINKS).toEqual([{ label: "Cookie preferences", href: "/legal/cookies" }]);
+
+    const columnLabels = FOOTER_LINK_COLUMNS.flatMap((c) => c.links.map((l) => l.label));
+    expect(FOOTER_LEGAL_LINKS.some((l) => columnLabels.includes(l.label))).toBe(false);
+  });
+
+  it("has the socials", () => {
     expect(FOOTER_SOCIAL_LINKS.map((s) => s.label)).toEqual(["LinkedIn", "X", "Instagram"]);
   });
 

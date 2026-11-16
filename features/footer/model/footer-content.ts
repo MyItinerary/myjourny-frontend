@@ -34,12 +34,9 @@ export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
   },
 ];
 
-export const FOOTER_LEGAL_LINKS: FooterLink[] = [
-  { label: "Privacy policy", href: "/legal/privacy" },
-  { label: "Terms of use", href: "/legal/terms" },
-  { label: "Cookie policy", href: "/legal/cookies" },
-  { label: "Cookie preferences", href: "/legal/cookies" },
-];
+// The policies live in the Legal column; the bottom row keeps only Cookie preferences,
+// which the Cookie Policy tells people to look for "in the footer of any page".
+export const FOOTER_LEGAL_LINKS: FooterLink[] = [{ label: "Cookie preferences", href: "/legal/cookies" }];
 
 export const FOOTER_SOCIAL_LINKS: FooterSocialLink[] = [
   { label: "LinkedIn", src: "/icons/footer/linkedin.svg", width: 18 },
