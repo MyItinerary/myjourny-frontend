@@ -226,3 +226,33 @@ describe("useExperiencePageViewModel", () => {
     expect(shareOpen).toHaveBeenCalled();
   });
 });
+
+describe("the preview of a listing that isn't live", () => {
+  const preview = () =>
+    renderHook(() => useExperiencePageViewModel("exp-1", { preview: true })).result;
+
+  it("says the listing's status and is not the normal page", () => {
+    queries.detail = { data: { ...experience, status: "INACTIVE" }, isLoading: false, isError: false };
+    expect(preview().current.preview).toMatchObject({ status: "Not live" });
+    expect(renderHook(() => useExperiencePageViewModel("exp-1")).result.current.preview).toBeNull();
+  });
+
+  it("keeps the booking card's pickers but can't book, even from the bar", () => {
+    const result = preview();
+    expect(result.current.booking.card.button).toMatchObject({ label: "Preview only", disabled: true });
+    expect(result.current.booking.booking).toMatchObject({ disabled: true });
+    expect(result.current.bar.actionLabel).toBe("Preview only");
+    act(() => result.current.onBookFromBar());
+    expect(panel.card.button.onClick).not.toHaveBeenCalled();
+    expect(result.current.mobileBookingOpen).toBe(true);
+    // Not even a guest's checkout draft.
+    expect(bookingProps).toHaveBeenLastCalledWith(expect.objectContaining({ onGuestBook: undefined }));
+  });
+
+  it("shows no similar experiences and keeps no referral code", () => {
+    window.history.pushState({}, "", "?ref=DANIEL10");
+    expect(preview().current.similar).toEqual([]);
+    expect(captureReferral).not.toHaveBeenCalled();
+    window.history.pushState({}, "", "/");
+  });
+});

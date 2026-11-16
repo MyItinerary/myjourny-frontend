@@ -16,6 +16,7 @@ import { ShareDialogView } from "@/features/share";
 
 import type { ExperiencePageViewModel } from "../view-model/use-experience-page-view-model";
 import { ExperienceSectionsView } from "./experience-sections-view";
+import { PreviewBannerView } from "./preview-banner-view";
 
 function Loading() {
   return (
@@ -26,10 +27,15 @@ function Loading() {
   );
 }
 
-function LoadError() {
+function LoadError({ preview }: { preview: boolean }) {
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-4 px-6 py-24 text-center">
-      <p className="text-lg font-medium text-foreground">Couldn&apos;t load this experience</p>
+      <p className="text-lg font-medium text-foreground">
+        {preview ? "This preview link has expired" : "Couldn't load this experience"}
+      </p>
+      {preview && (
+        <p className="max-w-md text-sm text-muted-foreground">Open the preview again from where you came from.</p>
+      )}
       <Link href="/" className="text-brand">
         Back to home
       </Link>
@@ -39,18 +45,19 @@ function LoadError() {
 
 /** The new experience page (Figma "Experience details" 2532:48478). */
 export function ExperiencePageView(vm: ExperiencePageViewModel) {
-  const { content, status } = vm;
+  const { content, status, preview } = vm;
 
   return (
     <div className="flex flex-1 flex-col pb-24 lg:pb-0">
       <HomeNav />
 
       {status === "loading" && <Loading />}
-      {status === "error" && <LoadError />}
+      {status === "error" && <LoadError preview={preview !== null} />}
 
       {status === "ready" && content && (
         <>
           <main className="mx-auto flex w-full max-w-[1512px] flex-col gap-7 px-6 pb-12 lg:px-20 lg:pt-9">
+            {preview && <PreviewBannerView status={preview.status} onClose={preview.onClose} />}
             <header className="flex flex-col gap-4 lg:gap-[19px]">
               <div className="hidden lg:block">
                 <DetailBreadcrumbs items={[{ label: "Home page", href: "/" }, { label: content.title }]} />
@@ -82,11 +89,9 @@ export function ExperiencePageView(vm: ExperiencePageViewModel) {
                       </>
                     )}
                   </p>
-                  <DetailActions
-                    saved={vm.saved}
-                    onToggleSave={vm.onToggleSave}
-                    onShare={vm.onShare}
-                  />
+                  {!preview && (
+                    <DetailActions saved={vm.saved} onToggleSave={vm.onToggleSave} onShare={vm.onShare} />
+                  )}
                 </div>
               </div>
             </header>
@@ -120,7 +125,7 @@ export function ExperiencePageView(vm: ExperiencePageViewModel) {
             />
           )}
 
-          <ShareDialogView {...vm.share} />
+          {!preview && <ShareDialogView {...vm.share} />}
 
           {!vm.externalBooking && (
             <BookingBarView {...vm.bar} onAction={vm.onBookFromBar} onExpand={vm.onOpenMobileBooking} />
@@ -141,12 +146,14 @@ export function ExperiencePageView(vm: ExperiencePageViewModel) {
             </div>
           )}
 
-          <SaveToCollectionModal
-            experienceId={content.id}
-            experienceTitle={content.title}
-            isOpen={vm.saveModalOpen}
-            onClose={vm.onCloseSaveModal}
-          />
+          {!preview && (
+            <SaveToCollectionModal
+              experienceId={content.id}
+              experienceTitle={content.title}
+              isOpen={vm.saveModalOpen}
+              onClose={vm.onCloseSaveModal}
+            />
+          )}
         </>
       )}
 

@@ -130,7 +130,9 @@ export function toListingDetail(exp: GuideExperience): ListingDetail {
       (exp.fitness_level && FITNESS[exp.fitness_level]) || "Not set",
       exp.weather_dependent ? "We may move or cancel it" : "It goes ahead",
     ],
-    actions: live ? [act("Edit listing", "edit"), act("Copy the link", "copy-link")] : [act("Edit listing", "edit")],
+    actions: live
+      ? [act("Edit listing", "edit"), act("Preview as a guest", "preview"), act("Copy the link", "copy-link")]
+      : [act("Edit listing", "edit"), act("Preview as a guest", "preview")],
     banner:
       status === "Taken down"
         ? {

@@ -67,18 +67,25 @@ export type ExperiencePageViewModel = {
   onShare: () => void;
   share: ShareDialogViewModel;
   similar: ReturnType<typeof experienceMatchToCardProps>[];
+  /** Set on the preview page: the listing as travellers will see it, with nothing that books, saves or shares. */
+  preview: { status: string; onClose: () => void } | null;
 };
 
+const STATUS_LABELS: Record<string, string> = { ACTIVE: "Live", INACTIVE: "Not live", DRAFT: "Draft" };
+
+export const PREVIEW_BOOK_LABEL = "Preview only";
+
 /** State for the experience page: the experience, its booking card, the
- * wishlist, sharing and the similar experiences. */
-export function useExperiencePageViewModel(id: string): ExperiencePageViewModel {
+ * wishlist, sharing and the similar experiences. A preview shows the same
+ * page but can't be booked, saved or shared. */
+export function useExperiencePageViewModel(id: string, { preview = false } = {}): ExperiencePageViewModel {
   const router = useRouter();
   const { user, hydrated } = useSession();
   // Guests see the whole page and the booking card; "Book now" takes them
   // through the email step and the payment page. Signed-in users go straight
   // to the payment provider.
   const isAccount = user !== null;
-  const isGuest = hydrated && !isAccount;
+  const isGuest = hydrated && !isAccount && !preview;
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
 
@@ -89,9 +96,11 @@ export function useExperiencePageViewModel(id: string): ExperiencePageViewModel 
   const durationLabel = formatDuration(experience?.duration_minutes) || "Flexible";
 
   // Recommendations need a profile; guests get the best-rated experiences.
-  const similarQuery = useRecommendedExperiences({ offset: 0, limit: 10, enabled: isAccount });
+  const similarQuery = useRecommendedExperiences({ offset: 0, limit: 10, enabled: isAccount && !preview });
   const guestSimilarQuery = useFilteredExperiences({ sort: "rating_desc", limit: 10, enabled: isGuest });
-  const similar = isAccount
+  const similar = preview
+    ? []
+    : isAccount
     ? (similarQuery.data ?? []).filter((m) => m.experience_id !== id).map(experienceMatchToCardProps)
     : (guestSimilarQuery.data?.items ?? []).filter((item) => item.id !== id).map(experienceListItemToCardProps);
 
@@ -124,7 +133,7 @@ export function useExperiencePageViewModel(id: string): ExperiencePageViewModel 
       }
     : undefined;
 
-  const booking = useBookingPanelViewModel({
+  const panel = useBookingPanelViewModel({
     experienceId: id,
     guideId: experience?.guide_id,
     prices: prices ?? [],
@@ -138,11 +147,19 @@ export function useExperiencePageViewModel(id: string): ExperiencePageViewModel 
     freeCancellationHours: experience?.free_cancellation_hours,
     onGuestBook,
   });
+  // The dates and tickets still work so the prices can be checked; only the button is off.
+  const booking: BookingPanelViewModel = preview
+    ? {
+        ...panel,
+        booking: { ...panel.booking, disabled: true, label: PREVIEW_BOOK_LABEL, onBook: () => {} },
+        card: { ...panel.card, button: { label: PREVIEW_BOOK_LABEL, loading: false, disabled: true, onClick: () => {} } },
+      }
+    : panel;
 
   // A visitor who arrived through someone's referral link keeps that code.
   useEffect(() => {
-    captureReferral(window.location.search);
-  }, []);
+    if (!preview) captureReferral(window.location.search);
+  }, [preview]);
 
   const share = useShareDialogViewModel({
     path: `/experiences/${id}`,
@@ -178,5 +195,12 @@ export function useExperiencePageViewModel(id: string): ExperiencePageViewModel 
     onShare: share.onOpen,
     share,
     similar,
+    preview: preview
+      ? {
+          status: experience ? (STATUS_LABELS[experience.status] ?? experience.status) : "",
+          // The preview opens in its own tab, so closing it goes back to where it came from.
+          onClose: () => window.close(),
+        }
+      : null,
   };
 }
