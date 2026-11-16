@@ -1,5 +1,6 @@
 import axios from "axios";
 import { clearAuth, getTokens, setTokens } from "@/lib/auth/session-store";
+import { PREVIEW_HEADER, previewTokenFor } from "@/lib/experience-preview";
 
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000",
@@ -10,6 +11,10 @@ apiClient.interceptors.request.use((config) => {
   const { accessToken } = getTokens();
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  const previewToken = previewTokenFor(config.url);
+  if (previewToken) {
+    config.headers[PREVIEW_HEADER] = previewToken;
   }
   return config;
 });

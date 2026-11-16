@@ -25,6 +25,12 @@ export function useGuideExperience(id: string, enabled: boolean) {
   });
 }
 
+/** A short-lived token that opens one of the guide's listings on the preview page, live or not. */
+export async function fetchGuidePreviewToken(id: string): Promise<string> {
+  const { data } = await apiClient.post<{ token: string }>(`/guide/experiences/${id}/preview-token`);
+  return data.token;
+}
+
 export function useDeleteGuideExperience() {
   const queryClient = useQueryClient();
   return useMutation({
