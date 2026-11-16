@@ -25,6 +25,8 @@ export function SearchContent() {
     search: query || undefined,
     date: searchParams.get("date") ?? undefined,
     until: searchParams.get("until") ?? undefined,
+    guests: searchParams.get("guests") ?? undefined,
+    children: searchParams.get("children") === "true",
   });
 
   return (

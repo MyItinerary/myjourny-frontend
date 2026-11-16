@@ -21,6 +21,8 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
     interest: slug,
     date: searchParams.get("date") ?? undefined,
     until: searchParams.get("until") ?? undefined,
+    guests: searchParams.get("guests") ?? undefined,
+    children: searchParams.get("children") === "true",
   });
 
   return <CategoryContent label={resolvedLabel} items={results.items} results={results} />;

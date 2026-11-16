@@ -41,6 +41,8 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
     city: cityName,
     date: searchParams.get("date") ?? undefined,
     until: searchParams.get("until") ?? undefined,
+    guests: searchParams.get("guests") ?? undefined,
+    children: searchParams.get("children") === "true",
   });
 
   // Neither source can exclude a city, so over-fetch and drop this city's

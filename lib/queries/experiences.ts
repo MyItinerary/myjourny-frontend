@@ -311,6 +311,10 @@ export type ExperienceFilters = {
   rating_min?: number;
   /** YYYY-MM-DD: only experiences someone can start that day (today or later). */
   date?: string;
+  /** Party size: listings it fits, with that many seats left on `date`. */
+  guests?: number;
+  /** Only listings children can come on (not adults only). */
+  children?: boolean;
   sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
 };
 
