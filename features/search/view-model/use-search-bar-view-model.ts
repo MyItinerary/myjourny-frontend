@@ -17,6 +17,7 @@ import {
   startOfToday,
   useSearchExperiences,
   withDate,
+  withGuests,
 } from "../model/search";
 import type {
   ActivitySuggestion,
@@ -259,12 +260,15 @@ export function useSearchBarViewModel({
       if (!trimmed) return;
 
       handleClose();
-      // The dates they picked go to every results page.
+      // The dates and guests they picked go to every results page. Infants
+      // don't take a seat, but any child or infant rules out adults-only listings.
       const { day, until } = linkDates(dateRange);
+      const results = (path: string) =>
+        withGuests(withDate(path, day, until), guests.adults + guests.children, guests.children + guests.infants > 0);
 
       // There's no event page yet, so an event is searched for by name.
       if (selectedType === "event") {
-        router.push(withDate(`/search?q=${encodeURIComponent(rawQuery)}`, day, until));
+        router.push(results(`/search?q=${encodeURIComponent(rawQuery)}`));
         return;
       }
 
@@ -274,13 +278,13 @@ export function useSearchBarViewModel({
       }
 
       if (selectedType === "activity" && selectedWhereId) {
-        router.push(withDate(`/categories/${selectedWhereId}`, day, until));
+        router.push(results(`/categories/${selectedWhereId}`));
         return;
       }
 
       if (selectedType === "destination" && selectedWhereId) {
         saveLastSearchArea(rawQuery);
-        router.push(withDate(`/cities/${selectedWhereId}`, day, until));
+        router.push(results(`/cities/${selectedWhereId}`));
         return;
       }
 
@@ -301,30 +305,30 @@ export function useSearchBarViewModel({
 
       if (matchedDest && !matchedAct) {
         saveLastSearchArea(matchedDest.city);
-        router.push(withDate(`/cities/${matchedDest.id}`, day, until));
+        router.push(results(`/cities/${matchedDest.id}`));
         return;
       }
 
       if (matchedAct) {
-        router.push(withDate(`/categories/${matchedAct.id}`, day, until));
+        router.push(results(`/categories/${matchedAct.id}`));
         return;
       }
 
       if (matchedDest) {
         saveLastSearchArea(matchedDest.city);
-        router.push(withDate(`/cities/${matchedDest.id}`, day, until));
+        router.push(results(`/cities/${matchedDest.id}`));
         return;
       }
 
       if (categoriesBySlug.has(trimmed)) {
-        router.push(withDate(`/categories/${trimmed}`, day, until));
+        router.push(results(`/categories/${trimmed}`));
         return;
       }
 
       // Free text isn't remembered as an area: there's no list of areas yet to tell "Lekki" from "jazz brunch".
-      router.push(withDate(`/search?q=${encodeURIComponent(rawQuery)}`, day, until));
+      router.push(results(`/search?q=${encodeURIComponent(rawQuery)}`));
     },
-    [dateRange, destinations, handleClose, router, selectedType, selectedWhere, selectedWhereId],
+    [dateRange, destinations, guests, handleClose, router, selectedType, selectedWhere, selectedWhereId],
   );
 
   const onNavigateToDestination = useCallback(
@@ -348,9 +352,10 @@ export function useSearchBarViewModel({
     (ev: EventSuggestion) => {
       handleClose();
       const { day, until } = linkDates(dateRange);
-      router.push(withDate(`/search?q=${encodeURIComponent(ev.title)}`, day, until));
+      const path = withDate(`/search?q=${encodeURIComponent(ev.title)}`, day, until);
+      router.push(withGuests(path, guests.adults + guests.children, guests.children + guests.infants > 0));
     },
-    [dateRange, handleClose, router],
+    [dateRange, guests, handleClose, router],
   );
 
   const onNavigateToExperience = useCallback(

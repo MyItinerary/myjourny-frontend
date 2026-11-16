@@ -91,6 +91,13 @@ describe("CityContent", () => {
     searchParams.current = new URLSearchParams();
   });
 
+  it("asks for listings that fit the guests from the search bar", () => {
+    searchParams.current = new URLSearchParams("date=2030-06-01&guests=3&children=true");
+    renderWithProviders(<CityContent cityName="Abuja" />);
+    expect(cityQueryState.lastFilters).toMatchObject({ city: "Abuja", date: "2030-06-01", guests: 3, children: true });
+    searchParams.current = new URLSearchParams();
+  });
+
   it("keeps the last day of a range in the Dates chip, without narrowing to one day", () => {
     searchParams.current = new URLSearchParams("date=2030-06-01&until=2030-06-03");
     renderWithProviders(<CityContent cityName="Abuja" />);

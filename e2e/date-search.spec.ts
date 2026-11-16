@@ -20,6 +20,21 @@ test("a city page searched for a day asks only for experiences on that day", asy
   expect(dates).toContain("2030-06-01");
 });
 
+test("a city page searched with guests asks only for experiences that fit them", async ({ page }) => {
+  const asked: { guests: string | null; children: string | null }[] = [];
+  await mockApi(page, {
+    "GET /experiences/filter": (r: Route) => {
+      const params = new URL(r.request().url()).searchParams;
+      if (params.get("city")) asked.push({ guests: params.get("guests"), children: params.get("children") });
+      return r.fulfill({ json: page1(params.get("city") ? [KAYAK] : []) });
+    },
+  });
+  await page.goto("/cities/abuja?guests=3&children=true");
+
+  await expect(page.getByText(KAYAK.title).first()).toBeVisible();
+  expect(asked).toContainEqual({ guests: "3", children: "true" });
+});
+
 test("a day the API refuses shows its reason instead of an empty page", async ({ page }) => {
   await mockApi(page, {
     "GET /experiences/filter": (r: Route) => {

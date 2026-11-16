@@ -338,6 +338,7 @@ export function toExperienceFilters(filters: ResultsFilters): ExperienceFilters 
   const duration = durationBand(filters.duration);
   return {
     date: singleDay(filters.dateRange),
+    guests: filters.groupSize > 1 ? filters.groupSize : undefined,
     // The listing takes one interest slug: the newest subcategory, else the newest category.
     interest: filters.subcategories[0] ?? filters.categories[0],
     price_min: filters.free ? undefined : (filters.price.min ?? undefined),
@@ -353,6 +354,8 @@ export function useResultsListing(params: {
   /** The category the page is about; a category chosen in the row takes over from it. */
   interest?: string;
   search?: string;
+  /** Children are coming: adults-only listings drop out. */
+  children?: boolean;
   filters: ResultsFilters;
   pageSize: number;
 }) {
@@ -360,6 +363,7 @@ export function useResultsListing(params: {
   return useInfiniteFilteredExperiences({
     city: params.city,
     search: params.search,
+    children: params.children || undefined,
     pageSize: params.pageSize,
     ...mapped,
     interest: mapped.interest ?? params.interest,

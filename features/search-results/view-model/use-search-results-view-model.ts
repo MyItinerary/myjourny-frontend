@@ -47,6 +47,16 @@ export interface UseSearchResultsViewModelOptions {
   date?: string;
   /** The last day of a range from the results link. */
   until?: string;
+  /** The party size from the results link. */
+  guests?: string;
+  /** Whether children are coming, from the results link. */
+  children?: boolean;
+}
+
+/** The group size a results link asks for: 1 (no filter) unless it names more. */
+function groupSizeFromLink(guests?: string): number {
+  const size = Number.parseInt(guests ?? "", 10);
+  return Number.isFinite(size) && size > 1 ? Math.min(size, MAX_GROUP_SIZE) : 1;
 }
 
 function today(): Date {
@@ -60,8 +70,21 @@ function comingWeekend(): DateRange {
   return { start: saturday, end: new Date(saturday.getTime() + DAY) };
 }
 
-export function useSearchResultsViewModel({ subject, city, interest, search, date, until }: UseSearchResultsViewModelOptions) {
-  const [filters, setFilters] = useState<ResultsFilters>(() => ({ ...EMPTY_FILTERS, dateRange: dateRangeFromLink(date, until) }));
+export function useSearchResultsViewModel({
+  subject,
+  city,
+  interest,
+  search,
+  date,
+  until,
+  guests,
+  children,
+}: UseSearchResultsViewModelOptions) {
+  const [filters, setFilters] = useState<ResultsFilters>(() => ({
+    ...EMPTY_FILTERS,
+    dateRange: dateRangeFromLink(date, until),
+    groupSize: groupSizeFromLink(guests),
+  }));
   // Set when choosing or clearing a type removed filters that no longer apply.
   const [clearedNote, setClearedNote] = useState<number | null>(null);
   const [openDropdown, setOpenDropdown] = useState<DropdownFilterId | null>(null);
@@ -69,17 +92,17 @@ export function useSearchResultsViewModel({ subject, city, interest, search, dat
   // The date picker applies on "Apply", everything else is live.
   const [draftRange, setDraftRange] = useState<DateRange>(EMPTY_FILTERS.dateRange);
 
-  // A new search from the nav can land on the same page with other dates.
-  const linkDates = `${date ?? ""}|${until ?? ""}`;
-  const [seenLinkDates, setSeenLinkDates] = useState(linkDates);
-  if (linkDates !== seenLinkDates) {
-    setSeenLinkDates(linkDates);
-    setFilters((f) => ({ ...f, dateRange: dateRangeFromLink(date, until) }));
+  // A new search from the nav can land on the same page with other dates or guests.
+  const linkSearch = `${date ?? ""}|${until ?? ""}|${guests ?? ""}`;
+  const [seenLinkSearch, setSeenLinkSearch] = useState(linkSearch);
+  if (linkSearch !== seenLinkSearch) {
+    setSeenLinkSearch(linkSearch);
+    setFilters((f) => ({ ...f, dateRange: dateRangeFromLink(date, until), groupSize: groupSizeFromLink(guests) }));
   }
 
   const tookQuiz = useTasteQuizAudience() === "taken";
   const quizHref = useTasteQuizCtaViewModel().href;
-  const listing = useResultsListing({ city, interest, search, filters, pageSize: PAGE_SIZE });
+  const listing = useResultsListing({ city, interest, search, children, filters, pageSize: PAGE_SIZE });
 
   const items = useMemo(
     () => (listing.data?.pages ?? []).flatMap((p) => p.items).map(experienceListItemToCardProps),
