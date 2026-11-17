@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
+import { startSignInLoader, stopSignInLoader } from "@/features/sign-in-loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { isTwoFactorChallenge, useGoogleAuth } from "@/lib/queries/auth";
@@ -86,19 +87,24 @@ export function AuthForm({
             loading={isGoogleAuthenticating}
             onCredential={(credential) => {
               setIsGoogleAuthenticating(true);
+              startSignInLoader();
               googleAuth.mutate(
                 { token: credential },
                 {
                   onSuccess: (data) => {
                     // An existing account with 2FA on: the code step lives on the login page.
                     if (isTwoFactorChallenge(data)) {
+                      stopSignInLoader();
                       toast.info("This account uses two-factor authentication. Log in to continue.");
                       router.push("/login");
                       return;
                     }
                     router.push(googleSuccessHref);
                   },
-                  onError: () => setIsGoogleAuthenticating(false),
+                  onError: () => {
+                    stopSignInLoader();
+                    setIsGoogleAuthenticating(false);
+                  },
                 }
               );
             }}
