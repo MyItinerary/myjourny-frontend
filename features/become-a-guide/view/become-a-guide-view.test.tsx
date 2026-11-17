@@ -38,6 +38,7 @@ describe("BecomeAGuideView", () => {
     formattedPricePerPerson: "₦10,000",
     groupSize: 8,
     sessionsPerMonth: 4,
+    profileLink: { href: "/profile", label: "Account settings" },
     earnings: {
       revenuePerSession: 80000,
       payoutPerSession: 68000,

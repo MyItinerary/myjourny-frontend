@@ -192,4 +192,16 @@ test.describe("become a guide application", () => {
     await page.getByRole("link", { name: "Switch to travelling" }).click();
     await expect(page).toHaveURL(/\/$/);
   });
+
+  test("signed out, the profile icon goes to log in and account settings stay closed", async ({ page }) => {
+    await mockApi(page, {});
+    await page.goto("/become-a-guide");
+
+    await page.getByRole("link", { name: "Log in" }).click();
+    await expect(page).toHaveURL(/\/login\?next=%2Fbecome-a-guide$/);
+
+    // Typing the address doesn't open an empty settings page either.
+    await page.goto("/profile?tab=security");
+    await expect(page).toHaveURL(/\/login\?next=%2Fprofile%3Ftab%3Dsecurity$/);
+  });
 });

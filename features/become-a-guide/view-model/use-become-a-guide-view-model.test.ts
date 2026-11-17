@@ -1,6 +1,8 @@
 import { act } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { clearAuth, setAuth } from "@/lib/auth/session-store";
 
 import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
@@ -101,5 +103,22 @@ describe("useBecomeAGuideViewModel", () => {
     });
 
     expect(mockPush).toHaveBeenCalledWith("/become-a-guide/apply");
+  });
+
+  describe("the profile icon", () => {
+    afterEach(() => clearAuth());
+
+    it("sends someone signed out to log in and back here", () => {
+      const { result } = renderHookWithProviders(() => useBecomeAGuideViewModel());
+
+      expect(result.current.profileLink).toEqual({ href: "/login?next=%2Fbecome-a-guide", label: "Log in" });
+    });
+
+    it("opens account settings when signed in", () => {
+      setAuth({ access_token: "a", refresh_token: "r" }, { id: "u1", email: "amara@example.com", fullName: null, avatarUrl: null });
+      const { result } = renderHookWithProviders(() => useBecomeAGuideViewModel());
+
+      expect(result.current.profileLink).toEqual({ href: "/profile", label: "Account settings" });
+    });
   });
 });

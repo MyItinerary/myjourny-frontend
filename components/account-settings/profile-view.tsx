@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "@/lib/auth/session-store";
 import { LanguageCurrencySection } from "@/components/account-settings/language-currency";
 import { LoginSecuritySection } from "@/components/account-settings/login-security";
 import { NotificationsSection } from "@/components/account-settings/notifications";
@@ -13,6 +14,8 @@ import { SettingsHeader } from "@/components/account-settings/settings-header";
 import { useVerifyEmailNoticeViewModel, VerifyEmailNoticeView } from "@/features/verify-email";
 
 export function ProfileView() {
+  const router = useRouter();
+  const { state, hydrated } = useSession();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const initialTab = SETTINGS_NAV_ITEMS.some((item) => item.key === tabParam) ? tabParam! : "personal";
@@ -21,6 +24,17 @@ export function ProfileView() {
   const verifyNotice = useVerifyEmailNoticeViewModel();
 
   const activeLabel = SETTINGS_NAV_ITEMS.find((item) => item.key === active)?.label ?? "";
+
+  // Account settings are for a signed-in account: anyone else logs in first
+  // and comes back to the same tab.
+  const signedOut = hydrated && state === "guest";
+  useEffect(() => {
+    if (!signedOut) return;
+    const here = tabParam ? `/profile?tab=${tabParam}` : "/profile";
+    router.replace(`/login?next=${encodeURIComponent(here)}`);
+  }, [signedOut, tabParam, router]);
+
+  if (state !== "account") return null;
 
   return (
     <div className="flex min-h-screen w-full flex-col">
