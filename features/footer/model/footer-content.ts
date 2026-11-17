@@ -5,12 +5,16 @@ import type { FooterLink, FooterLinkColumn, FooterSocialLink } from "./footer-co
 // Safety concerns and general questions go straight to the team by email.
 export const CONTACT_MAILTO = "mailto:hello@myjourny.io";
 
+// QA asked for some links to come off the footer, but they're wanted later, so they're
+// marked hidden rather than deleted. Remove `hidden` to bring one back.
 export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
   {
     heading: "Support",
     links: [
+      { label: "Help Center", href: "#", hidden: true },
       { label: "Safety Guide", href: "/legal/safety" },
       { label: "Report a safety concern", href: CONTACT_MAILTO },
+      { label: "Payment protection", href: "#", hidden: true },
       { label: "Cancellation and Refund Policy", href: "/legal/cancellations" },
       { label: "Contact us", href: CONTACT_MAILTO },
       { label: "Blog", href: "#" },
@@ -20,7 +24,20 @@ export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
     heading: "Hosting and Curating",
     links: [
       { label: "Become a host", href: "/become-a-guide" },
+      { label: "Host an event", href: "#", hidden: true },
+      { label: "How hosting pays", href: "#", hidden: true },
       { label: "Host Terms", href: "/legal/hosts" },
+      { label: "Hosting responsibly", href: "#", hidden: true },
+    ],
+  },
+  {
+    heading: "Myjourny",
+    hidden: true,
+    links: [
+      { label: "Why book with us", href: "#" },
+      { label: "Experiences", href: "/experiences" },
+      { label: "Investors", href: "#" },
+      { label: "Gift cards", href: "#" },
     ],
   },
   {
@@ -33,6 +50,13 @@ export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
     ],
   },
 ];
+
+// The columns and links people see: everything not marked hidden.
+export function visibleFooterColumns(columns: FooterLinkColumn[]): FooterLinkColumn[] {
+  return columns
+    .filter((column) => !column.hidden)
+    .map((column) => ({ ...column, links: column.links.filter((link) => !link.hidden) }));
+}
 
 // The policies live in the Legal column; the bottom row keeps only Cookie preferences,
 // which the Cookie Policy tells people to look for "in the footer of any page".

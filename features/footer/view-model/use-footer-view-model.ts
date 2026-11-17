@@ -7,6 +7,7 @@ import {
   FOOTER_LEGAL_LINKS,
   FOOTER_LINK_COLUMNS,
   FOOTER_SOCIAL_LINKS,
+  visibleFooterColumns,
 } from "../model/footer-content";
 import type {
   FooterLinkColumn,
@@ -47,7 +48,7 @@ export function useFooterViewModel(): FooterViewModel {
       categoriesQuery.isLoading ||
       subcategoriesQuery.isLoading ||
       (subcategoriesQuery.isFetching && subcategories.length === 0),
-    columns: FOOTER_LINK_COLUMNS,
+    columns: visibleFooterColumns(FOOTER_LINK_COLUMNS),
     legalLinks: FOOTER_LEGAL_LINKS,
     socialLinks: FOOTER_SOCIAL_LINKS,
     year: new Date().getFullYear(),
