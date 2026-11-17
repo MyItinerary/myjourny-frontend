@@ -8,6 +8,7 @@ import { GoogleAuthButton } from "@/components/onboarding/google-auth-button";
 import { PasswordInput } from "@/components/onboarding/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { startSignInLoader, stopSignInLoader } from "@/features/sign-in-loader";
 import { isTwoFactorChallenge, useGoogleAuth, useLogin } from "@/lib/queries/auth";
 
 // Where to go after login: ?next=<path> (e.g. back to an experience a
@@ -46,12 +47,19 @@ export function LoginForm() {
     (next: { via: "password" } | { via: "google"; token: string }, done: () => void) =>
     (data: unknown) => {
       if (isTwoFactorChallenge(data)) {
+        // The code step has to be seen, so the loader steps aside.
+        stopSignInLoader();
         setChallenge(next);
         done();
         return;
       }
       router.push(nextPath());
     };
+  // A failed attempt goes back to the form it came from.
+  const failed = (done: () => void) => () => {
+    stopSignInLoader();
+    done();
+  };
 
   if (challenge) {
     const trimmed = code.trim();
@@ -63,17 +71,22 @@ export function LoginForm() {
           if (!trimmed || isBusy) return;
           if (challenge.via === "password") {
             setIsLoggingIn(true);
+            startSignInLoader();
             login.mutate(
               { email, password, code: trimmed },
-              { onSuccess: afterAuth(challenge, () => setIsLoggingIn(false)), onError: () => setIsLoggingIn(false) }
+              {
+                onSuccess: afterAuth(challenge, () => setIsLoggingIn(false)),
+                onError: failed(() => setIsLoggingIn(false)),
+              }
             );
           } else {
             setIsGoogleAuthenticating(true);
+            startSignInLoader();
             googleAuth.mutate(
               { token: challenge.token, code: trimmed },
               {
                 onSuccess: afterAuth(challenge, () => setIsGoogleAuthenticating(false)),
-                onError: () => setIsGoogleAuthenticating(false),
+                onError: failed(() => setIsGoogleAuthenticating(false)),
               }
             );
           }
@@ -117,11 +130,12 @@ export function LoginForm() {
         e.preventDefault();
         if (!canContinue || isBusy) return;
         setIsLoggingIn(true);
+        startSignInLoader();
         login.mutate(
           { email, password },
           {
             onSuccess: afterAuth({ via: "password" }, () => setIsLoggingIn(false)),
-            onError: () => setIsLoggingIn(false),
+            onError: failed(() => setIsLoggingIn(false)),
           }
         );
       }}
@@ -130,13 +144,14 @@ export function LoginForm() {
         loading={isGoogleAuthenticating}
         onCredential={(credential) => {
           setIsGoogleAuthenticating(true);
+          startSignInLoader();
           googleAuth.mutate(
             { token: credential },
             {
               onSuccess: afterAuth({ via: "google", token: credential }, () =>
                 setIsGoogleAuthenticating(false)
               ),
-              onError: () => setIsGoogleAuthenticating(false),
+              onError: failed(() => setIsGoogleAuthenticating(false)),
             }
           );
         }}

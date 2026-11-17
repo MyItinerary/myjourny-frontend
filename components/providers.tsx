@@ -7,8 +7,15 @@ import { Toaster } from '@/components/ui/sonner';
 import { useState } from 'react';
 import { LayoutGroup } from 'motion/react';
 import { WishlistSaveProvider } from '@/components/wishlists/wishlist-save-provider';
+import { SignInLoaderView, useSignInLoaderViewModel } from '@/features/sign-in-loader';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+
+// Covers the screen from signing in until the next page has loaded.
+function SignInLoader() {
+  const vm = useSignInLoaderViewModel();
+  return <SignInLoaderView {...vm} />;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -27,6 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <LayoutGroup id="myjourny-global-layout">
             <WishlistSaveProvider>{children}</WishlistSaveProvider>
             <Toaster richColors position="top-right" />
+            <SignInLoader />
           </LayoutGroup>
         </TooltipProvider>
       </QueryClientProvider>
