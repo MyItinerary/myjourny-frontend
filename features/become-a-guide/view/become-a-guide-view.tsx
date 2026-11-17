@@ -32,10 +32,11 @@ export function BecomeAGuideView({
   onStartApplication,
   onScrollToHowItWorks,
   onToggleFaq,
+  profileLink,
 }: BecomeAGuideViewModel) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <BecomeAGuideNav />
+      <BecomeAGuideNav profileLink={profileLink} />
 
       <main className="flex-1">
         <HeroSection

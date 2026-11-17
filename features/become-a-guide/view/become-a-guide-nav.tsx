@@ -4,7 +4,12 @@ import { Menu, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export function BecomeAGuideNav() {
+export interface BecomeAGuideNavProps {
+  /** Account settings when signed in; log in when signed out. */
+  profileLink: { href: string; label: string };
+}
+
+export function BecomeAGuideNav({ profileLink }: BecomeAGuideNavProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#F0EFEB] bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-[1360px] items-center justify-between px-4 sm:px-8">
@@ -28,8 +33,8 @@ export function BecomeAGuideNav() {
           </Link>
 
           <Link
-            href="/profile"
-            aria-label="Profile"
+            href={profileLink.href}
+            aria-label={profileLink.label}
             className="flex size-9 items-center justify-center rounded-full border border-[#E0DFDD] text-[#333134] transition-colors hover:bg-[#FAF9F7]"
           >
             <User className="size-4" />

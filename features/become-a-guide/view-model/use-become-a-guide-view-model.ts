@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useSession } from "@/lib/auth/session-store";
+
 import { calculateEarnings, formatNgnCurrency, PROFESSIONS } from "../model/become-a-guide-calculator";
 import { FAQ_ITEMS } from "../model/become-a-guide-faq";
 import { THREE_STEPS } from "../model/become-a-guide-steps";
@@ -36,10 +38,16 @@ export interface BecomeAGuideViewModel {
   onStartApplication: () => void;
   onScrollToHowItWorks: () => void;
   onToggleFaq: (id: string) => void;
+  /** The profile icon: account settings, or log in (and come back) when signed out. */
+  profileLink: { href: string; label: string };
 }
+
+const SIGNED_OUT_PROFILE_LINK = { href: `/login?next=${encodeURIComponent("/become-a-guide")}`, label: "Log in" };
+const SIGNED_IN_PROFILE_LINK = { href: "/profile", label: "Account settings" };
 
 export function useBecomeAGuideViewModel(): BecomeAGuideViewModel {
   const router = useRouter();
+  const { state } = useSession();
   const [selectedProfessionId, setSelectedProfessionId] = useState<string>("photographer");
   const [pricePerPerson, setPricePerPerson] = useState<number>(10000);
   const [groupSize, setGroupSize] = useState<number>(8);
@@ -117,5 +125,6 @@ export function useBecomeAGuideViewModel(): BecomeAGuideViewModel {
     onStartApplication,
     onScrollToHowItWorks,
     onToggleFaq,
+    profileLink: state === "account" ? SIGNED_IN_PROFILE_LINK : SIGNED_OUT_PROFILE_LINK,
   };
 }
