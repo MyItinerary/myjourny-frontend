@@ -41,11 +41,19 @@ export type MeResponse = {
   completed: boolean;
   /** False for a password signup until the emailed link is opened. */
   is_email_verified?: boolean;
-  /** "guide" for someone who signed up through become-a-guide. */
-  signup_type?: "traveller" | "guide";
+  /** "guide" for someone who signed up through become-a-guide; "both" for a
+   * traveller who added hosting to their account. */
+  signup_type?: "traveller" | "guide" | "both";
   /** Where their guide application is; "none" for travellers. */
   guide_status?: GuideStatus;
+  /** Can open the host dashboard. */
+  is_host?: boolean;
 };
+
+/** Whether this account hosts. Older API responses only carry signup_type. */
+export function isHostAccount(me: Pick<MeResponse, "signup_type" | "is_host">): boolean {
+  return me.is_host ?? (me.signup_type === "guide" || me.signup_type === "both");
+}
 
 function toSessionUser(me: MeResponse): SessionUser {
   return { id: me.id, email: me.email, fullName: me.full_name, avatarUrl: me.avatar_url };

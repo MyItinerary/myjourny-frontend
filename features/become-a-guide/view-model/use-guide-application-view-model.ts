@@ -1,10 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { submitGuideApplication } from "../model/guide-application-api";
+import { useSession } from "@/lib/auth/session-store";
+import { isHostAccount, useMe } from "@/lib/queries/auth";
+
+import {
+  clearApplicationDraft,
+  loadApplicationDraft,
+  saveApplicationDraft,
+  submitGuideApplication,
+  useSubmitHostApplication,
+} from "../model/guide-application-api";
 import {
   dateOfBirthToIso,
   isOldEnoughToGuide,
@@ -27,6 +36,12 @@ export interface GuideApplicationViewModel {
   errors: GuideApplicationErrors;
   isSubmitting: boolean;
   cityOptions: string[];
+  /** Signed in: the application goes on this account, so no email or password. */
+  signedInEmail: string | null;
+  /** The email they typed already has an account. */
+  accountExists: boolean;
+  /** Log in (keeping what they've filled in) and come back to finish. */
+  handleLogIn: () => void;
   setField: (field: keyof GuideApplicationFormData, value: string) => void;
   setVerificationType: (type: VerificationType) => void;
   handleContinue: () => Promise<void>;
@@ -37,11 +52,46 @@ export interface GuideApplicationViewModel {
 export function useGuideApplicationViewModel(): GuideApplicationViewModel {
   const router = useRouter();
   const [step, setStep] = useState<ApplicationStep>(1);
-  const [formData, setFormData] = useState<GuideApplicationFormData>(DEFAULT_APPLICATION_DATA);
+  const [typed, setFormData] = useState<GuideApplicationFormData>(DEFAULT_APPLICATION_DATA);
   const [errors, setErrors] = useState<GuideApplicationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [accountExists, setAccountExists] = useState(false);
+  const { user, state, hydrated } = useSession();
+  const signedIn = state === "account";
+  const { data: me } = useMe();
+  const hostApplication = useSubmitHostApplication();
+
+  // Back from logging in: pick up where they left off, on step 2. Read once
+  // the browser's storage is, so the first render matches the server's.
+  const [draftRestored, setDraftRestored] = useState<boolean | null>(null);
+  if (hydrated && draftRestored === null) {
+    const draft = loadApplicationDraft();
+    setDraftRestored(!!draft);
+    if (draft) {
+      setFormData((prev) => ({ ...prev, ...draft, password: "" }));
+      setStep(2);
+    }
+  }
+  useEffect(() => {
+    if (draftRestored) clearApplicationDraft();
+  }, [draftRestored]);
+
+  // A signed-in applicant starts with the name on their account.
+  const [nameEdited, setNameEdited] = useState(false);
+  const accountName = user?.fullName ?? "";
+  const formData = useMemo(
+    () => (nameEdited || typed.fullName ? typed : { ...typed, fullName: accountName }),
+    [typed, nameEdited, accountName]
+  );
+
+  // Already a host: nothing to apply for.
+  const alreadyHost = !!me && isHostAccount(me);
+  useEffect(() => {
+    if (alreadyHost && step !== "review") router.replace("/host/dashboard");
+  }, [alreadyHost, step, router]);
 
   const setField = useCallback((field: keyof GuideApplicationFormData, value: string) => {
+    if (field === "fullName") setNameEdited(true);
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
       if (!prev[field]) return prev;
@@ -91,19 +141,21 @@ export function useGuideApplicationViewModel(): GuideApplicationViewModel {
       }
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email address is required";
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
+    if (!signedIn) {
+      if (!formData.email.trim()) {
+        newErrors.email = "Email address is required";
+      } else if (!isValidEmail(formData.email)) {
+        newErrors.email = "Please enter a valid email address";
+      }
 
-    if (!formData.password || formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      if (!formData.password || formData.password.length < 6) {
+        newErrors.password = "Password must be at least 6 characters";
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData]);
+  }, [formData, signedIn]);
 
   const handleContinue = useCallback(async () => {
     if (step === 1) {
@@ -116,11 +168,17 @@ export function useGuideApplicationViewModel(): GuideApplicationViewModel {
     if (step === 2) {
       if (!validateStep2()) return;
       setIsSubmitting(true);
+      setAccountExists(false);
       try {
-        const result = await submitGuideApplication(formData);
+        const result = signedIn
+          ? await hostApplication.mutateAsync(formData)
+          : await submitGuideApplication(formData);
         if (result.success) {
           setStep("review");
           window.scrollTo({ top: 0, behavior: "smooth" });
+        } else if (result.accountExists) {
+          // Said on the form, with the way forward, rather than in a toast.
+          setAccountExists(true);
         } else {
           toast.error(result.message || "Failed to submit application. Please try again.");
         }
@@ -130,7 +188,7 @@ export function useGuideApplicationViewModel(): GuideApplicationViewModel {
         setIsSubmitting(false);
       }
     }
-  }, [step, formData, validateStep1, validateStep2]);
+  }, [step, formData, validateStep1, validateStep2, signedIn, hostApplication]);
 
   const handleBack = useCallback(() => {
     if (step === 2) {
@@ -150,12 +208,20 @@ export function useGuideApplicationViewModel(): GuideApplicationViewModel {
     router.push("/host/dashboard");
   }, [router]);
 
+  const handleLogIn = useCallback(() => {
+    saveApplicationDraft({ ...formData, email: "" });
+    router.push(`/login?next=${encodeURIComponent("/become-a-guide/apply")}`);
+  }, [formData, router]);
+
   return {
     step,
     formData,
     errors,
     isSubmitting,
     cityOptions: NIGERIAN_CITIES,
+    signedInEmail: signedIn ? user?.email ?? null : null,
+    accountExists,
+    handleLogIn,
     setField,
     setVerificationType,
     handleContinue,

@@ -88,6 +88,14 @@ test.describe("host dashboard access", () => {
     await expect(page).toHaveURL(/\/become-a-guide$/);
   });
 
+  test("lets in a traveller who added hosting, with a way back to travelling", async ({ page }) => {
+    await signIn(page);
+    await mockApi(page, { "GET /auth/me": me("both", "approved") });
+    await page.goto("/host/dashboard");
+    await expect(page).toHaveURL(/\/host\/dashboard$/);
+    await expect(page.getByRole("link", { name: "Switch to travelling" })).toHaveAttribute("href", "/");
+  });
+
   test("lets a guide in review look around, and says so", async ({ page }) => {
     await signIn(page);
     await mockApi(page, { "GET /auth/me": me("guide", "pending") });

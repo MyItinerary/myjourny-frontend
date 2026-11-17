@@ -28,4 +28,13 @@ describe("hostAccessOf", () => {
     expect(hostAccessOf({ ...signedIn, me: { signup_type: "guide", guide_status: "rejected" } })).toBe("rejected");
     expect(hostAccessOf({ ...signedIn, me: { signup_type: "guide" } })).toBe("pending");
   });
+
+  it("lets in a traveller who added hosting to their account", () => {
+    expect(hostAccessOf({ ...signedIn, me: { signup_type: "both", guide_status: "pending" } })).toBe("pending");
+    expect(hostAccessOf({ ...signedIn, me: { signup_type: "both", guide_status: "approved", is_host: true } })).toBe("approved");
+  });
+
+  it("goes by is_host when the account says it", () => {
+    expect(hostAccessOf({ ...signedIn, me: { signup_type: "guide", is_host: false } })).toBe("traveller");
+  });
 });

@@ -48,4 +48,23 @@ describe("GuideApplicationStep2", () => {
 
     expect(onContinue).toHaveBeenCalled();
   });
+
+  it("leaves out the email and password for a signed-in applicant", () => {
+    render(<GuideApplicationStep2 {...defaultProps} signedInEmail="amara@example.com" />);
+
+    expect(screen.getByText("ADD HOSTING TO YOUR ACCOUNT")).toBeInTheDocument();
+    expect(screen.getByText("amara@example.com")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Email address/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Password/i)).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Submit application" })[0]).toBeInTheDocument();
+  });
+
+  it("says when the email already has an account and offers to log in", async () => {
+    const onLogIn = vi.fn();
+    render(<GuideApplicationStep2 {...defaultProps} accountExists onLogIn={onLogIn} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("You already have a MyJourny account with this email.");
+    await userEvent.click(screen.getByRole("button", { name: "Log in to continue" }));
+    expect(onLogIn).toHaveBeenCalled();
+  });
 });

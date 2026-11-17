@@ -8,7 +8,11 @@ import { HomeNav } from "./home-nav";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => "/" }));
 vi.mock("@/lib/auth/session-store", () => ({ useSession: () => ({ user: null }) }));
 const me = vi.hoisted(() => ({ current: undefined as { signup_type: string } | undefined }));
-vi.mock("@/lib/queries/auth", () => ({ useLogout: () => ({ mutate: vi.fn() }), useMe: () => ({ data: me.current }) }));
+vi.mock("@/lib/queries/auth", async (importOriginal) => ({
+  isHostAccount: (await importOriginal<typeof import("@/lib/queries/auth")>()).isHostAccount,
+  useLogout: () => ({ mutate: vi.fn() }),
+  useMe: () => ({ data: me.current }),
+}));
 vi.mock("@/lib/queries/notifications", () => ({ useUnreadNotificationsCount: () => ({ data: 0 }) }));
 vi.mock("@/components/notifications/notifications-dropdown", () => ({ NotificationsDropdown: () => null }));
 vi.mock("@/features/search", () => ({ SearchBarView: () => null, useSearchBarViewModel: () => ({}) }));
@@ -58,5 +62,12 @@ describe("HomeNav", () => {
     expect(links).toHaveLength(2);
     expect(screen.getByText("Manage your listings and bookings")).toBeInTheDocument();
     expect(screen.queryByText("Become a guide")).not.toBeInTheDocument();
+  });
+
+  it("sends a traveller who added hosting to the host dashboard too", () => {
+    me.current = { signup_type: "both" };
+    renderWithProviders(<HomeNav />);
+
+    expect(screen.getByRole("link", { name: "Switch to host dashboard" })).toHaveAttribute("href", "/host/dashboard");
   });
 });
