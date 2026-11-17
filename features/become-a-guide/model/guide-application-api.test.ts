@@ -3,7 +3,14 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { apiUrl } from "@/test/msw/handlers";
 import { server } from "@/test/msw/server";
-import { submitGuideApplication } from "./guide-application-api";
+import { renderHookWithProviders } from "@/test/utils/render";
+import {
+  clearApplicationDraft,
+  loadApplicationDraft,
+  saveApplicationDraft,
+  submitGuideApplication,
+  useSubmitHostApplication,
+} from "./guide-application-api";
 import { DEFAULT_APPLICATION_DATA } from "./guide-application.types";
 
 const individual = {
@@ -92,7 +99,8 @@ describe("guide-application-api", () => {
 
     const result = await submitGuideApplication(individual);
 
-    expect(result).toEqual({ success: false, message: "Email already registered" });
+    // A 409 means the email has an account: the form offers to log in.
+    expect(result).toEqual({ success: false, message: "Email already registered", accountExists: true });
   });
 
   it("reads the first field error when validation fails", async () => {
@@ -108,5 +116,49 @@ describe("guide-application-api", () => {
     const result = await submitGuideApplication(individual);
 
     expect(result).toEqual({ success: false, message: "Guides must be at least 18" });
+  });
+
+  it("adds hosting to the signed-in account and updates it", async () => {
+    const sent: { body: unknown } = { body: null };
+    const me = { id: "u1", email: "jane@example.com", signup_type: "both", guide_status: "pending", is_host: true };
+    server.use(
+      http.post(apiUrl("/auth/me/host"), async ({ request }) => {
+        sent.body = await request.json();
+        return HttpResponse.json(me, { status: 201 });
+      })
+    );
+    const { result, queryClient } = renderHookWithProviders(() => useSubmitHostApplication());
+
+    const outcome = await result.current.mutateAsync(individual);
+
+    expect(outcome).toEqual({ success: true });
+    expect(sent.body).toEqual({
+      full_name: "Jane Doe",
+      date_of_birth: "1994-03-12",
+      phone_number: "+2348012345678",
+      city: "Lagos",
+      applicant_type: "individual",
+      website: null,
+      business_name: null,
+      cac_number: null,
+    });
+    expect(queryClient.getQueryData(["auth", "me"])).toEqual(me);
+  });
+
+  it("returns the reason when adding hosting fails", async () => {
+    server.use(
+      http.post(apiUrl("/auth/me/host"), () => HttpResponse.json({ detail: "You're already a host" }, { status: 409 }))
+    );
+    const { result } = renderHookWithProviders(() => useSubmitHostApplication());
+
+    expect(await result.current.mutateAsync(individual)).toEqual({ success: false, message: "You're already a host" });
+  });
+
+  it("keeps a draft until it's cleared, without the password", () => {
+    saveApplicationDraft(individual);
+
+    expect(loadApplicationDraft()).toMatchObject({ fullName: " Jane Doe ", password: "" });
+    clearApplicationDraft();
+    expect(loadApplicationDraft()).toBeNull();
   });
 });

@@ -12,11 +12,14 @@ export function GuideApplicationView({
   errors,
   isSubmitting,
   cityOptions,
+  signedInEmail,
+  accountExists,
   setField,
   setVerificationType,
   handleContinue,
   handleBack,
   handleDone,
+  handleLogIn,
 }: GuideApplicationViewModel) {
   return (
     <main className="min-h-screen bg-white">
@@ -41,9 +44,12 @@ export function GuideApplicationView({
           formData={formData}
           errors={errors}
           isSubmitting={isSubmitting}
+          signedInEmail={signedInEmail}
+          accountExists={accountExists}
           setField={setField}
           onContinue={handleContinue}
           onBack={handleBack}
+          onLogIn={handleLogIn}
         />
       )}
 

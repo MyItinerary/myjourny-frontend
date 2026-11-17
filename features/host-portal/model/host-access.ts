@@ -1,5 +1,5 @@
 import { useSession } from "@/lib/auth/session-store";
-import { type MeResponse, useMe } from "@/lib/queries/auth";
+import { isHostAccount, type MeResponse, useMe } from "@/lib/queries/auth";
 
 /** Who is opening the host dashboard. */
 export type HostAccess = "checking" | "signed-out" | "traveller" | "pending" | "rejected" | "approved";
@@ -7,7 +7,7 @@ export type HostAccess = "checking" | "signed-out" | "traveller" | "pending" | "
 type Inputs = {
   hydrated: boolean;
   signedIn: boolean;
-  me: Pick<MeResponse, "signup_type" | "guide_status"> | undefined;
+  me: Pick<MeResponse, "signup_type" | "guide_status" | "is_host"> | undefined;
 };
 
 /** Signed-out visitors and travellers don't belong here; a guide whose
@@ -16,7 +16,7 @@ export function hostAccessOf({ hydrated, signedIn, me }: Inputs): HostAccess {
   if (!hydrated) return "checking";
   if (!signedIn) return "signed-out";
   if (!me) return "checking";
-  if (me.signup_type !== "guide") return "traveller";
+  if (!isHostAccount(me)) return "traveller";
   if (me.guide_status === "approved") return "approved";
   return me.guide_status === "rejected" ? "rejected" : "pending";
 }

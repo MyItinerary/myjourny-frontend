@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
@@ -30,13 +30,29 @@ const vm = (overrides: Partial<HostSidebarViewModel> = {}, active = "dashboard",
   ...overrides,
 });
 
+describe("HostSidebarView, switching to travelling", () => {
+  it("takes the host back to the traveller side", () => {
+    renderWithProviders(<HostSidebarView {...vm()} />);
+
+    expect(screen.getByRole("link", { name: "Switch to travelling" })).toHaveAttribute("href", "/");
+  });
+
+  it("keeps the link, by name, when the rail is collapsed", () => {
+    renderWithProviders(<HostSidebarView {...vm({ open: false })} />);
+
+    expect(screen.getByRole("link", { name: "Switch to travelling" })).toHaveAttribute("href", "/");
+    expect(screen.queryByText("Switch to travelling")).not.toBeInTheDocument();
+  });
+});
+
 describe("HostSidebarView, expanded", () => {
   it("shows the logo, the seven items and the host card", () => {
     renderWithProviders(<HostSidebarView {...vm()} />);
 
     expect(screen.getByAltText("Myjourny")).toBeInTheDocument();
     expect(screen.getByText("myjourny")).toBeInTheDocument();
-    expect(screen.getAllByRole("link").map((l) => l.textContent)).toEqual([
+    const nav = screen.getByRole("navigation", { name: "Host portal" });
+    expect(within(nav).getAllByRole("link").map((l) => l.textContent)).toEqual([
       "Home", "Listings", "Calendar", "Bookings", "Earnings", "Profile", "Help",
     ]);
     expect(screen.getByText("Tunde Bakare")).toBeInTheDocument();

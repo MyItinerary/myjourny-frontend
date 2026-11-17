@@ -11,28 +11,37 @@ export interface GuideApplicationStep2Props {
   formData: GuideApplicationFormData;
   errors: GuideApplicationErrors;
   isSubmitting: boolean;
+  /** Signed in: the application goes on this account, so no email or password. */
+  signedInEmail?: string | null;
+  /** The email typed already has an account. */
+  accountExists?: boolean;
   setField: (field: keyof GuideApplicationFormData, value: string) => void;
   onContinue: () => void;
   onBack: () => void;
+  onLogIn?: () => void;
 }
 
 export function GuideApplicationStep2({
   formData,
   errors,
   isSubmitting,
+  signedInEmail = null,
+  accountExists = false,
   setField,
   onContinue,
   onBack,
+  onLogIn,
 }: GuideApplicationStep2Props) {
   const isBusiness = formData.verificationType === "business";
-  const submitButtonText = isBusiness ? "Create an account" : "Continue";
+  const signedIn = signedInEmail !== null;
+  const submitButtonText = signedIn ? "Submit application" : isBusiness ? "Create an account" : "Continue";
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
       {/* Step Heading */}
       <div className="mb-8">
         <span className="font-sans text-xs font-bold tracking-wider text-[#F5032D]">
-          CREATE AN ACCOUNT
+          {signedIn ? "ADD HOSTING TO YOUR ACCOUNT" : "CREATE AN ACCOUNT"}
         </span>
         <h1 className="mt-2 font-sans text-2xl font-extrabold tracking-tight text-[#130404] sm:text-3xl">
           Let&apos;s get to know you
@@ -107,41 +116,65 @@ export function GuideApplicationStep2({
           </p>
         </div>
 
-        {/* Email Address */}
-        <div>
-          <label htmlFor="email" className="block font-sans text-sm font-semibold text-[#130404]">
-            Email address
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setField("email", e.target.value)}
-            placeholder="email@gmail.com"
-            className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
-          />
-          {errors.email && (
-            <p className="mt-1 font-sans text-xs text-[#DC2626]">{errors.email}</p>
-          )}
-        </div>
+        {signedIn ? (
+          <p className="rounded-[12px] bg-[#FAF9F7] px-4 py-3.5 font-sans text-sm text-[#130404]">
+            You&apos;re applying with <span className="font-semibold">{signedInEmail}</span>. You&apos;ll use the
+            same login for travelling and hosting.
+          </p>
+        ) : (
+          <>
+            {/* Email Address */}
+            <div>
+              <label htmlFor="email" className="block font-sans text-sm font-semibold text-[#130404]">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setField("email", e.target.value)}
+                placeholder="email@gmail.com"
+                className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
+              />
+              {errors.email && (
+                <p className="mt-1 font-sans text-xs text-[#DC2626]">{errors.email}</p>
+              )}
+              {accountExists && (
+                <div role="alert" className="mt-3 rounded-[12px] bg-[#FFF1F3] px-4 py-3.5 font-sans text-sm text-[#130404]">
+                  <p>
+                    <span className="font-semibold">You already have a MyJourny account with this email.</span> Log in
+                    and you can add hosting to it. We&apos;ll keep what you&apos;ve filled in.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onLogIn}
+                    className="mt-2 cursor-pointer font-semibold text-[#F5032D] hover:underline"
+                  >
+                    Log in to continue
+                  </button>
+                </div>
+              )}
+            </div>
 
-        {/* Password */}
-        <div>
-          <label htmlFor="password" className="block font-sans text-sm font-semibold text-[#130404]">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={formData.password}
-            onChange={(e) => setField("password", e.target.value)}
-            placeholder="Enter password"
-            className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
-          />
-          {errors.password && (
-            <p className="mt-1 font-sans text-xs text-[#DC2626]">{errors.password}</p>
-          )}
-        </div>
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="block font-sans text-sm font-semibold text-[#130404]">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setField("password", e.target.value)}
+                placeholder="Enter password"
+                className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
+              />
+              {errors.password && (
+                <p className="mt-1 font-sans text-xs text-[#DC2626]">{errors.password}</p>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Legal Disclaimer */}
         <p className="pt-2 font-sans text-xs text-[#6F6B72]">
