@@ -30,6 +30,13 @@ export function withDate(path: string, isoDay: string | null, isoUntil?: string 
   return isoUntil ? `${path}${joiner}date=${isoDay}&until=${isoUntil}` : `${path}${joiner}date=${isoDay}`;
 }
 
+/** A results page link, carrying the party size and whether children are coming, when given. */
+export function withGuests(path: string, guests: number, children: boolean): string {
+  const params = [guests > 0 && `guests=${guests}`, children && "children=true"].filter(Boolean);
+  if (params.length === 0) return path;
+  return `${path}${path.includes("?") ? "&" : "?"}${params.join("&")}`;
+}
+
 /** The `date` and `until` a results link carries for the dates in the bar; past dates are dropped. */
 export function linkDates({ start, end }: DateRange): { day: string | null; until: string | null } {
   const day = start && start >= startOfToday() ? toIsoDay(start) : null;

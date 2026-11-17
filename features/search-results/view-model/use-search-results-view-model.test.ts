@@ -313,6 +313,47 @@ describe("useSearchResultsViewModel", () => {
     await waitFor(() => expect(result.current.filters.dateRange.start).toEqual(new Date(2030, 6, 9)));
   });
 
+  it("starts from the guests in the results link and asks for listings that fit them", async () => {
+    const calls: URLSearchParams[] = [];
+    mockApi((params) => calls.push(params));
+    audience = "guest";
+    const { result } = renderHookWithProviders(() =>
+      useSearchResultsViewModel({ subject: { kind: "city", label: "Lagos" }, city: "Lagos", guests: "4", children: true }),
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(calls.at(-1)?.get("guests")).toBe("4");
+    expect(calls.at(-1)?.get("children")).toBe("true");
+    expect(result.current.filters.groupSize).toBe(4);
+  });
+
+  it("leaves the group size alone when the link names one guest or none", async () => {
+    const calls: URLSearchParams[] = [];
+    mockApi((params) => calls.push(params));
+    audience = "guest";
+    const { result } = renderHookWithProviders(() =>
+      useSearchResultsViewModel({ subject: { kind: "city", label: "Lagos" }, city: "Lagos", guests: "1" }),
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(calls.at(-1)?.has("guests")).toBe(false);
+    expect(calls.at(-1)?.has("children")).toBe(false);
+    expect(result.current.filters.groupSize).toBe(1);
+  });
+
+  it("follows new guests in the link while the page stays open", async () => {
+    mockApi();
+    audience = "guest";
+    const { result, rerender } = renderHookWithProviders(
+      ({ guests }: { guests: string }) =>
+        useSearchResultsViewModel({ subject: { kind: "city", label: "Lagos" }, city: "Lagos", guests }),
+      { initialProps: { guests: "2" } },
+    );
+
+    rerender({ guests: "6" });
+    await waitFor(() => expect(result.current.filters.groupSize).toBe(6));
+  });
+
   it("gives the API's reason when the listing fails, and isn't empty", async () => {
     server.use(
       http.get(apiUrl("/experiences/filter"), () =>

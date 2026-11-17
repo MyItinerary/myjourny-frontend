@@ -1,7 +1,7 @@
 export type BookingTab = "Requests" | "Upcoming" | "Completed" | "Cancelled";
 
 /** How the table words where a booking is in its life. */
-export type BookingStatusLabel = "Waiting on you" | "Confirmed" | "Paid out" | "Cancelled by guest";
+export type BookingStatusLabel = "Waiting on you" | "Confirmed" | "Completed" | "Paid out" | "Cancelled by guest" | "Cancelled";
 
 export type BookingWhen = "today" | "tomorrow" | "later" | "past";
 

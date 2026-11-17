@@ -72,10 +72,12 @@ function Detail({ detail, vm }: { detail: BookingDetail; vm: HostBookingsViewMod
         ))}
       </div>
 
-      <section className={cn(CARD, "mb-2.5 p-4")}>
-        <h3 className="mb-2 text-[12.5px] font-medium text-[#333134]">Food and access notes</h3>
-        <p className="text-[13px] leading-[1.6] text-pretty text-[#6F6B72]">{booking.notes}</p>
-      </section>
+      {booking.notes && (
+        <section className={cn(CARD, "mb-2.5 p-4")}>
+          <h3 className="mb-2 text-[12.5px] font-medium text-[#333134]">Food and access notes</h3>
+          <p className="text-[13px] leading-[1.6] text-pretty text-[#6F6B72]">{booking.notes}</p>
+        </section>
+      )}
       <section className={cn(NOTE_CARD, "mb-[18px] p-4")}>
         <h3 className="mb-2 text-[12.5px] font-medium text-[#333134]">Their phone number</h3>
         <p className="text-[13px] leading-[1.6] text-pretty text-[#6F6B72]">{booking.contact}</p>

@@ -277,6 +277,30 @@ describe("useSearchBarViewModel", () => {
     expect(mockPush).toHaveBeenCalledWith("/search?q=Lagos%20Jazz%20Night&date=2030-06-01");
   });
 
+  it("takes the guests to the results, counting adults and children as seats", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "" }));
+    act(() => result.current.onPickDate(new Date(2030, 5, 1)));
+    act(() => result.current.onApplyDates());
+    act(() => result.current.incrementGuest("adults"));
+    act(() => result.current.incrementGuest("adults"));
+    act(() => result.current.incrementGuest("children"));
+    act(() => result.current.incrementGuest("infants"));
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01&guests=3&children=true");
+  });
+
+  it("searches with only a where, leaving guests and dates out", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.setWhereInput("jazz"));
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/search?q=jazz");
+  });
+
   it("takes a picked range to the city's results", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 

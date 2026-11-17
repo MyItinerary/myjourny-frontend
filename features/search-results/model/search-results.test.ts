@@ -310,6 +310,11 @@ describe("dates and times the API takes", () => {
     expect(toExperienceFilters(withFilters({ dateRange: { start: day, end: new Date(2030, 5, 3) } })).date).toBeUndefined();
   });
 
+  it("sends a group size above one as `guests`", () => {
+    expect(toExperienceFilters(withFilters({ groupSize: 4 })).guests).toBe(4);
+    expect(toExperienceFilters(withFilters({ groupSize: 1 })).guests).toBeUndefined();
+  });
+
   it("maps the finer times of day onto the day and night listings store", () => {
     const sent = (timeOfDay: ResultsFilters["timeOfDay"]) => toExperienceFilters(withFilters({ timeOfDay })).time_of_day;
     expect([sent("morning"), sent("afternoon"), sent("evening"), sent("late_night")]).toEqual(["day", "day", "night", "night"]);
