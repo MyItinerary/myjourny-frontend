@@ -7,7 +7,14 @@ import { apiErrorMessage } from "@/lib/api-error";
 
 import { useListingDraft } from "../model/draft-store";
 import { useHostAccess } from "../model/host-access";
-import { fetchListingForEdit, uploadPhoto, useInterestTree, usePlaceSearch, useSaveListing } from "../model/listing-builder-api";
+import {
+  fetchListingForEdit,
+  fetchPlacePin,
+  uploadPhoto,
+  useInterestTree,
+  usePlaceSearch,
+  useSaveListing,
+} from "../model/listing-builder-api";
 import {
   ACCESS_OPTIONS,
   AGE_POLICIES,
@@ -142,6 +149,8 @@ export type HostListingBuilderViewModel = {
 
 const LISTINGS = `${HOST_PORTAL_BASE}/listings`;
 const NOT_APPROVED = "You can publish once your guide application is approved.";
+const PIN_FAILED = "Couldn't put that place on the map. Pick it again.";
+const newPlaceSession = () => crypto.randomUUID();
 
 /** What itin said was wrong, in a sentence. A publish missing details answers
  * with { message, missing } rather than a string. */
@@ -203,7 +212,9 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
   const query = typedQuery ?? draft.landmark;
   const typing = placeOpen && query.trim().length > 0 && query !== draft.landmark;
   const searchFor = useDebounced(typing ? query : "", 400);
-  const search = usePlaceSearch(searchFor, draft.city);
+  // One Google search session per pick: the typing and the pick are billed together.
+  const [placeSession, setPlaceSession] = useState(newPlaceSession);
+  const search = usePlaceSearch(searchFor, draft.city, placeSession);
   const results = typing && searchFor === query ? (search.data ?? []) : [];
   const searched = typing && searchFor === query && (search.isSuccess || search.isError || query.trim().length < 3);
 
@@ -330,7 +341,13 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
       onPick: (place) => {
         setTypedQuery(null);
         setPlaceOpen(false);
-        update((d) => ({ ...d, landmark: place.name.slice(0, 120), lat: place.lat, lng: place.lng }));
+        const landmark = place.name.slice(0, 120);
+        // The name shows straight away; the pin follows once Google says where it is.
+        update((d) => ({ ...d, landmark, lat: null, lng: null }));
+        fetchPlacePin(place.placeId, placeSession)
+          .then((pin) => update((d) => (d.landmark === landmark ? { ...d, ...pin } : d)))
+          .catch(() => toast.error(PIN_FAILED));
+        setPlaceSession(newPlaceSession());
       },
       // Kept as the landmark's name, but with no pin until one is picked from the list.
       onUseTyped: () => {

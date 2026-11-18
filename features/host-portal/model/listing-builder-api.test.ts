@@ -7,7 +7,15 @@ import { builderHandlers, CLOUDINARY, FREEDOM_PARK } from "@/test/msw/host-build
 import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 
-import { fetchListingForEdit, searchPlaces, uploadPhoto, useInterestTree, usePlaceSearch, useSaveListing } from "./listing-builder-api";
+import {
+  fetchListingForEdit,
+  fetchPlacePin,
+  searchPlaces,
+  uploadPhoto,
+  useInterestTree,
+  usePlaceSearch,
+  useSaveListing,
+} from "./listing-builder-api";
 import { blankDraft } from "./listing-draft";
 import { toExperiencePayload } from "./listing-payload";
 
@@ -16,24 +24,39 @@ beforeEach(() => server.use(...builderHandlers()));
 const payload = toExperiencePayload({ ...blankDraft(), title: "Lagoon kayak" }, [], "2026-11-10");
 
 describe("place search", () => {
-  it("finds places in Nigeria with their map pins", async () => {
+  it("asks itin (Google) for places in the listing's city, in one search session", async () => {
     let asked = "";
     server.use(
-      http.get("https://nominatim.openstreetmap.org/search", ({ request }) => {
+      http.get(apiUrl("/geo/places/autocomplete"), ({ request }) => {
         asked = request.url;
-        return HttpResponse.json([{ display_name: "Freedom Park, Old Broad Street, Lagos Island, Lagos", lat: "6.45", lon: "3.39" }]);
+        return HttpResponse.json([{ place_id: "p1", name: "Freedom Park", area: "Old Broad Street, Lagos" }, { place_id: "p2", name: "Tafawa Balewa Square", area: null }]);
       }),
     );
-    expect(await searchPlaces("freedom", "Lagos")).toEqual([{ name: "Freedom Park", area: "Old Broad Street, Lagos Island", lat: 6.45, lng: 3.39 }]);
-    expect(new URL(asked).searchParams.get("q")).toBe("freedom, Lagos");
-    expect(new URL(asked).searchParams.get("countrycodes")).toBe("ng");
+    expect(await searchPlaces("freedom", "Lagos", "s1")).toEqual([
+      { placeId: "p1", name: "Freedom Park", area: "Old Broad Street, Lagos" },
+      { placeId: "p2", name: "Tafawa Balewa Square", area: "" },
+    ]);
+    const params = new URL(asked).searchParams;
+    expect([params.get("q"), params.get("city"), params.get("session")]).toEqual(["freedom", "Lagos", "s1"]);
+  });
+
+  it("looks up a picked place's pin in the same session", async () => {
+    let session = "";
+    server.use(
+      http.get(apiUrl("/geo/places/:id"), ({ request }) => {
+        session = new URL(request.url).searchParams.get("session") ?? "";
+        return HttpResponse.json({ place_id: "p1", latitude: 6.45, longitude: 3.39 });
+      }),
+    );
+    expect(await fetchPlacePin("p1", "s1")).toEqual({ lat: 6.45, lng: 3.39 });
+    expect(session).toBe("s1");
   });
 
   it("waits for three letters", async () => {
-    const short = renderHookWithProviders(() => usePlaceSearch("fr", "Lagos"));
+    const short = renderHookWithProviders(() => usePlaceSearch("fr", "Lagos", "s"));
     expect(short.result.current.fetchStatus).toBe("idle");
-    const { result } = renderHookWithProviders(() => usePlaceSearch("freedom", "Lagos"));
-    await waitFor(() => expect(result.current.data?.[0]).toMatchObject({ name: FREEDOM_PARK.name, lat: FREEDOM_PARK.lat }));
+    const { result } = renderHookWithProviders(() => usePlaceSearch("freedom", "Lagos", "s"));
+    await waitFor(() => expect(result.current.data?.[0]).toMatchObject({ name: FREEDOM_PARK.name, placeId: FREEDOM_PARK.placeId }));
   });
 });
 

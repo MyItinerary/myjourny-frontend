@@ -1,6 +1,6 @@
 import { waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { clearAuth, setAuth } from "@/lib/auth/session-store";
 import { apiUrl } from "@/test/msw/handlers";
@@ -115,6 +115,9 @@ describe("beforeYouBookItems", () => {
 });
 
 describe("experienceLocation", () => {
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY", "browser-key"));
+  afterEach(() => vi.unstubAllEnvs());
+
   it("shows the booked traveller's exact pin, instructions and directions", () => {
     const location = experienceLocation(
       { ...base, latitude: 6.5, longitude: 3.39 },
@@ -126,7 +129,7 @@ describe("experienceLocation", () => {
       instructions: "Blue gate at the jetty",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=6.495852,3.392337",
     });
-    expect(location?.mode === "exact" && location.embedUrl).toContain("marker=6.495852%2C3.392337");
+    expect(location?.mode === "exact" && location.embedUrl).toContain("/place?key=browser-key&q=6.495852%2C3.392337");
   });
 
   it("keeps instructions alone when the meeting point has no coordinates", () => {
@@ -140,7 +143,7 @@ describe("experienceLocation", () => {
   it("shows only the area, without a pin, before booking", () => {
     const location = experienceLocation({ ...base, latitude: 6.5, longitude: 3.39 });
     expect(location?.mode).toBe("approximate");
-    expect(location?.mode === "approximate" && location.embedUrl).not.toContain("marker");
+    expect(location?.mode === "approximate" && location.embedUrl).toContain("/view?key=browser-key&center=6.5%2C3.39");
   });
 
   it("falls back to the city label, or nothing", () => {
@@ -150,10 +153,19 @@ describe("experienceLocation", () => {
 });
 
 describe("mapEmbedUrl", () => {
-  it("frames a wider box for the area than for the exact pin", () => {
-    const area = new URL(mapEmbedUrl(6.5, 3.39, { pin: false })).searchParams.get("bbox")!.split(",").map(Number);
-    const pin = new URL(mapEmbedUrl(6.5, 3.39, { pin: true })).searchParams.get("bbox")!.split(",").map(Number);
-    expect(area[2] - area[0]).toBeGreaterThan(pin[2] - pin[0]);
+  it("pins the exact spot close up, and shows the area further out with no pin", () => {
+    const pin = new URL(mapEmbedUrl(6.5, 3.39, { pin: true }, "k")!);
+    const area = new URL(mapEmbedUrl(6.5, 3.39, { pin: false }, "k")!);
+    expect(pin.origin + pin.pathname).toBe("https://www.google.com/maps/embed/v1/place");
+    expect(pin.searchParams.get("q")).toBe("6.5,3.39");
+    expect(area.pathname).toBe("/maps/embed/v1/view");
+    expect(area.searchParams.get("center")).toBe("6.5,3.39");
+    expect(area.searchParams.has("q")).toBe(false);
+    expect(Number(area.searchParams.get("zoom"))).toBeLessThan(Number(pin.searchParams.get("zoom")));
+  });
+
+  it("has no map without a Google Maps key", () => {
+    expect(mapEmbedUrl(6.5, 3.39, { pin: true }, "")).toBeNull();
   });
 });
 

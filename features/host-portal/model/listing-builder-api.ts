@@ -4,7 +4,7 @@ import { apiClient } from "@/lib/api-client";
 import { type Category, useInterestCategories } from "@/lib/queries/categories";
 
 import type { GuideExperience } from "./guide-listings.types";
-import type { PlaceResult } from "./listing-draft.types";
+import type { PlacePin, PlaceResult } from "./listing-draft.types";
 import type { ExperiencePayload, ListingPrices } from "./listing-payload";
 
 /** The interest categories with their subcategories, for the builder's
@@ -14,31 +14,33 @@ export function useInterestTree(): { tree: Category[]; ready: boolean } {
   return { tree: data ?? [], ready: isFetched };
 }
 
-type NominatimResult = { name?: string; display_name: string; lat: string; lon: string };
+type PlaceSuggestion = { place_id: string; name: string; area: string | null };
+type PlaceLocation = { place_id: string; latitude: number; longitude: number };
 
-/** Places matching what the guide typed, each with its map pin. OpenStreetMap's
- * Nominatim, as helm uses: no key, and light enough for a guide typing. */
-export async function searchPlaces(query: string, city: string): Promise<PlaceResult[]> {
-  const url = new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("format", "jsonv2");
-  url.searchParams.set("limit", "5");
-  url.searchParams.set("countrycodes", "ng");
-  url.searchParams.set("q", city ? `${query}, ${city}` : query);
-  const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
-  if (!response.ok) throw new Error("Place search failed");
-  const results = (await response.json()) as NominatimResult[];
-  return results.map((r) => {
-    const [first, ...rest] = r.display_name.split(", ");
-    return { name: r.name || first, area: rest.slice(0, 2).join(", "), lat: Number(r.lat), lng: Number(r.lon) };
+/** Places matching what the guide typed, from Google through itin. The same
+ * `session` goes on the pick, so Google bills the typing and the pick as
+ * one search. */
+export async function searchPlaces(query: string, city: string, session: string): Promise<PlaceResult[]> {
+  const { data } = await apiClient.get<PlaceSuggestion[]>("/geo/places/autocomplete", {
+    params: { q: query, city: city || undefined, session },
   });
+  return data.map((p) => ({ placeId: p.place_id, name: p.name, area: p.area ?? "" }));
+}
+
+/** The map pin of a picked place. */
+export async function fetchPlacePin(placeId: string, session: string): Promise<PlacePin> {
+  const { data } = await apiClient.get<PlaceLocation>(`/geo/places/${encodeURIComponent(placeId)}`, {
+    params: { session },
+  });
+  return { lat: data.latitude, lng: data.longitude };
 }
 
 /** Search once the guide has typed three letters; `query` is already debounced. */
-export function usePlaceSearch(query: string, city: string) {
+export function usePlaceSearch(query: string, city: string, session: string) {
   const q = query.trim();
   return useQuery({
     queryKey: ["places", q, city],
-    queryFn: () => searchPlaces(q, city),
+    queryFn: () => searchPlaces(q, city, session),
     enabled: q.length >= 3,
     staleTime: 10 * 60_000,
   });

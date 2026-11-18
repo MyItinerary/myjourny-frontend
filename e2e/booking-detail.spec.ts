@@ -4,6 +4,13 @@ import { expect, mockApi, test } from "./fixtures";
 // time shown are the session's (Lagos), not the browser's.
 test.use({ timezoneId: "America/Los_Angeles" });
 
+test.beforeEach(async ({ page }) => {
+  // The meeting point map is a Google Maps embed (when the site has a key); keep it off the real network.
+  await page.route("https://www.google.com/maps/embed/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<html><body>map</body></html>" }),
+  );
+});
+
 test("shows a multi-day booking's dates in the session's time zone", async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(

@@ -5,7 +5,7 @@ import { apiUrl } from "./handlers";
 export const CLOUDINARY = "https://res.cloudinary.com/demo/";
 
 /** The meeting point the place search knows. */
-export const FREEDOM_PARK = { name: "Freedom Park", lat: 6.4509, lng: 3.3936 };
+export const FREEDOM_PARK = { placeId: "ChIJfreedom", name: "Freedom Park", lat: 6.4509, lng: 3.3936 };
 
 
 /** Everything the listing builder reaches for: categories (none, so it uses
@@ -15,14 +15,17 @@ export const builderHandlers = () => {
   let uploads = 0;
   return [
     http.get(apiUrl("/categories"), () => HttpResponse.json([])),
-    http.get("https://nominatim.openstreetmap.org/search", ({ request }) => {
+    http.get(apiUrl("/geo/places/autocomplete"), ({ request }) => {
       const q = new URL(request.url).searchParams.get("q") ?? "";
       return HttpResponse.json(
         q.toLowerCase().includes("freedom")
-          ? [{ name: FREEDOM_PARK.name, display_name: "Freedom Park, Old Broad Street, Lagos Island, Lagos, Nigeria", lat: String(FREEDOM_PARK.lat), lon: String(FREEDOM_PARK.lng) }]
+          ? [{ place_id: FREEDOM_PARK.placeId, name: FREEDOM_PARK.name, area: "Old Broad Street, Lagos Island, Lagos, Nigeria" }]
           : [],
       );
     }),
+    http.get(apiUrl(`/geo/places/${FREEDOM_PARK.placeId}`), () =>
+      HttpResponse.json({ place_id: FREEDOM_PARK.placeId, latitude: FREEDOM_PARK.lat, longitude: FREEDOM_PARK.lng }),
+    ),
     http.get(apiUrl("/guide/uploads/cloudinary-signature"), () =>
       HttpResponse.json({ signature: "sig", timestamp: 1, api_key: "key", cloud_name: "demo", folder: "experiences" }),
     ),

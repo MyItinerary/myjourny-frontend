@@ -213,18 +213,25 @@ export function meetingLandmark(experience: ExperienceDetailsFields): MeetingLan
   return text ? { text, photoUrl: experience.meeting_photo_url || null } : null;
 }
 
-const OSM_EMBED = "https://www.openstreetmap.org/export/embed.html";
+const MAPS_EMBED = "https://www.google.com/maps/embed/v1";
 
-/** An OpenStreetMap embed around a point; a pin only for the exact spot. */
-export function mapEmbedUrl(latitude: number, longitude: number, { pin }: { pin: boolean }): string {
-  // A wider box for the rounded area, so it doesn't look like a precise spot.
-  const half = pin ? 0.006 : 0.03;
-  const bbox = [longitude - half, latitude - half, longitude + half, latitude + half]
-    .map((n) => n.toFixed(5))
-    .join(",");
-  const params = new URLSearchParams({ bbox, layer: "mapnik" });
-  if (pin) params.set("marker", `${latitude},${longitude}`);
-  return `${OSM_EMBED}?${params.toString()}`;
+/**
+ * A Google Maps embed (Maps Embed API, free) around a point: a pin for the
+ * exact spot, or no pin and zoomed out for the rounded area, so it doesn't
+ * look like a precise spot. Null without a key.
+ */
+export function mapEmbedUrl(
+  latitude: number,
+  longitude: number,
+  { pin }: { pin: boolean },
+  key: string | undefined = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY,
+): string | null {
+  if (!key) return null;
+  const point = `${latitude},${longitude}`;
+  const params = pin
+    ? new URLSearchParams({ key, q: point, zoom: "16" })
+    : new URLSearchParams({ key, center: point, zoom: "13" });
+  return `${MAPS_EMBED}/${pin ? "place" : "view"}?${params.toString()}`;
 }
 
 export function directionsUrl(latitude: number, longitude: number): string {

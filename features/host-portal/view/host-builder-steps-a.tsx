@@ -144,7 +144,7 @@ export function StepWhere({ vm }: Props) {
           {place.open && (
             <div className="absolute inset-x-0 top-[54px] z-30 flex flex-col rounded-[14px] bg-white p-1.5 shadow-[inset_0_0_0_1px_#E7E7E7,0_12px_32px_rgba(16,24,40,0.14)]">
               {place.results.map((r) => (
-                <button key={`${r.lat},${r.lng}`} type="button" onClick={() => place.onPick(r)} className="flex w-full cursor-pointer items-start gap-2.5 rounded-[10px] p-2.5 text-left hover:bg-[#F5F5F5]">
+                <button key={r.placeId} type="button" onClick={() => place.onPick(r)} className="flex w-full cursor-pointer items-start gap-2.5 rounded-[10px] p-2.5 text-left hover:bg-[#F5F5F5]">
                   <MapPin className="mt-px size-[18px] shrink-0 text-[#6F6B72]" />
                   <span>
                     <span className="block text-[13.5px] font-medium">{r.name}</span>
