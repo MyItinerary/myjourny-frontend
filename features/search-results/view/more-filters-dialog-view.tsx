@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CalendarDays, Coins, Heart, Moon, Sparkles, Ticket, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -49,8 +50,13 @@ function Chips({ group, onToggle }: { group: PanelGroup; onToggle: (groupId: str
   );
 }
 
+// The same motion as the phone search sheet: up in 250ms, down in 200ms, with the backdrop fading alongside.
+const SHEET_IN = { duration: 0.25, ease: [0.2, 0, 0, 1] as const };
+const SHEET_OUT = { duration: 0.2, ease: [0.4, 0, 1, 1] as const };
+const FADE = { duration: 0.15 };
+
 export function MoreFiltersDialogView(vm: MoreFiltersDialogViewProps) {
-  const { panelOpen, closePanel, panel, filters, total, isLoading, footerLabel } = vm;
+  const { panelOpen, closePanel } = vm;
 
   useEffect(() => {
     if (!panelOpen) return;
@@ -61,7 +67,16 @@ export function MoreFiltersDialogView(vm: MoreFiltersDialogViewProps) {
     return () => document.removeEventListener("keydown", onKey);
   }, [panelOpen, closePanel]);
 
-  if (!panelOpen) return null;
+  // Kept mounted while it closes, so it can roll back down.
+  return <AnimatePresence>{panelOpen && <FiltersSheet key="filters" {...vm} />}</AnimatePresence>;
+}
+
+function FiltersSheet(vm: MoreFiltersDialogViewProps) {
+  const { closePanel, panel, filters, total, isLoading, footerLabel } = vm;
+  const reduce = useReducedMotion();
+  // A bottom sheet on phones rolls up from the bottom edge; the centred dialog on wider screens just rises a little.
+  const [wide] = useState(() => typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches);
+  const hidden = reduce ? { opacity: 0 } : wide ? { opacity: 0, y: 24 } : { y: "100%" };
 
   const noResults = !isLoading && total === 0;
   const featuredAction: Record<FeaturedId, () => void> = {
@@ -92,9 +107,19 @@ export function MoreFiltersDialogView(vm: MoreFiltersDialogViewProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 md:items-center md:p-5">
-      <div aria-hidden onClick={closePanel} className="absolute inset-0" />
-      <div
+    <div className="fixed inset-0 z-[60] flex items-end justify-center md:items-center md:p-5">
+      <motion.div
+        aria-hidden
+        onClick={closePanel}
+        className="absolute inset-0 bg-black/50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: reduce ? FADE : SHEET_IN }}
+        exit={{ opacity: 0, transition: reduce ? FADE : SHEET_OUT }}
+      />
+      <motion.div
+        initial={hidden}
+        animate={{ opacity: 1, y: 0, transition: reduce ? FADE : SHEET_IN }}
+        exit={{ ...hidden, transition: reduce ? FADE : SHEET_OUT }}
         role="dialog"
         aria-modal="true"
         aria-label="Filters"
@@ -274,7 +299,7 @@ export function MoreFiltersDialogView(vm: MoreFiltersDialogViewProps) {
             {noResults ? "No matching experiences" : footerLabel}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

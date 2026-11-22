@@ -34,6 +34,7 @@ describe("MobileSearchModalView", () => {
     onPickDate: vi.fn(),
     onPickDatePreset: vi.fn(),
     onApplyDates: vi.fn(),
+    onSetDates: vi.fn(),
     onClearDates: vi.fn(),
     onAnyDate: vi.fn(),
     onNavigateToDestination: vi.fn(),

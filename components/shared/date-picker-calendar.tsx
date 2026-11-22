@@ -105,7 +105,8 @@ export function DatePickerCalendar({
   return (
     <div className={cn("flex w-full flex-col gap-3", className)}>
       {presets && presets.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        // One row that scrolls sideways rather than wrapping onto a second line.
+        <div className="flex items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-1.5">
           {presets.map((preset) => {
             const isPresetDisabled = !!minDay && startOfDay(preset.date) < minDay;
             return (
@@ -115,7 +116,7 @@ export function DatePickerCalendar({
                 disabled={isPresetDisabled}
                 onClick={() => onSelect(preset.date)}
                 className={cn(
-                  "rounded-full border border-[#E0E0E0] bg-white px-3 py-1 text-center font-sans text-xs font-normal text-[#130404] transition-colors",
+                  "shrink-0 whitespace-nowrap rounded-full border border-[#E0E0E0] bg-white px-3 py-1 text-center font-sans text-xs font-normal text-[#130404] transition-colors",
                   isPresetDisabled
                     ? "cursor-not-allowed opacity-40"
                     : "cursor-pointer hover:bg-[#F4F2EE] hover:border-brand/40",
@@ -231,13 +232,14 @@ function RangeMonths({
   return (
     <div className={cn("flex w-full flex-col gap-4", className)}>
       {presets && presets.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
+        // One row that scrolls sideways rather than wrapping onto a second line.
+        <div className="flex items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-2">
           {presets.map((preset) => (
             <button
               key={preset.label}
               type="button"
               onClick={() => (onSelectPreset ? onSelectPreset(preset) : onSelect(preset.date))}
-              className="rounded-full bg-[#F1EEEA] px-4 py-2 font-sans text-xs font-medium text-[#1F1C20] transition-colors hover:bg-[#E6E2DC] active:scale-[0.97] cursor-pointer"
+              className="shrink-0 whitespace-nowrap rounded-full bg-[#F1EEEA] px-4 py-2 font-sans text-xs font-medium text-[#1F1C20] transition-colors hover:bg-[#E6E2DC] active:scale-[0.97] cursor-pointer"
             >
               {preset.label}
             </button>

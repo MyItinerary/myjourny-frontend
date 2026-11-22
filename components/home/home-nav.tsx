@@ -14,6 +14,7 @@ import { useSession } from "@/lib/auth/session-store";
 import { isHostAccount, useLogout, useMe } from "@/lib/queries/auth";
 import { useUnreadNotificationsCount } from "@/lib/queries/notifications";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
+import { MobileMenuView, openMobileSearch, useMobileMenuViewModel } from "@/features/mobile-nav";
 import { SearchBarView, useSearchBarViewModel } from "@/features/search";
 
 // Illustrated nav/menu icons (Figma "image 16"): the 44px artwork is cropped
@@ -138,6 +139,9 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
   const pathname = usePathname();
   // "My experiences" lives in the account menu, not the pill bar, so its pages
   // (and bookings) light up no pill. /experiences and /events are the discovery pages.
+  // Home, Experiences and Events have their own search box in the hero, so the header's button only
+  // appears once that's scrolled past; everywhere else (Wishlists included) it's always there.
+  const heroHasSearch = pathname === "/" || pathname === "" || pathname === "/experiences" || pathname === "/events";
   const currentPathTab = pathname?.startsWith("/wishlists") || pathname === "/wishlist"
     ? "wishlist"
     : pathname === "/experiences" || pathname?.startsWith("/experiences/")
@@ -211,7 +215,9 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (menuContainerRef.current && !menuContainerRef.current.contains(e.target as Node)) {
+      // The phone menu is portalled out of the container, so a tap inside it isn't an outside click.
+      const inMobileMenu = (e.target as Element).closest?.("[data-mobile-menu]");
+      if (menuContainerRef.current && !menuContainerRef.current.contains(e.target as Node) && !inMobileMenu) {
         setProfileMenuOpen(false);
       }
       if (notifContainerRef.current && !notifContainerRef.current.contains(e.target as Node)) {
@@ -306,7 +312,9 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
 
             {/* Desktop Center: Nav Pills <-> Compact Search Transformation */}
             <div className="absolute left-1/2 hidden -translate-x-1/2 items-center lg:flex">
-              <AnimatePresence mode="wait">
+              {/* Every page mounts its own nav, so no entrance animation on mount: the pills would
+                  fade in again after each click. Only the switch to and from the compact pill animates. */}
+              <AnimatePresence mode="wait" initial={false}>
                 {!compact ? (
                   <motion.nav
                     layout="position"
@@ -410,16 +418,21 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
 
             {/* Right Nav: Notifications + Profile Icon Trigger + Dropdown Menu */}
             <div className="relative flex items-center gap-[11px] shrink-0 lg:gap-3">
-              {/* Mobile: just a search button; the full bar opens only when it's tapped. */}
-              <button
-                type="button"
-                aria-label="Search"
-                aria-expanded={isSearchExpanded}
-                onClick={() => (isSearchExpanded ? handleCloseSearch() : handleOpenSearch("where"))}
-                className="flex size-12 shrink-0 items-center justify-center rounded-[12px] bg-[#F4F2EE] transition-colors hover:bg-[#eae8e3] cursor-pointer lg:hidden"
-              >
-                <Image src="/icons/nav/search-sm.svg" alt="" width={20} height={20} unoptimized />
-              </button>
+              {/* Mobile: just a search button; it opens the phone search sheet. */}
+              {(!heroHasSearch || isScrolled) && (
+                <button
+                  type="button"
+                  aria-label="Search"
+                  aria-haspopup="dialog"
+                  onClick={() => {
+                    setProfileMenuOpen(false);
+                    openMobileSearch();
+                  }}
+                  className="flex size-12 shrink-0 items-center justify-center rounded-[12px] bg-[#F4F2EE] transition-colors hover:bg-[#eae8e3] cursor-pointer lg:hidden"
+                >
+                  <Image src="/icons/nav/search-sm.svg" alt="" width={20} height={20} unoptimized />
+                </button>
+              )}
 
               <Link
                 href={guideLink.href}
@@ -508,36 +521,8 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -6 }}
                       transition={{ duration: 0.18, ease: "easeOut" }}
-                      className="absolute right-0 top-[calc(100%+12px)] z-50 max-h-[calc(100dvh-96px)] w-[401px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB]"
+                      className="absolute right-0 top-[calc(100%+12px)] z-50 max-h-[calc(100dvh-96px)] w-[401px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[0_12px_44px_rgba(0,0,0,0.12)] border border-[#F0EFEB] max-lg:hidden"
                     >
-                      <div className="lg:hidden">
-                        <MenuRow
-                          href="/"
-                          onClick={() => setProfileMenuOpen(false)}
-                          icon="/icons/nav/home.png"
-                          label="Home"
-                        />
-                        <MenuRow
-                          href="/experiences"
-                          onClick={() => setProfileMenuOpen(false)}
-                          icon="/icons/nav/experiences.png"
-                          label="Experiences"
-                        />
-                        {eventsEnabled() && (
-                          <MenuRow
-                            href="/events"
-                            onClick={() => setProfileMenuOpen(false)}
-                            icon="/icons/nav/events.png"
-                            label="Events"
-                          />
-                        )}
-                        <MenuRow
-                          href={user ? "/wishlists" : "/login"}
-                          onClick={() => setProfileMenuOpen(false)}
-                          icon="/icons/nav/wishlist.png"
-                          label="Wishlists"
-                        />
-                      </div>
                       <MenuRow
                         href="/my-experiences"
                         onClick={() => setProfileMenuOpen(false)}
@@ -593,6 +578,8 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                     </motion.div>
                   )}
                 </AnimatePresence>
+                {/* Phones get the full-screen menu instead of the dropdown. */}
+                {profileMenuOpen && <MobileMenu onClose={() => setProfileMenuOpen(false)} />}
               </div>
             </div>
           </div>
@@ -625,6 +612,11 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
       </div>
     </>
   );
+}
+
+function MobileMenu({ onClose }: { onClose: () => void }) {
+  const vm = useMobileMenuViewModel({ onClose });
+  return <MobileMenuView {...vm} />;
 }
 
 function compactLabel(id: (typeof COMPACT_SEARCH_TABS)[number]["id"], fallback: string, summary?: NavSearchSummary) {
