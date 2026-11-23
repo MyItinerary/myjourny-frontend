@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Plus, X } from "lucide-react";
 
 import { HomeNav } from "@/components/home/home-nav";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteWishlistDialog, NameWishlistDialog } from "@/components/wishlists/wishlist-dialogs";
 import { EmptyStateView } from "@/features/empty-state";
 import { cn } from "@/lib/utils";
@@ -38,6 +40,15 @@ export function WishlistsPageView(vm: WishlistsPageViewModel) {
             </button>
           </div>
         )}
+        {status === "loading" && (
+          <div aria-hidden className={cn(CONTAINER, "flex items-start justify-between gap-4 pt-8 pb-10 sm:pt-16 sm:pb-16")}>
+            <div className="flex w-full max-w-[696px] flex-col gap-3">
+              <Skeleton className="h-9 w-56 rounded-lg sm:h-10 sm:w-72" />
+              <Skeleton className="h-5 w-full max-w-[460px]" />
+            </div>
+            <Skeleton className="h-11 w-[72px] shrink-0 rounded-full" />
+          </div>
+        )}
       </section>
 
       {status === "signed-out" && (
@@ -49,10 +60,14 @@ export function WishlistsPageView(vm: WishlistsPageViewModel) {
           href="/login"
         />
       )}
-      {status === "loading" && (
-        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
-          <div className="size-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-          <p className="mt-3 text-sm">Loading your collections...</p>
+      {status === "loading" && <CollectionsSkeleton />}
+      {status === "error" && (
+        <div role="alert" className="flex flex-col items-center gap-4 px-6 py-20 text-center">
+          <h2 className="font-heading text-2xl font-bold text-[#130404]">Couldn&apos;t load your wishlists</h2>
+          <p className="max-w-sm text-base text-[#6F6B72]">Check your connection and try again. Your saved experiences are safe.</p>
+          <Button type="button" variant="brand" size="cta" onClick={vm.onRetry} className="mt-2">
+            Try again
+          </Button>
         </div>
       )}
       {status === "empty" && (
@@ -147,5 +162,26 @@ function CollectionCard({ card, editing, onDelete }: { card: WishlistCard; editi
     <Link href={card.href} className="flex flex-col gap-3">
       {body}
     </Link>
+  );
+}
+
+const SKELETON_CARDS = 4;
+
+/** While the collections load: the page's shape, so nothing jumps when they arrive. */
+function CollectionsSkeleton() {
+  return (
+    <div role="status" aria-label="Loading your collections" className={cn(CONTAINER, "pt-6 pb-16 sm:pt-10")}>
+      <div className="grid grid-cols-1 gap-x-[29px] gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-4">
+        {Array.from({ length: SKELETON_CARDS }, (_, i) => (
+          <div key={i} data-testid="collection-skeleton" className="flex flex-col gap-3">
+            <Skeleton className="aspect-[21/20] w-full rounded-[20px]" />
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

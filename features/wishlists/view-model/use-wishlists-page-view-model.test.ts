@@ -19,11 +19,21 @@ const collection = (id: string, name: string, item_count: number) => ({
 const state = vi.hoisted(() => ({
   collections: [] as ReturnType<typeof collection>[],
   isLoading: false,
+  isError: false,
+  isFetching: false,
+  failed: false,
+  refetch: vi.fn(),
   create: vi.fn(),
   remove: vi.fn(),
 }));
 vi.mock("@/lib/queries/wishlists", () => ({
-  useWishlists: () => ({ data: state.collections, isLoading: state.isLoading }),
+  useWishlists: () => ({
+    data: state.failed ? undefined : state.collections,
+    isLoading: state.isLoading,
+    isError: state.isError,
+    isFetching: state.isFetching,
+    refetch: state.refetch,
+  }),
   useCreateWishlist: () => ({ mutate: state.create, isPending: false }),
   useDeleteWishlist: () => ({ mutate: state.remove, isPending: false }),
 }));
@@ -42,6 +52,9 @@ afterEach(() => {
   session.hydrated = true;
   state.collections = [];
   state.isLoading = false;
+  state.isError = false;
+  state.isFetching = false;
+  state.failed = false;
   images.byId = {};
   vi.clearAllMocks();
 });
@@ -121,5 +134,20 @@ describe("useWishlistsPageViewModel", () => {
     act(() => result.current.createDialog.onSubmit("Lagos 2027"));
     expect(state.create).toHaveBeenCalledWith("Lagos 2027", expect.anything());
     expect(result.current.createDialog.open).toBe(false);
+  });
+
+  it("says the collections couldn't load, rather than looking empty, and retries", () => {
+    state.failed = true;
+    state.isError = true;
+    const { result, rerender } = renderHookWithProviders(() => useWishlistsPageViewModel());
+
+    expect(result.current.status).toBe("error");
+    act(() => result.current.onRetry());
+    expect(state.refetch).toHaveBeenCalled();
+
+    // While the retry runs, the skeleton shows again.
+    state.isFetching = true;
+    rerender();
+    expect(result.current.status).toBe("loading");
   });
 });

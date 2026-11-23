@@ -36,8 +36,10 @@ export function LoginForm() {
   );
   const [code, setCode] = useState("");
   const router = useRouter();
-  const login = useLogin();
-  const googleAuth = useGoogleAuth();
+  // The full-screen loader waits until the details are accepted: while they're being checked only
+  // the button says so, so a wrong password gets its error straight away, with no loader first.
+  const login = useLogin({ onAccepted: () => startSignInLoader() });
+  const googleAuth = useGoogleAuth({ onAccepted: () => startSignInLoader() });
 
   const canContinue = email.length > 0 && password.length > 0;
   const isBusy = isLoggingIn || isGoogleAuthenticating;
@@ -71,7 +73,6 @@ export function LoginForm() {
           if (!trimmed || isBusy) return;
           if (challenge.via === "password") {
             setIsLoggingIn(true);
-            startSignInLoader();
             login.mutate(
               { email, password, code: trimmed },
               {
@@ -81,7 +82,6 @@ export function LoginForm() {
             );
           } else {
             setIsGoogleAuthenticating(true);
-            startSignInLoader();
             googleAuth.mutate(
               { token: challenge.token, code: trimmed },
               {
@@ -130,7 +130,6 @@ export function LoginForm() {
         e.preventDefault();
         if (!canContinue || isBusy) return;
         setIsLoggingIn(true);
-        startSignInLoader();
         login.mutate(
           { email, password },
           {
@@ -144,7 +143,6 @@ export function LoginForm() {
         loading={isGoogleAuthenticating}
         onCredential={(credential) => {
           setIsGoogleAuthenticating(true);
-          startSignInLoader();
           googleAuth.mutate(
             { token: credential },
             {

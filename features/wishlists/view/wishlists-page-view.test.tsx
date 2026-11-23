@@ -10,6 +10,7 @@ vi.mock("@/components/home/home-nav", () => ({ HomeNav: () => <nav data-testid="
 
 const vm = (overrides: Partial<WishlistsPageViewModel> = {}): WishlistsPageViewModel => ({
   status: "ready",
+  onRetry: vi.fn(),
   cards: [
     { id: "w-1", name: "Birthday", href: "/wishlists/w-1", subtitle: "1 saved · Updated today", cover: { kind: "single", src: "/canoe.jpg" } },
     { id: "w-2", name: "Accra 2026", href: "/wishlists/w-2", subtitle: "5 saved · Updated today", cover: { kind: "grid", tiles: ["/1.jpg", null, null, null] } },
@@ -69,5 +70,24 @@ describe("WishlistsPageView", () => {
 
     rerender(<WishlistsPageView {...vm({ status: "empty", cards: [] })} />);
     expect(screen.getByText("It’s empty in here")).toBeInTheDocument();
+  });
+
+  it("shows a skeleton of the page while the collections load", () => {
+    renderWithProviders(<WishlistsPageView {...vm({ status: "loading", cards: [] })} />);
+
+    expect(screen.getByRole("status", { name: "Loading your collections" })).toBeInTheDocument();
+    expect(screen.getAllByTestId("collection-skeleton")).toHaveLength(4);
+    expect(screen.queryByRole("heading", { name: "Saved for later" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+  });
+
+  it("says when the collections couldn't load, and tries again", async () => {
+    const model = vm({ status: "error", cards: [] });
+    const { user } = renderWithProviders(<WishlistsPageView {...model} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Couldn't load your wishlists");
+    expect(screen.queryByText("It’s empty in here")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(model.onRetry).toHaveBeenCalled();
   });
 });

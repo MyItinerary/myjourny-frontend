@@ -19,7 +19,10 @@ export interface WishlistCard {
 }
 
 export interface WishlistsPageViewModel {
-  status: "signed-out" | "loading" | "empty" | "ready";
+  /** "error": the collections couldn't load (not the same as having none). */
+  status: "signed-out" | "loading" | "error" | "empty" | "ready";
+  /** Loads the collections again after an error. */
+  onRetry: () => void;
   cards: WishlistCard[];
   hasMore: boolean;
   onShowMore: () => void;
@@ -36,7 +39,8 @@ export interface WishlistsPageViewModel {
 /** My wishlists: the collections, their covers, creating one, and deleting whole collections in edit mode. */
 export function useWishlistsPageViewModel(): WishlistsPageViewModel {
   const { user, hydrated } = useSession();
-  const { data: collections = [], isLoading } = useWishlists();
+  const { data, isLoading, isError, isFetching, refetch } = useWishlists();
+  const collections = data ?? [];
   const { mutate: createCollection, isPending: isCreating } = useCreateWishlist();
   const { mutate: deleteCollection, isPending: isDeleting } = useDeleteWishlist();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -45,12 +49,24 @@ export function useWishlistsPageViewModel(): WishlistsPageViewModel {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const covers = useWishlistCoverLayouts(collections);
 
-  const status = hydrated && !user ? "signed-out" : !hydrated || isLoading ? "loading" : collections.length === 0 ? "empty" : "ready";
+  // A failed load says so, rather than looking like no wishlists; a retry shows the skeleton again.
+  const failed = isError && !data;
+  const status =
+    hydrated && !user
+      ? "signed-out"
+      : !hydrated || isLoading || (failed && isFetching)
+        ? "loading"
+        : failed
+          ? "error"
+          : collections.length === 0
+            ? "empty"
+            : "ready";
   const visible = showAll ? collections : collections.slice(0, COLLAPSED_COLLECTIONS);
   const toDelete = collections.find((c) => c.id === deleteId);
 
   return {
     status,
+    onRetry: () => void refetch(),
     cards: visible.map((collection) => ({
       id: collection.id,
       name: collection.name,
