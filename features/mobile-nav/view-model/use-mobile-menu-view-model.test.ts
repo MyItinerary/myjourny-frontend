@@ -36,22 +36,35 @@ describe("useMobileMenuViewModel", () => {
     expect(result.current.guide?.href).toBe("/become-a-guide");
   });
 
-  it("gives a signed-in user the host dashboard switch, their account pages and the unread count", () => {
+  it("invites a signed-in traveller to become a guide, with no hosting switch, and gives them their account pages", () => {
     session.user = { email: "ada@example.com" };
+    me.current = { signup_type: "traveller" };
     unread.count = 3;
     const { result } = renderHookWithProviders(() => useMobileMenuViewModel({ onClose: vi.fn() }));
 
-    expect(result.current.hostingHref).toBe("/host/dashboard");
+    expect(result.current.hostingHref).toBeNull();
+    expect(result.current.guide?.label).toBe("Become a guide");
     expect(result.current.links.find((l) => l.id === "notifications")).toMatchObject({ href: "/notifications", badge: 3 });
     expect(result.current.links.find((l) => l.id === "account-settings")?.href).toBe("/profile");
     expect(result.current.auth.label).toBe("Logout");
   });
 
-  it("drops the guide invite for hosts", () => {
+  it("gives hosts the hosting switch instead of the guide invite", () => {
     session.user = { email: "ada@example.com" };
-    me.current = { signup_type: "guide" };
+    for (const signup_type of ["guide", "both"]) {
+      me.current = { signup_type };
+      const { result, unmount } = renderHookWithProviders(() => useMobileMenuViewModel({ onClose: vi.fn() }));
+      expect(result.current.hostingHref).toBe("/host/dashboard");
+      expect(result.current.guide).toBeNull();
+      unmount();
+    }
+  });
+
+  it("shows neither while a signed-in account is still loading, so the wrong one never flashes up", () => {
+    session.user = { email: "ada@example.com" };
     const { result } = renderHookWithProviders(() => useMobileMenuViewModel({ onClose: vi.fn() }));
 
+    expect(result.current.hostingHref).toBeNull();
     expect(result.current.guide).toBeNull();
   });
 

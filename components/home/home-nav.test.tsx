@@ -8,7 +8,8 @@ import { HomeNav } from "./home-nav";
 
 const nav = vi.hoisted(() => ({ pathname: "/" }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => nav.pathname }));
-vi.mock("@/lib/auth/session-store", () => ({ useSession: () => ({ user: null }) }));
+const session = vi.hoisted(() => ({ user: null as null | { email: string } }));
+vi.mock("@/lib/auth/session-store", () => ({ useSession: () => session }));
 const me = vi.hoisted(() => ({ current: undefined as { signup_type: string } | undefined }));
 vi.mock("@/lib/queries/auth", async (importOriginal) => ({
   isHostAccount: (await importOriginal<typeof import("@/lib/queries/auth")>()).isHostAccount,
@@ -25,6 +26,7 @@ describe("HomeNav", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     me.current = undefined;
+    session.user = null;
     nav.pathname = "/";
     closeMobileSearch();
   });
@@ -90,28 +92,43 @@ describe("HomeNav", () => {
     expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
   });
 
-  it("invites travellers to become a guide", async () => {
+  it("invites travellers to become a guide, with no way to switch to hosting", async () => {
+    session.user = { email: "ada@example.com" };
     me.current = { signup_type: "traveller" };
     const { user } = renderWithProviders(<HomeNav />);
 
     expect(screen.getByRole("link", { name: "Become a guide" })).toHaveAttribute("href", "/become-a-guide");
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
     expect(screen.queryByText("Switch to host dashboard")).not.toBeInTheDocument();
+    expect(screen.queryByText("Switch to hosting")).not.toBeInTheDocument();
   });
 
-  it("sends guides to their host dashboard from the nav and the profile menu", async () => {
+  it("sends guides to their host dashboard from the nav and both profile menus, with no guide invite", async () => {
+    session.user = { email: "ada@example.com" };
     me.current = { signup_type: "guide" };
     const { user } = renderWithProviders(<HomeNav />);
 
     expect(screen.getByRole("link", { name: "Switch to host dashboard" })).toHaveAttribute("href", "/host/dashboard");
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
+    // The header link, the desktop dropdown's row and the phone menu's Switch to hosting.
     const links = screen.getAllByRole("link").filter((link) => link.getAttribute("href") === "/host/dashboard");
-    expect(links).toHaveLength(2);
+    expect(links).toHaveLength(3);
     expect(screen.getByText("Manage your listings and bookings")).toBeInTheDocument();
     expect(screen.queryByText("Become a guide")).not.toBeInTheDocument();
   });
 
+  it("shows neither while a signed-in account is still loading", async () => {
+    session.user = { email: "ada@example.com" };
+    const { user } = renderWithProviders(<HomeNav />);
+
+    await user.click(screen.getByRole("button", { name: "Profile menu" }));
+    expect(screen.queryByText("Become a guide")).not.toBeInTheDocument();
+    expect(screen.queryByText("Switch to host dashboard")).not.toBeInTheDocument();
+    expect(screen.queryByText("Switch to hosting")).not.toBeInTheDocument();
+  });
+
   it("sends a traveller who added hosting to the host dashboard too", () => {
+    session.user = { email: "ada@example.com" };
     me.current = { signup_type: "both" };
     renderWithProviders(<HomeNav />);
 

@@ -61,14 +61,17 @@ test("the experience page keeps its own booking bar, without the bottom bar over
   await expect(tabBar(page)).toHaveCount(0);
 });
 
-test("a signed-in traveller gets the full-screen menu, with Switch to hosting, and it fits the screen", async ({ page }) => {
+test("a signed-in host gets the full-screen menu with Switch to hosting, and it fits the screen", async ({ page }) => {
   await signIn(page);
-  await mockApi(page, { "GET /auth/me": (r) => r.fulfill({ json: { id: "user-1", email: "ngozi@example.com" } }) });
+  await mockApi(page, {
+    "GET /auth/me": (r) => r.fulfill({ json: { id: "user-1", email: "ngozi@example.com", signup_type: "guide" } }),
+  });
   await page.goto("/");
 
   await page.getByRole("button", { name: "Profile menu" }).click();
   const menu = page.getByRole("dialog", { name: "Menu" });
   await expect(menu.getByRole("link", { name: "Switch to hosting" })).toHaveAttribute("href", "/host/dashboard");
+  await expect(menu.getByText("Become a guide")).toHaveCount(0);
   const notifications = menu.getByRole("link", { name: "Notifications" });
   await expect(notifications).toBeVisible();
   const box = await notifications.boundingBox();
@@ -76,6 +79,19 @@ test("a signed-in traveller gets the full-screen menu, with Switch to hosting, a
   expect(box).not.toBeNull();
   expect(box!.x).toBeGreaterThanOrEqual(0);
   expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+});
+
+test("a signed-in traveller is invited to become a guide, with no Switch to hosting", async ({ page }) => {
+  await signIn(page);
+  await mockApi(page, {
+    "GET /auth/me": (r) => r.fulfill({ json: { id: "user-1", email: "ngozi@example.com", signup_type: "traveller" } }),
+  });
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Profile menu" }).click();
+  const menu = page.getByRole("dialog", { name: "Menu" });
+  await expect(menu.getByRole("link", { name: /Become a guide/ })).toHaveAttribute("href", "/become-a-guide");
+  await expect(menu.getByRole("link", { name: "Switch to hosting" })).toHaveCount(0);
 });
 
 test("the search button in the header opens the search sheet on a category page", async ({ page }) => {

@@ -15,10 +15,10 @@ export type MobileMenuLink = {
 };
 
 export type MobileMenuViewModel = {
-  /** The Switch to hosting button's target; null for guests, who have no host side to switch to. */
+  /** The Switch to hosting button's target; null for anyone who isn't a host. */
   hostingHref: string | null;
   links: MobileMenuLink[];
-  /** Null for hosts, who have nothing left to become. */
+  /** Become a guide; null for hosts, who already are one. */
   guide: MobileMenuLink | null;
   auth: { label: string; icon: string };
   onClose: () => void;
@@ -42,13 +42,14 @@ export function useMobileMenuViewModel({ onClose }: { onClose: () => void }): Mo
   }, []);
 
   const { data: me } = useMe();
-  // Hosts already are guides; the Switch to hosting button is their way across.
-  const isHost = me !== undefined && isHostAccount(me);
   const signedIn = user !== null;
+  // Hosts get Switch to hosting; everyone else (signed out included) is invited to become a guide.
+  // Until a signed-in account has loaded, neither shows, so the wrong one never flashes up.
+  const role = !signedIn ? "guest" : me === undefined ? "unknown" : isHostAccount(me) ? "host" : "guest";
   const accountHref = (href: string) => (signedIn ? href : "/login");
 
   return {
-    hostingHref: signedIn ? "/host/dashboard" : null,
+    hostingHref: role === "host" ? "/host/dashboard" : null,
     links: [
       { id: "my-experiences", label: "My experiences", icon: "/icons/nav/experiences.png", href: "/my-experiences" },
       {
@@ -62,15 +63,16 @@ export function useMobileMenuViewModel({ onClose }: { onClose: () => void }): Mo
       { id: "account-settings", label: "Account settings", icon: "/icons/nav/account-settings.png", href: accountHref("/profile") },
       { id: "help", label: "Help center", icon: "/icons/nav/help.png", href: "#" },
     ],
-    guide: isHost
-      ? null
-      : {
-          id: "guide",
-          label: "Become a guide",
-          sublabel: "Make extra income from what you already love doing",
-          icon: "/icons/nav/become-guide.png",
-          href: "/become-a-guide",
-        },
+    guide:
+      role !== "guest"
+        ? null
+        : {
+            id: "guide",
+            label: "Become a guide",
+            sublabel: "Make extra income from what you already love doing",
+            icon: "/icons/nav/become-guide.png",
+            href: "/become-a-guide",
+          },
     auth: signedIn
       ? { label: "Logout", icon: "/icons/nav/logout.png" }
       : { label: "Login or create account", icon: "/icons/nav/login.png" },

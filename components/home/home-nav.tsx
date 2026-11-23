@@ -129,12 +129,15 @@ export interface NavSearchSummary {
 
 export function HomeNav({ className, searchSummary }: { className?: string; searchSummary?: NavSearchSummary }) {
   const { user } = useSession();
-  // Hosts get a way over to their dashboard where everyone else is invited to become one.
+  // Hosts get a way over to their dashboard where everyone else is invited to become one. Until a
+  // signed-in account has loaded neither shows, so a host never sees "Become a guide" flash up.
   const { data: me } = useMe();
   const guideLink =
-    me && isHostAccount(me)
-      ? { href: "/host/dashboard", label: "Switch to host dashboard", sublabel: "Manage your listings and bookings" }
-      : { href: "/become-a-guide", label: "Become a guide", sublabel: "Make extra income from what you already love doing" };
+    user && !me
+      ? null
+      : me && isHostAccount(me)
+        ? { href: "/host/dashboard", label: "Switch to host dashboard", sublabel: "Manage your listings and bookings" }
+        : { href: "/become-a-guide", label: "Become a guide", sublabel: "Make extra income from what you already love doing" };
   const router = useRouter();
   const pathname = usePathname();
   // "My experiences" lives in the account menu, not the pill bar, so its pages
@@ -434,12 +437,14 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                 </button>
               )}
 
-              <Link
-                href={guideLink.href}
-                className="hidden text-base font-medium text-foreground transition-colors hover:text-brand xl:inline-block mr-1"
-              >
-                {guideLink.label}
-              </Link>
+              {guideLink && (
+                <Link
+                  href={guideLink.href}
+                  className="hidden text-base font-medium text-foreground transition-colors hover:text-brand xl:inline-block mr-1"
+                >
+                  {guideLink.label}
+                </Link>
+              )}
 
               {user && (
                 <div ref={notifContainerRef} className="relative hidden lg:block">
@@ -549,16 +554,19 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
                         label="Help center"
                       />
 
-                      <div className="my-3 h-px w-full bg-[#EEEEEE]" />
-
-                      <MenuRow
-                        href={guideLink.href}
-                        onClick={() => setProfileMenuOpen(false)}
-                        icon="/icons/nav/become-guide.png"
-                        label={guideLink.label}
-                        sublabel={guideLink.sublabel}
-                        accent
-                      />
+                      {guideLink && (
+                        <>
+                          <div className="my-3 h-px w-full bg-[#EEEEEE]" />
+                          <MenuRow
+                            href={guideLink.href}
+                            onClick={() => setProfileMenuOpen(false)}
+                            icon="/icons/nav/become-guide.png"
+                            label={guideLink.label}
+                            sublabel={guideLink.sublabel}
+                            accent
+                          />
+                        </>
+                      )}
 
                       <div className="my-3 h-px w-full bg-[#EEEEEE]" />
 
