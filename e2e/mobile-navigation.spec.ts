@@ -103,3 +103,33 @@ test("the search button in the header opens the search sheet on a category page"
   await page.getByRole("banner").getByRole("button", { name: "Search", exact: true }).click();
   await expect(searchSheet(page).getByPlaceholder("Search destination or activities")).toBeVisible();
 });
+
+test("the bottom bar slides away as you scroll down and comes back as you scroll up", async ({ page }) => {
+  await page.goto("/");
+  const bar = page.locator('nav[aria-label="Main"]');
+  await expect(bar).toHaveAttribute("data-hidden", "false");
+
+  await page.mouse.wheel(0, 600);
+  await expect(bar).toHaveAttribute("data-hidden", "true");
+  await expect(page.getByRole("navigation", { name: "Main" })).toHaveCount(0);
+
+  await page.mouse.wheel(0, -200);
+  await expect(bar).toHaveAttribute("data-hidden", "false");
+  await expect(tabBar(page).getByRole("link", { name: "Home" })).toBeVisible();
+});
+
+test("the site can be added to the home screen with the Myjourny name and icons", async ({ page, request }) => {
+  await page.goto("/");
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
+  await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute("content", "Myjourny");
+
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  expect(manifest).toMatchObject({ name: "Myjourny", display: "standalone", start_url: "/" });
+  for (const icon of manifest.icons as { src: string }[]) {
+    const res = await request.get(icon.src);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toBe("image/png");
+  }
+  expect((await request.get("/apple-icon")).status()).toBe(200);
+});
