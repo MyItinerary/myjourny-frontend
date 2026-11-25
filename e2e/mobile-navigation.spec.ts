@@ -133,3 +133,16 @@ test("the site can be added to the home screen with the MyJourny name and icons"
   }
   expect((await request.get("/apple-icon")).status()).toBe(200);
 });
+
+test("an iPhone opening the installed app gets a white launch image, and the launch screen stays out of browser tabs", async ({ page, request }) => {
+  await page.goto("/");
+  const startup = page.locator('link[rel="apple-touch-startup-image"]');
+  expect(await startup.count()).toBeGreaterThan(5);
+
+  const res = await request.get((await startup.first().getAttribute("href"))!);
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toBe("image/png");
+
+  // In a browser tab (not the installed app) the launch screen never shows.
+  await expect(page.getByTestId("launch-screen")).toBeHidden();
+});
