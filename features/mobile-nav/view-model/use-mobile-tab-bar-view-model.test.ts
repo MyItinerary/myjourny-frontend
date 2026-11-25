@@ -18,6 +18,7 @@ describe("useMobileTabBarViewModel", () => {
     const { result } = renderHookWithProviders(() => useMobileTabBarViewModel());
 
     expect(result.current.visible).toBe(true);
+    expect(result.current.hidden).toBe(false);
     expect(result.current.tabs.map((t) => [t.label, t.href, t.icon, t.active])).toEqual([
       ["Home", "/", "/icons/nav/home.png", true],
       ["Experiences", "/experiences", "/icons/nav/experiences.png", false],
