@@ -46,8 +46,8 @@ export const HELP_CARDS = {
     action: "Read the safety rules",
   },
   community: {
-    title: "Other hosts in Lagos",
-    body: "There is a WhatsApp group of 40 hosts who mostly talk about pricing and difficult guests. We do not read it.",
+    title: "Other guides in Lagos",
+    body: "There is a WhatsApp group of 40 guides who mostly talk about pricing and difficult guests. We do not read it.",
     action: "Ask to join",
   },
 };

@@ -19,7 +19,7 @@ export function EventPastEventsView({ events }: { events: EventDetail["pastEvent
     <section aria-labelledby="past-events" className="mx-auto w-full max-w-[1512px] px-6 pt-[77px] pb-[77px] lg:px-20 lg:pb-[79px]">
       <div className="flex items-center justify-between gap-4">
         <h2 id="past-events" className="font-sans text-[32px] leading-[120%] font-extrabold text-[#333134] lg:text-[40px] lg:leading-[48px]">
-          Past events by this host
+          Past events by this guide
         </h2>
         <div className="flex gap-1">
           <button

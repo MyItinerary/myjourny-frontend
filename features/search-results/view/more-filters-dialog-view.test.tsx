@@ -57,12 +57,12 @@ describe("MoreFiltersDialogView", () => {
     const { user } = renderWithProviders(<MoreFiltersDialogView {...open({ filters, setFlag, setGroupSize, toggleOption })} />);
 
     expect(screen.getByRole("heading", { name: "Experiences" })).toBeInTheDocument();
-    for (const label of ["Free cancellation", "Verified host", "Host replies within 2 hours", "Not weather dependent"]) {
+    for (const label of ["Free cancellation", "Verified guide", "Guide replies within 2 hours", "Not weather dependent"]) {
       expect(screen.getByRole("switch", { name: label })).toBeInTheDocument();
     }
     expect(screen.getByRole("button", { name: "Hausa" })).toBeDisabled();
 
-    await user.click(screen.getByRole("switch", { name: "Verified host" }));
+    await user.click(screen.getByRole("switch", { name: "Verified guide" }));
     expect(setFlag).toHaveBeenCalledWith("verifiedHost", true);
     await user.click(screen.getByRole("button", { name: "More group size" }));
     expect(setGroupSize).toHaveBeenCalledWith(2);

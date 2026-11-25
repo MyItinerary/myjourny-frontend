@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { VerifyEmailContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Verify email | MyJourny",
+  title: "Verify email | Myjourny",
 };
 
 export default function VerifyEmailPage() {

@@ -51,7 +51,7 @@ function formatDay(iso: string | null | undefined) {
 // "Chrome on macOS" from the session's user agent (itin stores the raw string).
 function describeDevice(userAgent: string | null) {
   if (!userAgent) return "Unknown device";
-  if (/MyJourny/i.test(userAgent)) return "MyJourny app";
+  if (/MyJourny/i.test(userAgent)) return "Myjourny app";
   const browser = /Edg\//.test(userAgent)
     ? "Edge"
     : /OPR\/|Opera/.test(userAgent)

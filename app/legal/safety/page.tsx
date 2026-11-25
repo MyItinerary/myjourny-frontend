@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { SafetyContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Safety Guide | MyJourny",
-  description: "Comprehensive safety guide for guests, hosts, and organisers on MyJourny.",
+  title: "Safety Guide | Myjourny",
+  description: "Comprehensive safety guide for guests, guides, and organisers on Myjourny.",
 };
 
 export default function SafetyPage() {

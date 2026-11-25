@@ -22,7 +22,7 @@ describe("BookingConfirmedEmailView", () => {
     renderWithProviders(<BookingConfirmedEmailView data={mockBookingConfirmedEmail} />);
 
     expect(
-      screen.getByText(`Hosted by ${mockBookingConfirmedEmail.host.name}`),
+      screen.getByText(`Guided by ${mockBookingConfirmedEmail.host.name}`),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What's included" })).toBeInTheDocument();
     expect(screen.getByText("Manage booking")).toBeInTheDocument();

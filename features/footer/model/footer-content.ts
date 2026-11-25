@@ -21,13 +21,13 @@ export const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
     ],
   },
   {
-    heading: "Hosting and Curating",
+    heading: "Guiding and Curating",
     links: [
-      { label: "Become a host", href: "/become-a-guide" },
-      { label: "Host an event", href: "#", hidden: true },
-      { label: "How hosting pays", href: "#", hidden: true },
-      { label: "Host Terms", href: "/legal/hosts" },
-      { label: "Hosting responsibly", href: "#", hidden: true },
+      { label: "Become a guide", href: "/become-a-guide" },
+      { label: "Guide an event", href: "#", hidden: true },
+      { label: "How guiding pays", href: "#", hidden: true },
+      { label: "Guide Terms", href: "/legal/hosts" },
+      { label: "Guiding responsibly", href: "#", hidden: true },
     ],
   },
   {

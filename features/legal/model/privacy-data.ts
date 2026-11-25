@@ -10,17 +10,17 @@ export const privacyData: TermsData = {
     items: [
       {
         question: "Who is responsible for your data?",
-        answer: "Myjourny and Experiences LLC, operating as MyJourny.",
+        answer: "Myjourny and Experiences LLC, operating as Myjourny.",
       },
       {
         question: "What do we collect?",
         answer:
-          "What you give us, what happens when you use MyJourny, and what our partners tell us, such as whether a payment went through.",
+          "What you give us, what happens when you use Myjourny, and what our partners tell us, such as whether a payment went through.",
       },
       {
         question: "Why?",
         answer:
-          "To run your bookings, keep people safe, pay hosts, personalise what you see, and follow the law.",
+          "To run your bookings, keep people safe, pay guides, personalise what you see, and follow the law.",
       },
       {
         question: "Do you sell my data?",
@@ -29,7 +29,7 @@ export const privacyData: TermsData = {
       {
         question: "Who sees it?",
         answer:
-          "Hosts and organisers see only what they need to run your booking. Our service providers see what they need to work for us.",
+          "Guides and organisers see only what they need to run your booking. Our service providers see what they need to work for us.",
       },
       {
         question: "Can I stop personalisation and marketing?",
@@ -52,7 +52,7 @@ export const privacyData: TermsData = {
     { id: "section-3", label: "3. What we collect" },
     { id: "section-4", label: "4. Why we use your data, and our legal basis" },
     { id: "section-5", label: "5. Personalisation and automated decisions" },
-    { id: "section-6", label: "6. What hosts and organisers see" },
+    { id: "section-6", label: "6. What guides and organisers see" },
     { id: "section-7", label: "7. Who else we share data with" },
     { id: "section-8", label: "8. Transfers outside Nigeria" },
     { id: "section-9", label: "9. How long we keep your data" },
@@ -71,13 +71,13 @@ export const privacyData: TermsData = {
       title: "1. Who we are",
       items: [
         {
-          text: 'MyJourny is a service of Myjourny and Experiences LLC (RC 9460304), of The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos. We help guests find and book experiences and events in Nigeria, run by hosts and organisers. In this policy, "we", "us", and "our" mean Myjourny and Experiences LLC.',
+          text: 'Myjourny is a service of Myjourny and Experiences LLC (RC 9460304), of The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos. We help guests find and book experiences and events in Nigeria, run by guides and organisers. In this policy, "we", "us", and "our" mean Myjourny and Experiences LLC.',
         },
         {
           text: "We are the data controller of the personal data described here. This policy follows the Nigeria Data Protection Act 2023 and the regulations and directives made under it. Our Data Protection Officer is reachable at [DPO EMAIL] .",
         },
         {
-          text: "This policy applies to guests, hosts, event organisers, curators, and visitors to our website and any other service we run. If we collect data for a different purpose, we will tell you at that point.",
+          text: "This policy applies to guests, guides, event organisers, curators, and visitors to our website and any other service we run. If we collect data for a different purpose, we will tell you at that point.",
         },
       ],
     },
@@ -89,7 +89,7 @@ export const privacyData: TermsData = {
       bullets: [
         "We use your details to make bookings work, to take payment, and to contact you about them.",
         "We use your taste and activity to show you experiences you are more likely to want. You can switch this off.",
-        "We share limited details with hosts and organisers so they can run what you booked.",
+        "We share limited details with guides and organisers so they can run what you booked.",
         "We keep payment and legal records as long as the law needs us to.",
         "You have rights over your data, and we make them easy to use.",
       ],
@@ -105,16 +105,16 @@ export const privacyData: TermsData = {
           bullets: [
             "**Account details:** your name, phone number, email address, and profile photo if you add one. If you sign in with Google, we receive your name, email, and profile picture from Google.",
             "**Taste profile:** your answers to the taste quiz, the categories and experiences you save, and the preferences you set.",
-            "**Booking details:** the experience or event, the date, the number of guests, add-ons, and any notes you write to the host.",
-            "**Dietary and access needs:** anything you tell us so a host can look after you. This can reveal health, religious, or other **sensitive information**. We collect it only with your **explicit consent**, only when you choose to give it, and share it only with the host or organiser who needs it.",
-            "**Messages:** what you write to hosts, organisers, and our support team.",
+            "**Booking details:** the experience or event, the date, the number of guests, add-ons, and any notes you write to the guide.",
+            "**Dietary and access needs:** anything you tell us so a guide can look after you. This can reveal health, religious, or other **sensitive information**. We collect it only with your **explicit consent**, only when you choose to give it, and share it only with the guide or organiser who needs it.",
+            "**Messages:** what you write to guides, organisers, and our support team.",
             "**Reviews, ratings, and photos** you post.",
-            "**Identity details:** if you are a host, an organiser, or a curator, we collect ID documents and may collect a selfie, so we can verify you. For payouts we collect your bank account details. For some guest bookings we may ask for ID or proof of age, for example for 18+ events.",
+            "**Identity details:** if you are a guide, an organiser, or a curator, we collect ID documents and may collect a selfie, so we can verify you. For payouts we collect your bank account details. For some guest bookings we may ask for ID or proof of age, for example for 18+ events.",
             "**Reports and complaints:** what you tell us in a safety report or a dispute.",
           ],
         },
         {
-          boldPrefix: "3.2 What we collect when you use MyJourny",
+          boldPrefix: "3.2 What we collect when you use Myjourny",
           text: "",
           bullets: [
             "**Device and technical data:** device type, operating system, browser, IP address, language, and the pages and features you use.",
@@ -130,7 +130,7 @@ export const privacyData: TermsData = {
           bullets: [
             "**Our payment partners, Paystack, Novac and Stripe:** whether a payment succeeded, failed, or was refunded, a payment reference, and the masked card or bank details (for example, Mastercard ending 4821). We do not receive or store your full card number.",
             "**Our verification provider, [ID VERIFICATION PROVIDER] :** whether your ID and bank details checked out.",
-            "**Hosts and organisers:** their notes about a booking, such as a no-show, or a report about an incident.",
+            "**Guides and organisers:** their notes about a booking, such as a no-show, or a report about an incident.",
             "**Other users,** if they report a problem involving you.",
             "**Public sources and advisers,** where needed to prevent fraud or follow the law.",
           ],
@@ -156,7 +156,7 @@ export const privacyData: TermsData = {
             "Contract",
           ],
           [
-            "Share details with the host or organiser so they can run your booking",
+            "Share details with the guide or organiser so they can run your booking",
             "Name, group size, notes, dietary and access needs, contact details unlocked 24 hours before",
             "Contract, and your **explicit consent** for sensitive details",
           ],
@@ -181,12 +181,12 @@ export const privacyData: TermsData = {
             "Legitimate interest, legal obligation, and the protection of people's vital interests",
           ],
           [
-            "Verify hosts, organisers, and curators",
+            "Verify guides, organisers, and curators",
             "ID, selfie, bank details, business details",
             "Contract, legal obligation, and legitimate interest",
           ],
           [
-            "Improve MyJourny: fix bugs, understand how it is used, measure what works",
+            "Improve Myjourny: fix bugs, understand how it is used, measure what works",
             "Activity and device data, usually aggregated",
             "Legitimate interest, or consent where cookies require it",
           ],
@@ -218,7 +218,7 @@ export const privacyData: TermsData = {
           text: "We use your taste profile and activity to rank and recommend experiences. We always show why something was recommended, and you can change your taste profile or turn personalisation off in settings. If you turn it off, you still see everything. It is just not ordered for you.",
         },
         {
-          text: "**We never sell ranking or placement.** A host cannot pay to appear higher in your results.",
+          text: "**We never sell ranking or placement.** A guide cannot pay to appear higher in your results.",
         },
         {
           text: "We use automated checks to spot likely fraud, such as repeated failed payments or suspicious sign-ins. A person reviews any decision that could stop you booking or block your account, and you can ask us to review it again.",
@@ -228,8 +228,8 @@ export const privacyData: TermsData = {
     {
       id: "section-6",
       number: "6.",
-      title: "6. What hosts and organisers see",
-      intro: "When you book, we share with the host or organiser only what they need:",
+      title: "6. What guides and organisers see",
+      intro: "When you book, we share with the guide or organiser only what they need:",
       bullets: [
         "your first name, and your full name where they need to check you in",
         "the number of guests and any add-ons",
@@ -238,7 +238,7 @@ export const privacyData: TermsData = {
       ],
       items: [
         {
-          text: "After you book, the host or organiser becomes an **independent controller** of those details. Our Host Terms require them to use the details only to run your booking and keep you safe, to keep them secure, to avoid sending you marketing unless you separately agree, to delete them normally within 30 days after the experience, and never to sell them. If you think a host or organiser has misused your data, tell us at **[DPO EMAIL]** and we will act on it.",
+          text: "After you book, the guide or organiser becomes an **independent controller** of those details. Our Guide Terms require them to use the details only to run your booking and keep you safe, to keep them secure, to avoid sending you marketing unless you separately agree, to delete them normally within 30 days after the experience, and never to sell them. If you think a guide or organiser has misused your data, tell us at **[DPO EMAIL]** and we will act on it.",
         },
         {
           text: "**Attendee connect** is optional and off by default. If you opt in after an experience, we show your first name and photo to the others who were there, for **14 days**. You can leave at any time.",
@@ -292,11 +292,11 @@ export const privacyData: TermsData = {
             "6 years after the transaction, for tax and accounting",
           ],
           [
-            "Host, organiser, and curator ID documents and selfies",
+            "Guide, organiser, and curator ID documents and selfies",
             "Until verification is complete and then for 12 months after your account closes, unless a longer period is needed for a dispute or the law",
           ],
           [
-            "Messages with hosts and organisers",
+            "Messages with guides and organisers",
             "2 years after the experience, longer if there is a dispute",
           ],
           ["Support conversations", "3 years after the request closes"],
@@ -372,7 +372,7 @@ export const privacyData: TermsData = {
       title: "13. Children",
       items: [
         {
-          text: "MyJourny accounts are for people aged 18 and over. We do not knowingly collect data from children through their own accounts. Some experiences and events welcome children when they come with a parent or guardian who books for them. If you think a child has given us data, contact **[DPO EMAIL]** and we will delete it.",
+          text: "Myjourny accounts are for people aged 18 and over. We do not knowingly collect data from children through their own accounts. Some experiences and events welcome children when they come with a parent or guardian who books for them. If you think a child has given us data, contact **[DPO EMAIL]** and we will delete it.",
         },
       ],
     },
@@ -382,7 +382,7 @@ export const privacyData: TermsData = {
       title: "14. Links to other sites",
       items: [
         {
-          text: "MyJourny may link to other sites, such as maps, payment pages, or a host's own page. We are not responsible for how they handle data. Read their policies.",
+          text: "Myjourny may link to other sites, such as maps, payment pages, or a guide's own page. We are not responsible for how they handle data. Read their policies.",
         },
       ],
     },
@@ -392,7 +392,7 @@ export const privacyData: TermsData = {
       title: "15. Changes to this policy",
       items: [
         {
-          text: "We may update this policy. For guests, we tell you at least **14 days** before a material change takes effect, by email and in the product. For hosts and organisers, we give **30 days**. The date at the top shows when it was last changed.",
+          text: "We may update this policy. For guests, we tell you at least **14 days** before a material change takes effect, by email and in the product. For guides and organisers, we give **30 days**. The date at the top shows when it was last changed.",
         },
       ],
     },

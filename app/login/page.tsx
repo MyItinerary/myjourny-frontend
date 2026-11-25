@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { LoginContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Login | MyJourny",
+  title: "Login | Myjourny",
 };
 
 export default function LoginPage() {

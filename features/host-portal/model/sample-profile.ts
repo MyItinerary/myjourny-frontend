@@ -30,7 +30,7 @@ export const SAMPLE_PROFILE: HostProfile = {
       row("Identity", "NIN checked on 2 March 2026", "View", { chip: { text: "Verified", kind: "Live" } }),
       row("Identity selfie", "Taken on webcam, 2 March 2026", "View", { chip: { text: "Verified", kind: "Live" } }),
       row("Bank account name", "BAKARE TUNDE OLUWASEUN matches your NIN", "View", { chip: { text: "Matched", kind: "Live" } }),
-      row("Registered business", "You host as an individual", "Set up", {
+      row("Registered business", "You guide as an individual", "Set up", {
         chip: { text: "Not set up", kind: "Draft" },
         help: "A CAC number adds a Registered business badge, makes you eligible for company and agency bookings, and raises your payout limit. Nothing is taken away if you never do it.",
       }),
@@ -66,18 +66,18 @@ export const SAMPLE_PROFILE: HostProfile = {
   schedule: "weekly",
   statements: [
     { year: "2026, so far", sub: "₦1,046,000 earned · ₦156,900 commission" },
-    { year: "2025", sub: "You were not hosting yet" },
+    { year: "2025", sub: "You were not guiding yet" },
   ],
   documents: [
     { name: "National identity number", sub: "NIN slip · uploaded 2 March 2026", checked: true, action: "View" },
     { name: "Identity selfie", sub: "Taken on webcam · 2 March 2026", checked: true, action: "View" },
     { name: "Bank account", sub: "GTBank · name matched your NIN", checked: true, action: "View" },
-    { name: "CAC certificate", sub: "You host as an individual, this is optional", checked: false, action: "Upload" },
+    { name: "CAC certificate", sub: "You guide as an individual, this is optional", checked: false, action: "Upload" },
   ],
   preview: {
     name: "Tunde Bakare",
-    line: "Photographer · Lagos · hosting since 2026",
-    badges: ["Verified host", "Replies in an hour", "4.9 from 128 guests"],
+    line: "Photographer · Lagos · guiding since 2026",
+    badges: ["Verified guide", "Replies in an hour", "4.9 from 128 guests"],
     bio: "I have been photographing Lagos Island for nine years, long before it was on anyone's list. I know which walls catch the light at five o'clock and which streets are quiet on a Saturday. You do not need a camera or any idea how to pose. I will tell you where to stand.",
     languages: "English, Yoruba and Pidgin",
   },

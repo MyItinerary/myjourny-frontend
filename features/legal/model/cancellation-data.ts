@@ -16,7 +16,7 @@ export const cancellationData: TermsData = {
       },
       {
         id: "short-2",
-        text: "If a host cancels, you get a **full refund**.",
+        text: "If a guide cancels, you get a **full refund**.",
       },
       {
         id: "short-3",
@@ -41,7 +41,7 @@ export const cancellationData: TermsData = {
     { id: "section-5", label: "5. What is not refundable" },
     { id: "section-6", label: "6. How refunds are paid" },
     { id: "section-7", label: "7. How to ask" },
-    { id: "section-8", label: "8. For hosts" },
+    { id: "section-8", label: "8. For guides" },
   ],
   sections: [
     {
@@ -51,7 +51,7 @@ export const cancellationData: TermsData = {
       items: [
         {
           number: "1.1",
-          text: "MyJourny applies each host's policy for them. The policy that was showing when you booked is the one that applies, even if the host changes it later.",
+          text: "Myjourny applies each guide's policy for them. The policy that was showing when you booked is the one that applies, even if the guide changes it later.",
         },
         {
           number: "1.2",
@@ -71,7 +71,7 @@ export const cancellationData: TermsData = {
         {
           number: "2.1",
           boldPrefix: "Changing the date.",
-          text: "You can ask to move your booking to another date. If the cancellation window is still open and there is space, we will move it for free. If not, the host may agree to a change, but they do not have to.",
+          text: "You can ask to move your booking to another date. If the cancellation window is still open and there is space, we will move it for free. If not, the guide may agree to a change, but they do not have to.",
         },
         {
           number: "2.2",
@@ -91,7 +91,7 @@ export const cancellationData: TermsData = {
         {
           number: "2.5",
           boldPrefix: "Request to book.",
-          text: "Your card is authorised, not charged, until the host accepts. If they decline or do not reply in time, the authorisation is released and you pay nothing. The cancellation policy applies only once your booking is confirmed.",
+          text: "Your card is authorised, not charged, until the guide accepts. If they decline or do not reply in time, the authorisation is released and you pay nothing. The cancellation policy applies only once your booking is confirmed.",
         },
       ],
     },
@@ -160,13 +160,13 @@ export const cancellationData: TermsData = {
       items: [
         {
           number: "4.1",
-          boldPrefix: "The host or organiser cancels:",
+          boldPrefix: "The guide or organiser cancels:",
           text: "full refund. We will also help you find another date or a similar experience.",
         },
         {
           number: "4.2",
           boldPrefix: "The experience cannot safely go ahead.",
-          text: "This includes severe weather, unsafe conditions, or a safety concern raised by the host or by us. You choose **a new date or a full refund**.",
+          text: "This includes severe weather, unsafe conditions, or a safety concern raised by the guide or by us. You choose **a new date or a full refund**.",
         },
         {
           number: "4.3",
@@ -175,7 +175,7 @@ export const cancellationData: TermsData = {
         },
         {
           number: "4.4",
-          boldPrefix: "The host does not deliver, or what you receive is materially different from the listing.",
+          boldPrefix: "The guide does not deliver, or what you receive is materially different from the listing.",
           text: "For example, the listing said the experience suits beginners and it does not, or the meeting point is wrong, or the stated accessibility is untrue. Tell us as soon as you can, ideally on the day, and within 48 hours after. We will review it, and you may be entitled to a full or partial refund.",
         },
         {
@@ -198,22 +198,22 @@ export const cancellationData: TermsData = {
         {
           number: "5.1",
           boldPrefix: "No-shows and late arrival.",
-          text: "If you do not turn up, or arrive after the host has released your spot (normally 15 minutes after the start unless the listing says otherwise), no refund is due.",
+          text: "If you do not turn up, or arrive after the guide has released your spot (normally 15 minutes after the start unless the listing says otherwise), no refund is due.",
         },
         {
           number: "5.2",
           boldPrefix: "Being sent away.",
-          text: "If a host stops you taking part because you are unsafe, drunk, on drugs, or disruptive, or because you did not meet requirements the listing clearly stated (such as an age limit or ID), no refund is due.",
+          text: "If a guide stops you taking part because you are unsafe, drunk, on drugs, or disruptive, or because you did not meet requirements the listing clearly stated (such as an age limit or ID), no refund is due.",
         },
         {
           number: "5.3",
           boldPrefix: "Change of mind or personal circumstances",
-          text: "outside the refund windows, including illness, travel problems, and work. In genuine emergencies with proof, such as a hospital admission or a death in the family, please contact us. We cannot promise a refund, but we will talk to the host and may offer a new date or credit as a goodwill gesture. This is a favour, not a right.",
+          text: "outside the refund windows, including illness, travel problems, and work. In genuine emergencies with proof, such as a hospital admission or a death in the family, please contact us. We cannot promise a refund, but we will talk to the guide and may offer a new date or credit as a goodwill gesture. This is a favour, not a right.",
         },
         {
           number: "5.4",
           boldPrefix: "Credit.",
-          text: "In some cases, such as a goodwill gesture, we may offer MyJourny credit instead of a refund. Credit is optional for you to accept, and you can ask for a refund where this policy says you are entitled to one.",
+          text: "In some cases, such as a goodwill gesture, we may offer Myjourny credit instead of a refund. Credit is optional for you to accept, and you can ask for a refund where this policy says you are entitled to one.",
         },
       ],
     },
@@ -263,7 +263,7 @@ export const cancellationData: TermsData = {
     {
       id: "section-8",
       number: "8.",
-      title: "8. For hosts",
+      title: "8. For guides",
       items: [
         {
           number: "8.1",
@@ -275,7 +275,7 @@ export const cancellationData: TermsData = {
         },
         {
           number: "8.3",
-          text: "If you cancel, guests get a full refund, and you are not paid for that booking. Repeated cancellations affect your listing's visibility and can lead to suspension. See the [Host Terms](/legal/hosts).",
+          text: "If you cancel, guests get a full refund, and you are not paid for that booking. Repeated cancellations affect your listing's visibility and can lead to suspension. See the [Guide Terms](/legal/hosts).",
         },
         {
           number: "8.4",

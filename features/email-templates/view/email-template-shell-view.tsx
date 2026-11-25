@@ -28,10 +28,10 @@ export function EmailTemplateShellView({
   title,
   subtitle,
   signOffPrefix,
-  signOffTeam = "From MyJourny",
+  signOffTeam = "From Myjourny",
   footerNotice,
   footerHelpEmail,
-  footerCopyright = "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  footerCopyright = "© 2026 Myjourny Ltd. Lagos, Nigeria.",
   children,
   className,
   maxWidthClass = "max-w-[600px]",
@@ -63,12 +63,12 @@ export function EmailTemplateShellView({
           {/* Subtle contrast overlay to enhance logo readability */}
           <div className="absolute inset-0 bg-black/15" />
 
-          {/* Centered MyJourny Logo */}
+          {/* Centered Myjourny Logo */}
           <div className="absolute inset-0 flex items-center justify-center p-6">
             <div className="relative h-10 w-[190px] sm:h-12 sm:w-[210px]">
               <Image
                 src={logoSrc}
-                alt="MyJourny"
+                alt="Myjourny"
                 fill
                 sizes="210px"
                 className="object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"

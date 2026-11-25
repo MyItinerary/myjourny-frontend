@@ -4,20 +4,20 @@ export const termsData: TermsData = {
   title: "Terms of Use",
   lastUpdated: "9 November 2026",
   companyAgreementText:
-    'These terms are an agreement between you and Myjourny and Experiences LLC (RC 9460304), registered at The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos. We call ourselves "MyJourny", "we", or "us". You are "you" or "the guest".',
+    'These terms are an agreement between you and Myjourny and Experiences LLC (RC 9460304), registered at The Ersleigh 2, Road 13, Lekki Scheme 2, off Ogombo Road, Lagos. We call ourselves "Myjourny", "we", or "us". You are "you" or "the guest".',
   agreementNoticeText:
-    "By creating an account or making a booking, you agree to these terms, our [Privacy Policy](/legal/privacy), and our [Cancellation and Refund Policy](/legal/cancellations). If you do not agree, please do not use MyJourny.",
+    "By creating an account or making a booking, you agree to these terms, our [Privacy Policy](/legal/privacy), and our [Cancellation and Refund Policy](/legal/cancellations). If you do not agree, please do not use Myjourny.",
   shortVersion: {
     title: "The short version",
     disclaimer: "This summary is for convenience. The full terms below are what apply.",
     items: [
       {
         id: "short-1",
-        text: "MyJourny is a marketplace. Hosts run the experiences. We help you find them, book them, and pay safely.",
+        text: "Myjourny is a marketplace. Guides run the experiences. We help you find them, book them, and pay safely.",
       },
       {
         id: "short-2",
-        text: "Your payment is held by our payment partner until the experience happens, then released to the host.",
+        text: "Your payment is held by our payment partner until the experience happens, then released to the guide.",
       },
       {
         id: "short-3",
@@ -25,17 +25,17 @@ export const termsData: TermsData = {
       },
       {
         id: "short-4",
-        text: "If a host cancels, you get a full refund.",
+        text: "If a guide cancels, you get a full refund.",
       },
       {
         id: "short-5",
-        text: "Be kind, follow your host's safety instructions, and tell them about anything that affects your safety.",
+        text: "Be kind, follow your guide's safety instructions, and tell them about anything that affects your safety.",
       },
     ],
   },
   tableOfContents: [
     { id: "short-version", label: "The short version" },
-    { id: "section-1", label: "1. What MyJourny is, and what it is not" },
+    { id: "section-1", label: "1. What Myjourny is, and what it is not" },
     { id: "section-2", label: "2. Your account" },
     { id: "section-3", label: "3. Booking" },
     { id: "section-4", label: "4. Payment" },
@@ -57,28 +57,28 @@ export const termsData: TermsData = {
     {
       id: "section-1",
       number: "1.",
-      title: "1. What MyJourny is, and what it is not",
+      title: "1. What Myjourny is, and what it is not",
       items: [
         {
           number: "1.1",
-          text: "MyJourny is an online marketplace where independent hosts list experiences and events, and guests book them.",
+          text: "Myjourny is an online marketplace where independent guides list experiences and events, and guests book them.",
         },
         {
           number: "1.2",
-          boldPrefix: "The host is the seller.",
-          text: "When you book, the agreement to provide the experience is between you and the host. We act as the host's agent for taking bookings, collecting payment, and applying the cancellation policy. We are not the host, the organiser, or the operator of any experience.",
+          boldPrefix: "The guide is the seller.",
+          text: "When you book, the agreement to provide the experience is between you and the guide. We act as the guide's agent for taking bookings, collecting payment, and applying the cancellation policy. We are not the guide, the organiser, or the operator of any experience.",
         },
         {
           number: "1.3",
-          text: "We are not a tour operator, an employer of hosts, an insurer, or a guarantor of any experience. Hosts are independent. Curators who recommend experiences are independent too, and a recommendation is an opinion, not a safety guarantee.",
+          text: "We are not a tour operator, an employer of guides, an insurer, or a guarantor of any experience. Guides are independent. Curators who recommend experiences are independent too, and a recommendation is an opinion, not a safety guarantee.",
         },
         {
           number: "1.4",
-          text: '"Verified" next to a host means we checked their identity and that the payout bank account is in their name. It does not mean we inspected their equipment, venue, vehicles, or safety practices. "Curator pick" means a curator liked it.',
+          text: '"Verified" next to a guide means we checked their identity and that the payout bank account is in their name. It does not mean we inspected their equipment, venue, vehicles, or safety practices. "Curator pick" means a curator liked it.',
         },
         {
           number: "1.5",
-          text: "We do our best to keep listings accurate, but listing details come from hosts. Please read them carefully.",
+          text: "We do our best to keep listings accurate, but listing details come from guides. Please read them carefully.",
         },
       ],
     },
@@ -118,7 +118,7 @@ export const termsData: TermsData = {
         {
           number: "3.2",
           boldPrefix: "Request to book.",
-          text: 'If a listing says "Request to book", your card is authorised but not charged until the host accepts. The host has up to 24 hours to respond, or until 48 hours before the start time, whichever is sooner. If the host declines or does not respond, the request ends and the authorisation is released. A bank may take a few days to show the released amount.',
+          text: 'If a listing says "Request to book", your card is authorised but not charged until the guide accepts. The guide has up to 24 hours to respond, or until 48 hours before the start time, whichever is sooner. If the guide declines or does not respond, the request ends and the authorisation is released. A bank may take a few days to show the released amount.',
         },
         {
           number: "3.3",
@@ -138,7 +138,7 @@ export const termsData: TermsData = {
         {
           number: "3.6",
           boldPrefix: "Group bookings.",
-          text: "If you book for others, you are responsible for making sure they know and follow these terms, the listing, and the host's instructions. Please share the host's safety and meeting-point information with them.",
+          text: "If you book for others, you are responsible for making sure they know and follow these terms, the listing, and the guide's instructions. Please share the guide's safety and meeting-point information with them.",
         },
         {
           number: "3.7",
@@ -154,16 +154,16 @@ export const termsData: TermsData = {
       items: [
         {
           number: "4.1",
-          text: "You pay through MyJourny using the payment methods shown at checkout. Payments are processed by Paystack, Novac and Stripe, licensed payment companies. We do not store your full card details.",
+          text: "You pay through Myjourny using the payment methods shown at checkout. Payments are processed by Paystack, Novac and Stripe, licensed payment companies. We do not store your full card details.",
         },
         {
           number: "4.2",
           boldPrefix: "Your money is held until the experience happens.",
-          text: "After you pay, the payment partner holds the money. It is released to the host after the experience ends, less our commission. If the experience is cancelled or you are due a refund under our policy, the held money is refunded to you.",
+          text: "After you pay, the payment partner holds the money. It is released to the guide after the experience ends, less our commission. If the experience is cancelled or you are due a refund under our policy, the held money is refunded to you.",
         },
         {
           number: "4.3",
-          text: "Payments made outside MyJourny, for example by transferring money directly to a host, are not protected by us. Please do not do it. If a host asks you to pay outside MyJourny, tell us.",
+          text: "Payments made outside Myjourny, for example by transferring money directly to a guide, are not protected by us. Please do not do it. If a guide asks you to pay outside Myjourny, tell us.",
         },
         {
           number: "4.4",
@@ -182,7 +182,7 @@ export const termsData: TermsData = {
         },
         {
           number: "5.2",
-          boldPrefix: "If a host cancels, you receive a full refund.",
+          boldPrefix: "If a guide cancels, you receive a full refund.",
           text: "We will also help you find another date or a similar experience.",
         },
         {
@@ -210,11 +210,11 @@ export const termsData: TermsData = {
         },
         {
           number: "6.2",
-          text: "Tell your host before the experience about anything that could affect your safety or theirs, such as a medical condition, an injury, pregnancy, an allergy, or a disability. You do not have to share more than is needed.",
+          text: "Tell your guide before the experience about anything that could affect your safety or theirs, such as a medical condition, an injury, pregnancy, an allergy, or a disability. You do not have to share more than is needed.",
         },
         {
           number: "6.3",
-          text: "Follow your host's safety briefing and instructions. A host may stop you from taking part, without a refund, if you are unsafe, are drunk or on drugs, or put others at risk.",
+          text: "Follow your guide's safety briefing and instructions. A guide may stop you from taking part, without a refund, if you are unsafe, are drunk or on drugs, or put others at risk.",
         },
         {
           number: "6.4",
@@ -222,7 +222,7 @@ export const termsData: TermsData = {
         },
         {
           number: "6.5",
-          text: "Treat hosts, other guests, and other people's property with respect. You are responsible for damage you cause.",
+          text: "Treat guides, other guests, and other people's property with respect. You are responsible for damage you cause.",
         },
         {
           number: "6.6",
@@ -241,11 +241,11 @@ export const termsData: TermsData = {
         },
         {
           number: "7.2",
-          text: "Hosts, not MyJourny, run and supervise experiences. We ask hosts to meet safety standards and to hold the permits and insurance their activity needs, but we do not inspect or supervise experiences, and we cannot promise that any experience is safe for you.",
+          text: "Guides, not Myjourny, run and supervise experiences. We ask guides to meet safety standards and to hold the permits and insurance their activity needs, but we do not inspect or supervise experiences, and we cannot promise that any experience is safe for you.",
         },
         {
           number: "7.3",
-          text: "We recommend you hold your own personal accident insurance if you want cover beyond what a host provides.",
+          text: "We recommend you hold your own personal accident insurance if you want cover beyond what a guide provides.",
         },
         {
           number: "7.4",
@@ -254,7 +254,7 @@ export const termsData: TermsData = {
         },
         {
           number: "7.5",
-          text: "If something goes wrong, tell the host straight away and then contact us. Call the emergency services first if anyone is in danger.",
+          text: "If something goes wrong, tell the guide straight away and then contact us. Call the emergency services first if anyone is in danger.",
         },
       ],
     },
@@ -273,7 +273,7 @@ export const termsData: TermsData = {
         },
         {
           number: "8.3",
-          text: "You keep ownership of what you post. You give us a free, worldwide licence to display and use your reviews, photos, and other content on MyJourny and in our marketing, and to remove or edit it where needed for these terms.",
+          text: "You keep ownership of what you post. You give us a free, worldwide licence to display and use your reviews, photos, and other content on Myjourny and in our marketing, and to remove or edit it where needed for these terms.",
         },
         {
           number: "8.4",
@@ -316,7 +316,7 @@ export const termsData: TermsData = {
         },
         {
           number: "10.3",
-          text: "The host's contact details are shared with you 24 hours before the experience, so you can coordinate. Before then, you can message the host through MyJourny. Please keep communication about bookings on MyJourny so we can help if something goes wrong.",
+          text: "The guide's contact details are shared with you 24 hours before the experience, so you can coordinate. Before then, you can message the guide through Myjourny. Please keep communication about bookings on Myjourny so we can help if something goes wrong.",
         },
       ],
     },
@@ -332,7 +332,7 @@ export const termsData: TermsData = {
         "post or send spam, scams, or malicious code",
         "copy, scrape, or resell our listings, data, or content",
         "try to bypass our payment system to avoid fees, or to take bookings off the platform",
-        "interfere with how MyJourny works or try to access accounts that are not yours",
+        "interfere with how Myjourny works or try to access accounts that are not yours",
       ],
       items: [],
     },
@@ -342,7 +342,7 @@ export const termsData: TermsData = {
       title: "12. Our intellectual property",
       items: [
         {
-          text: "MyJourny, our logo, our design, and our content are ours or our licensors'. You may use MyJourny for your personal use under these terms. You may not copy or use our brand without our written permission.",
+          text: "Myjourny, our logo, our design, and our content are ours or our licensors'. You may use Myjourny for your personal use under these terms. You may not copy or use our brand without our written permission.",
         },
       ],
     },
@@ -353,7 +353,7 @@ export const termsData: TermsData = {
       items: [
         {
           number: "13.1",
-          text: "We are not responsible for what hosts, other guests, or curators do or fail to do, or for the quality, safety, or legality of an experience, except where we ourselves were negligent or broke these terms.",
+          text: "We are not responsible for what guides, other guests, or curators do or fail to do, or for the quality, safety, or legality of an experience, except where we ourselves were negligent or broke these terms.",
         },
         {
           number: "13.2",
@@ -366,7 +366,7 @@ export const termsData: TermsData = {
         },
         {
           number: "13.4",
-          text: "We do not promise that MyJourny will always be available or error-free. We may change or pause parts of the service.",
+          text: "We do not promise that Myjourny will always be available or error-free. We may change or pause parts of the service.",
         },
       ],
     },
@@ -395,7 +395,7 @@ export const termsData: TermsData = {
       title: "15. Changes to these terms",
       items: [
         {
-          text: "We may update these terms. For significant changes, we will give you at least 14 days' notice by email, SMS, or in the app. If you keep using MyJourny after the change takes effect, you accept the new terms. If you do not, you can close your account. Bookings you already made keep the terms that applied when you booked.",
+          text: "We may update these terms. For significant changes, we will give you at least 14 days' notice by email, SMS, or in the app. If you keep using Myjourny after the change takes effect, you accept the new terms. If you do not, you can close your account. Bookings you already made keep the terms that applied when you booked.",
         },
       ],
     },
@@ -485,7 +485,7 @@ export const termsData: TermsData = {
         },
         {
           boldPrefix: "B9. Filming and photography.",
-          text: "Organisers and MyJourny may film or photograph events. By attending, you may appear in recordings. Notices at the venue will say so. If you do not want to be filmed, tell the organiser or staff and move out of filmed areas.",
+          text: "Organisers and Myjourny may film or photograph events. By attending, you may appear in recordings. Notices at the venue will say so. If you do not want to be filmed, tell the organiser or staff and move out of filmed areas.",
         },
         {
           boldPrefix: "B10. Age and alcohol.",

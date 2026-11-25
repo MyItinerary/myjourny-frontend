@@ -13,14 +13,14 @@ describe("cancellationData", () => {
     expect(cancellationData.shortVersion).toBeDefined();
     expect(cancellationData.shortVersion?.items.length).toBe(5);
     expect(cancellationData.shortVersion?.items[0].text).toContain("cancellation policy with exact dates and amounts");
-    expect(cancellationData.shortVersion?.items[1].text).toContain("If a host cancels, you get a **full refund**");
+    expect(cancellationData.shortVersion?.items[1].text).toContain("If a guide cancels, you get a **full refund**");
   });
 
   it("defines table of contents items matching the sections", () => {
     expect(cancellationData.tableOfContents.length).toBe(9);
     expect(cancellationData.tableOfContents[0].id).toBe("short-version");
     expect(cancellationData.tableOfContents[1].label).toBe("1. How cancellation works");
-    expect(cancellationData.tableOfContents[8].label).toBe("8. For hosts");
+    expect(cancellationData.tableOfContents[8].label).toBe("8. For guides");
   });
 
   it("contains all 8 cancellation sections populated with text", () => {

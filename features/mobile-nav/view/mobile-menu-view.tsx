@@ -67,8 +67,8 @@ export function MobileMenuView({ hostingHref, links, guide, auth, onClose, onAut
       className="fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-white px-6 pt-[max(47px,env(safe-area-inset-top))] pb-6 lg:hidden"
     >
       <div className="flex h-[60px] shrink-0 items-center justify-between">
-        <Link href="/" aria-label="MyJourny home" onClick={onClose} className="flex shrink-0 items-center">
-          <Image src="/logo/myjourny-logo.svg" alt="MyJourny" width={167} height={29} style={{ width: "auto" }} className="h-[29px] w-auto" />
+        <Link href="/" aria-label="Myjourny home" onClick={onClose} className="flex shrink-0 items-center">
+          <Image src="/logo/myjourny-logo.svg" alt="Myjourny" width={167} height={29} style={{ width: "auto" }} className="h-[29px] w-auto" />
         </Link>
         <button
           type="button"
@@ -88,7 +88,7 @@ export function MobileMenuView({ hostingHref, links, guide, auth, onClose, onAut
             className="flex h-14 items-center gap-3 rounded-2xl bg-[#333134] px-3.5 text-base font-medium text-white"
           >
             <Image src="/icons/nav/switch.svg" alt="" width={22} height={22} unoptimized className="shrink-0" />
-            <span className="flex-1">Switch to hosting</span>
+            <span className="flex-1">Switch to guiding</span>
             <Image src="/icons/nav/chevron-right-white.svg" alt="" width={20} height={20} unoptimized className="shrink-0" />
           </Link>
         </div>

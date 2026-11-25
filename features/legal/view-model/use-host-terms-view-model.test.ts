@@ -4,11 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 import { useHostTermsViewModel } from "./use-host-terms-view-model";
 
 describe("useHostTermsViewModel", () => {
-  it("initializes with short-version as default active section and Host Terms data", () => {
+  it("initializes with short-version as default active section and Guide Terms data", () => {
     const { result } = renderHook(() => useHostTermsViewModel());
 
     expect(result.current.activeSectionId).toBe("short-version");
-    expect(result.current.data.title).toBe("Host Terms");
+    expect(result.current.data.title).toBe("Guide Terms");
   });
 
   it("changes activeSectionId and attempts to scroll to element onSectionSelect", () => {

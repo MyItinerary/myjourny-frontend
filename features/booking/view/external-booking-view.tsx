@@ -17,9 +17,9 @@ type Props = {
 export function ExternalBookingView({ url, signedIn, loginHref, className }: Props) {
   return (
     <aside className={cn("flex flex-col gap-3 rounded-[24px] border border-[#E7E7E7] bg-white p-6", className)}>
-      <h2 className="font-sans text-lg font-semibold text-[#333134]">Booked on the host&apos;s site</h2>
+      <h2 className="font-sans text-lg font-semibold text-[#333134]">Booked on the guide&apos;s site</h2>
       <p className="text-sm leading-[22px] text-[#6F6B72]">
-        The host takes bookings and payment for this experience on their own site, so its dates, prices and
+        The guide takes bookings and payment for this experience on their own site, so its dates, prices and
         cancellation terms are set there.
       </p>
       {url ? (
@@ -29,11 +29,11 @@ export function ExternalBookingView({ url, signedIn, loginHref, className }: Pro
           rel="noopener noreferrer"
           className="flex h-12 items-center justify-center gap-2 rounded-full bg-[#F5032D] px-4 text-base font-medium text-white hover:bg-[#d90328]"
         >
-          Book on the host&apos;s site
+          Book on the guide&apos;s site
           <ExternalLink aria-hidden className="size-4" />
         </a>
       ) : signedIn ? (
-        <p className="text-sm font-medium text-[#333134]">The host hasn&apos;t shared a booking link yet.</p>
+        <p className="text-sm font-medium text-[#333134]">The guide hasn&apos;t shared a booking link yet.</p>
       ) : (
         <Link
           href={loginHref}

@@ -118,7 +118,7 @@ function ScreenShell({
       <div className="relative flex min-h-full flex-col items-center px-6 py-16 sm:px-10 sm:py-20">
         <Image
           src="/logo/myjourny-logo.svg"
-          alt="MyJourny"
+          alt="Myjourny"
           width={150}
           height={26}
           className="h-6 w-auto"

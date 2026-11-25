@@ -158,7 +158,7 @@ export function GuideApplicationStep1({
               <div>
                 <p className="font-sans text-sm font-bold text-[#130404]">An individual</p>
                 <p className="font-sans text-xs text-[#6F6B72]">
-                  You&apos;re hosting under your own name
+                  You&apos;re guiding under your own name
                 </p>
               </div>
             </button>

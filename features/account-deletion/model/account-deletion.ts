@@ -52,7 +52,7 @@ export function describeBlockers(blockers: DeletionBlockers): BlockerNote[] {
     notes.push({
       key: "upcoming",
       title: `You have ${upcoming === 1 ? "an upcoming booking" : `${upcoming} upcoming bookings`}`,
-      body: `Cancel ${upcoming === 1 ? "it" : "them"} first, so the host knows and any refund can follow the cancellation policy.`,
+      body: `Cancel ${upcoming === 1 ? "it" : "them"} first, so the guide knows and any refund can follow the cancellation policy.`,
     });
   }
   const refunds = blockers.open_refund_requests;

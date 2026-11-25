@@ -95,8 +95,8 @@ test.describe("change password", () => {
         r.fulfill({
           json: {
             secret: "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP",
-            qr_payload: "otpauth://totp/MyJourny%3Aamara%40example.com?secret=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP&issuer=MyJourny",
-            otpauth_url: "otpauth://totp/MyJourny%3Aamara%40example.com?secret=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP&issuer=MyJourny",
+            qr_payload: "otpauth://totp/Myjourny%3Aamara%40example.com?secret=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP&issuer=Myjourny",
+            otpauth_url: "otpauth://totp/Myjourny%3Aamara%40example.com?secret=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP&issuer=Myjourny",
           },
         }),
     });

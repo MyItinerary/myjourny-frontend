@@ -75,7 +75,7 @@ describe("useGuideApplicationViewModel", () => {
     await act(async () => {
       await result.current.handleContinue();
     });
-    expect(result.current.errors.dateOfBirth).toBe("You need to be at least 18 to guide on MyJourny");
+    expect(result.current.errors.dateOfBirth).toBe("You need to be at least 18 to guide on Myjourny");
   });
 
   it("refuses an email address without a domain on step 2", async () => {
@@ -209,7 +209,7 @@ describe("useGuideApplicationViewModel", () => {
   it("offers to log in when the email already has an account, keeping the form", async () => {
     server.use(
       http.post(apiUrl("/auth/register/guide"), () =>
-        HttpResponse.json({ detail: "This email is already registered with MyJourny." }, { status: 409 })
+        HttpResponse.json({ detail: "This email is already registered with Myjourny." }, { status: 409 })
       )
     );
     const { result } = renderHookWithProviders(() => useGuideApplicationViewModel());

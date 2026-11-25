@@ -80,7 +80,7 @@ describe("cancellationTerms", () => {
 
   it("words non-refundable and custom policies, and keeps the default without one", () => {
     expect(cancellationTerms({ refundPolicy: "non_refundable" }).short).toBe("Non-refundable");
-    expect(cancellationTerms({ refundPolicy: "custom" }).short).toBe("See the host's cancellation terms");
+    expect(cancellationTerms({ refundPolicy: "custom" }).short).toBe("See the guide's cancellation terms");
     expect(cancellationTerms({}).body).toBe("You can only cancel up to 24 hours before the experience.");
   });
 });

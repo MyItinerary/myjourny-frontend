@@ -25,7 +25,7 @@ const EMPTY_STATES: Record<
 > = {
   upcoming: {
     title: "Your experiences live here",
-    body: "Once you book, this is where you'll find your meeting point, your host's number, and everything you need on the day.",
+    body: "Once you book, this is where you'll find your meeting point, your guide's number, and everything you need on the day.",
     ctaLabel: "Get Started",
   },
   past: {
@@ -64,7 +64,7 @@ export function MyExperiencesContent() {
   const currentEmptyState = !user
     ? {
       title: "Your experiences live here",
-      body: "Once you book, this is where you'll find your meeting point, your host's number, and everything you need on the day.",
+      body: "Once you book, this is where you'll find your meeting point, your guide's number, and everything you need on the day.",
       ctaLabel: "Get Started",
       href: "/login",
     }

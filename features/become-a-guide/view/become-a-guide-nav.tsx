@@ -13,10 +13,10 @@ export function BecomeAGuideNav({ profileLink }: BecomeAGuideNavProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#F0EFEB] bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-[1360px] items-center justify-between px-4 sm:px-8">
-        <Link href="/" aria-label="MyJourny home" className="flex items-center">
+        <Link href="/" aria-label="Myjourny home" className="flex items-center">
           <Image
             src="/logo/myjourny-logo.svg"
-            alt="MyJourny"
+            alt="Myjourny"
             width={132}
             height={28}
             priority

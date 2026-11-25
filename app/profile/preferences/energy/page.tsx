@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { EditEnergyContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Edit Energy Level | MyJourny",
+  title: "Edit Energy Level | Myjourny",
   description: "Update your travel energy and pace preferences.",
 };
 

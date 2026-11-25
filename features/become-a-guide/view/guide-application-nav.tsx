@@ -20,10 +20,10 @@ export function GuideApplicationNav({ step }: GuideApplicationNavProps) {
     <header className="w-full bg-white pt-6 sm:pt-8">
       {/* Top Logo */}
       <div className="flex justify-center">
-        <Link href="/" aria-label="MyJourny home" className="flex items-center">
+        <Link href="/" aria-label="Myjourny home" className="flex items-center">
           <Image
             src="/logo/myjourny-logo.svg"
-            alt="MyJourny"
+            alt="Myjourny"
             width={132}
             height={34}
             priority

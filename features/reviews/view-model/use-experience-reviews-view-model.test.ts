@@ -115,7 +115,7 @@ describe("useExperienceReviewsViewModel", () => {
     const { result } = renderHookWithProviders(() => useExperienceReviewsViewModel("exp-1", null, { preview: true }));
     await waitFor(() => expect(result.current.display).toBe("populated"));
     expect(result.current.rating).toBe("4.8");
-    expect(result.current.breakdown.map((row) => row.label)).toEqual(["Host", "Value", "Organisation"]);
+    expect(result.current.breakdown.map((row) => row.label)).toEqual(["Guide", "Value", "Organisation"]);
     expect(result.current.summary).toBeTruthy();
   });
 

@@ -59,7 +59,7 @@ export function HostBuilderPreviewView({ vm }: { vm: HostListingBuilderViewModel
           {draft.quote && (
             <div className="mt-4 rounded-[14px] bg-[#F4F2EE] p-3.5">
               <div className="text-[13.5px] leading-normal">&ldquo;{draft.quote}&rdquo;</div>
-              <div className="mt-1.5 text-xs text-[#6F6B72]">Your host</div>
+              <div className="mt-1.5 text-xs text-[#6F6B72]">Your guide</div>
             </div>
           )}
         </div>

@@ -7,7 +7,7 @@ describe("PrivacyAtAGlance", () => {
   const mockItems = [
     {
       question: "Who is responsible for your data?",
-      answer: "MyJourny is the controller.",
+      answer: "Myjourny is the controller.",
     },
     {
       question: "Do you sell my data?",
@@ -22,7 +22,7 @@ describe("PrivacyAtAGlance", () => {
     expect(
       screen.getByRole("heading", { name: "Who is responsible for your data?", level: 3 })
     ).toBeInTheDocument();
-    expect(screen.getByText("MyJourny is the controller.")).toBeInTheDocument();
+    expect(screen.getByText("Myjourny is the controller.")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Do you sell my data?", level: 3 })
     ).toBeInTheDocument();

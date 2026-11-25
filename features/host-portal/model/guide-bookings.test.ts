@@ -74,7 +74,7 @@ describe("toHostBooking", () => {
     ]);
     expect(toHostBooking(booking({ status: "cancelled", cancelled_by: "admin" }), TODAY).timeline[1]).toEqual({
       title: "Cancelled",
-      body: "Any refund is handled by MyJourny.",
+      body: "Any refund is handled by Myjourny.",
     });
   });
 

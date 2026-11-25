@@ -26,7 +26,7 @@ export function buildExperiencePage(experience: ExperienceDetail, durationLabel:
     location,
     host: {
       id: experience.host?.id ?? null,
-      name: experience.host?.display_name?.trim() || "Your host",
+      name: experience.host?.display_name?.trim() || "Your guide",
       verified: !!experience.host?.is_verified,
       // HARD-CODED fallback line. TODO(backend/admin): hosts need a short bio the admin can set.
       blurb: experience.host?.headline?.trim() || "Your safety and satisfaction are well guaranteed",

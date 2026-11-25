@@ -21,7 +21,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "registered-business",
     question: "Do I need a registered business?",
     answer:
-      "No, you can host as an individual. You just need a valid government-issued ID and a Nigerian bank account.",
+      "No, you can guide as an individual. You just need a valid government-issued ID and a Nigerian bank account.",
   },
   {
     id: "first-time-host",
@@ -39,7 +39,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "refunds-and-disputes",
     question: "Who handles refunds and disputes?",
     answer:
-      "MyJourny handles customer payments, cancellations, and guest inquiries according to our clear published cancellation policy.",
+      "Myjourny handles customer payments, cancellations, and guest inquiries according to our clear published cancellation policy.",
   },
   {
     id: "post-to-followers",
@@ -51,6 +51,6 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "experience-vs-event",
     question: "What's the difference between an experience and an event?",
     answer:
-      "Experiences are intimate, host-led activities for small groups (usually 4–20 guests), while events are larger, date-specific gatherings.",
+      "Experiences are intimate, guide-led activities for small groups (usually 4–20 guests), while events are larger, date-specific gatherings.",
   },
 ];

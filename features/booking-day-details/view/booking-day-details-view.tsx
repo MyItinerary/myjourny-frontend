@@ -53,7 +53,7 @@ export function BookingDayDetailsView({ details, showMeeting, showDownloads }: P
               <div className="flex gap-3">
                 <Phone className="mt-0.5 size-4 shrink-0 text-[#6F6B72]" aria-hidden />
                 <div>
-                  <dt className="font-medium text-[#130404]">Your host</dt>
+                  <dt className="font-medium text-[#130404]">Your guide</dt>
                   <dd className="mt-1">
                     <a href={details.hostPhoneHref} className="font-medium text-brand">
                       {details.hostPhone}

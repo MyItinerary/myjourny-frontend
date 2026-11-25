@@ -29,26 +29,26 @@ describe("MobileMenuView", () => {
     renderWithProviders(<MobileMenuView {...vm} />);
 
     expect(screen.getByRole("dialog", { name: "Menu" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "MyJourny home" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Myjourny home" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "My experiences" })).toHaveAttribute("href", "/my-experiences");
     expect(screen.getByText("English/USD")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Become a guide/ })).toHaveAttribute("href", "/become-a-guide");
   });
 
-  it("opens the host dashboard from Switch to hosting", async () => {
+  it("opens the guide dashboard from Switch to guiding", async () => {
     const onClose = vi.fn();
     const { user } = renderWithProviders(<MobileMenuView {...vm} onClose={onClose} />);
 
-    const link = screen.getByRole("link", { name: "Switch to hosting" });
+    const link = screen.getByRole("link", { name: "Switch to guiding" });
     expect(link).toHaveAttribute("href", "/host/dashboard");
     await user.click(link);
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("leaves Switch to hosting out for guests", () => {
+  it("leaves Switch to guiding out for guests", () => {
     renderWithProviders(<MobileMenuView {...vm} hostingHref={null} auth={{ label: "Login or create account", icon: "/icons/nav/login.png" }} />);
 
-    expect(screen.queryByRole("link", { name: "Switch to hosting" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Switch to guiding" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Login or create account" })).toBeInTheDocument();
   });
 

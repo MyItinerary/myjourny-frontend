@@ -32,7 +32,7 @@ function vm(overrides: Partial<ExperienceReviewsViewModel> = {}): ExperienceRevi
     rating: "4.5",
     showScore: true,
     countLabel: "8 reviews",
-    breakdown: [{ label: "Host", value: "4.9", width: "98%" }],
+    breakdown: [{ label: "Guide", value: "4.9", width: "98%" }],
     summary: "Guests loved the breakfast.",
     reviews: [card(), card({ id: "b", author: "Tunde O.", initials: "TO", rating: 4, comment: null })],
     query: "",
@@ -71,7 +71,7 @@ describe("ExperienceReviewsView", () => {
     expect(screen.getByRole("heading", { name: "Reviews" })).toBeInTheDocument();
     expect(screen.getByText("4.5")).toBeInTheDocument();
     expect(screen.getByText("From 8 reviews")).toBeInTheDocument();
-    expect(screen.getByText("Host")).toBeInTheDocument();
+    expect(screen.getByText("Guide")).toBeInTheDocument();
     expect(screen.getByText("Guests loved the breakfast.")).toBeInTheDocument();
     expect(screen.getByText("Ireti G.")).toBeInTheDocument();
     expect(screen.getByText("Loved it")).toBeInTheDocument();
@@ -172,13 +172,13 @@ describe("ExperienceReviewsView", () => {
       expect(screen.getByRole("button", { name: "Read less" })).toBeInTheDocument();
     });
 
-    it("shows the host's reply and the verified badge", () => {
+    it("shows the guide's reply and the verified badge", () => {
       renderWithProviders(
         <ExperienceReviewsView
-          {...vm({ reviews: [card({ hostReply: { author: "Tunde, host", text: "Thank you!", initials: "T" } })] })}
+          {...vm({ reviews: [card({ hostReply: { author: "Tunde, guide", text: "Thank you!", initials: "T" } })] })}
         />,
       );
-      expect(screen.getByText("Reply from Tunde, host")).toBeInTheDocument();
+      expect(screen.getByText("Reply from Tunde, guide")).toBeInTheDocument();
       expect(screen.getByText("Thank you!")).toBeInTheDocument();
       expect(screen.getByText("Verified booking")).toBeInTheDocument();
     });

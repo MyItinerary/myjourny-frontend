@@ -102,10 +102,10 @@ export function ConfirmDetailsPanel({
     <div className="w-full bg-white text-[#333134]">
       {/* Top Navbar / Logo Row */}
       <header className="mx-auto flex w-full max-w-[1240px] items-center px-4 py-6 sm:px-8">
-        <Link href="/" aria-label="MyJourny home" className="flex items-center">
+        <Link href="/" aria-label="Myjourny home" className="flex items-center">
           <Image
             src="/logo/myjourny-logo.svg"
-            alt="MyJourny"
+            alt="Myjourny"
             width={167}
             height={29}
             priority

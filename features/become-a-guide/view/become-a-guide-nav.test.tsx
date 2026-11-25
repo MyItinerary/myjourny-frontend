@@ -7,7 +7,7 @@ describe("BecomeAGuideNav", () => {
   it("renders logo, back to experiences and the account settings link", () => {
     render(<BecomeAGuideNav profileLink={{ href: "/profile", label: "Account settings" }} />);
 
-    expect(screen.getByRole("link", { name: /MyJourny home/i })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: /Myjourny home/i })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: /Back to experiences/i })).toHaveAttribute("href", "/experiences");
     expect(screen.getByRole("link", { name: "Account settings" })).toHaveAttribute("href", "/profile");
   });

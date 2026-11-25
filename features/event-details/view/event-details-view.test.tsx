@@ -58,7 +58,7 @@ describe("EventDetailsView", () => {
     expect(screen.getByText("9:00AM to 5:00PM")).toBeInTheDocument();
     expect(screen.getByText("Harbour Hall, Victoria Island, Lagos.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "About this event" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Past events by this host" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Past events by this guide" })).toBeInTheDocument();
     expect(screen.getByTestId("side-card")).toBeInTheDocument();
     expect(screen.getByText("Footer")).toBeInTheDocument();
   });

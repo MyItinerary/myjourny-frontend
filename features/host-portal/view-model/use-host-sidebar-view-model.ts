@@ -16,7 +16,7 @@ export type HostStatus = {
 };
 
 const STATUS: Record<HostVerification, HostStatus> = {
-  verified: { label: "Verified host", tone: "green", glyph: "seal", dotOnAvatar: false },
+  verified: { label: "Verified guide", tone: "green", glyph: "seal", dotOnAvatar: false },
   business: { label: "Registered business", tone: "green", glyph: "seal", dotOnAvatar: false },
   review: { label: "Under review", tone: "amber", glyph: "clock", dotOnAvatar: true },
   info: { label: "More info needed", tone: "red", glyph: "alert", dotOnAvatar: true },

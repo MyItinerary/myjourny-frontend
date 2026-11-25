@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { ConfirmEmailContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Confirm email | MyJourny",
+  title: "Confirm email | Myjourny",
 };
 
 export default function ConfirmEmailPage() {

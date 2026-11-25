@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { EmailTemplatesContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Email Templates | MyJourny",
-  description: "Preview transactional email templates for MyJourny.",
+  title: "Email Templates | Myjourny",
+  description: "Preview transactional email templates for Myjourny.",
   robots: {
     index: false,
     follow: false,

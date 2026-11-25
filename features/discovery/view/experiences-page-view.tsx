@@ -23,7 +23,7 @@ export function ExperiencesPageView({
       <DiscoveryHeroView
         hero={hero}
         title="Experiences worth showing up for"
-        subtitle="Tours, tastings, workshops, and hidden spots, hosted by locals."
+        subtitle="Tours, tastings, workshops, and hidden spots, guided by locals."
         titleWidth={644}
       />
 

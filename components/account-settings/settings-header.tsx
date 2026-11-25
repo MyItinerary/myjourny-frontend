@@ -19,7 +19,7 @@ export function SettingsHeader() {
     <div className="sticky top-0 z-40 flex h-20 shrink-0 items-center justify-between gap-6 border-b border-border bg-white px-4 sm:px-10">
       <Image
         src="/logo/myjourny-logo.svg"
-        alt="MyJourny"
+        alt="Myjourny"
         width={120}
         height={21}
         className="h-[26px] w-auto"

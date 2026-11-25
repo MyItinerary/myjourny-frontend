@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { hostTermsData } from "./host-terms-data";
 
 describe("hostTermsData", () => {
-  it("contains Host Terms title, lastUpdated, and agreement text", () => {
-    expect(hostTermsData.title).toBe("Host Terms");
+  it("contains Guide Terms title, lastUpdated, and agreement text", () => {
+    expect(hostTermsData.title).toBe("Guide Terms");
     expect(hostTermsData.lastUpdated).toBe("9 November 2026");
     expect(hostTermsData.companyAgreementText).toContain("Myjourny and Experiences LLC (RC 9460304)");
     expect(hostTermsData.agreementNoticeText).toContain("Terms of Use (Guests)");
@@ -21,7 +21,7 @@ describe("hostTermsData", () => {
   it("defines table of contents with all sections and schedules", () => {
     expect(hostTermsData.tableOfContents.length).toBe(27);
     expect(hostTermsData.tableOfContents[0].id).toBe("short-version");
-    expect(hostTermsData.tableOfContents[1].label).toBe("1. Who can host");
+    expect(hostTermsData.tableOfContents[1].label).toBe("1. Who can guide");
     expect(hostTermsData.tableOfContents[6].label).toBe("6. Money");
     expect(hostTermsData.tableOfContents[7].label).toBe("7. Cancellations");
     expect(hostTermsData.tableOfContents[14].label).toBe("14. Disputes and general");

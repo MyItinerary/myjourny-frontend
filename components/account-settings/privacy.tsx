@@ -15,8 +15,8 @@ import {
 import { ModalShell, Row, SavedBanner, SectionSkeleton, ToggleRow } from "@/components/account-settings/section-ui";
 
 const VISIBILITY_OPTIONS: { value: ProfileVisibility; label: string; meta: string }[] = [
-  { value: "public", label: "Public", meta: "Anyone on MyJourny can see your profile" },
-  { value: "hosts_booked", label: "Hosts you have booked with", meta: "Nobody else can find you" },
+  { value: "public", label: "Public", meta: "Anyone on Myjourny can see your profile" },
+  { value: "hosts_booked", label: "Guides you have booked with", meta: "Nobody else can find you" },
 ];
 
 type ModalKey = "visibility" | "dataRequest" | "blocked";
@@ -94,7 +94,7 @@ export function PrivacySection() {
         <Row
           label="Profile visibility"
           value={visibilityLabel}
-          note="The other option is visible only to hosts you have booked with."
+          note="The other option is visible only to guides you have booked with."
           actionLabel="Edit"
           onAction={openVisibility}
         />
@@ -132,7 +132,7 @@ export function PrivacySection() {
             <div className="text-base font-medium text-foreground">Blocked accounts</div>
             <div className="text-base text-muted-foreground">{blockedCount}</div>
             <div className="mt-0.5 text-sm text-muted-foreground">
-              You won&apos;t see experiences hosted by people you have blocked.
+              You won&apos;t see experiences guided by people you have blocked.
             </div>
           </div>
           <button
@@ -190,7 +190,7 @@ export function PrivacySection() {
               onClick={() =>
                 save(
                   { profile_visibility: visibilityDraft },
-                  `Saved. Your profile is now visible to ${visibilityDraft === "public" ? "anyone on MyJourny" : "hosts you have booked with"}.`,
+                  `Saved. Your profile is now visible to ${visibilityDraft === "public" ? "anyone on Myjourny" : "guides you have booked with"}.`,
                 )
               }
               className="cursor-pointer rounded-full bg-brand px-5.5 py-3 text-[15px] font-medium text-white hover:bg-[#FF4540] disabled:cursor-wait disabled:opacity-60"
@@ -246,7 +246,7 @@ export function PrivacySection() {
                   className="flex items-center justify-between gap-6 rounded-xl border border-border px-4 py-3.5"
                 >
                   <div>
-                    <div className="text-[15px] font-medium text-foreground">{b.name ?? "MyJourny member"}</div>
+                    <div className="text-[15px] font-medium text-foreground">{b.name ?? "Myjourny member"}</div>
                     <div className="text-[13px] text-muted-foreground">Blocked {formatDay(b.blocked_at)}</div>
                   </div>
                   <button
@@ -271,7 +271,7 @@ export function PrivacySection() {
             <div className="text-sm text-muted-foreground">You have no blocked accounts.</div>
           )}
           <div className="mt-2.5 text-sm text-muted-foreground">
-            You won&apos;t see experiences hosted by people you have blocked.
+            You won&apos;t see experiences guided by people you have blocked.
           </div>
           <div className="mt-6 flex justify-end">
             <button

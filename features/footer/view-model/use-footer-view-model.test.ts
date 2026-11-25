@@ -52,7 +52,7 @@ describe("useFooterViewModel", () => {
   it("carries the static link content and current year", () => {
     state.categories = { data: [], isLoading: false };
     const { result } = renderHook(() => useFooterViewModel());
-    expect(result.current.columns.map((c) => c.heading)).toEqual(["Support", "Hosting and Curating", "Legal"]);
+    expect(result.current.columns.map((c) => c.heading)).toEqual(["Support", "Guiding and Curating", "Legal"]);
     expect(result.current.columns.flatMap((c) => c.links).some((l) => l.hidden)).toBe(false);
     expect(result.current.year).toBe(new Date().getFullYear());
   });

@@ -24,7 +24,7 @@ const vm = (overrides: Partial<HostSidebarViewModel> = {}, active = "dashboard",
     name: "Tunde Bakare",
     photoUrl: null,
     initials: "TB",
-    status: { label: "Verified host", tone: "green", glyph: "seal", dotOnAvatar: false },
+    status: { label: "Verified guide", tone: "green", glyph: "seal", dotOnAvatar: false },
     loading: false,
   },
   ...overrides,
@@ -51,12 +51,12 @@ describe("HostSidebarView, expanded", () => {
 
     expect(screen.getByAltText("Myjourny")).toBeInTheDocument();
     expect(screen.getByText("myjourny")).toBeInTheDocument();
-    const nav = screen.getByRole("navigation", { name: "Host portal" });
+    const nav = screen.getByRole("navigation", { name: "Guide portal" });
     expect(within(nav).getAllByRole("link").map((l) => l.textContent)).toEqual([
       "Home", "Listings", "Calendar", "Bookings", "Earnings", "Profile", "Help",
     ]);
     expect(screen.getByText("Tunde Bakare")).toBeInTheDocument();
-    expect(screen.getByText("Verified host")).toBeInTheDocument();
+    expect(screen.getByText("Verified guide")).toBeInTheDocument();
   });
 
   it("links each item to its page and marks the current one", () => {
@@ -112,7 +112,7 @@ describe("HostSidebarView, expanded", () => {
   it("has no status line until verification is known, and a photo when there is one", () => {
     renderWithProviders(<HostSidebarView {...vm({ host: { ...vm().host, status: null, photoUrl: "/tunde.jpg" } })} />);
 
-    expect(screen.queryByText("Verified host")).not.toBeInTheDocument();
+    expect(screen.queryByText("Verified guide")).not.toBeInTheDocument();
     expect(document.querySelector("img[src*='tunde']")).not.toBeNull();
   });
 

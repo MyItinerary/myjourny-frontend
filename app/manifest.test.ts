@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import manifest from "./manifest";
 
 describe("web app manifest", () => {
-  it("installs as MyJourny, opening full-screen from the home page", () => {
+  it("installs as Myjourny, opening full-screen from the home page", () => {
     const m = manifest();
-    expect(m).toMatchObject({ name: "MyJourny", short_name: "MyJourny", start_url: "/", scope: "/", display: "standalone" });
+    expect(m).toMatchObject({ name: "Myjourny", short_name: "Myjourny", start_url: "/", scope: "/", display: "standalone" });
   });
 
   it("has the home-screen icons Android and desktop Chrome need, including a maskable one", () => {

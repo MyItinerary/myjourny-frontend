@@ -20,14 +20,14 @@ interface NotifRow {
 // in-app channel isn't shown; it stays on. Rows only show for types the
 // backend returns.
 const ROWS: NotifRow[] = [
-  { key: "booking_confirmations", label: "Booking confirmations", note: "Sent the moment a host confirms." },
+  { key: "booking_confirmations", label: "Booking confirmations", note: "Sent the moment a guide confirms." },
   { key: "pre_trip_reminder", label: "Booking reminders", note: "A day before, and two hours before." },
   {
     key: "itinerary_update",
     label: "Day of messages",
-    note: "Meeting point, host name, what to bring, and any change to the plan.",
+    note: "Meeting point, guide name, what to bring, and any change to the plan.",
   },
-  { key: "host_messages", label: "Messages from hosts" },
+  { key: "host_messages", label: "Messages from guides" },
   { key: "safety_alert", label: "Safety alerts", note: "Weather, closures and anything that affects your day." },
   {
     key: "cancellations_refunds",

@@ -28,7 +28,7 @@ export function SignInLoaderView({ visible }: SignInLoaderViewModel) {
           >
             <Image
               src="/logo/myjourny-logo.svg"
-              alt="MyJourny"
+              alt="Myjourny"
               width={188}
               height={40}
               priority

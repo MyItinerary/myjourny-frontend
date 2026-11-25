@@ -6,7 +6,7 @@ import { eventsEnabled } from "@/lib/feature-flags";
 import { EventsContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Events you won’t miss for anything | MyJourny",
+  title: "Events you won’t miss for anything | Myjourny",
   description: "Concerts, conferences, meetups, and nights out across Nigeria.",
 };
 

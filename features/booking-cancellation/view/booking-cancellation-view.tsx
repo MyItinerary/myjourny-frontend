@@ -48,7 +48,7 @@ export function BookingCancellationView({
 
       <p className="mt-3 whitespace-pre-line text-sm text-[#130404]">{policyText}</p>
       <p className="mt-3 text-xs text-[#6F6B72]">
-        This is the policy shown when you booked. MyJourny support reviews every cancellation request against it
+        This is the policy shown when you booked. Myjourny support reviews every cancellation request against it
         and decides any refund.
       </p>
 

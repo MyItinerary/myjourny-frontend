@@ -25,7 +25,7 @@ export function BookingReviewView(props: BookingReviewViewModel) {
         <p className="mt-3 text-sm text-[#6F6B72]">Posted {props.date}</p>
         {props.isHidden && (
           <p className="mt-2 text-sm text-[#6F6B72]">
-            MyJourny has hidden this review from the experience page.
+            Myjourny has hidden this review from the experience page.
           </p>
         )}
       </section>

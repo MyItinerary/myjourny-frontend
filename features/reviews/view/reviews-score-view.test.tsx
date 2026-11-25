@@ -12,7 +12,7 @@ describe("ReviewsScoreView", () => {
         rating="4.8"
         countLabel="124 reviews"
         breakdown={[
-          { label: "Host", value: "4.9", width: "98%" },
+          { label: "Guide", value: "4.9", width: "98%" },
           { label: "Value", value: "4.7", width: "94%" },
         ]}
       />,
@@ -20,7 +20,7 @@ describe("ReviewsScoreView", () => {
     expect(screen.getByText("4.8")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "4.8 out of 5 stars" })).toBeInTheDocument();
     expect(screen.getByText("From 124 reviews")).toBeInTheDocument();
-    expect(screen.getByText("Host")).toBeInTheDocument();
+    expect(screen.getByText("Guide")).toBeInTheDocument();
     expect(screen.getByText("4.7")).toBeInTheDocument();
   });
 

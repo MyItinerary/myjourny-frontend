@@ -144,7 +144,7 @@ export function HomeNav({
     user && !me
       ? null
       : me && isHostAccount(me)
-        ? { href: "/host/dashboard", label: "Switch to host dashboard", sublabel: "Manage your listings and bookings" }
+        ? { href: "/host/dashboard", label: "Switch to guide dashboard", sublabel: "Manage your listings and bookings" }
         : { href: "/become-a-guide", label: "Become a guide", sublabel: "Make extra income from what you already love doing" };
   const router = useRouter();
   const pathname = usePathname();
@@ -306,10 +306,10 @@ export function HomeNav({
             }}
           >
             {/* Logo */}
-            <Link href="/" aria-label="MyJourny home" className="flex shrink-0 items-center">
+            <Link href="/" aria-label="Myjourny home" className="flex shrink-0 items-center">
               <Image
                 src="/logo/myjourny-logo.svg"
-                alt="MyJourny"
+                alt="Myjourny"
                 width={167}
                 height={29}
                 priority

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { MyExperiencesContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "My experiences — MyJourny",
+  title: "My experiences — Myjourny",
   description: "View and manage your upcoming, past, and cancelled experiences.",
 };
 

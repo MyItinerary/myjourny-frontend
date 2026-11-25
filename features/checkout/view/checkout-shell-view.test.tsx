@@ -9,7 +9,7 @@ describe("CheckoutShellView", () => {
   it("puts the form and the summary side by side under the logo", () => {
     renderWithProviders(<CheckoutShellView summary={<p>Order</p>}>{<p>Form</p>}</CheckoutShellView>);
 
-    expect(screen.getByAltText("MyJourny")).toBeInTheDocument();
+    expect(screen.getByAltText("Myjourny")).toBeInTheDocument();
     expect(screen.getByText("Form")).toBeInTheDocument();
     expect(screen.getByText("Order")).toBeInTheDocument();
   });

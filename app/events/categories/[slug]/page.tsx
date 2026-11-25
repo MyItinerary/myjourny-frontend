@@ -8,7 +8,7 @@ import { EventCategoryContent } from "./content";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  return { title: `${eventCategoryLabel(decodeURIComponent(slug))} events | MyJourny` };
+  return { title: `${eventCategoryLabel(decodeURIComponent(slug))} events | Myjourny` };
 }
 
 export default async function EventCategoryPage({ params }: { params: Promise<{ slug: string }> }) {

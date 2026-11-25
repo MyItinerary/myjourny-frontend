@@ -52,7 +52,7 @@ export function emptyProfile(user: { fullName: string | null; email: string | nu
         row("Identity", "Not started", "Start", { chip: { text: "To do", kind: "In review" } }),
         row("Identity selfie", "Not started", "Start", { chip: { text: "To do", kind: "In review" } }),
         row("Bank account name", "Add a bank account first", "Add", { chip: { text: "To do", kind: "In review" } }),
-        row("Registered business", "You host as an individual", "Set up", {
+        row("Registered business", "You guide as an individual", "Set up", {
           chip: { text: "Not set up", kind: "Draft" },
           help: "A CAC number adds a Registered business badge, makes you eligible for company and agency bookings, and raises your payout limit. Nothing is taken away if you never do it.",
         }),
@@ -90,11 +90,11 @@ export function emptyProfile(user: { fullName: string | null; email: string | nu
       { name: "National identity number", sub: "Not sent yet", checked: false, action: "Upload" },
       { name: "Identity selfie", sub: "Not sent yet", checked: false, action: "Upload" },
       { name: "Bank account", sub: "No account added yet", checked: false, action: "Add" },
-      { name: "CAC certificate", sub: "You host as an individual, this is optional", checked: false, action: "Upload" },
+      { name: "CAC certificate", sub: "You guide as an individual, this is optional", checked: false, action: "Upload" },
     ],
     preview: {
       name: name || "Your name",
-      line: "Your trade · Your city · hosting since this year",
+      line: "Your trade · Your city · guiding since this year",
       badges: [],
       bio: "A few lines about what you do will show here.",
       languages: "the languages you add",

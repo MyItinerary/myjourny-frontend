@@ -5,10 +5,10 @@ import type { TermsData } from "../model/terms.types";
 import { HostTermsView } from "./host-terms-view";
 
 const mockHostTermsData: TermsData = {
-  title: "Host Terms",
+  title: "Guide Terms",
   lastUpdated: "[DATE]",
-  companyAgreementText: "These terms are an agreement between [COMPANY LEGAL NAME] and the host.",
-  agreementNoticeText: "By applying to host, you accept these terms.",
+  companyAgreementText: "These terms are an agreement between [COMPANY LEGAL NAME] and the guide.",
+  agreementNoticeText: "By applying to guide, you accept these terms.",
   shortVersion: {
     title: "The short version",
     disclaimer: "This summary is for convenience.",
@@ -25,14 +25,14 @@ const mockHostTermsData: TermsData = {
   },
   tableOfContents: [
     { id: "short-version", label: "The short version" },
-    { id: "section-1", label: "1. Who can host" },
+    { id: "section-1", label: "1. Who can guide" },
     { id: "section-2", label: "2. Our role, and yours" },
   ],
   sections: [
     {
       id: "section-1",
       number: "1.",
-      title: "1. Who can host",
+      title: "1. Who can guide",
       items: [
         {
           number: "1.1",
@@ -47,11 +47,11 @@ const mockHostTermsData: TermsData = {
       items: [
         {
           number: "2.1",
-          text: "MyJourny is a marketplace.",
+          text: "Myjourny is a marketplace.",
         },
         {
           number: "2.2",
-          boldPrefix: "You are an independent host.",
+          boldPrefix: "You are an independent guide.",
           text: "You are not our employee.",
         },
       ],
@@ -69,10 +69,10 @@ describe("HostTermsView", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { level: 1, name: "Host Terms" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Guide Terms" })).toBeInTheDocument();
     expect(screen.getByText(/These terms are an agreement/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "The short version" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: "1. Who can host" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "1. Who can guide" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "2. Our role, and yours" })).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe("HostTermsView", () => {
       />
     );
 
-    const section1Btn = screen.getByRole("button", { name: "1. Who can host" });
+    const section1Btn = screen.getByRole("button", { name: "1. Who can guide" });
     fireEvent.click(section1Btn);
 
     expect(handleSelect).toHaveBeenCalledWith("section-1");

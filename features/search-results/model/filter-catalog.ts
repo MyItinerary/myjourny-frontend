@@ -227,7 +227,7 @@ export const EXPERIENCE_GROUPS: ChipGroup[] = [
     options: [
       { value: "shared", label: "Shared group" },
       { value: "private", label: "Private group" },
-      { value: "one-on-one", label: "One-on-one with the host" },
+      { value: "one-on-one", label: "One-on-one with the guide" },
     ],
   },
 ];
@@ -265,8 +265,8 @@ export interface FlagDef {
 
 export const EXPERIENCE_FLAGS: FlagDef[] = [
   { id: "freeCancellation", label: "Free cancellation", scope: "experiences" },
-  { id: "verifiedHost", label: "Verified host", scope: "experiences" },
-  { id: "hostReplies", label: "Host replies within 2 hours", scope: "experiences" },
+  { id: "verifiedHost", label: "Verified guide", scope: "experiences" },
+  { id: "hostReplies", label: "Guide replies within 2 hours", scope: "experiences" },
   { id: "notWeatherDependent", label: "Not weather dependent", scope: "experiences" },
 ];
 

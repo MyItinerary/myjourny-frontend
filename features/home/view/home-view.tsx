@@ -98,7 +98,7 @@ export function HomeView({
 
       {newOnMyJourny.show && (
         <Reveal>
-          <HomeRailView heading="New on MyJourny" items={newOnMyJourny.items} isLoading={newOnMyJourny.isLoading} />
+          <HomeRailView heading="New on Myjourny" items={newOnMyJourny.items} isLoading={newOnMyJourny.isLoading} />
         </Reveal>
       )}
 

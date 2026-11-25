@@ -7,7 +7,7 @@ import { CommunityGuidelinesView } from "./community-guidelines-view";
 const mockCommunityData: TermsData = {
   title: "Community Guidelines and Reviews Policy",
   lastUpdated: "[DATE]",
-  companyAgreementText: "MyJourny runs on trust.",
+  companyAgreementText: "Myjourny runs on trust.",
   agreementNoticeText: "",
   shortVersion: {
     title: "The short version",

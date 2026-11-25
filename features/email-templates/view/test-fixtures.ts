@@ -23,10 +23,10 @@ export const mockPasswordResetEmail: PasswordResetEmailData = {
   securityNote:
     "Wasn't you? No action needed, your password stays exactly as it is unless this code gets used.",
   signOffPrefix: "See you out there.",
-  signOffTeam: "From MyJourny",
+  signOffTeam: "From Myjourny",
   footerNotice: "This is an automated security message, replies to this address aren't monitored.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const mockBookingConfirmedEmail: BookingConfirmedEmailData = {
@@ -55,10 +55,10 @@ export const mockBookingConfirmedEmail: BookingConfirmedEmailData = {
   manageBookingUrl: "https://myjourny.app/bookings/MJ-84213/manage",
   explorerCountNote: "6 other explorers are joining this sunrise. See you on the water.",
   signOffPrefix: "Go make a story,",
-  signOffTeam: "MyJourny team",
+  signOffTeam: "Myjourny team",
   footerNotice: "This confirms your booking, keep it for your records.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const mockTodayReminderEmail: TodayReminderEmailData = {
@@ -87,10 +87,10 @@ export const mockTodayReminderEmail: TodayReminderEmailData = {
   ],
   whatsappNote: "Running behind? Message Tobi on WhatsApp, he's expecting you and would rather know.",
   signOffPrefix: "See you at the jetty,",
-  signOffTeam: "MyJourny team",
-  footerNotice: "This is a copy of what's already in your MyJourny app and WhatsApp.",
+  signOffTeam: "Myjourny team",
+  footerNotice: "This is a copy of what's already in your Myjourny app and WhatsApp.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const mockPaymentConfirmedEmail: PaymentConfirmedEmailData = {
@@ -110,10 +110,10 @@ export const mockPaymentConfirmedEmail: PaymentConfirmedEmailData = {
   checkInCode: "MJ-84213",
   downloadReceiptUrl: "https://myjourny.app/receipts/RCP-260801-4213",
   billingEmail: "billing@myjourny.app",
-  signOffTeam: "MyJourny team",
+  signOffTeam: "Myjourny team",
   footerNotice:
-    "Keep this receipt for your records, it may be used for expense or tax purposes. MyJourny Ltd is the merchant of record for this transaction.",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+    "Keep this receipt for your records, it may be used for expense or tax purposes. Myjourny Ltd is the merchant of record for this transaction.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const mockBookingCancelledEmail: BookingCancelledEmailData = {
@@ -132,10 +132,10 @@ export const mockBookingCancelledEmail: BookingCancelledEmailData = {
   billingEmail: "billing@myjourny.app",
   bookingCode: "MJ-10552",
   signOffPrefix: "Until next time,",
-  signOffTeam: "MyJourny Team",
+  signOffTeam: "Myjourny Team",
   footerNotice: "This confirms the cancellation of booking MJ-10552.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const mockVerifyEmailEmail: VerifyEmailEmailData = {
@@ -147,13 +147,13 @@ export const mockVerifyEmailEmail: VerifyEmailEmailData = {
   buttonLabel: "Verify email",
   expiresInHours: 24,
   discoveryNote:
-    "Once verified, you'll be ready to browse and book real experiences in Lagos and Abuja, hosted by people who actually live there.",
-  unrecognizedNote: "Didn't create a MyJourny account? You can safely ignore this email.",
+    "Once verified, you'll be ready to browse and book real experiences in Lagos and Abuja, guided by people who actually live there.",
+  unrecognizedNote: "Didn't create a Myjourny account? You can safely ignore this email.",
   signOffPrefix: "Can't wait to see where you go,",
-  signOffTeam: "The MyJourny Team",
+  signOffTeam: "The Myjourny Team",
   footerNotice: "This is an automated message, replies to this address aren't monitored.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const mockEmailCatalog: EmailCatalogItem[] = [
@@ -168,7 +168,7 @@ export const mockEmailCatalog: EmailCatalogItem[] = [
     id: "booking-confirmed",
     title: "Booking Confirmed",
     eyebrow: "Bookings",
-    description: "Confirmation with date, time, host info and inclusions",
+    description: "Confirmation with date, time, guide info and inclusions",
     heroImageSrc: EMAIL_HERO_2_SRC,
   },
   {

@@ -228,7 +228,7 @@ test("the page shows the host's fit details, lists, paragraphs and meeting landm
   const fit = page.locator("section").filter({ has: page.getByRole("heading", { name: "Before you book" }) });
   await expect(fit.getByText("Moderate. Two hours in a canoe")).toBeVisible();
   await expect(fit.getByText("Ages 12+")).toBeVisible();
-  await expect(fit.getByText("Not confirmed. Ask the host before you book.")).toBeVisible();
+  await expect(fit.getByText("Not confirmed. Ask the guide before you book.")).toBeVisible();
   await expect(fit.getByText("English, Yoruba")).toBeVisible();
   await expect(fit.getByText("If the weather stops it, you get a new date or a full refund.")).toBeVisible();
 
@@ -270,7 +270,7 @@ test("a listing that books on the host's site shows no booking card", async ({ p
   await page.goto("/experiences/exp-1");
   await expect(page.getByRole("heading", { name: "Makoko Floating Village Boat Tour" }).first()).toBeVisible();
 
-  await expect(page.getByRole("heading", { name: "Booked on the host's site" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Booked on the guide's site" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Log in to see the booking link" })).toHaveAttribute(
     "href",
     "/login?next=%2Fexperiences%2Fexp-1",
@@ -286,7 +286,7 @@ test("a signed-in user gets the host's booking link, never the log-in prompt", a
   );
   await page.goto("/experiences/exp-1");
 
-  await expect(page.getByRole("link", { name: /Book on the host's site/ })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: /Book on the guide's site/ })).toHaveAttribute(
     "href",
     "https://tickets.example.com/makoko",
   );

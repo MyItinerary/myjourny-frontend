@@ -16,11 +16,11 @@ import { MobileTabBar } from "./mobile-tab-bar";
 export const viewport: Viewport = { viewportFit: "cover", themeColor: "#FFFFFF" };
 
 export const metadata: Metadata = {
-  title: "MyJourny",
+  title: "Myjourny",
   description: SITE_DESCRIPTION,
-  applicationName: "MyJourny",
-  // Added to an iPhone's home screen: opens full-screen, named MyJourny (the icon is app/apple-icon.tsx).
-  appleWebApp: { capable: true, title: "MyJourny", statusBarStyle: "default" },
+  applicationName: "Myjourny",
+  // Added to an iPhone's home screen: opens full-screen, named Myjourny (the icon is app/apple-icon.tsx).
+  appleWebApp: { capable: true, title: "Myjourny", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 

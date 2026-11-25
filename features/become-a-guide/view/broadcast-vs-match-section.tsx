@@ -23,7 +23,7 @@ export function BroadcastVsMatchSection() {
         </h2>
 
         <p className="mt-4 font-sans text-sm leading-relaxed text-[#6F6B72] sm:text-base">
-          Everyone who books on MyJourny told us what they are drawn to: their pace, their
+          Everyone who books on Myjourny told us what they are drawn to: their pace, their
           budget, who they go with, what they want out of it. We put your experience in front
           of the ones it actually fits, and we bring you people who have never heard of you.
         </p>
@@ -75,11 +75,11 @@ export function BroadcastVsMatchSection() {
           </ul>
         </div>
 
-        {/* Right Container: Listing on MyJourny */}
+        {/* Right Container: Listing on Myjourny */}
         <div className="flex flex-col rounded-[16px] bg-[#2C0101] p-6 text-white sm:p-9 lg:col-span-6">
           <div className="inline-flex">
             <span className="rounded-full bg-[#F5032D] px-3.5 py-1.5 font-sans text-xs font-semibold text-white">
-              Listing on MyJourny
+              Listing on Myjourny
             </span>
           </div>
 

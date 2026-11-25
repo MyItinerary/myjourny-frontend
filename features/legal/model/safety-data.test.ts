@@ -7,7 +7,7 @@ describe("safetyData", () => {
     expect(safetyData.title).toBe("Safety Guide");
     expect(safetyData.lastUpdated).toBe("9 November 2026");
     expect(safetyData.tableOfContents.length).toBe(16);
-    expect(safetyData.tableOfContents[0].label).toBe("1. How safety works on MyJourny");
+    expect(safetyData.tableOfContents[0].label).toBe("1. How safety works on Myjourny");
     expect(safetyData.tableOfContents[15].label).toBe("16. Contact and feedback");
   });
 

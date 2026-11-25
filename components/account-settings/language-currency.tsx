@@ -21,7 +21,7 @@ const LANGUAGE_OPTIONS: Option[] = [
 ];
 
 const CURRENCY_OPTIONS: Option[] = [
-  { value: "NGN", label: "Naira (₦)", meta: "Default for experiences hosted in Nigeria" },
+  { value: "NGN", label: "Naira (₦)", meta: "Default for experiences guided in Nigeria" },
   { value: "USD", label: "US dollars ($)", meta: "Default everywhere else" },
 ];
 
@@ -50,7 +50,7 @@ function savedMessageFor(key: ModalKey, label: string) {
     case "language":
       return `Saved. Your preferred language is ${label}.`;
     case "currency":
-      return `Saved. Your display currency is ${label}. Each experience is still charged in its host’s currency.`;
+      return `Saved. Your display currency is ${label}. Each experience is still charged in its guide’s currency.`;
     case "timezone":
       return `Saved. Reminders and start times now use ${label}.`;
   }
@@ -111,7 +111,7 @@ export function LanguageCurrencySection() {
         <Row
           label="Currency"
           value={labelFor("currency", values.currency)}
-          note="Each experience is priced in its host’s own currency. Experiences hosted in Nigeria are charged in Naira through Paystack, everywhere else in US dollars."
+          note="Each experience is priced in its guide’s own currency. Experiences guided in Nigeria are charged in Naira through Paystack, everywhere else in US dollars."
           actionLabel="Edit"
           onAction={() => openModal("currency")}
         />

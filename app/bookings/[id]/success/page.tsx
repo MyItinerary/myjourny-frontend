@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { BookingPaymentStatus } from "@/components/bookings/booking-payment-status";
 
 export const metadata: Metadata = {
-  title: "Your booking — MyJourny",
+  title: "Your booking — Myjourny",
 };
 
 // Landed on after itin's /bookings/success redirect (platform=web). The

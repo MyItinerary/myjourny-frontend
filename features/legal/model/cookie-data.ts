@@ -24,7 +24,7 @@ export const cookieData: TermsData = {
       title: "1. What this policy covers",
       items: [
         {
-          text: 'This policy explains how **Myjourny and Experiences LLC** ("we", "us") uses cookies and similar technologies on MyJourny. It should be read with our [Privacy Policy](/legal/privacy), which explains how we handle personal data more widely.',
+          text: 'This policy explains how **Myjourny and Experiences LLC** ("we", "us") uses cookies and similar technologies on Myjourny. It should be read with our [Privacy Policy](/legal/privacy), which explains how we handle personal data more widely.',
         },
       ],
     },
@@ -53,7 +53,7 @@ export const cookieData: TermsData = {
           [
             "**Strictly necessary**",
             "Keeps you signed in, holds your spot during the 12-minute checkout hold, remembers your cookie choice, protects against fraud and attacks, and makes payments work",
-            "No. MyJourny cannot work without them. They do not need consent.",
+            "No. Myjourny cannot work without them. They do not need consent.",
           ],
           [
             "**Preferences**",
@@ -62,7 +62,7 @@ export const cookieData: TermsData = {
           ],
           [
             "**Analytics**",
-            "Tells us how people use MyJourny so we can fix problems and improve it. We look at it in aggregate.",
+            "Tells us how people use Myjourny so we can fix problems and improve it. We look at it in aggregate.",
             "Yes",
           ],
           [
@@ -85,28 +85,28 @@ export const cookieData: TermsData = {
           [
             "**[session cookie]**",
             "Strictly necessary",
-            "MyJourny",
+            "Myjourny",
             "Keeps you signed in",
             "Session, up to **[DURATION]**",
           ],
           [
             "**[checkout hold cookie]**",
             "Strictly necessary",
-            "MyJourny",
+            "Myjourny",
             "Holds your selection for 12 minutes during checkout",
             "12 minutes",
           ],
           [
             "**[security cookie]**",
             "Strictly necessary",
-            "MyJourny",
+            "Myjourny",
             "Protects against fraud and bot traffic",
             "**[DURATION]**",
           ],
           [
             "**[consent cookie]**",
             "Strictly necessary",
-            "MyJourny",
+            "Myjourny",
             "Remembers your cookie choice",
             "12 months",
           ],
@@ -120,7 +120,7 @@ export const cookieData: TermsData = {
           [
             "**[preferences cookie]**",
             "Preferences",
-            "MyJourny",
+            "Myjourny",
             "Remembers your area, filters, and language",
             "**[DURATION]**",
           ],
@@ -134,7 +134,7 @@ export const cookieData: TermsData = {
           [
             "**[personalisation cookie]**",
             "Personalisation",
-            "MyJourny",
+            "Myjourny",
             "Links your activity to your taste profile",
             "**[DURATION]**",
           ],
@@ -166,7 +166,7 @@ export const cookieData: TermsData = {
       bullets: [
         "**When you first visit,** we show a banner with three options: **Accept all**, **Reject non-essential**, and **Manage preferences**. Rejecting is as easy as accepting. Nothing non-essential runs until you choose.",
         '**To change your mind,** open Settings, then Privacy, then Cookie preferences, or use the "Cookie preferences" link in the footer of any page. Withdrawing consent is as easy as giving it.',
-        "**Browser settings** let you block or delete cookies. If you block strictly necessary cookies, parts of MyJourny will not work, such as signing in and paying.",
+        "**Browser settings** let you block or delete cookies. If you block strictly necessary cookies, parts of Myjourny will not work, such as signing in and paying.",
         "**Mobile devices** let you reset your advertising identifier or limit tracking in your phone's settings.",
         "**Emails:** if we measure opens with a pixel, you can stop that by turning off marketing emails, or by blocking images in your mail app. Service emails never need it.",
       ],
@@ -182,7 +182,7 @@ export const cookieData: TermsData = {
       title: "7. If you say no",
       items: [
         {
-          text: "You can still use MyJourny, browse, and book. You may see less relevant recommendations, and we may not remember your filters between visits.",
+          text: "You can still use Myjourny, browse, and book. You may see less relevant recommendations, and we may not remember your filters between visits.",
         },
       ],
     },

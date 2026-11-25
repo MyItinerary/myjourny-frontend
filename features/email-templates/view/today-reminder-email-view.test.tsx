@@ -26,7 +26,7 @@ describe("TodayReminderEmailView", () => {
     renderWithProviders(<TodayReminderEmailView data={mockTodayReminderEmail} />);
 
     expect(
-      screen.getByText(`Hosted by ${mockTodayReminderEmail.host.name}`),
+      screen.getByText(`Guided by ${mockTodayReminderEmail.host.name}`),
     ).toBeInTheDocument();
     expect(screen.getByText(mockTodayReminderEmail.whatsappNote)).toBeInTheDocument();
   });

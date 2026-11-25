@@ -16,7 +16,7 @@ const vm = (over: Partial<HostProfileViewModel> = {}): HostProfileViewModel => (
   onPane: vi.fn(),
   pane: "personal",
   title: "Personal information",
-  subtitle: "Only you and MyJourny see this.",
+  subtitle: "Only you and Myjourny see this.",
   setup: null,
   rows: [
     { label: "Legal name", value: "Tunde Oluwaseun Bakare", action: "Edit" },
@@ -48,7 +48,7 @@ describe("HostProfileView, the panes and rows", () => {
     const { user } = renderWithProviders(<HostProfileView vm={props} />);
 
     expect(screen.getByRole("heading", { name: "Personal information" })).toBeInTheDocument();
-    expect(screen.getByText("Only you and MyJourny see this.")).toBeInTheDocument();
+    expect(screen.getByText("Only you and Myjourny see this.")).toBeInTheDocument();
     expect(screen.getByText("Tunde Oluwaseun Bakare")).toHaveClass("text-[#6F6B72]");
     expect(screen.getByText("Not provided")).toHaveClass("text-[#A09DA3]");
     expect(screen.getByText("Never shown to guests.")).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe("HostProfileView, a guest's view of you", () => {
           preview: {
             name: "Tunde Bakare",
             line: "Photographer · Lagos",
-            badges: ["Verified host", "Replies in an hour"],
+            badges: ["Verified guide", "Replies in an hour"],
             bio: "Nine years on the island.",
             languages: "English and Yoruba",
           },
@@ -100,7 +100,7 @@ describe("HostProfileView, a guest's view of you", () => {
       />,
     );
     expect(screen.getByText("What a guest sees")).toBeInTheDocument();
-    expect(screen.getByText("Verified host")).toHaveClass("text-[#0CBA65]");
+    expect(screen.getByText("Verified guide")).toHaveClass("text-[#0CBA65]");
     expect(screen.getByText("Replies in an hour")).toHaveClass("text-[#6F6B72]");
     expect(screen.getByText("Nine years on the island.")).toBeInTheDocument();
     expect(screen.getByText("Speaks English and Yoruba")).toBeInTheDocument();
@@ -110,7 +110,7 @@ describe("HostProfileView, a guest's view of you", () => {
     renderWithProviders(
       <HostProfileView vm={vm({ preview: { name: "Your name", line: "Your trade", badges: [], bio: "A few lines.", languages: "the languages you add" } })} />,
     );
-    expect(screen.queryByText("Verified host")).not.toBeInTheDocument();
+    expect(screen.queryByText("Verified guide")).not.toBeInTheDocument();
   });
 });
 

@@ -67,12 +67,12 @@ function renderEmailShell(opts: ShellOptions): string {
     bodyHtml,
   } = opts;
 
-  const escapedTitle = escapeHtml(title) || "MyJourny";
+  const escapedTitle = escapeHtml(title) || "Myjourny";
   const escapedEyebrow = escapeHtml(eyebrow) || "MYJOURNY";
   const escapedSubtitle = escapeHtml(subtitle);
-  const escapedSignOffTeam = escapeHtml(signOffTeam || "From MyJourny");
+  const escapedSignOffTeam = escapeHtml(signOffTeam || "From Myjourny");
   const escapedFooterNotice = escapeHtml(footerNotice);
-  const escapedCopyright = escapeHtml(copyright || "© 2026 MyJourny Ltd. Lagos, Nigeria.");
+  const escapedCopyright = escapeHtml(copyright || "© 2026 Myjourny Ltd. Lagos, Nigeria.");
   const safeHelpMailto = helpEmail ? sanitizeUrl(`mailto:${helpEmail}`) : "";
   const escapedHelpEmail = helpEmail ? escapeHtml(helpEmail) : "";
 
@@ -102,7 +102,7 @@ function renderEmailShell(opts: ShellOptions): string {
               <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <img src="${LOGO_FULL_URL}" alt="MyJourny" width="180" style="display:block;max-width:180px;height:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.35));" />
+                    <img src="${LOGO_FULL_URL}" alt="Myjourny" width="180" style="display:block;max-width:180px;height:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.35));" />
                   </td>
                 </tr>
               </table>
@@ -280,7 +280,7 @@ export function generateBookingConfirmedEmailHtml(data: BookingConfirmedEmailDat
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #F4F2EE;padding-top:16px;margin-top:16px;">
       <tr>
         <td style="font-size:14px;font-weight:600;color:#130404;">
-          Hosted by ${escapeHtml(data.host.name)} ${data.host.isVerified ? "(Verified Host)" : ""}
+          Guided by ${escapeHtml(data.host.name)} ${data.host.isVerified ? "(Verified Guide)" : ""}
         </td>
       </tr>
     </table>
@@ -369,7 +369,7 @@ export function generateTodayReminderEmailHtml(data: TodayReminderEmailData): st
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #F4F2EE;padding-top:16px;margin-top:16px;">
       <tr>
         <td style="font-size:14px;font-weight:600;color:#130404;">
-          Hosted by ${escapeHtml(data.host.name)} ${data.host.isVerified ? "(Verified Host)" : ""}
+          Guided by ${escapeHtml(data.host.name)} ${data.host.isVerified ? "(Verified Guide)" : ""}
         </td>
       </tr>
     </table>

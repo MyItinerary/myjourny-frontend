@@ -41,10 +41,10 @@ describe("RowList", () => {
 describe("PreviewCard", () => {
   it("shows a guest's view with initials and badges", () => {
     renderWithProviders(
-      <PreviewCard preview={{ name: "Tunde Bakare", line: "Photographer", badges: ["Verified host"], bio: "Nine years.", languages: "English" }} />,
+      <PreviewCard preview={{ name: "Tunde Bakare", line: "Photographer", badges: ["Verified guide"], bio: "Nine years.", languages: "English" }} />,
     );
     expect(screen.getByText("TB")).toBeInTheDocument();
-    expect(screen.getByText("Verified host")).toBeInTheDocument();
+    expect(screen.getByText("Verified guide")).toBeInTheDocument();
     expect(screen.getByText("Speaks English")).toBeInTheDocument();
   });
 });

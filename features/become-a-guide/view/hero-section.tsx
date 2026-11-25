@@ -18,7 +18,7 @@ export function HeroSection({ onStartApplication, onScrollToHowItWorks }: HeroSe
           </h1>
 
           <p className="mt-6 max-w-xl font-sans text-base leading-relaxed text-[#333134] sm:text-lg">
-            Turn your city knowledge into income. Real experiences, hosted by real people who
+            Turn your city knowledge into income. Real experiences, guided by real people who
             actually live there
           </p>
 
@@ -46,7 +46,7 @@ export function HeroSection({ onStartApplication, onScrollToHowItWorks }: HeroSe
           <div className="relative aspect-[4/5] w-full max-w-[520px] overflow-hidden rounded-[28px] bg-[#EBEBEB] shadow-md">
             <Image
               src="/guides/homepage.webp"
-              alt="Real experiences hosted by real people"
+              alt="Real experiences guided by real people"
               fill
               priority
               className="object-cover"

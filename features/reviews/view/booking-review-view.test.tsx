@@ -72,7 +72,7 @@ describe("BookingReviewView", () => {
     expect(onEdit).toHaveBeenCalled();
   });
 
-  it("tells the author when MyJourny has hidden their review", () => {
+  it("tells the author when Myjourny has hidden their review", () => {
     renderWithProviders(
       <BookingReviewView mode="posted" rating={1} comment={null} date="12 Oct 2026" isHidden onEdit={null} />,
     );

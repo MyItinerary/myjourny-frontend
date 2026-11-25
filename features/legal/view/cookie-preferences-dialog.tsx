@@ -52,7 +52,7 @@ export function CookiePreferencesDialog({
           <div>
             <h2 className="font-sans text-xl font-bold text-[#130404]">Cookie preferences</h2>
             <p className="mt-1 font-sans text-xs text-[#6F6B72]">
-              Manage which cookies you allow us to use on MyJourny.
+              Manage which cookies you allow us to use on Myjourny.
             </p>
           </div>
           <button

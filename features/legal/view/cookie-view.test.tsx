@@ -21,7 +21,7 @@ const mockCookieData: TermsData = {
       title: "1. What this policy covers",
       items: [
         {
-          text: "This policy explains how MyJourny uses cookies.",
+          text: "This policy explains how Myjourny uses cookies.",
         },
       ],
     },
@@ -93,7 +93,7 @@ describe("CookieView", () => {
     expect(
       screen.getByRole("heading", { name: "1. What this policy covers", level: 2 })
     ).toBeInTheDocument();
-    expect(screen.getByText("This policy explains how MyJourny uses cookies.")).toBeInTheDocument();
+    expect(screen.getByText("This policy explains how Myjourny uses cookies.")).toBeInTheDocument();
   });
 
   it("renders table and action card button", () => {
