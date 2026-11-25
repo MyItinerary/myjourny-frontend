@@ -60,4 +60,15 @@ describe("WhoGuestsDropdownView", () => {
     await user.click(searchButton);
     expect(onSearch).toHaveBeenCalled();
   });
+
+  it("supports upward placement and maxHeight constraint", () => {
+    const { container } = renderWithProviders(
+      <WhoGuestsDropdownView {...defaultProps} placement="top" maxHeight={320} />,
+    );
+
+    const dropdown = container.firstElementChild as HTMLElement;
+    expect(dropdown.className).toContain("bottom-[calc(100%+12px)]");
+    expect(dropdown.className).toContain("overflow-y-auto");
+    expect(dropdown.style.maxHeight).toBe("320px");
+  });
 });

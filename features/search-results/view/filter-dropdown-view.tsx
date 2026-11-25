@@ -60,13 +60,30 @@ export function FilterDropdownView(props: DropdownProps) {
   }
 
   // Kept mounted while it closes, so the phone sheet can roll back down.
-  return <AnimatePresence>{openDropdown === "dates" && <DatesSheet key="dates" {...props} />}</AnimatePresence>;
+  return (
+    <AnimatePresence>
+      {openDropdown === "dates" && <DatesSheet key="dates" {...props} />}
+    </AnimatePresence>
+  );
 }
 
-function DatesSheet({ draftRange, total, pickDate, pickDatePreset, applyDates, clearDates, closeDropdown, className }: DropdownProps) {
+function DatesSheet({
+  draftRange,
+  total,
+  pickDate,
+  pickDatePreset,
+  applyDates,
+  clearDates,
+  closeDropdown,
+  className,
+}: DropdownProps) {
   const reduce = useReducedMotion();
   // From md up it's an anchored dropdown, which opens and closes as it always has.
-  const [wide] = useState(() => typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches);
+  const [wide] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(min-width: 768px)").matches,
+  );
 
   const panel = (
     <DateRangePanel
@@ -79,13 +96,23 @@ function DatesSheet({ draftRange, total, pickDate, pickDatePreset, applyDates, c
       }}
       onClear={clearDates}
       onApply={applyDates}
-      mobileApplyLabel={total !== undefined ? `Show ${total} experiences` : undefined}
+      mobileApplyLabel={
+        total !== undefined ? `Show ${total} experiences` : undefined
+      }
     />
   );
 
   if (wide) {
     return (
-      <div role="dialog" aria-label="Dates" className={cn(PANEL, "w-[700px] max-w-[calc(100vw-32px)]", className)}>
+      <div
+        role="dialog"
+        aria-label="Dates"
+        className={cn(
+          PANEL,
+          "w-[700px] max-w-[calc(100vw-32px)] max-h-[calc(100dvh-176px)] overflow-y-auto",
+          className,
+        )}
+      >
         {panel}
       </div>
     );
@@ -106,11 +133,18 @@ function DatesSheet({ draftRange, total, pickDate, pickDatePreset, applyDates, c
       <motion.div
         initial={reduce ? { opacity: 0 } : { y: "100%" }}
         animate={{ opacity: 1, y: 0, transition: reduce ? FADE : SHEET_IN }}
-        exit={reduce ? { opacity: 0, transition: FADE } : { y: "100%", transition: SHEET_OUT }}
+        exit={
+          reduce
+            ? { opacity: 0, transition: FADE }
+            : { y: "100%", transition: SHEET_OUT }
+        }
         role="dialog"
         aria-modal="true"
         aria-label="Dates"
-        className={cn(PANEL, "relative max-h-full w-full overflow-y-auto rounded-b-none shadow-[0_12px_48px_rgba(0,0,0,0.2)]")}
+        className={cn(
+          PANEL,
+          "relative max-h-full w-full overflow-y-auto rounded-b-none shadow-[0_12px_48px_rgba(0,0,0,0.2)]",
+        )}
       >
         {panel}
       </motion.div>

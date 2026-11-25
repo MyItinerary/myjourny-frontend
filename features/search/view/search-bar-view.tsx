@@ -1,15 +1,43 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 
 import { DateRangePanel } from "@/components/shared/date-range-panel";
 import { cn } from "@/lib/utils";
 
+import type { SearchBarVariant, SearchTab } from "../model/search.types";
 import type { SearchBarViewModel } from "../view-model/use-search-bar-view-model";
 import { SearchSuggestionList } from "./search-suggestion-item-view";
 import { WhoGuestsDropdownView } from "./who-guests-dropdown-view";
+
+const PREFERRED_DROPDOWN_HEIGHT: Record<SearchTab, number> = {
+  where: 420,
+  when: 520,
+  who: 340,
+};
+
+function computeDropdownLayout(
+  rect: DOMRect,
+  viewportHeight: number,
+  variant: SearchBarVariant,
+  tab: SearchTab,
+): { placement: "top" | "bottom"; maxHeight?: number } {
+  // Unlaid-out test environments (e.g. jsdom with zero rects) keep the default downward layout.
+  if (rect.width === 0 && rect.height === 0) {
+    return { placement: "bottom", maxHeight: undefined };
+  }
+  const edgePadding = 16;
+  const topClearance = variant === "hero" ? 108 : 16;
+  const spaceBelow = Math.floor(viewportHeight - rect.bottom - edgePadding);
+  const spaceAbove = Math.floor(rect.top - topClearance);
+
+  if (spaceBelow < PREFERRED_DROPDOWN_HEIGHT[tab] && spaceAbove > spaceBelow) {
+    return { placement: "top", maxHeight: Math.max(200, spaceAbove) };
+  }
+  return { placement: "bottom", maxHeight: Math.max(200, spaceBelow) };
+}
 
 export interface SearchBarViewProps extends SearchBarViewModel {
   className?: string;
@@ -53,6 +81,9 @@ export function SearchBarView({
   const whereInputRef = useRef<HTMLInputElement>(null);
   const whenInputRef = useRef<HTMLInputElement>(null);
   const whoInputRef = useRef<HTMLInputElement>(null);
+  const [dropdownLayout, setDropdownLayout] = useState<{ placement: "top" | "bottom"; maxHeight?: number }>({
+    placement: "bottom",
+  });
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -65,6 +96,23 @@ export function SearchBarView({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
+
+  useEffect(() => {
+    if (!activeTab) return;
+    const tab = activeTab;
+    function updateLayout() {
+      const el = searchBarRef.current;
+      if (!el) return;
+      setDropdownLayout(computeDropdownLayout(el.getBoundingClientRect(), window.innerHeight, variant, tab));
+    }
+    updateLayout();
+    window.addEventListener("resize", updateLayout);
+    window.addEventListener("scroll", updateLayout, { passive: true });
+    return () => {
+      window.removeEventListener("resize", updateLayout);
+      window.removeEventListener("scroll", updateLayout);
+    };
+  }, [activeTab, variant]);
 
   return (
     <div
@@ -190,8 +238,14 @@ export function SearchBarView({
 
       {/* Suggested Destinations & Activities Dropdown Modal */}
       {activeTab === "where" && (
-        <div className="absolute top-[calc(100%+12px)] left-0 z-50 flex w-[440px] max-w-[calc(100vw-32px)] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex w-full flex-col gap-4 max-h-[360px] overflow-y-auto pr-1">
+        <div
+          style={dropdownLayout.maxHeight ? { maxHeight: dropdownLayout.maxHeight } : undefined}
+          className={cn(
+            "absolute left-0 z-50 flex w-[440px] max-w-[calc(100vw-32px)] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
+            dropdownLayout.placement === "top" ? "bottom-[calc(100%+12px)]" : "top-[calc(100%+12px)]",
+          )}
+        >
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-4 max-h-[360px] overflow-y-auto pr-1">
             <SearchSuggestionList
               destinations={filteredDestinations}
               activities={filteredActivities}
@@ -225,7 +279,11 @@ export function SearchBarView({
         <div
           role="dialog"
           aria-label="Dates"
-          className="absolute top-[calc(100%+8px)] left-1/2 z-50 w-[700px] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-[24px] border border-[#e0dfdd] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150"
+          style={dropdownLayout.maxHeight ? { maxHeight: dropdownLayout.maxHeight } : undefined}
+          className={cn(
+            "absolute left-1/2 z-50 w-[700px] max-w-[calc(100vw-32px)] -translate-x-1/2 overflow-y-auto rounded-[24px] border border-[#e0dfdd] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
+            dropdownLayout.placement === "top" ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]",
+          )}
         >
           <DateRangePanel
             range={draftRange}
@@ -255,6 +313,8 @@ export function SearchBarView({
           incrementGuest={incrementGuest}
           decrementGuest={decrementGuest}
           onSearch={onSearch}
+          placement={dropdownLayout.placement}
+          maxHeight={dropdownLayout.maxHeight}
         />
       )}
     </div>

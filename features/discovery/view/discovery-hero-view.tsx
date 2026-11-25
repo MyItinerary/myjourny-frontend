@@ -22,7 +22,7 @@ export function DiscoveryHeroView({ hero, title, subtitle, titleWidth }: Discove
 
   return (
     <section className="relative z-20 bg-gradient-to-b from-[rgba(244,242,238,0.87)] to-white">
-      <HomeNav />
+      <HomeNav hideCompactSearch={Boolean(search?.activeTab)} />
 
       <div className="mx-auto flex w-full max-w-[900px] flex-col items-center px-6 pt-6 pb-16 text-center lg:px-0 lg:pt-[77px] lg:pb-[110px]">
         <div className="flex flex-col items-center gap-4 lg:gap-5">

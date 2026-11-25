@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
@@ -143,5 +143,50 @@ describe("SearchBarView", () => {
     const plusButtons = screen.getAllByRole("button", { name: "+" });
     await user.click(plusButtons[0]);
     expect(incrementGuest).toHaveBeenCalledWith("adults");
+  });
+
+  it("flips the calendar dropdown upward and constrains maxHeight when below space is tight", () => {
+    const originalHeight = window.innerHeight;
+    Object.defineProperty(window, "innerHeight", { value: 650, configurable: true });
+
+    const rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(() => ({
+      top: 434,
+      bottom: 500,
+      left: 100,
+      right: 1000,
+      width: 900,
+      height: 66,
+      x: 100,
+      y: 434,
+      toJSON: () => ({}),
+    }));
+
+    renderWithProviders(<SearchBarView {...defaultVm} activeTab="when" />);
+
+    const dialog = screen.getByRole("dialog", { name: "Dates" });
+    expect(dialog.className).toContain("bottom-[calc(100%+8px)]");
+    expect(dialog.className).toContain("overflow-y-auto");
+    expect(dialog.style.maxHeight).toBe("326px");
+
+    rectSpy.mockImplementation(() => ({
+      top: 120,
+      bottom: 186,
+      left: 100,
+      right: 1000,
+      width: 900,
+      height: 66,
+      x: 100,
+      y: 120,
+      toJSON: () => ({}),
+    }));
+    act(() => {
+      window.dispatchEvent(new Event("scroll"));
+    });
+
+    expect(dialog.className).toContain("top-[calc(100%+8px)]");
+    expect(dialog.style.maxHeight).toBe("448px");
+
+    rectSpy.mockRestore();
+    Object.defineProperty(window, "innerHeight", { value: originalHeight, configurable: true });
   });
 });

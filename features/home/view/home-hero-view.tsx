@@ -23,7 +23,7 @@ const itemVariants: Variants = {
 export function HomeHeroView({ search, isScrolled, onOpenMobileSearch }: HomeHeroViewModel) {
   return (
     <section className="relative z-20 bg-gradient-to-b from-[rgba(244,242,238,0.87)] to-white">
-      <HomeNav />
+      <HomeNav hideCompactSearch={Boolean(search?.activeTab)} />
 
       <motion.div
         variants={containerVariants}
