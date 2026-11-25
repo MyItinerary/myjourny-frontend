@@ -2,55 +2,35 @@ import { act, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { closeMobileSearch, useMobileSearchOpen } from "@/features/mobile-nav";
-import {
-  renderHookWithProviders,
-  renderWithProviders,
-} from "@/test/utils/render";
+import { renderHookWithProviders, renderWithProviders } from "@/test/utils/render";
 
 import { HomeNav } from "./home-nav";
 
 const nav = vi.hoisted(() => ({ pathname: "/" }));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-  usePathname: () => nav.pathname,
-}));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => nav.pathname }));
 const session = vi.hoisted(() => ({ user: null as null | { email: string } }));
 vi.mock("@/lib/auth/session-store", () => ({ useSession: () => session }));
-const me = vi.hoisted(() => ({
-  current: undefined as { signup_type: string } | undefined,
-}));
+const me = vi.hoisted(() => ({ current: undefined as { signup_type: string } | undefined }));
 vi.mock("@/lib/queries/auth", async (importOriginal) => ({
-  isHostAccount: (await importOriginal<typeof import("@/lib/queries/auth")>())
-    .isHostAccount,
+  isHostAccount: (await importOriginal<typeof import("@/lib/queries/auth")>()).isHostAccount,
   useLogout: () => ({ mutate: vi.fn() }),
   useMe: () => ({ data: me.current }),
 }));
-vi.mock("@/lib/queries/notifications", () => ({
-  useUnreadNotificationsCount: () => ({ data: 0 }),
-}));
-vi.mock("@/components/notifications/notifications-dropdown", () => ({
-  NotificationsDropdown: () => null,
-}));
+vi.mock("@/lib/queries/notifications", () => ({ useUnreadNotificationsCount: () => ({ data: 0 }) }));
+vi.mock("@/components/notifications/notifications-dropdown", () => ({ NotificationsDropdown: () => null }));
 // The real bar is covered in features/search; here a marker shows whether the nav has it open.
 vi.mock("@/features/search", () => ({
   SearchBarView: () => <div role="search" aria-label="Nav search bar" />,
   useSearchBarViewModel: () => ({}),
 }));
 
-const eventLinks = () =>
-  screen
-    .queryAllByRole("link")
-    .filter((link) => link.getAttribute("href") === "/events");
+const eventLinks = () => screen.queryAllByRole("link").filter((link) => link.getAttribute("href") === "/events");
 
 describe("HomeNav", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     me.current = undefined;
-    Object.defineProperty(window, "scrollY", {
-      value: 0,
-      writable: true,
-      configurable: true,
-    });
+    Object.defineProperty(window, "scrollY", { value: 0, writable: true, configurable: true });
     session.user = null;
     nav.pathname = "/";
     closeMobileSearch();
@@ -59,9 +39,7 @@ describe("HomeNav", () => {
   // Every page mounts its own nav, so fading the pills in on mount replayed on every click.
   it("shows the nav pills straight away instead of fading them in on each page", () => {
     renderWithProviders(<HomeNav />);
-    expect(screen.getByRole("navigation", { name: "Primary" })).not.toHaveStyle(
-      { opacity: "0" },
-    );
+    expect(screen.getByRole("navigation", { name: "Primary" })).not.toHaveStyle({ opacity: "0" });
   });
 
   it("on Home, Experiences and Events, shows the search button only once the hero's search is scrolled past", () => {
@@ -69,19 +47,13 @@ describe("HomeNav", () => {
       nav.pathname = path;
       window.scrollY = 0;
       const { unmount } = renderWithProviders(<HomeNav />);
-      expect(
-        screen.queryByRole("button", { name: "Search" }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Search" })).not.toBeInTheDocument();
 
       act(() => {
         window.scrollY = 400;
         window.dispatchEvent(new Event("scroll"));
       });
-      expect(
-        screen
-          .getAllByRole("button", { name: "Search" })
-          .some((b) => b.getAttribute("aria-haspopup") === "dialog"),
-      ).toBe(true);
+      expect(screen.getAllByRole("button", { name: "Search" }).some((b) => b.getAttribute("aria-haspopup") === "dialog")).toBe(true);
       unmount();
     }
     window.scrollY = 0;
@@ -101,9 +73,7 @@ describe("HomeNav", () => {
     vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "");
     const { user } = renderWithProviders(<HomeNav />);
 
-    expect(
-      screen.getByRole("link", { name: "Experiences" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Experiences" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
     expect(eventLinks()).toEqual([]);
   });
@@ -112,10 +82,7 @@ describe("HomeNav", () => {
     vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true");
     const { user } = renderWithProviders(<HomeNav />);
 
-    expect(screen.getByRole("link", { name: "Events" })).toHaveAttribute(
-      "href",
-      "/events",
-    );
+    expect(screen.getByRole("link", { name: "Events" })).toHaveAttribute("href", "/events");
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
     expect(eventLinks()).toHaveLength(1);
   });
@@ -123,15 +90,11 @@ describe("HomeNav", () => {
   it("opens the full-screen menu from the profile button and closes it from the X", async () => {
     const { user } = renderWithProviders(<HomeNav />);
 
-    expect(
-      screen.queryByRole("dialog", { name: "Menu" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
     expect(screen.getByRole("dialog", { name: "Menu" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Close menu" }));
-    expect(
-      screen.queryByRole("dialog", { name: "Menu" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
   });
 
   it("invites travellers to become a guide, with no way to switch to hosting", async () => {
@@ -139,13 +102,9 @@ describe("HomeNav", () => {
     me.current = { signup_type: "traveller" };
     const { user } = renderWithProviders(<HomeNav />);
 
-    expect(
-      screen.getByRole("link", { name: "Become a guide" }),
-    ).toHaveAttribute("href", "/become-a-guide");
+    expect(screen.getByRole("link", { name: "Become a guide" })).toHaveAttribute("href", "/become-a-guide");
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
-    expect(
-      screen.queryByText("Switch to host dashboard"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Switch to host dashboard")).not.toBeInTheDocument();
     expect(screen.queryByText("Switch to hosting")).not.toBeInTheDocument();
   });
 
@@ -154,18 +113,12 @@ describe("HomeNav", () => {
     me.current = { signup_type: "guide" };
     const { user } = renderWithProviders(<HomeNav />);
 
-    expect(
-      screen.getByRole("link", { name: "Switch to host dashboard" }),
-    ).toHaveAttribute("href", "/host/dashboard");
+    expect(screen.getByRole("link", { name: "Switch to host dashboard" })).toHaveAttribute("href", "/host/dashboard");
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
     // The header link, the desktop dropdown's row and the phone menu's Switch to hosting.
-    const links = screen
-      .getAllByRole("link")
-      .filter((link) => link.getAttribute("href") === "/host/dashboard");
+    const links = screen.getAllByRole("link").filter((link) => link.getAttribute("href") === "/host/dashboard");
     expect(links).toHaveLength(3);
-    expect(
-      screen.getByText("Manage your listings and bookings"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Manage your listings and bookings")).toBeInTheDocument();
     expect(screen.queryByText("Become a guide")).not.toBeInTheDocument();
   });
 
@@ -175,9 +128,7 @@ describe("HomeNav", () => {
 
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
     expect(screen.queryByText("Become a guide")).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("Switch to host dashboard"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Switch to host dashboard")).not.toBeInTheDocument();
     expect(screen.queryByText("Switch to hosting")).not.toBeInTheDocument();
   });
 
@@ -186,45 +137,29 @@ describe("HomeNav", () => {
     me.current = { signup_type: "both" };
     renderWithProviders(<HomeNav />);
 
-    expect(
-      screen.getByRole("link", { name: "Switch to host dashboard" }),
-    ).toHaveAttribute("href", "/host/dashboard");
+    expect(screen.getByRole("link", { name: "Switch to host dashboard" })).toHaveAttribute("href", "/host/dashboard");
   });
 
   it("keeps the expanded search bar open when scrolling back to the top", async () => {
-    Object.defineProperty(window, "scrollY", {
-      value: 200,
-      configurable: true,
-    });
+    Object.defineProperty(window, "scrollY", { value: 200, configurable: true });
     const { user } = renderWithProviders(<HomeNav />);
 
     const whenButton = await screen.findByRole("button", { name: "When" });
     await user.click(whenButton);
-    expect(
-      await screen.findByRole("search", { name: "Nav search bar" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("search", { name: "Nav search bar" })).toBeInTheDocument();
 
     Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
     act(() => {
       window.dispatchEvent(new Event("scroll"));
     });
-    expect(
-      screen.getByRole("search", { name: "Nav search bar" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("search", { name: "Nav search bar" })).toBeInTheDocument();
   });
 
   it("suppresses the compact search pill when hideCompactSearch is true", () => {
-    Object.defineProperty(window, "scrollY", {
-      value: 200,
-      configurable: true,
-    });
+    Object.defineProperty(window, "scrollY", { value: 200, configurable: true });
     renderWithProviders(<HomeNav hideCompactSearch />);
 
-    expect(
-      screen.queryByRole("button", { name: "When" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("navigation", { name: "Primary" }),
-    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "When" })).not.toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
   });
 });
