@@ -13,16 +13,20 @@ export type HomeHeroViewModel = {
 
 export function useHomeHeroViewModel(): HomeHeroViewModel {
   const search = useSearchBarViewModel({ variant: "hero" });
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrolledPastTop, setScrolledPastTop] = useState(false);
 
   useEffect(() => {
     function handleScroll() {
-      setIsScrolled(window.scrollY > 20);
+      setScrolledPastTop(window.scrollY > 20);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Keep the hero search bar visible while a dropdown is open so scrolling to
+  // view the calendar or suggestions doesn't dismiss it underneath the user.
+  const isScrolled = scrolledPastTop && !search.activeTab;
 
   return { search, isScrolled, onOpenMobileSearch: openMobileSearch };
 }

@@ -23,6 +23,7 @@ describe("HomeNav", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     me.current = undefined;
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
   });
 
   it("leaves Events out of the nav and the profile menu while events are off", async () => {
@@ -69,5 +70,26 @@ describe("HomeNav", () => {
     renderWithProviders(<HomeNav />);
 
     expect(screen.getByRole("link", { name: "Switch to host dashboard" })).toHaveAttribute("href", "/host/dashboard");
+  });
+
+  it("keeps the expanded search bar open when scrolling back to the top", async () => {
+    Object.defineProperty(window, "scrollY", { value: 200, configurable: true });
+    const { user } = renderWithProviders(<HomeNav />);
+
+    const whenButton = await screen.findByRole("button", { name: "When" });
+    await user.click(whenButton);
+    expect(screen.getByRole("button", { name: "Search", expanded: true })).toBeInTheDocument();
+
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+    window.dispatchEvent(new Event("scroll"));
+    expect(screen.getByRole("button", { name: "Search", expanded: true })).toBeInTheDocument();
+  });
+
+  it("suppresses the compact search pill when hideCompactSearch is true", () => {
+    Object.defineProperty(window, "scrollY", { value: 200, configurable: true });
+    renderWithProviders(<HomeNav hideCompactSearch />);
+
+    expect(screen.queryByRole("button", { name: "When" })).not.toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
   });
 });

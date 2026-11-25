@@ -70,7 +70,7 @@ export function FilterDropdownView({
         aria-label="Dates"
         className={cn(
           PANEL,
-          "w-[700px] max-w-[calc(100vw-32px)]",
+          "w-[700px] max-w-[calc(100vw-32px)] max-h-[calc(100dvh-24px)] overflow-y-auto md:max-h-[calc(100dvh-176px)]",
           "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:z-50 max-md:w-full max-md:max-w-none max-md:rounded-b-none",
           className,
         )}

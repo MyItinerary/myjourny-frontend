@@ -126,7 +126,15 @@ export interface NavSearchSummary {
   who?: string;
 }
 
-export function HomeNav({ className, searchSummary }: { className?: string; searchSummary?: NavSearchSummary }) {
+export function HomeNav({
+  className,
+  searchSummary,
+  hideCompactSearch = false,
+}: {
+  className?: string;
+  searchSummary?: NavSearchSummary;
+  hideCompactSearch?: boolean;
+}) {
   const { user } = useSession();
   // Hosts get a way over to their dashboard where everyone else is invited to become one.
   const { data: me } = useMe();
@@ -185,8 +193,9 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const unreadCount = useUnreadNotificationsCount();
   const [isScrolled, setIsScrolled] = useState(false);
-  // The compact search pill takes over the centre once scrolled, or always on a results page.
-  const compact = isScrolled || !!searchSummary;
+  // The compact search pill takes over the centre once scrolled (unless the hero
+  // search bar has a dropdown open), or always on a results page.
+  const compact = !hideCompactSearch && (isScrolled || !!searchSummary);
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const notifContainerRef = useRef<HTMLDivElement>(null);
 
@@ -196,18 +205,14 @@ export function HomeNav({ className, searchSummary }: { className?: string; sear
 
   useEffect(() => {
     function handleScroll() {
-      // Navbar becomes fixed when scrolling starts
-      const scrolled = window.scrollY > 20;
-      setIsScrolled(scrolled);
-      if (!scrolled && !searchSummary) {
-        setIsSearchExpanded(false);
-        setActiveSearchTab(null);
-      }
+      // Navbar becomes fixed when scrolling starts; keep any open search bar
+      // expanded so scrolling up to inspect a dropdown doesn't close it.
+      setIsScrolled(window.scrollY > 20);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [searchSummary]);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

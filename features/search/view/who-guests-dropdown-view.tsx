@@ -14,6 +14,8 @@ export interface WhoGuestsDropdownViewProps {
   incrementGuest: (key: keyof GuestCounts) => void;
   decrementGuest: (key: keyof GuestCounts) => void;
   onSearch: () => void;
+  placement?: "top" | "bottom";
+  maxHeight?: number;
   className?: string;
 }
 
@@ -26,12 +28,16 @@ export function WhoGuestsDropdownView({
   incrementGuest,
   decrementGuest,
   onSearch,
+  placement = "bottom",
+  maxHeight,
   className,
 }: WhoGuestsDropdownViewProps) {
   return (
     <div
+      style={maxHeight ? { maxHeight } : undefined}
       className={cn(
-        "absolute top-[calc(100%+12px)] right-0 z-50 flex w-[400px] max-w-[calc(100vw-32px)] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
+        "absolute right-0 z-50 flex w-[400px] max-w-[calc(100vw-32px)] flex-col items-start gap-4 overflow-y-auto rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
+        placement === "top" ? "bottom-[calc(100%+12px)]" : "top-[calc(100%+12px)]",
         variant === "hero" && "lg:right-4",
         className,
       )}
