@@ -16,7 +16,7 @@ These rules apply to **everyone who pushes code here, people and AI agents alike
 ## Setup
 
 ```bash
-nvm use                         # Node 22 (.nvmrc)
+nvm use                         # Node 26 (.nvmrc)
 npm ci
 npx playwright install chromium # once, for E2E
 npm run dev                     # http://localhost:3000

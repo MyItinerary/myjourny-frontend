@@ -31,7 +31,9 @@ async function completeAuthUnlessChallenged(data: AuthResponse, placeholderEmail
   await completeAuth(data, placeholderEmail);
 }
 
-type MeResponse = {
+export type GuideStatus = "none" | "pending" | "approved" | "rejected";
+
+export type MeResponse = {
   id: string;
   email: string | null;
   full_name: string | null;
@@ -39,7 +41,19 @@ type MeResponse = {
   completed: boolean;
   /** False for a password signup until the emailed link is opened. */
   is_email_verified?: boolean;
+  /** "guide" for someone who signed up through become-a-guide; "both" for a
+   * traveller who added hosting to their account. */
+  signup_type?: "traveller" | "guide" | "both";
+  /** Where their guide application is; "none" for travellers. */
+  guide_status?: GuideStatus;
+  /** Can open the host dashboard. */
+  is_host?: boolean;
 };
+
+/** Whether this account hosts. Older API responses only carry signup_type. */
+export function isHostAccount(me: Pick<MeResponse, "signup_type" | "is_host">): boolean {
+  return me.is_host ?? (me.signup_type === "guide" || me.signup_type === "both");
+}
 
 function toSessionUser(me: MeResponse): SessionUser {
   return { id: me.id, email: me.email, fullName: me.full_name, avatarUrl: me.avatar_url };
@@ -57,7 +71,7 @@ function notifySessionRoute() {
 // Register/login/google-auth all return tokens only, no user — set a
 // placeholder immediately (so `apiClient` is authorized for the follow-up
 // call) then fill in the real user from /auth/me.
-async function completeAuth(tokens: Tokens, placeholderEmail: string | null) {
+export async function completeAuth(tokens: Tokens, placeholderEmail: string | null) {
   // The onboarding quiz's localStorage draft is browser-scoped, not
   // account-scoped — clear it the moment a session becomes "about this
   // specific account" (register, login, or Google, whichever this is) so
@@ -99,7 +113,9 @@ export function useRegister() {
   });
 }
 
-export function useLogin() {
+/** `onAccepted`: the details were right and sign-in is going ahead (not a 2FA code request), called
+ * before the account is loaded, so a caller can cover that wait without covering a wrong password. */
+export function useLogin({ onAccepted }: { onAccepted?: () => void } = {}) {
   return useMutation({
     mutationFn: async (payload: { email: string; password: string; code?: string }) => {
       // /auth/login is OAuth2PasswordRequestForm-based (form-urlencoded),
@@ -109,7 +125,10 @@ export function useLogin() {
       const { data } = await apiClient.post<AuthResponse>("/auth/login", body);
       return data;
     },
-    onSuccess: (data, variables) => completeAuthUnlessChallenged(data, variables.email),
+    onSuccess: (data, variables) => {
+      if (!isTwoFactorChallenge(data)) onAccepted?.();
+      return completeAuthUnlessChallenged(data, variables.email);
+    },
     onError: (error, variables) =>
       toast.error(
         apiErrorMessage(error, variables.code ? "That code didn't work." : "Incorrect email or password.")
@@ -117,7 +136,8 @@ export function useLogin() {
   });
 }
 
-export function useGoogleAuth() {
+/** `onAccepted`: as for useLogin. */
+export function useGoogleAuth({ onAccepted }: { onAccepted?: () => void } = {}) {
   return useMutation({
     mutationFn: async (payload: {
       token: string;
@@ -131,7 +151,10 @@ export function useGoogleAuth() {
       });
       return data;
     },
-    onSuccess: (data) => completeAuthUnlessChallenged(data, null),
+    onSuccess: (data) => {
+      if (!isTwoFactorChallenge(data)) onAccepted?.();
+      return completeAuthUnlessChallenged(data, null);
+    },
     onError: (error) =>
       toast.error(apiErrorMessage(error, "Couldn't sign in with Google. Please try again.")),
   });

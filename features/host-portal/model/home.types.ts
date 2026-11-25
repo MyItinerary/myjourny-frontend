@@ -1,4 +1,14 @@
-export type ListingStatus = "Live" | "Draft" | "In review" | "Hidden" | "Paused" | "Sold out" | "Archived" | "Rejected";
+export type ListingStatus =
+  | "Live"
+  | "Draft"
+  | "In review"
+  | "Hidden"
+  | "Paused"
+  | "Sold out"
+  | "Archived"
+  | "Rejected"
+  | "Taken down"
+  | "Incomplete";
 
 export type HomeStat = {
   label: string;

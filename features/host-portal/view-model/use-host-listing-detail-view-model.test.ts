@@ -10,12 +10,35 @@ vi.mock("next/navigation", () => ({
 }));
 const toast = vi.hoisted(() => ({ info: vi.fn(), success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
+const fetchGuidePreviewToken = vi.hoisted(() => vi.fn());
+vi.mock("../model/guide-listings-api", () => ({ fetchGuidePreviewToken }));
+const openExperiencePreview = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/experience-preview", () => ({ openExperiencePreview }));
+// The design's samples for ?preview=full; `real` stands in for itin.
+const data = vi.hoisted(() => ({ real: null as null | { loading: boolean; found: boolean } }));
+vi.mock("../model/listing-detail-data", async () => {
+  const { SAMPLE_LISTINGS } = await import("../model/sample-listings");
+  const { SAMPLE_LISTING_DETAILS } = await import("../model/sample-listing-details");
+  return {
+    useHostListingDetail: (id: string, preview: string | null) => {
+      if (data.real) {
+        const found = data.real.found ? SAMPLE_LISTINGS[0] : null;
+        return { listing: found, detail: found ? SAMPLE_LISTING_DETAILS.l1 : null, loading: data.real.loading };
+      }
+      return preview === "full"
+        ? { listing: SAMPLE_LISTINGS.find((l) => l.id === id) ?? null, detail: SAMPLE_LISTING_DETAILS[id] ?? null, loading: false }
+        : { listing: null, detail: null, loading: false };
+    },
+  };
+});
 
 beforeEach(() => {
   window.localStorage.clear();
   nav.preview = "full";
+  data.real = null;
   nav.push.mockReset();
   Object.values(toast).forEach((t) => t.mockReset());
+  openExperiencePreview.mockReset();
 });
 
 const render = (id: string) => renderHook(() => useHostListingDetailViewModel(id)).result;
@@ -116,5 +139,58 @@ describe("a listing that isn't there", () => {
     nav.preview = null;
     window.localStorage.clear();
     expect(render("l1").current.notFound).toBe(true);
+  });
+
+  it("edits and fixes a real listing in the builder", () => {
+    nav.preview = null;
+    data.real = { loading: false, found: true };
+    const result = render("e1");
+    expect(result.current.header.actions[0]).toMatchObject({ href: "/host/dashboard/listings/new?id=e1" });
+    act(() => result.current.actions[0].onClick());
+    expect(nav.push).toHaveBeenLastCalledWith("/host/dashboard/listings/new?id=e1");
+  });
+
+  it("isn't 'not found' while the listing is still loading", () => {
+    nav.preview = null;
+    data.real = { loading: true, found: false };
+    expect(render("e1").current).toMatchObject({ loading: true, notFound: false });
+
+    data.real = { loading: false, found: false };
+    expect(render("e1").current).toMatchObject({ loading: false, notFound: true });
+
+    data.real = { loading: false, found: true };
+    expect(render("e1").current.notFound).toBe(false);
+  });
+});
+
+describe("preview as a guest", () => {
+  const previewAction = (result: ReturnType<typeof render>) =>
+    result.current.actions.find((a) => a.label === "Preview as a guest")!;
+
+  it("opens a sample listing's guest page in a new tab", () => {
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    const result = render("l1");
+    act(() => previewAction(result).onClick());
+    expect(open).toHaveBeenCalledWith("/experiences/l1", "_blank", "noopener");
+    expect(openExperiencePreview).not.toHaveBeenCalled();
+    open.mockRestore();
+  });
+
+  it("previews a real listing, live or not, with a token for it", async () => {
+    nav.preview = null;
+    data.real = { loading: false, found: true };
+    openExperiencePreview.mockResolvedValueOnce(undefined);
+    const result = render("l1");
+    await act(async () => previewAction(result).onClick());
+    expect(openExperiencePreview).toHaveBeenCalledWith("l1", fetchGuidePreviewToken);
+  });
+
+  it("says so when the preview can't be opened", async () => {
+    nav.preview = null;
+    data.real = { loading: false, found: true };
+    openExperiencePreview.mockRejectedValueOnce(new Error("404"));
+    const result = render("l1");
+    await act(async () => previewAction(result).onClick());
+    expect(toast.error).toHaveBeenCalledWith("Couldn't open the preview. Try again.");
   });
 });

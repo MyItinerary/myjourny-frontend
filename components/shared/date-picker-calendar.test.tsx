@@ -150,3 +150,41 @@ describe("DatePickerCalendar", () => {
     expect(screen.getByRole("button", { name: "Future" })).not.toBeDisabled();
   });
 });
+
+describe("DatePickerCalendar range mode", () => {
+  it("shows two months and reports each click", async () => {
+    const onSelect = vi.fn();
+    const { user } = renderWithProviders(
+      <DatePickerCalendar
+        selectedDate={null}
+        range={{ start: new Date(2030, 5, 10), end: new Date(2030, 5, 14) }}
+        onSelect={onSelect}
+      />,
+    );
+
+    expect(screen.getByText("June 2030")).toBeInTheDocument();
+    expect(screen.getByText("July 2030")).toBeInTheDocument();
+
+    // Both ends are marked as selected, the days between are not.
+    const june = screen.getAllByRole("button", { name: "10" })[0];
+    expect(june).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getAllByRole("button", { name: "12" })[0]).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(screen.getAllByRole("button", { name: "20" })[0]);
+    expect(onSelect).toHaveBeenCalledWith(new Date(2030, 5, 20));
+  });
+
+  it("moves both months with the arrows", async () => {
+    const { user } = renderWithProviders(
+      <DatePickerCalendar
+        selectedDate={null}
+        range={{ start: new Date(2030, 5, 10), end: null }}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Next month" }));
+    expect(screen.getByText("July 2030")).toBeInTheDocument();
+    expect(screen.getByText("August 2030")).toBeInTheDocument();
+  });
+});

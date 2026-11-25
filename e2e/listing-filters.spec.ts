@@ -24,16 +24,23 @@ async function openCategory(page: Page) {
 test("a price filter narrows a category page", async ({ page }) => {
   const calls = await openCategory(page);
 
-  await page.getByRole("button", { name: "Price" }).click();
-  await page.getByRole("dialog", { name: "Price" }).getByRole("button", { name: "Under ₦5,000" }).click();
+  await page.getByRole("button", { name: "More filters" }).click();
+  const panel = page.getByRole("dialog", { name: "Filters" });
+  await panel.getByRole("button", { name: "Under ₦5,000" }).click();
+  await panel.getByRole("button", { name: /^Show / }).click();
 
   await expect(page.getByText(DEAR.title)).toHaveCount(0);
   await expect(page.getByText(CHEAP.title).first()).toBeVisible();
   expect(calls.at(-1)?.get("price_max")).toBe("5000");
-  await expect(page.getByRole("button", { name: "Under ₦5,000" })).toBeVisible();
+});
 
-  await page.getByRole("button", { name: "Clear filters" }).click();
-  await expect(page.getByText(DEAR.title).first()).toBeVisible();
+test("a time of day asks for what listings store", async ({ page }) => {
+  const calls = await openCategory(page);
+
+  await page.getByRole("button", { name: "More filters" }).click();
+  await page.getByRole("dialog", { name: "Filters" }).getByRole("button", { name: "Evening" }).click();
+
+  await expect.poll(() => calls.at(-1)?.get("time_of_day")).toBe("night");
 });
 
 test.describe("on a phone", () => {
@@ -41,11 +48,12 @@ test.describe("on a phone", () => {
   delete pixel.defaultBrowserType;
   test.use(pixel);
 
-  test("a filter's options open as a sheet at the bottom of the screen", async ({ page }) => {
+  test("the Dates picker opens as a sheet at the bottom of the screen", async ({ page }) => {
     await openCategory(page);
 
-    await page.getByRole("button", { name: "Duration" }).click();
-    const sheet = page.getByRole("dialog", { name: "Duration" });
+    await page.getByRole("button", { name: "Dates" }).click();
+    const sheet = page.getByRole("dialog", { name: "Dates" });
+    await expect(sheet).toBeVisible();
     const box = await sheet.boundingBox();
     const viewport = page.viewportSize()!;
     expect(box).not.toBeNull();

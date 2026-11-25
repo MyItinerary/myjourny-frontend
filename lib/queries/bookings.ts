@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { apiErrorMessage } from "@/lib/api-error";
@@ -59,18 +59,6 @@ export type Booking = {
   // Signed downloads: the PDF receipt once paid, the calendar file once confirmed.
   receipt_url?: string | null;
   calendar_url?: string | null;
-};
-
-// A cancellation request (itin's RefundRequestOut). Support decides the
-// refund under the booking's policy; nothing is refunded automatically.
-export type CancellationRequest = {
-  id: string;
-  kind: string;
-  status: "open" | "resolved";
-  reason?: string | null;
-  refund_amount?: string | null;
-  created_at: string;
-  resolved_at?: string | null;
 };
 
 // What the customer should see for a booking after checkout.
@@ -133,46 +121,6 @@ export function useRetryBookingPayment() {
     },
     onError: (error) =>
       toast.error(apiErrorMessage(error, "Couldn't restart the payment. Please try again.")),
-  });
-}
-
-// GET /bookings/{id}/cancellation — the latest cancellation request, if any.
-export function useCancellationRequest(bookingId: string) {
-  const { user } = useSession();
-  return useQuery({
-    queryKey: ["bookings", bookingId, "cancellation"],
-    queryFn: async () => {
-      const { data } = await apiClient.get<CancellationRequest | null>(
-        `/bookings/${bookingId}/cancellation`
-      );
-      return data;
-    },
-    enabled: !!bookingId && (!!user || !!getTokens().accessToken),
-  });
-}
-
-// POST /bookings/{id}/cancellation. Unpaid bookings are cancelled straight
-// away; paid ones go to support, who decide the refund.
-export function useRequestCancellation(bookingId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (reason: string) => {
-      const { data } = await apiClient.post<{
-        booking_status: string;
-        request: CancellationRequest | null;
-      }>(`/bookings/${bookingId}/cancellation`, { reason });
-      return data;
-    },
-    onSuccess: (data) => {
-      toast.success(
-        data.request
-          ? "Cancellation requested. We'll email you once support has reviewed it."
-          : "Booking cancelled."
-      );
-      queryClient.invalidateQueries({ queryKey: ["bookings", bookingId] });
-    },
-    onError: (error) =>
-      toast.error(apiErrorMessage(error, "Couldn't send your cancellation request. Please try again.")),
   });
 }
 

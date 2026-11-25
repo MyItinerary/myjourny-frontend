@@ -4,7 +4,18 @@ import { Dialog } from "@base-ui/react/dialog";
 
 import type { DeleteDialog } from "../view-model/use-host-listings-view-model";
 
-export function DeleteDialogView({ dialog, onClose, onConfirm }: { dialog: DeleteDialog | null; onClose: () => void; onConfirm: () => void }) {
+export function DeleteDialogView({
+  dialog,
+  onClose,
+  onConfirm,
+  onDelete,
+}: {
+  dialog: DeleteDialog | null;
+  onClose: () => void;
+  /** "Hide it instead" or "Archive it instead". */
+  onConfirm: () => void;
+  onDelete: () => void;
+}) {
   const title = dialog?.kind === "blocked" ? "You cannot delete this one yet" : `Delete ${dialog?.title ?? ""} for good`;
   const outline = "h-11 cursor-pointer rounded-full bg-white px-[18px] text-sm font-medium text-[#333134] shadow-[inset_0_0_0_1px_#E7E7E7]";
 
@@ -49,7 +60,7 @@ export function DeleteDialogView({ dialog, onClose, onConfirm }: { dialog: Delet
                   ) : (
                     <button
                       type="button"
-                      onClick={onConfirm}
+                      onClick={onDelete}
                       className="ml-auto h-11 cursor-pointer rounded-full bg-white px-[18px] text-sm font-medium text-[#F5032D] shadow-[inset_0_0_0_1px_#FACDD3]"
                     >
                       Delete and lose the reviews

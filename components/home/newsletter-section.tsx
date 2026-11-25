@@ -50,7 +50,7 @@ export function NewsletterSection() {
         </div>
 
         <div className="flex w-full min-w-0 flex-col gap-5 lg:max-w-[540px] lg:flex-1">
-          <h2 className="font-heading text-[32px] font-extrabold leading-[1.2] text-[#333134] lg:text-[40px]">
+          <h2 className="font-heading text-[32px] font-extrabold leading-[1.2] text-[#333134] lg:text-[32px]">
             One email.
             <br />
             Always worth opening.

@@ -78,6 +78,12 @@ export type ExperienceDetail = {
   know_before_you_go?: string[] | null;
   refund_policy?: "full_refund_until" | "non_refundable" | "custom" | null;
   free_cancellation_hours?: number | null;
+  // Optional extras from the host builder (itin#127); shown only when set.
+  tags?: string[] | null;
+  swim_requirement?: string | null;
+  dietary_options?: string[] | null;
+  what_to_wear_items?: string[] | null;
+  host_note?: string | null;
 
   // Older fields, still served until every client reads the ones above.
   requirements?: { fitness_level?: string | null; age?: string | null; accessibility?: string | null } | null;

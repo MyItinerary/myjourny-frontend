@@ -55,14 +55,18 @@ export type ExperienceDetailsFields = {
   what_to_bring_items?: string[] | null;
   not_suitable_for?: string[] | null;
   know_before_you_go?: string[] | null;
+  // Optional extras from the host builder (itin#127); shown only when set.
+  swim_requirement?: string | null;
+  dietary_options?: string[] | null;
+  what_to_wear_items?: string[] | null;
 };
 
-export type FitKind = "fitness" | "age" | "accessibility" | "languages" | "weather" | "pickup";
+export type FitKind = "fitness" | "age" | "accessibility" | "languages" | "swim" | "diet" | "weather" | "pickup";
 
 /** One tile of "Fit and logistics": "Fitness · Moderate", with the host's note. */
 export type FitItem = { kind: FitKind; label: string; value: string; note: string | null };
 
-export type ListKind = "highlights" | "bring" | "not_suitable" | "know";
+export type ListKind = "highlights" | "bring" | "wear" | "not_suitable" | "know";
 
 /** A titled list on the page, e.g. "What to bring". */
 export type ListSection = { kind: ListKind; title: string; items: string[] };

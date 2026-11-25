@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { HomeNav } from "@/components/home/home-nav";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { HeartRoundedIcon, StarIcon } from "@/components/icons/shared-icons";
 import {
   useWishlists,
@@ -43,24 +43,27 @@ export function WishlistDetailContent({ id }: { id: string }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <HomeNav />
-
       <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-gradient-to-b from-[rgba(244,242,238,0.87)] to-white">
+        {/* Hero: the nav sits inside its soft wash, as on Home, Experiences and Events. */}
+        <section className="relative z-20 bg-gradient-to-b from-[rgba(244,242,238,0.87)] to-white">
+          <HomeNav />
           <div className="mx-auto w-full max-w-[1352px] px-6 pb-6 pt-6 sm:px-10 sm:pt-10 lg:px-20">
-            <nav className="text-sm text-[#212121]" aria-label="Breadcrumb">
-              <Link href="/wishlists" className="text-[#F5032D] hover:underline">
+            {/* Same breadcrumb as the results pages (search, cities, categories). */}
+            <nav className="flex items-center gap-1.5 text-base font-medium" aria-label="Breadcrumb">
+              <Link href="/wishlists" className="text-brand hover:underline">
                 Wishlists
               </Link>
-              <span className="mx-2">/</span>
-              <span>{collectionName}</span>
+              <span aria-hidden className="font-normal text-foreground">
+                /
+              </span>
+              <span className="text-foreground">{collectionName}</span>
             </nav>
-            <h1 className="mt-3 font-heading text-[32px] font-extrabold leading-[1.2] text-[#2C0101] sm:text-[52px]">
+            {/* Title and subtitle styled like My experiences. */}
+            <h1 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:mt-[18px]">
               {collectionName}
             </h1>
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-base text-[#6F6B72] sm:text-2xl">
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-base text-[#6F6B72]">
                 {isLoading ? (
                   "Loading experiences…"
                 ) : isError && experiences.length === 0 ? (

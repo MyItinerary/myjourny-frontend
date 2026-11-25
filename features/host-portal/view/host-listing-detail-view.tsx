@@ -17,6 +17,9 @@ const card = "rounded-2xl bg-white shadow-[inset_0_0_0_1px_#E7E7E7]";
 
 export function HostListingDetailView({ vm }: { vm: HostListingDetailViewModel }) {
   const { listing, detail } = vm;
+  if (vm.loading) {
+    return <p className="flex-1 px-7 pt-8 text-sm text-[#6F6B72]">Loading your listing…</p>;
+  }
   if (!listing || !detail) {
     return (
       <div className="flex-1 overflow-y-auto bg-[#FCFCFC] p-10">
@@ -109,7 +112,7 @@ export function HostListingDetailView({ vm }: { vm: HostListingDetailViewModel }
               <div className="p-5">
                 <div className="mb-[18px] flex flex-col gap-4 sm:flex-row">
                   <span className="relative h-[132px] w-full shrink-0 overflow-hidden rounded-[14px] bg-muted sm:w-[200px]">
-                    <Image src={listing.imageUrl} alt="" fill sizes="200px" className="object-cover" />
+                    {listing.imageUrl && <Image src={listing.imageUrl} alt="" fill sizes="200px" className="object-cover" />}
                   </span>
                   <div className="min-w-0">
                     <div className="text-[11px] font-medium tracking-[0.06em] text-[#F5032D] uppercase">{listing.cat}</div>
@@ -183,7 +186,7 @@ export function HostListingDetailView({ vm }: { vm: HostListingDetailViewModel }
             <h2 className="mb-3 text-sm font-medium">Where you meet</h2>
             <div className="flex gap-[11px]">
               <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-muted">
-                <Image src={listing.imageUrl} alt="" fill sizes="64px" className="object-cover" />
+                {listing.imageUrl && <Image src={listing.imageUrl} alt="" fill sizes="64px" className="object-cover" />}
               </span>
               <div className="min-w-0">
                 <div className="text-[13.5px] font-medium">{vm.meetCue}</div>

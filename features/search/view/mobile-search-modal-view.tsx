@@ -16,10 +16,12 @@ export function MobileSearchModalView({
   suggestedExperiences,
   filteredDestinations,
   filteredActivities,
+  filteredEvents,
   setWhereInput,
   onNavigateToDestination,
   onNavigateToActivity,
   onNavigateToExperience,
+  onNavigateToEvent,
   onSearch,
   onClose,
 }: MobileSearchModalViewProps) {
@@ -67,11 +69,13 @@ export function MobileSearchModalView({
           destinations={filteredDestinations}
           activities={filteredActivities}
           experiences={suggestedExperiences}
+          events={filteredEvents}
           isSearchingExperiences={isSearchingExperiences}
           query={selectedWhere}
           onSelectDestination={onNavigateToDestination}
           onSelectActivity={onNavigateToActivity}
           onSelectExperience={onNavigateToExperience}
+          onSelectEvent={onNavigateToEvent}
         />
       </div>
     </div>

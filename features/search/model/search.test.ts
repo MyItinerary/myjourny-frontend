@@ -11,6 +11,7 @@ import {
   toIsoDay,
   formatGuests,
   withDate,
+  withGuests,
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
   FALLBACK_IMAGE,
@@ -43,10 +44,17 @@ describe("search model constants & mappers", () => {
   it("formats the searched day for links and the API", () => {
     expect(toIsoDay(new Date(2030, 0, 5))).toBe("2030-01-05");
     expect(withDate("/cities/lagos", "2030-01-05")).toBe("/cities/lagos?date=2030-01-05");
+    expect(withDate("/cities/lagos", "2030-01-05", "2030-01-07")).toBe("/cities/lagos?date=2030-01-05&until=2030-01-07");
     expect(withDate("/cities/lagos", null)).toBe("/cities/lagos");
-    expect(withDate("/cities/lagos", "2030-01-05", true)).toBe("/cities/lagos?date=2030-01-05&children=true");
-    expect(withDate("/cities/lagos", null, true)).toBe("/cities/lagos?children=true");
+    expect(withDate("/search?q=jazz", "2030-01-05", "2030-01-07")).toBe("/search?q=jazz&date=2030-01-05&until=2030-01-07");
     expect(startOfToday(new Date(2030, 0, 5, 17, 30))).toEqual(new Date(2030, 0, 5));
+  });
+
+  it("adds the party size and children to a results link only when given", () => {
+    expect(withGuests("/cities/lagos", 3, false)).toBe("/cities/lagos?guests=3");
+    expect(withGuests("/cities/lagos?date=2030-01-05", 2, true)).toBe("/cities/lagos?date=2030-01-05&guests=2&children=true");
+    expect(withGuests("/cities/lagos", 0, true)).toBe("/cities/lagos?children=true");
+    expect(withGuests("/cities/lagos", 0, false)).toBe("/cities/lagos");
   });
 
   it("builds consistent query keys", () => {

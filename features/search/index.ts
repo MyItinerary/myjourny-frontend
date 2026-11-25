@@ -1,7 +1,9 @@
 // Public API of the search feature. Other code imports only from here.
 export type {
   ActivitySuggestion,
+  DateRange,
   DestinationSuggestion,
+  EventSuggestion,
   ExperienceSuggestion,
   ExperienceSuggestionRow,
   GuestCounts,
@@ -12,6 +14,7 @@ export type {
 export {
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
+  DEFAULT_EVENTS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
   searchExperiencesQueryKey,
@@ -26,6 +29,10 @@ export { GUEST_TYPES, useSearchBarViewModel } from "./view-model/use-search-bar-
 
 export type { SearchBarViewProps } from "./view/search-bar-view";
 export { SearchBarView } from "./view/search-bar-view";
+
+export type { SearchSheetViewModel } from "./view-model/use-search-sheet-view-model";
+export { useSearchSheetViewModel } from "./view-model/use-search-sheet-view-model";
+export { SearchSheetView } from "./view/search-sheet-view";
 
 export type { MobileSearchModalViewProps } from "./view/mobile-search-modal-view";
 export { MobileSearchModalView } from "./view/mobile-search-modal-view";
@@ -42,3 +49,4 @@ export {
 
 export type { WhoGuestsDropdownViewProps } from "./view/who-guests-dropdown-view";
 export { WhoGuestsDropdownView } from "./view/who-guests-dropdown-view";
+export { readLastSearchArea, saveLastSearchArea, useLastSearchArea } from "./model/last-search-area";

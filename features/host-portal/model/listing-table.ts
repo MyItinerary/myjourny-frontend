@@ -8,7 +8,18 @@ import type {
 } from "./listings.types";
 import { formatNaira } from "./money";
 
-export const STATUS_OPTIONS: ListingStatus[] = ["Live", "Draft", "In review", "Hidden", "Paused", "Sold out", "Archived", "Rejected"];
+export const STATUS_OPTIONS: ListingStatus[] = [
+  "Live",
+  "Incomplete",
+  "Taken down",
+  "Draft",
+  "In review",
+  "Hidden",
+  "Paused",
+  "Sold out",
+  "Archived",
+  "Rejected",
+];
 
 export const RATING_OPTIONS: RatingFilter[] = ["All", "4.5 and up", "4 and up", "Not rated yet"];
 

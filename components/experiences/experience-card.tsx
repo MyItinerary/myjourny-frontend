@@ -20,6 +20,10 @@ export interface ExperienceCardProps {
   className?: string;
   /** Links to /experiences/{id} when present — mock/placeholder cards can omit it. */
   id?: string;
+  /** Where the card links, when it isn't /experiences/{id} (an event, say). */
+  href?: string;
+  /** false hides the save button, for cards that can't be wishlisted yet. */
+  saveable?: boolean;
 }
 
 export function ExperienceCard({

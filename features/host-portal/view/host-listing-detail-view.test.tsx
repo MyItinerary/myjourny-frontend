@@ -43,6 +43,7 @@ const vm = (id = "l1", over: Partial<HostListingDetailViewModel> = {}): HostList
   return {
     header: { title: listing.title, subtitle: "", actions: [] },
     notFound: false,
+    loading: false,
     listingsHref: "/host/dashboard/listings",
     calendarHref: "/host/dashboard/calendar",
     listing,

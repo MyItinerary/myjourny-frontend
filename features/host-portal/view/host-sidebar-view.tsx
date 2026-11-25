@@ -57,7 +57,8 @@ function StatusGlyph({ kind }: { kind: HostStatus["glyph"] }) {
 }
 
 // Figma / handoff "Sidebar Nav": the host portal's left rail. 240px, or 72px
-// collapsed, with the seven destinations and the host card pinned to the bottom.
+// collapsed, with the seven destinations, and the way back to travelling above
+// the host card pinned to the bottom.
 export function HostSidebarView({ open, onToggle, items, host }: HostSidebarViewModel) {
   const dotOnAvatar = !open && host.status?.dotOnAvatar ? TONE[host.status.tone].dot : null;
 
@@ -151,9 +152,36 @@ export function HostSidebarView({ open, onToggle, items, host }: HostSidebarView
         ))}
       </nav>
 
+      <Link
+        href="/"
+        aria-label={open ? undefined : "Switch to travelling"}
+        title={open ? undefined : "Switch to travelling"}
+        className={cn(
+          "mt-auto mb-2 flex h-[38px] items-center gap-2.5 rounded-full text-[13.5px] font-medium text-[#333134] transition-colors duration-[120ms] hover:bg-[#F4F2EE] active:bg-[#EEECE7]",
+          FOCUS_RING,
+          open ? "w-full justify-start px-2.5" : "w-[44px] justify-center self-center px-0",
+        )}
+      >
+        <svg
+          aria-hidden
+          width={20}
+          height={20}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.9}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="shrink-0 text-[#6F6B72]"
+        >
+          <path d="M7 7h11l-3-3M17 17H6l3 3" />
+        </svg>
+        {open && <span className="whitespace-nowrap">Switch to travelling</span>}
+      </Link>
+
       <div
         className={cn(
-          "mt-auto flex items-center gap-2.5 rounded-[14px] bg-white shadow-[inset_0_0_0_1px_#E7E7E7]",
+          "flex items-center gap-2.5 rounded-[14px] bg-white shadow-[inset_0_0_0_1px_#E7E7E7]",
           open ? "justify-start px-2.5 py-3" : "justify-center p-2",
         )}
       >

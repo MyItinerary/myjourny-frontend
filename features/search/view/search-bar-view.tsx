@@ -1,15 +1,43 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 
-import { computeDatePresets, DatePickerCalendar } from "@/components/shared/date-picker-calendar";
+import { DateRangePanel } from "@/components/shared/date-range-panel";
 import { cn } from "@/lib/utils";
 
+import type { SearchBarVariant, SearchTab } from "../model/search.types";
 import type { SearchBarViewModel } from "../view-model/use-search-bar-view-model";
 import { SearchSuggestionList } from "./search-suggestion-item-view";
 import { WhoGuestsDropdownView } from "./who-guests-dropdown-view";
+
+const PREFERRED_DROPDOWN_HEIGHT: Record<SearchTab, number> = {
+  where: 420,
+  when: 520,
+  who: 340,
+};
+
+function computeDropdownLayout(
+  rect: DOMRect,
+  viewportHeight: number,
+  variant: SearchBarVariant,
+  tab: SearchTab,
+): { placement: "top" | "bottom"; maxHeight?: number } {
+  // Unlaid-out test environments (e.g. jsdom with zero rects) keep the default downward layout.
+  if (rect.width === 0 && rect.height === 0) {
+    return { placement: "bottom", maxHeight: undefined };
+  }
+  const edgePadding = 16;
+  const topClearance = variant === "hero" ? 108 : 16;
+  const spaceBelow = Math.floor(viewportHeight - rect.bottom - edgePadding);
+  const spaceAbove = Math.floor(rect.top - topClearance);
+
+  if (spaceBelow < PREFERRED_DROPDOWN_HEIGHT[tab] && spaceAbove > spaceBelow) {
+    return { placement: "top", maxHeight: Math.max(200, spaceAbove) };
+  }
+  return { placement: "bottom", maxHeight: Math.max(200, spaceBelow) };
+}
 
 export interface SearchBarViewProps extends SearchBarViewModel {
   className?: string;
@@ -20,16 +48,16 @@ export function SearchBarView({
   activeTab,
   selectedWhere,
   selectedWhen,
-  selectedDate,
-  minDate,
+  draftRange,
   whoText,
   guests,
   totalGuests,
-  allFieldsFilled,
+  canSearch,
   isSearchingExperiences,
   suggestedExperiences,
   filteredDestinations,
   filteredActivities,
+  filteredEvents,
   guestTypes,
   setActiveTab,
   setWhereInput,
@@ -37,7 +65,12 @@ export function SearchBarView({
   onSelectDestination,
   onSelectActivity,
   onSelectExperience,
-  onSelectDate,
+  onSelectEvent,
+  onPickDate,
+  onPickDatePreset,
+  onApplyDates,
+  onClearDates,
+  onAnyDate,
   incrementGuest,
   decrementGuest,
   onSearch,
@@ -48,6 +81,9 @@ export function SearchBarView({
   const whereInputRef = useRef<HTMLInputElement>(null);
   const whenInputRef = useRef<HTMLInputElement>(null);
   const whoInputRef = useRef<HTMLInputElement>(null);
+  const [dropdownLayout, setDropdownLayout] = useState<{ placement: "top" | "bottom"; maxHeight?: number }>({
+    placement: "bottom",
+  });
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -61,11 +97,28 @@ export function SearchBarView({
     };
   }, [onClose]);
 
+  useEffect(() => {
+    if (!activeTab) return;
+    const tab = activeTab;
+    function updateLayout() {
+      const el = searchBarRef.current;
+      if (!el) return;
+      setDropdownLayout(computeDropdownLayout(el.getBoundingClientRect(), window.innerHeight, variant, tab));
+    }
+    updateLayout();
+    window.addEventListener("resize", updateLayout);
+    window.addEventListener("scroll", updateLayout, { passive: true });
+    return () => {
+      window.removeEventListener("resize", updateLayout);
+      window.removeEventListener("scroll", updateLayout);
+    };
+  }, [activeTab, variant]);
+
   return (
     <div
       ref={searchBarRef}
       className={cn(
-        "relative flex flex-col gap-2 rounded-[28px] border border-[#c7c1ba] bg-white p-2 lg:flex-row lg:items-center lg:gap-[9px] lg:rounded-[57px] shadow-sm transition-all",
+        "relative flex flex-col gap-2 rounded-[28px] border border-[#c7c1ba] bg-white p-2 text-left lg:flex-row lg:items-center lg:gap-[9px] lg:rounded-[57px] shadow-sm transition-all",
         variant === "nav" && "shadow-lg border-[#E0DFDD] bg-white",
         className,
       )}
@@ -100,6 +153,9 @@ export function SearchBarView({
           />
         </div>
 
+        {/* Divider (side-by-side layout only; the stacked phone layout uses divide-y above) */}
+        <span aria-hidden="true" data-testid="search-field-divider" className="hidden h-[39px] w-px shrink-0 bg-[#E0DFDD] lg:block" />
+
         {/* When Tab */}
         <div
           onClick={() => {
@@ -125,6 +181,9 @@ export function SearchBarView({
             className="w-full border-0 bg-transparent p-0 font-sans text-base text-foreground placeholder:text-muted-foreground lg:text-sm outline-none focus:ring-0 leading-tight cursor-pointer"
           />
         </div>
+
+        {/* Divider (side-by-side layout only; the stacked phone layout uses divide-y above) */}
+        <span aria-hidden="true" data-testid="search-field-divider" className="hidden h-[39px] w-px shrink-0 bg-[#E0DFDD] lg:block" />
 
         {/* Who Tab */}
         <div
@@ -158,7 +217,7 @@ export function SearchBarView({
         <button
           type="button"
           aria-label="Search"
-          disabled={!allFieldsFilled}
+          disabled={!canSearch}
           onClick={() => onSearch()}
           className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-5 text-white transition-all hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-sm w-full lg:w-auto"
         >
@@ -169,7 +228,7 @@ export function SearchBarView({
         <button
           type="button"
           aria-label="Search"
-          disabled={!allFieldsFilled}
+          disabled={!canSearch}
           onClick={() => onSearch()}
           className="flex size-12 shrink-0 items-center justify-center self-end rounded-full bg-brand text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto cursor-pointer"
         >
@@ -179,12 +238,19 @@ export function SearchBarView({
 
       {/* Suggested Destinations & Activities Dropdown Modal */}
       {activeTab === "where" && (
-        <div className="absolute top-[calc(100%+12px)] left-0 z-50 flex w-[440px] max-w-[calc(100vw-32px)] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex w-full flex-col gap-4 max-h-[360px] overflow-y-auto pr-1">
+        <div
+          style={dropdownLayout.maxHeight ? { maxHeight: dropdownLayout.maxHeight } : undefined}
+          className={cn(
+            "absolute left-0 z-50 flex w-[440px] max-w-[calc(100vw-32px)] flex-col items-start gap-4 rounded-[28px] border border-[#e0dfdd] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
+            dropdownLayout.placement === "top" ? "bottom-[calc(100%+12px)]" : "top-[calc(100%+12px)]",
+          )}
+        >
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-4 max-h-[360px] overflow-y-auto pr-1">
             <SearchSuggestionList
               destinations={filteredDestinations}
               activities={filteredActivities}
               experiences={suggestedExperiences}
+              events={filteredEvents}
               isSearchingExperiences={isSearchingExperiences}
               query={selectedWhere}
               onSelectDestination={(dest) => {
@@ -199,31 +265,37 @@ export function SearchBarView({
                 onSelectExperience(exp);
                 setTimeout(() => whenInputRef.current?.focus(), 80);
               }}
+              onSelectEvent={(ev) => {
+                onSelectEvent(ev);
+                setTimeout(() => whenInputRef.current?.focus(), 80);
+              }}
             />
           </div>
         </div>
       )}
 
-      {/* Calendar Dropdown Modal */}
+      {/* Dual-date picker: the same panel as the results page's Dates chip. */}
       {activeTab === "when" && (
         <div
+          role="dialog"
+          aria-label="Dates"
+          style={dropdownLayout.maxHeight ? { maxHeight: dropdownLayout.maxHeight } : undefined}
           className={cn(
-            "absolute z-50 flex w-[350px] max-w-[calc(100vw-32px)] flex-col items-start gap-3 rounded-[24px] border border-[#e0dfdd] bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
-            variant === "nav" ? "top-[calc(100%+8px)] left-1/2 -translate-x-1/2" : "top-[calc(100%+8px)] left-0 lg:left-[170px]",
+            "absolute left-1/2 z-50 w-[700px] max-w-[calc(100vw-32px)] -translate-x-1/2 overflow-y-auto rounded-[24px] border border-[#e0dfdd] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in-95 duration-150",
+            dropdownLayout.placement === "top" ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]",
           )}
         >
-          <DatePickerCalendar
-            selectedDate={selectedDate}
-            minDate={minDate}
-            presets={computeDatePresets()}
-            onSelect={(date) => {
-              const preset = computeDatePresets().find(
-                (p) => p.date.toDateString() === date.toDateString(),
-              );
-              onSelectDate(
-                date,
-                preset?.label ?? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }),
-              );
+          <DateRangePanel
+            range={draftRange}
+            onPick={onPickDate}
+            onPreset={onPickDatePreset}
+            onAnyDate={() => {
+              onAnyDate();
+              setTimeout(() => whoInputRef.current?.focus(), 80);
+            }}
+            onClear={onClearDates}
+            onApply={() => {
+              onApplyDates();
               setTimeout(() => whoInputRef.current?.focus(), 80);
             }}
           />
@@ -236,11 +308,13 @@ export function SearchBarView({
           variant={variant}
           guests={guests}
           totalGuests={totalGuests}
-          allFieldsFilled={allFieldsFilled}
+          canSearch={canSearch}
           guestTypes={guestTypes}
           incrementGuest={incrementGuest}
           decrementGuest={decrementGuest}
           onSearch={onSearch}
+          placement={dropdownLayout.placement}
+          maxHeight={dropdownLayout.maxHeight}
         />
       )}
     </div>

@@ -2,13 +2,16 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { builderHandlers } from "@/test/msw/host-builder";
+import { server } from "@/test/msw/server";
 import { renderWithProviders } from "@/test/utils/render";
 
 import { useHostListingBuilderViewModel } from "../view-model/use-host-listing-builder-view-model";
 import { HostBuilderPreviewView } from "./host-builder-preview-view";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("sonner", () => ({ toast: { info: vi.fn(), success: vi.fn() } }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), useSearchParams: () => new URLSearchParams() }));
+vi.mock("../model/host-access", () => ({ useHostAccess: () => "approved" }));
+vi.mock("sonner", () => ({ toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() } }));
 
 function Harness() {
   const vm = useHostListingBuilderViewModel();
@@ -22,7 +25,10 @@ function Harness() {
   );
 }
 
-beforeEach(() => window.localStorage.clear());
+beforeEach(() => {
+  window.localStorage.clear();
+  server.use(...builderHandlers());
+});
 
 describe("the guest preview", () => {
   it("starts with placeholders", () => {
@@ -30,7 +36,7 @@ describe("the guest preview", () => {
     expect(screen.getByText("Your title goes here")).toBeInTheDocument();
     expect(screen.getByText("Your cover photo shows here")).toBeInTheDocument();
     expect(screen.getByText("Price not set")).toBeInTheDocument();
-    expect(screen.getByText("How they book, not set")).toBeInTheDocument();
+    expect(screen.getByText("Book now")).toBeInTheDocument();
   });
 
   it("fills in the title, the host's line and what's included as they are written", async () => {

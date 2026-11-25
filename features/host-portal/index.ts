@@ -34,3 +34,6 @@ export { HostListingBuilderView } from "./view/host-listing-builder-view";
 export type { HostListingDetailViewModel } from "./view-model/use-host-listing-detail-view-model";
 export { useHostListingDetailViewModel } from "./view-model/use-host-listing-detail-view-model";
 export { HostListingDetailView } from "./view/host-listing-detail-view";
+export type { HostGuardViewModel } from "./view-model/use-host-guard-view-model";
+export { useHostGuardViewModel } from "./view-model/use-host-guard-view-model";
+export { HostGuardView } from "./view/host-guard-view";

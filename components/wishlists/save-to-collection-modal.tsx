@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence } from "motion/react";
 
 import {
   useWishlists,
@@ -11,8 +12,9 @@ import {
   useCreateWishlist,
 } from "@/lib/queries/wishlists";
 import { useSession } from "@/lib/auth/session-store";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { WishlistCover } from "@/components/wishlists/wishlist-cover";
+import { useWishlistCoverLayouts, WishlistCoverView } from "@/features/wishlists";
 import { NameWishlistDialog, WishlistDialogShell } from "@/components/wishlists/wishlist-dialogs";
 
 export interface SaveToCollectionModalProps {
@@ -25,7 +27,12 @@ export interface SaveToCollectionModalProps {
 // Heart-icon flow: no wishlists yet → straight to "Create wishlist";
 // otherwise pick from existing lists or create a new one. Creating a
 // wishlist from here also saves the experience into it.
-export function SaveToCollectionModal({ experienceId, isOpen, onClose }: SaveToCollectionModalProps) {
+export function SaveToCollectionModal(props: SaveToCollectionModalProps) {
+  // Kept mounted while it closes, so the sheet can roll back down.
+  return <AnimatePresence>{props.isOpen && <SaveToCollectionSheet key="save" {...props} />}</AnimatePresence>;
+}
+
+function SaveToCollectionSheet({ experienceId, onClose }: SaveToCollectionModalProps) {
   const router = useRouter();
   const { user } = useSession();
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -35,8 +42,8 @@ export function SaveToCollectionModal({ experienceId, isOpen, onClose }: SaveToC
   const { mutate: addToCollection, isPending: isAdding } = useAddToWishlist();
   const { mutate: removeFromCollection, isPending: isRemoving } = useRemoveFromWishlist();
   const { mutate: createCollection, isPending: isCreating } = useCreateWishlist({ silent: true });
-
-  if (!isOpen) return null;
+  // The same covers as My wishlists: one experience's image, or a 2×2 grid of up to four.
+  const covers = useWishlistCoverLayouts(collections);
 
   const close = () => {
     setIsCreatingNew(false);
@@ -45,31 +52,35 @@ export function SaveToCollectionModal({ experienceId, isOpen, onClose }: SaveToC
 
   if (!user) {
     return (
-      <WishlistDialogShell title="Save to wishlist" onClose={close} className="max-w-[462px]">
+      <WishlistDialogShell title="Save to wishlist" onClose={close} className="max-w-[440px] sm:p-6">
         <p className="text-center text-base text-[#6F6B72]">
           Log in or create an account to save experiences to your wishlists.
         </p>
-        <div className="mt-6 flex gap-4">
-          <button
+        <div className="mt-6 flex gap-3">
+          <Button
             type="button"
-            className="flex-1 cursor-pointer rounded-full border border-[#40000B] px-4 py-3 text-base font-medium text-[#40000B] hover:bg-[#40000B]/5"
+            variant="outline"
+            size="cta"
+            className="flex-1"
             onClick={() => {
               close();
               router.push("/onboarding");
             }}
           >
             Sign up
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="flex-1 cursor-pointer rounded-full bg-[#F5032D] px-4 py-3 text-base font-medium text-white hover:bg-[#d90227]"
+            variant="brand"
+            size="cta"
+            className="flex-1"
             onClick={() => {
               close();
               router.push("/login");
             }}
           >
             Log in
-          </button>
+          </Button>
         </div>
       </WishlistDialogShell>
     );
@@ -77,7 +88,7 @@ export function SaveToCollectionModal({ experienceId, isOpen, onClose }: SaveToC
 
   if (isLoadingCollections) {
     return (
-      <WishlistDialogShell title="Save to wishlist" onClose={close} className="max-w-[462px]">
+      <WishlistDialogShell title="Save to wishlist" onClose={close} className="max-w-[440px] sm:p-6">
         <div className="flex justify-center py-10">
           <div className="size-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
         </div>
@@ -111,45 +122,49 @@ export function SaveToCollectionModal({ experienceId, isOpen, onClose }: SaveToC
   const activeIds = new Set(checkData?.collection_ids ?? []);
 
   return (
-    <WishlistDialogShell title="Save to wishlist" onClose={close} className="max-w-[822px]">
+    // The same small card as the other wishlist dialogs. Past four collections the list scrolls
+    // inside it, while the title and "Create a new wishlist" stay put.
+    <WishlistDialogShell title="Save to wishlist" onClose={close} className="max-w-[440px] sm:p-6">
       <div className="flex flex-col gap-5">
-        <div className="grid grid-cols-1 gap-[30px] sm:grid-cols-2">
-          {collections.map((collection) => {
-            const selected = activeIds.has(collection.id);
-            return (
-              <button
-                key={collection.id}
-                type="button"
-                aria-pressed={selected}
-                disabled={isAdding || isRemoving}
-                onClick={() =>
-                  selected
-                    ? removeFromCollection({ collectionId: collection.id, experienceId })
-                    : addToCollection({ collectionId: collection.id, experienceId })
-                }
-                className="flex cursor-pointer flex-col gap-[18px] text-left disabled:cursor-wait"
-              >
-                <WishlistCover imageUrl={collection.cover_image_url} tone="dialog" selected={selected} />
-                <div className="flex flex-col gap-[7px]">
-                  <p className={cn("truncate text-xl font-semibold", selected ? "text-[#F5032D]" : "text-[#333134]")}>
-                    {collection.name}
-                  </p>
-                  <p className="text-base leading-6 text-[#6F6B72]">
-                    {selected ? "Saved · " : ""}
-                    {collection.item_count} saved
-                  </p>
-                </div>
-              </button>
-            );
-          })}
+        <div className="-mx-1 max-h-[min(480px,55dvh)] overflow-y-auto px-1 pt-1">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5 pb-1">
+            {collections.map((collection) => {
+              const selected = activeIds.has(collection.id);
+              return (
+                <button
+                  key={collection.id}
+                  type="button"
+                  aria-pressed={selected}
+                  disabled={isAdding || isRemoving}
+                  onClick={() =>
+                    selected
+                      ? removeFromCollection({ collectionId: collection.id, experienceId })
+                      : // Saved: the dialog's job is done, so it closes.
+                        addToCollection({ collectionId: collection.id, experienceId }, { onSuccess: close })
+                  }
+                  className="flex min-w-0 cursor-pointer flex-col gap-2 text-left disabled:cursor-wait"
+                >
+                  <WishlistCoverView
+                    cover={covers[collection.id]}
+                    className={cn("rounded-[16px]", selected && "ring-2 ring-[#F5032D] ring-offset-2")}
+                  />
+                  <span className="flex min-w-0 flex-col">
+                    <span className={cn("truncate text-base font-medium", selected ? "text-[#F5032D]" : "text-[#333134]")}>
+                      {collection.name}
+                    </span>
+                    <span className="text-sm text-[#6F6B72]">
+                      {selected ? "Saved · " : ""}
+                      {collection.item_count} saved
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsCreatingNew(true)}
-          className="sticky bottom-0 w-full cursor-pointer rounded-full shadow-[0_-8px_16px_white] sm:static sm:shadow-none bg-[#F5032D] px-4 py-[18px] text-xl font-medium text-white transition-colors hover:bg-[#d90227] sm:text-2xl"
-        >
+        <Button type="button" variant="brand" size="cta" onClick={() => setIsCreatingNew(true)} className="w-full">
           Create a new wishlist
-        </button>
+        </Button>
       </div>
     </WishlistDialogShell>
   );

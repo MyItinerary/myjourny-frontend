@@ -92,7 +92,7 @@ export function StepCategory({ vm }: Props) {
       </div>
       <div className="mb-2.5 flex items-baseline gap-2">
         <span className="text-[13px] font-medium">Tags</span>
-        <span className="ml-auto text-xs text-[#6F6B72]">{draft.tags.length} picked · three or more</span>
+        <span className="ml-auto text-xs text-[#6F6B72]">{draft.tags.length} picked · optional</span>
       </div>
       <div className="flex flex-wrap gap-2">
         {options.tags.map((t) => (
@@ -144,7 +144,7 @@ export function StepWhere({ vm }: Props) {
           {place.open && (
             <div className="absolute inset-x-0 top-[54px] z-30 flex flex-col rounded-[14px] bg-white p-1.5 shadow-[inset_0_0_0_1px_#E7E7E7,0_12px_32px_rgba(16,24,40,0.14)]">
               {place.results.map((r) => (
-                <button key={r.name} type="button" onClick={() => place.onPick(r.name)} className="flex w-full cursor-pointer items-start gap-2.5 rounded-[10px] p-2.5 text-left hover:bg-[#F5F5F5]">
+                <button key={`${r.lat},${r.lng}`} type="button" onClick={() => place.onPick(r)} className="flex w-full cursor-pointer items-start gap-2.5 rounded-[10px] p-2.5 text-left hover:bg-[#F5F5F5]">
                   <MapPin className="mt-px size-[18px] shrink-0 text-[#6F6B72]" />
                   <span>
                     <span className="block text-[13.5px] font-medium">{r.name}</span>
@@ -154,7 +154,7 @@ export function StepWhere({ vm }: Props) {
               ))}
               {place.noMatch && (
                 <div>
-                  <p className="p-2.5 text-[13px] leading-normal text-[#6F6B72]">Nothing by that name. Type it out yourself and we will add it.</p>
+                  <p className="p-2.5 text-[13px] leading-normal text-[#6F6B72]">Nothing by that name. Try a nearby place we can pin on the map, or use your words and pick a place later.</p>
                   <button type="button" onClick={place.onUseTyped} className="h-9 w-full cursor-pointer rounded-[9px] bg-[#F4F2EE] px-2.5 text-left text-[12.5px] font-medium">
                     Use &ldquo;{place.query}&rdquo; anyway
                   </button>
@@ -166,7 +166,10 @@ export function StepWhere({ vm }: Props) {
         {draft.landmark ? (
           <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#F0FCF5] px-3 py-2.5 shadow-[inset_0_0_0_1px_#C8EED7]">
             <Check className="size-4 shrink-0 text-[#0CBA65]" />
-            <span className="text-[12.5px]">Guests will be sent to {draft.landmark}</span>
+            <span className="text-[12.5px]">
+              Guests will be sent to {draft.landmark}
+              {!place.pinned && <span className="block text-[#B4760A]">Not on the map yet. Search again and pick it from the list.</span>}
+            </span>
             <button type="button" onClick={place.onClear} className="ml-auto cursor-pointer text-xs font-medium text-[#F5032D]">Change</button>
           </div>
         ) : (
@@ -180,14 +183,23 @@ export function StepWhere({ vm }: Props) {
       <div className="mb-2.5 text-xs text-[#6F6B72]">Required. Stand where the guest will stand and take one picture.</div>
       <div className="flex items-stretch gap-3">
         {draft.meetPhoto && (
-          // eslint-disable-next-line @next/next/no-img-element -- a local preview of a file the host just picked
+          // eslint-disable-next-line @next/next/no-img-element -- the photo the host just uploaded
           <img src={draft.meetPhoto} alt="Meeting point" className="h-[110px] w-[150px] shrink-0 rounded-[14px] object-cover" />
         )}
         <label htmlFor={fileId} className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[14px] bg-[#FCFCFC] p-3.5 text-center shadow-[inset_0_0_0_1px_#E0DFDD] hover:bg-[#FAF9F7]">
           <Upload className="size-5 text-[#6F6B72]" />
-          <span className="text-[13px] font-medium">{draft.meetPhoto ? "Choose a different photo" : "Choose a photo"}</span>
+          <span className="text-[13px] font-medium">
+            {vm.uploading > 0 ? "Uploading…" : draft.meetPhoto ? "Choose a different photo" : "Choose a photo"}
+          </span>
           <span className="text-[11.5px] text-[#6F6B72]">JPG or PNG, up to 10 MB</span>
-          <input id={fileId} type="file" accept="image/*" className="sr-only" onChange={(e) => onMeetPhoto(e.target.files?.[0])} />
+          <input
+            id={fileId}
+            type="file"
+            accept="image/*"
+            aria-label="Photo of the meeting point"
+            className="sr-only"
+            onChange={(e) => onMeetPhoto(e.target.files?.[0])}
+          />
         </label>
       </div>
     </div>

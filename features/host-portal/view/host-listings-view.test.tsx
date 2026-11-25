@@ -36,6 +36,7 @@ const row = (l: HostListing, selected = false) => ({
 
 const vm = (over: Partial<HostListingsViewModel> = {}): HostListingsViewModel => ({
   header: { title: "Your listings", subtitle: "", actions: [] },
+  loading: false,
   isEmpty: false,
   newListingHref: "/host/dashboard/listings/new",
   query: "",
@@ -83,6 +84,7 @@ const vm = (over: Partial<HostListingsViewModel> = {}): HostListingsViewModel =>
   dialog: null,
   onCloseDialog: vi.fn(),
   onDialogConfirm: vi.fn(),
+  onDialogDelete: vi.fn(),
   ...over,
 });
 
@@ -248,7 +250,7 @@ describe("HostListingsView, no listings at all", () => {
 
 describe("HostListingsView, delete dialogs", () => {
   it("won't delete a listing with bookings to come, and suggests hiding", async () => {
-    const props = vm({ dialog: { kind: "blocked", title: "Lagos Island Photowalk", upcoming: 4 } });
+    const props = vm({ dialog: { kind: "blocked", id: "l1", title: "Lagos Island Photowalk", upcoming: 4 } });
     const { user } = renderWithProviders(<HostListingsView vm={props} />);
 
     const dialog = await screen.findByRole("dialog");
@@ -263,28 +265,29 @@ describe("HostListingsView, delete dialogs", () => {
   });
 
   it("says it with one booking", async () => {
-    renderWithProviders(<HostListingsView vm={vm({ dialog: { kind: "blocked", title: "Boat", upcoming: 1 } })} />);
+    renderWithProviders(<HostListingsView vm={vm({ dialog: { kind: "blocked", id: "l1", title: "Boat", upcoming: 1 } })} />);
     expect(await screen.findByText(/has 1 booking still to come/)).toBeInTheDocument();
     expect(screen.getByText(/cancel it and every guest/)).toBeInTheDocument();
   });
 
   it("warns what deleting loses, and offers archiving", async () => {
-    const props = vm({ dialog: { kind: "ok", title: "Harmattan Portrait Session", rating: "4.9" } });
+    const props = vm({ dialog: { kind: "ok", id: "l1", title: "Harmattan Portrait Session", rating: "4.9" } });
     const { user } = renderWithProviders(<HostListingsView vm={props} />);
 
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Delete Harmattan Portrait Session for good")).toBeInTheDocument();
     expect(within(dialog).getByText(/the 4.9 rating attached to it/)).toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("button", { name: "Delete and lose the reviews" }));
+    // Archiving instead must never delete.
     await user.click(within(dialog).getByRole("button", { name: "Archive it instead" }));
-    expect(props.onDialogConfirm).toHaveBeenCalledTimes(2);
+    await user.click(within(dialog).getByRole("button", { name: "Delete and lose the reviews" }));
+    expect([props.onDialogConfirm, props.onDialogDelete].map((fn) => vi.mocked(fn).mock.calls.length)).toEqual([1, 1]);
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     expect(props.onCloseDialog).toHaveBeenCalled();
   });
 
   it("leaves out the rating when there isn't one", async () => {
-    renderWithProviders(<HostListingsView vm={vm({ dialog: { kind: "ok", title: "Night Market Walk", rating: null } })} />);
+    renderWithProviders(<HostListingsView vm={vm({ dialog: { kind: "ok", id: "l1", title: "Night Market Walk", rating: null } })} />);
     expect(await screen.findByText(/past bookings and reviews\. That cannot be undone/)).toBeInTheDocument();
   });
 });

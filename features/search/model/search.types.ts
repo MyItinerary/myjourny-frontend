@@ -34,10 +34,22 @@ export interface ActivitySuggestion {
   subtitle: string;
 }
 
+/** An event suggestion. Hardcoded for now (see DEFAULT_EVENTS), until there's an events endpoint. */
+export interface EventSuggestion {
+  id: string;
+  title: string;
+  subtitle: string;
+}
+
 export interface GuestCounts {
   adults: number;
   children: number;
   infants: number;
+}
+
+export interface DateRange {
+  start: Date | null;
+  end: Date | null;
 }
 
 export type SearchTab = "where" | "when" | "who";

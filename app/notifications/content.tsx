@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { HomeNav } from "@/components/home/home-nav";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import {
   useNotifications,
   useMarkNotificationRead,

@@ -2,10 +2,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { openExperiencePreview } from "@/lib/experience-preview";
+
 import { BANNER_TONE, capitalise, DETAIL_TABS, dateFill, payout, RULE_LABELS, stars } from "../model/listing-detail";
+import { fetchGuidePreviewToken } from "../model/guide-listings-api";
 import { useHostListingDetail } from "../model/listing-detail-data";
 import type { DetailAction, DetailTab, ListingDetail } from "../model/listing-detail.types";
-import { useHostListings } from "../model/listings-data";
 import type { HostListing } from "../model/listings.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
@@ -15,6 +17,8 @@ export type HostListingDetailViewModel = {
   header: HostPageHeader;
   /** No such listing for this host. */
   notFound: boolean;
+  /** Still fetching the listing. */
+  loading: boolean;
   listingsHref: string;
   calendarHref: string;
   listing: HostListing | null;
@@ -33,20 +37,22 @@ export type HostListingDetailViewModel = {
 };
 
 const NOT_CONNECTED = "This will work once your listings are connected.";
+const PREVIEW_FAILED = "Couldn't open the preview. Try again.";
 const BASE = HOST_PORTAL_BASE;
 
 export function useHostListingDetailViewModel(id: string): HostListingDetailViewModel {
   const router = useRouter();
   const preview = usePreviewMode();
-  const listing = useHostListings(preview).find((l) => l.id === id) ?? null;
-  const detail = useHostListingDetail(id, preview);
+  const { listing, detail, loading } = useHostListingDetail(id, preview);
+  // The design's sample listings aren't in itin, so they open an empty builder.
+  const editHref = preview === "full" ? `${BASE}/listings/new` : `${BASE}/listings/new?id=${id}`;
   const [tab, setTab] = useState<DetailTab>("About");
 
   const run = (action: DetailAction) => {
     switch (action) {
       case "edit":
       case "fix":
-        router.push(`${BASE}/listings/new`);
+        router.push(editHref);
         return;
       case "block-date":
       case "add-dates":
@@ -55,6 +61,11 @@ export function useHostListingDetailViewModel(id: string): HostListingDetailView
       case "past-bookings":
       case "see-guests":
         router.push(`${BASE}/bookings`);
+        return;
+      case "preview":
+        // The design's sample listings aren't in itin, so there's nothing to get a token for.
+        if (preview === "full") window.open(`/experiences/${id}`, "_blank", "noopener");
+        else void openExperiencePreview(id, fetchGuidePreviewToken).catch(() => toast.error(PREVIEW_FAILED));
         return;
       case "copy-link":
         void navigator.clipboard
@@ -75,9 +86,10 @@ export function useHostListingDetailViewModel(id: string): HostListingDetailView
       title: listing?.title ?? "Listing",
       chip: listing?.status,
       subtitle: listing ? `${listing.cat} · ${listing.sub}` : "",
-      actions: listing && listing.status !== "Archived" ? [{ label: "Edit listing", href: `${BASE}/listings/new`, primary: true }] : [],
+      actions: listing && listing.status !== "Archived" ? [{ label: "Edit listing", href: editHref, primary: true }] : [],
     },
-    notFound: !listing || !detail,
+    notFound: !loading && (!listing || !detail),
+    loading,
     listingsHref: `${BASE}/listings`,
     calendarHref: `${BASE}/calendar`,
     listing,

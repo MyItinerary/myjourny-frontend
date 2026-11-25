@@ -134,6 +134,7 @@ function languageName(code: string): string {
 }
 
 const note = (text?: string | null) => text?.trim() || null;
+const clean = (items?: string[] | null) => (items ?? []).map((item) => item.trim()).filter(Boolean);
 
 /** "Fit and logistics": only what the host set. "Not applicable" fitness is left out. */
 export function fitAndLogistics(experience: ExperienceDetailsFields): FitItem[] {
@@ -152,6 +153,10 @@ export function fitAndLogistics(experience: ExperienceDetailsFields): FitItem[] 
   }
   const languages = (experience.languages ?? []).map(languageName);
   if (languages.length) items.push({ kind: "languages", label: "Languages", value: languages.join(", "), note: null });
+  const swim = note(experience.swim_requirement);
+  if (swim) items.push({ kind: "swim", label: "Swimming", value: swim, note: null });
+  const diets = clean(experience.dietary_options);
+  if (diets.length) items.push({ kind: "diet", label: "Dietary needs", value: diets.join(", "), note: null });
   if (experience.weather_dependent) {
     items.push({ kind: "weather", label: "Weather dependent", value: WEATHER_LINE, note: null });
   }
@@ -161,9 +166,7 @@ export function fitAndLogistics(experience: ExperienceDetailsFields): FitItem[] 
   return items;
 }
 
-const clean = (items?: string[] | null) => (items ?? []).map((item) => item.trim()).filter(Boolean);
-
-/** Highlights, What to bring, Not suitable for and Know before you go; empty ones are left out. */
+/** Highlights, What to bring, What to wear, Not suitable for and Know before you go; empty ones are left out. */
 export function listSections(experience: ExperienceDetailsFields): ListSection[] {
   // Older listings have "what to bring" as one block of text: one item per line.
   const bring = experience.what_to_bring_items?.length
@@ -172,6 +175,7 @@ export function listSections(experience: ExperienceDetailsFields): ListSection[]
   const sections: ListSection[] = [
     { kind: "highlights", title: "Highlights", items: clean(experience.highlights) },
     { kind: "bring", title: "What to bring", items: bring },
+    { kind: "wear", title: "What to wear", items: clean(experience.what_to_wear_items) },
     { kind: "not_suitable", title: "Not suitable for", items: clean(experience.not_suitable_for) },
     { kind: "know", title: "Know before you go", items: clean(experience.know_before_you_go) },
   ];

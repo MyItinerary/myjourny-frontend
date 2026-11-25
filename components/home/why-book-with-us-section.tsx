@@ -42,7 +42,7 @@ export function WhyBookWithUsSection() {
     <section className="mx-auto w-full max-w-[900px] px-6 py-[42px] lg:px-0 lg:py-[65px]">
       <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
         <div className="flex flex-col gap-4 lg:gap-3">
-          <h2 className="font-sans text-[32px] font-extrabold leading-[120%] text-[#333134] lg:text-[40px] lg:leading-[48px]">
+          <h2 className="font-sans text-[32px] font-extrabold leading-[120%] text-[#333134] lg:text-[32px] lg:leading-[38px]">
             Why book with us?
           </h2>
           <p className="max-w-[279px] font-sans text-lg font-normal leading-[28px] text-[#6F6B72] lg:max-w-none lg:text-[20px] lg:leading-[30px]">

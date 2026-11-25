@@ -4,9 +4,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Figma: "_Section" empty states for My experiences (2360:33913) and
-// Wishlists (2353:9198) — 180px illustration, 44px title, 24px body and a
-// pill CTA, so every empty page reads the same.
+// Every empty page reads the same, at the size of an empty wishlist collection: a small
+// illustration (72px, 120px from sm), a 24px title, a 16px body and the standard pill CTA.
 export function EmptyStateView({
   imageSrc,
   title,
@@ -23,18 +22,13 @@ export function EmptyStateView({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "mx-auto flex w-full max-w-7xl flex-col items-center gap-6 px-6 py-10 text-center sm:gap-[45px] sm:px-0 sm:py-20",
-        className,
-      )}
-    >
-      <div className="relative size-[90px] overflow-hidden rounded-[4px] border-[0.5px] border-[#E0DFDD] sm:size-[180px] sm:rounded-[8px] sm:border">
-        <Image src={imageSrc} alt="" fill sizes="180px" className="object-cover" priority />
+    <div className={cn("mx-auto flex w-full max-w-7xl flex-col items-center gap-5 px-6 py-12 text-center sm:py-20", className)}>
+      <div className="relative size-[72px] overflow-hidden rounded-[6px] border-[0.5px] border-[#E0DFDD] sm:size-[120px] sm:rounded-[8px] sm:border">
+        <Image src={imageSrc} alt="" fill sizes="120px" className="object-cover" priority />
       </div>
-      <div className="flex w-full max-w-[696px] flex-col gap-5">
-        <h2 className="font-heading text-[32px] font-extrabold leading-[1.2] text-[#130404] sm:text-[44px]">{title}</h2>
-        <p className="font-sans text-base leading-6 text-[#6F6B72] sm:text-2xl sm:leading-normal">{body}</p>
+      <div className="flex w-full max-w-sm flex-col gap-4">
+        <h2 className="font-heading text-2xl font-bold text-[#130404]">{title}</h2>
+        <p className="font-sans text-base text-[#6F6B72]">{body}</p>
       </div>
       <Button size="cta" render={<Link href={href} />}>
         {ctaLabel}

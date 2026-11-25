@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Globe, MapPin, Star } from "lucide-react";
 import { HomeNav } from "@/components/home/home-nav";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { useUser } from "@/lib/queries/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 

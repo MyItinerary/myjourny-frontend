@@ -13,6 +13,8 @@ const CHIP: Record<ListingStatus, string> = {
   "Sold out": "text-[#3086FF] bg-[#F0F6FF]",
   Archived: "text-[#6F6B72] bg-[#F5F5F5]",
   Rejected: "text-[#F5032D] bg-[#FEF2F3]",
+  "Taken down": "text-[#F5032D] bg-[#FEF2F3]",
+  Incomplete: "text-[#6F6B72] bg-[#F5F5F5]",
 };
 
 /** A booking's status, coloured like the listing status it matches. */

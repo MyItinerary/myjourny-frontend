@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { motion } from "motion/react";
 
 import { HomeNav } from "@/components/home/home-nav";
-import { Footer } from "@/components/home/footer";
+import { Footer } from "@/features/footer";
 import { EmptyStateView } from "@/features/empty-state";
 import { BookingCard } from "@/components/my-experiences/booking-card";
 import { useSession } from "@/lib/auth/session-store";
@@ -31,12 +31,12 @@ const EMPTY_STATES: Record<
   past: {
     title: "No past experiences",
     body: "You haven't completed any experiences yet. Once you take a trip, your details will be saved here.",
-    ctaLabel: "Homepage",
+    ctaLabel: "Discover experiences",
   },
   cancelled: {
     title: "No cancelled experiences",
     body: "You haven't cancelled any bookings. All your confirmed bookings remain on your schedule.",
-    ctaLabel: "Homepage",
+    ctaLabel: "Discover experiences",
   },
 };
 
