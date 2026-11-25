@@ -83,4 +83,10 @@ describe("HomeRailView", () => {
 
     expect(screen.queryByText("A")).not.toBeInTheDocument();
   });
+
+  it("uses compact vertical padding between rails", () => {
+    const { container } = renderWithProviders(<HomeRailView heading="Top picks" items={[item("A")]} />);
+
+    expect(container.querySelector("section > div")).toHaveClass("py-6", "lg:py-7");
+  });
 });

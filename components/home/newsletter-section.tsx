@@ -38,7 +38,7 @@ export function NewsletterSection() {
 
   return (
     <section className="relative bg-gradient-to-b from-[rgba(244,242,238,0.87)] to-white">
-      <div className="mx-auto flex w-full max-w-[1056px] flex-col items-center justify-center gap-16 px-6 py-8 lg:min-h-[426px] lg:flex-row lg:gap-12 xl:gap-[83px] xl:px-0">
+      <div className="mx-auto flex w-full max-w-[1056px] flex-col items-center justify-center gap-16 px-6 py-6 lg:min-h-[360px] lg:flex-row lg:gap-12 lg:py-8 xl:gap-[83px] xl:px-0">
         <div className="relative aspect-[1448/1086] w-full shrink-0 overflow-hidden rounded-xl border border-[#dedede] bg-[#FDFCF8] lg:w-[433.8px]">
           <Image
             src="/images/home/newsletter/newsletter-envelope.jpg"

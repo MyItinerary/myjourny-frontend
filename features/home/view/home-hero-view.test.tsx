@@ -36,4 +36,13 @@ describe("HomeHeroView", () => {
 
     expect(screen.getByTestId("hero-search").parentElement).toHaveClass("pointer-events-none");
   });
+
+  it("uses compact bottom padding so the next section sits closer to the hero", () => {
+    const { container } = renderWithProviders(
+      <HomeHeroView search={search} isScrolled={false} onOpenMobileSearch={vi.fn()} />,
+    );
+
+    const inner = container.querySelector("section > div");
+    expect(inner).toHaveClass("pb-10", "lg:pb-16");
+  });
 });

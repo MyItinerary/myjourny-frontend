@@ -22,7 +22,7 @@ export type HomeRailViewProps = {
 export function HomeRailView({ heading, mutedHeading, items, isLoading = false, seeMoreHref }: HomeRailViewProps) {
   return (
     <section className="w-full overflow-x-clip bg-white">
-      <div className="mx-auto w-full max-w-[1512px] px-6 py-10 lg:px-32 lg:py-[53px]">
+      <div className="mx-auto w-full max-w-[1512px] px-6 py-6 lg:px-32 lg:py-7">
         <Carousel opts={{ align: "start", dragFree: true }}>
           <div className="flex items-center justify-between gap-4">
             <h2 className="font-sans text-[28px] font-extrabold leading-[120%] text-[#333134]">
@@ -63,7 +63,7 @@ export function HomeRailView({ heading, mutedHeading, items, isLoading = false, 
         </Carousel>
 
         {seeMoreHref ? (
-          <div className="mt-12 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <Button
               size="cta"
               render={<Link href={seeMoreHref} />}

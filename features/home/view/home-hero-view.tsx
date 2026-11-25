@@ -29,7 +29,7 @@ export function HomeHeroView({ search, isScrolled, onOpenMobileSearch }: HomeHer
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="mx-auto flex w-full max-w-[900px] flex-col items-center px-6 pt-6 pb-16 text-center lg:px-0 lg:pt-[77px] lg:pb-[138px]"
+        className="mx-auto flex w-full max-w-[900px] flex-col items-center px-6 pt-6 pb-10 text-center lg:px-0 lg:pt-[77px] lg:pb-16"
       >
         <div className="flex flex-col items-center gap-4 lg:gap-5">
           <motion.h1
