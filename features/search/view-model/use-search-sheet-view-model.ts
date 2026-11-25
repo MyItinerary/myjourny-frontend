@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { toCityDestination, useExperienceCities } from "@/features/cities";
 import { useTasteQuizCtaViewModel } from "@/features/taste-quiz-cta";
@@ -42,6 +42,14 @@ export function useSearchSheetViewModel({ onClose }: { onClose: () => void }): S
   const [searching, setSearching] = useState(false);
   // Waiting on the location for Nearby (the permission prompt, then a fix).
   const [locating, setLocating] = useState(false);
+  // The sheet unmounts when it closes; a location that arrives after that mustn't navigate.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const citiesQuery = useExperienceCities();
   const viewportHeight = useVisualViewportHeight();
 
@@ -143,6 +151,8 @@ export function useSearchSheetViewModel({ onClose }: { onClose: () => void }): S
       onSelect: () => {
         if (locating) return;
         const open = (path: string) => {
+          if (!mounted.current) return;
+          setLocating(false);
           search.onClose();
           router.push(resultsLink(path));
         };

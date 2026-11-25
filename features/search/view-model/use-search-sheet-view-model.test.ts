@@ -246,6 +246,36 @@ describe("useSearchSheetViewModel", () => {
     vi.unstubAllGlobals();
   });
 
+  it("doesn't navigate when the location arrives after the sheet was closed", () => {
+    let answer: (position: { coords: { latitude: number; longitude: number } }) => void = () => {};
+    const getCurrentPosition = vi.fn((done: typeof answer) => {
+      answer = done;
+    });
+    vi.stubGlobal("navigator", { ...navigator, geolocation: { getCurrentPosition } });
+    const { result, unmount } = renderSheet();
+
+    act(() => result.current.nearby.onSelect());
+    unmount();
+    answer({ coords: { latitude: 6.4474, longitude: 3.4723 } });
+    expect(push).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it("stops saying it's finding the location once the answer is in", () => {
+    let fail: () => void = () => {};
+    const getCurrentPosition = vi.fn((_done: () => void, onError: () => void) => {
+      fail = onError;
+    });
+    vi.stubGlobal("navigator", { ...navigator, geolocation: { getCurrentPosition } });
+    const { result } = renderSheet();
+
+    act(() => result.current.nearby.onSelect());
+    expect(result.current.nearby.subtitle).toBe("Finding where you are…");
+    act(() => fail());
+    expect(result.current.nearby.subtitle).toBe("Find what's around you");
+    vi.unstubAllGlobals();
+  });
+
   it("shows everything for the dates and guests when Nearby can't get a location", () => {
     const getCurrentPosition = vi.fn((_done: () => void, fail: () => void) => fail());
     vi.stubGlobal("navigator", { ...navigator, geolocation: { getCurrentPosition } });
