@@ -19,7 +19,7 @@ export function HomeCitiesView({ cities, heading = "Discover by cities" }: { cit
 
   return (
     <section className="w-full overflow-x-clip bg-[#fcfcfc]">
-      <div className="mx-auto flex w-full max-w-[1512px] flex-col gap-8 px-6 py-10 lg:gap-[53px] lg:px-32 lg:py-[53px]">
+      <div className="mx-auto flex w-full max-w-[1512px] flex-col gap-8 px-6 py-6 lg:gap-9 lg:px-32 lg:py-7">
         <h2 className="font-sans text-[28px] font-extrabold leading-[120%] text-[#333134]">
           {heading}
         </h2>

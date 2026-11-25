@@ -24,7 +24,7 @@ const REASONS = [
 export function HomeWhyBookView() {
   return (
     <section id={HOME_SECTION_IDS.whyBook} className="w-full bg-white">
-      <div className="mx-auto w-full max-w-[1512px] px-6 pt-12 pb-12 lg:px-32 lg:pt-[65px] lg:pb-[46px]">
+      <div className="mx-auto w-full max-w-[1512px] px-6 py-7 lg:px-32 lg:py-9">
         <div className="mx-auto flex max-w-[454px] flex-col gap-[11px] text-center">
           <h2 className="font-sans text-[28px] font-extrabold leading-[120%] text-[#333134]">
             Why book with us?
