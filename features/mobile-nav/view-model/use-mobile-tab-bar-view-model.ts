@@ -2,6 +2,8 @@ import { usePathname } from "next/navigation";
 
 import { eventsEnabled } from "@/lib/feature-flags";
 
+import { useHideOnScroll } from "./use-hide-on-scroll";
+
 export type MobileTabId = "home" | "experiences" | "events" | "wishlists";
 
 export type MobileTab = {
@@ -17,6 +19,8 @@ export type MobileTabBarViewModel = {
   /** On the pages its tabs open (Home, Experiences, Events, My wishlists), so it stays put as you
    * move between them; deeper pages (a listing, a results page) have their own bars. */
   visible: boolean;
+  /** Slid out of the way while you scroll down; back as you scroll up or reach either end. */
+  hidden: boolean;
   tabs: MobileTab[];
 };
 
@@ -25,6 +29,7 @@ const under = (pathname: string, prefix: string) => pathname === prefix || pathn
 /** The phone bottom bar: the desktop nav's sections, with its pictures. */
 export function useMobileTabBarViewModel(): MobileTabBarViewModel {
   const pathname = usePathname() ?? "/";
+  const hidden = useHideOnScroll();
   const tabs: MobileTab[] = [
     { id: "home" as const, label: "Home", href: "/", icon: "/icons/nav/home.png", active: pathname === "/" },
     { id: "experiences" as const, label: "Experiences", href: "/experiences", icon: "/icons/nav/experiences.png", active: under(pathname, "/experiences") },
@@ -32,5 +37,5 @@ export function useMobileTabBarViewModel(): MobileTabBarViewModel {
     { id: "wishlists" as const, label: "My wishlists", href: "/wishlists", icon: "/icons/nav/wishlist.png", active: under(pathname, "/wishlists") },
   ].filter((tab) => tab.id !== "events" || eventsEnabled());
 
-  return { visible: tabs.some((tab) => tab.href === pathname), tabs };
+  return { visible: tabs.some((tab) => tab.href === pathname), hidden, tabs };
 }

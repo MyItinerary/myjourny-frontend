@@ -15,7 +15,7 @@ const tabs: MobileTab[] = [
 
 describe("MobileTabBarView", () => {
   it("links each section and marks the current one", () => {
-    renderWithProviders(<MobileTabBarView visible tabs={tabs} />);
+    renderWithProviders(<MobileTabBarView visible hidden={false} tabs={tabs} />);
 
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
@@ -24,8 +24,22 @@ describe("MobileTabBarView", () => {
     expect(screen.getByRole("link", { name: "Experiences" })).not.toHaveAttribute("aria-current");
   });
 
+  it("slides away while you scroll down, out of reach of keyboard and screen readers", () => {
+    const { container, rerender } = renderWithProviders(<MobileTabBarView visible hidden tabs={tabs} />);
+    const bar = container.querySelector("nav")!;
+    expect(bar).toHaveClass("translate-y-full");
+    expect(bar).toHaveAttribute("aria-hidden", "true");
+    expect(bar).toHaveAttribute("inert");
+    expect(screen.queryByRole("navigation", { name: "Main" })).not.toBeInTheDocument();
+
+    rerender(<MobileTabBarView visible hidden={false} tabs={tabs} />);
+    expect(bar).not.toHaveClass("translate-y-full");
+    expect(bar).not.toHaveAttribute("inert");
+    expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
+  });
+
   it("renders nothing where it's hidden", () => {
-    const { container } = renderWithProviders(<MobileTabBarView visible={false} tabs={tabs} />);
+    const { container } = renderWithProviders(<MobileTabBarView visible={false} hidden={false} tabs={tabs} />);
     expect(container).toBeEmptyDOMElement();
   });
 });
