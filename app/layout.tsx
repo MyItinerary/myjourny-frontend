@@ -6,7 +6,9 @@ import "@fontsource/tiktok-sans/700.css";
 import "@fontsource/tiktok-sans/800.css";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { LAUNCH_SCREENS } from "@/lib/launch-screens";
 import { SITE_DESCRIPTION } from "@/lib/site";
+import { LaunchScreen } from "./launch-screen";
 import { MobileSearchHost } from "./mobile-search-host";
 import { MobileTabBar } from "./mobile-tab-bar";
 
@@ -20,7 +22,13 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   applicationName: "MyJourny",
   // Added to an iPhone's home screen: opens full-screen, named MyJourny (the icon is app/apple-icon.tsx).
-  appleWebApp: { capable: true, title: "MyJourny", statusBarStyle: "default" },
+  // startupImage replaces iOS's blank (black in dark mode) screen while the app opens.
+  appleWebApp: {
+    capable: true,
+    title: "MyJourny",
+    statusBarStyle: "default",
+    startupImage: LAUNCH_SCREENS.map(({ size, media }) => ({ url: `/launch-screens/${size}`, media })),
+  },
   formatDetection: { telephone: false },
 };
 
@@ -36,6 +44,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-clip">
         <Providers>
+          <LaunchScreen />
           {children}
           <MobileTabBar />
           <MobileSearchHost />
