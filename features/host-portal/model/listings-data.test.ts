@@ -39,7 +39,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("useHostListings", () => {
-  it("loads the guide's own listings from itin, with category names", async () => {
+  it("loads the guide's own experiences from itin, with category names", async () => {
     const { result } = renderHookWithProviders(() => useHostListings(null));
     expect(result.current.loading).toBe(true);
 
@@ -55,7 +55,7 @@ describe("useHostListings", () => {
     expect(result.current).toEqual({ listings: [], loading: false });
   });
 
-  it("shows the eight sample listings for ?preview=full", () => {
+  it("shows the eight sample experiences for ?preview=full", () => {
     expect(renderHookWithProviders(() => useHostListings("full")).result.current.listings).toHaveLength(8);
   });
 

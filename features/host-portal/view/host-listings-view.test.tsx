@@ -35,13 +35,13 @@ const row = (l: HostListing, selected = false) => ({
 });
 
 const vm = (over: Partial<HostListingsViewModel> = {}): HostListingsViewModel => ({
-  header: { title: "Your listings", subtitle: "", actions: [] },
+  header: { title: "Your experiences", subtitle: "", actions: [] },
   loading: false,
   isEmpty: false,
   newListingHref: "/host/dashboard/listings/new",
   query: "",
   onQuery: vi.fn(),
-  resultLine: "All 2 listings",
+  resultLine: "All 2 experiences",
   hasFilters: false,
   onClearFilters: vi.fn(),
   groups: [
@@ -59,7 +59,7 @@ const vm = (over: Partial<HostListingsViewModel> = {}): HostListingsViewModel =>
   ],
   onPick: vi.fn(),
   columns: [
-    { key: "title", label: "Listing", direction: null },
+    { key: "title", label: "Experience", direction: null },
     { key: "cat", label: "Category", direction: null },
     { key: "status", label: "Status", direction: null },
     { key: "price", label: "Price", direction: null },
@@ -73,7 +73,7 @@ const vm = (over: Partial<HostListingsViewModel> = {}): HostListingsViewModel =>
   onShowEverything: vi.fn(),
   selection: {
     count: 0,
-    label: "0 listings selected",
+    label: "0 experiences selected",
     allSelected: false,
     onToggleAll: vi.fn(),
     onToggleRow: vi.fn(),
@@ -89,7 +89,7 @@ const vm = (over: Partial<HostListingsViewModel> = {}): HostListingsViewModel =>
 });
 
 describe("HostListingsView, the table", () => {
-  it("shows a row per listing with its details", () => {
+  it("shows a row per experience with its details", () => {
     renderWithProviders(<HostListingsView vm={vm()} />);
 
     const rows = screen.getAllByRole("row");
@@ -120,11 +120,11 @@ describe("HostListingsView, the table", () => {
 
     await user.click(screen.getByRole("checkbox", { name: "Select Sunset Kayak and Paint" }));
     expect(props.selection.onToggleRow).toHaveBeenCalledWith("l2");
-    await user.click(screen.getByRole("checkbox", { name: "Select all listings" }));
+    await user.click(screen.getByRole("checkbox", { name: "Select all experiences" }));
     expect(props.selection.onToggleAll).toHaveBeenCalled();
   });
 
-  it("links each listing's name to its details", () => {
+  it("links each experience's name to its details", () => {
     renderWithProviders(<HostListingsView vm={vm()} />);
     expect(screen.getByRole("link", { name: /Lagos Island Photowalk/ })).toHaveAttribute("href", "/host/dashboard/listings/l1");
   });
@@ -132,7 +132,7 @@ describe("HostListingsView, the table", () => {
   it("shows the selected rows ticked", () => {
     renderWithProviders(<HostListingsView vm={vm({ rows: [row(listing(), true)], selection: { ...vm().selection, count: 1, allSelected: true } })} />);
     expect(screen.getByRole("checkbox", { name: "Select Lagos Island Photowalk" })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByRole("checkbox", { name: "Select all listings" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("checkbox", { name: "Select all experiences" })).toHaveAttribute("aria-checked", "true");
   });
 
   it("opens a row's menu and runs the action picked", async () => {
@@ -166,8 +166,8 @@ describe("HostListingsView, the toolbar", () => {
     const props = vm();
     const { user } = renderWithProviders(<HostListingsView vm={props} />);
 
-    expect(screen.getByText("All 2 listings")).toBeInTheDocument();
-    await user.type(screen.getByRole("searchbox", { name: "Search your listings" }), "k");
+    expect(screen.getByText("All 2 experiences")).toBeInTheDocument();
+    await user.type(screen.getByRole("searchbox", { name: "Search your experiences" }), "k");
     expect(props.onQuery).toHaveBeenCalledWith("k");
   });
 
@@ -223,11 +223,11 @@ describe("HostListingsView, the toolbar", () => {
 
 describe("HostListingsView, selected rows", () => {
   it("swaps the toolbar for the bulk bar", async () => {
-    const props = vm({ selection: { ...vm().selection, count: 2, label: "2 listings selected" } });
+    const props = vm({ selection: { ...vm().selection, count: 2, label: "2 experiences selected" } });
     const { user } = renderWithProviders(<HostListingsView vm={props} />);
 
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
-    expect(screen.getByText("2 listings selected")).toBeInTheDocument();
+    expect(screen.getByText("2 experiences selected")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Pause new bookings" }));
     expect(props.selection.onBulk).toHaveBeenCalledWith("pause");
     await user.click(screen.getByRole("button", { name: "Hide from search" }));
@@ -238,18 +238,18 @@ describe("HostListingsView, selected rows", () => {
   });
 });
 
-describe("HostListingsView, no listings at all", () => {
-  it("offers a first listing instead of a table", () => {
+describe("HostListingsView, no experiences at all", () => {
+  it("offers a first experience instead of a table", () => {
     renderWithProviders(<HostListingsView vm={vm({ isEmpty: true, rows: [] })} />);
 
     expect(screen.getByRole("heading", { name: "Nothing here yet" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Start a new listing" })).toHaveAttribute("href", "/host/dashboard/listings/new");
+    expect(screen.getByRole("link", { name: "Start a new experience" })).toHaveAttribute("href", "/host/dashboard/listings/new");
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 });
 
 describe("HostListingsView, delete dialogs", () => {
-  it("won't delete a listing with bookings to come, and suggests hiding", async () => {
+  it("won't delete an experience with bookings to come, and suggests hiding", async () => {
     const props = vm({ dialog: { kind: "blocked", id: "l1", title: "Lagos Island Photowalk", upcoming: 4 } });
     const { user } = renderWithProviders(<HostListingsView vm={props} />);
 

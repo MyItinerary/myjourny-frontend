@@ -73,7 +73,7 @@ export function HostBookingsView({ vm }: { vm: HostBookingsViewModel }) {
           <div role="row" className="flex h-[42px] items-center gap-3.5 px-[18px] text-[11.5px] font-medium text-[#6F6B72] shadow-[inset_0_-1px_0_#E7E7E7]">
             <span role="columnheader" className={COL.ref}>Reference</span>
             <span role="columnheader" className={COL.guest}>Guest</span>
-            <span role="columnheader" className={COL.listing}>Listing</span>
+            <span role="columnheader" className={COL.listing}>Experience</span>
             <span role="columnheader" className={COL.date}>Date</span>
             <span role="columnheader" className={COL.guests}>Guests</span>
             <span role="columnheader" className={COL.gross}>They pay</span>

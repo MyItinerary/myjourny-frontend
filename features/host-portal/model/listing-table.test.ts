@@ -76,14 +76,14 @@ describe("sortListings", () => {
 
 describe("summaries", () => {
   it("words the result count", () => {
-    expect(resultLine(8, 8)).toBe("All 8 listings");
-    expect(resultLine(1, 8)).toBe("1 listing");
-    expect(resultLine(3, 8)).toBe("3 listings");
+    expect(resultLine(8, 8)).toBe("All 8 experiences");
+    expect(resultLine(1, 8)).toBe("1 experience");
+    expect(resultLine(3, 8)).toBe("3 experiences");
   });
 
   it("summarises the page header", () => {
-    expect(listingsSummary(SAMPLE_LISTINGS)).toBe("8 listings · 1 live · 1 in review");
-    expect(listingsSummary(SAMPLE_LISTINGS.slice(0, 1))).toBe("1 listing · 1 live · 0 in review");
+    expect(listingsSummary(SAMPLE_LISTINGS)).toBe("8 experiences · 1 live · 1 in review");
+    expect(listingsSummary(SAMPLE_LISTINGS.slice(0, 1))).toBe("1 experience · 1 live · 0 in review");
     expect(listingsSummary([])).toBe("Nothing here yet");
   });
 
@@ -111,7 +111,7 @@ describe("rowActions", () => {
     expect(listingHref(SAMPLE_LISTINGS[0], "/host/dashboard")).toBe("/host/dashboard/listings/l1");
   });
 
-  it("offers to show a hidden listing again", () => {
+  it("offers to show a hidden experience again", () => {
     const hidden = SAMPLE_LISTINGS.find((l) => l.status === "Hidden")!;
     expect(rowActions(hidden).map((a) => a.action)).toContain("show");
     expect(rowActions(hidden).map((a) => a.action)).not.toContain("hide");

@@ -13,7 +13,7 @@ export type HostNavItem = {
 
 export const HOST_NAV_ITEMS: HostNavItem[] = [
   { key: "dashboard", label: "Home", icon: "dash", href: HOST_PORTAL_BASE },
-  { key: "listings", label: "Listings", icon: "list", href: `${HOST_PORTAL_BASE}/listings` },
+  { key: "listings", label: "Experiences", icon: "list", href: `${HOST_PORTAL_BASE}/listings` },
   { key: "calendar", label: "Calendar", icon: "cal", href: `${HOST_PORTAL_BASE}/calendar` },
   { key: "bookings", label: "Bookings", icon: "book", href: `${HOST_PORTAL_BASE}/bookings` },
   { key: "earnings", label: "Earnings", icon: "earn", href: `${HOST_PORTAL_BASE}/earnings` },

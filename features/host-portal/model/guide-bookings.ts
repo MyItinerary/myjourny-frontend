@@ -53,7 +53,7 @@ export function toHostBooking(b: GuideBooking, today: string): HostBooking {
   const time = b.requested_datetime?.slice(11, 16) ?? "";
   const tab = tabOf(b);
   const status = statusOf(b, tab);
-  const listing = b.experience_title ?? "Listing";
+  const listing = b.experience_title ?? "Experience";
   const guests = b.party_size ?? 0;
   const gross = amount(b.price_total);
   const net = amount(b.guide_earnings_amount);

@@ -36,7 +36,7 @@ export type HostListingDetailViewModel = {
   actions: { label: string; onClick: () => void }[];
 };
 
-const NOT_CONNECTED = "This will work once your listings are connected.";
+const NOT_CONNECTED = "This will work once your experiences are connected.";
 const PREVIEW_FAILED = "Couldn't open the preview. Try again.";
 const BASE = HOST_PORTAL_BASE;
 
@@ -83,10 +83,10 @@ export function useHostListingDetailViewModel(id: string): HostListingDetailView
 
   return {
     header: {
-      title: listing?.title ?? "Listing",
+      title: listing?.title ?? "Experience",
       chip: listing?.status,
       subtitle: listing ? `${listing.cat} · ${listing.sub}` : "",
-      actions: listing && listing.status !== "Archived" ? [{ label: "Edit listing", href: editHref, primary: true }] : [],
+      actions: listing && listing.status !== "Archived" ? [{ label: "Edit experience", href: editHref, primary: true }] : [],
     },
     notFound: !loading && (!listing || !detail),
     loading,

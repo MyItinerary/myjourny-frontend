@@ -102,7 +102,7 @@ export function sampleBookings(today: string): HostBooking[] {
         { title: "The place went back on sale", body: "Your Saturday went back to 6 of 8 and stayed open. Nobody took it before the walk." },
       ],
       cancelNote:
-        "This one does not count against you. A guest cancelling more than 48 hours ahead never touches your rating or where you show up in search. If you start seeing several cancellations on the same listing, it usually means the meeting point or the start time is not clear enough.",
+        "This one does not count against you. A guest cancelling more than 48 hours ahead never touches your rating or where you show up in search. If you start seeing several cancellations on the same experience, it usually means the meeting point or the start time is not clear enough.",
     },
   ];
 }

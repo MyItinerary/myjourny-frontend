@@ -40,11 +40,11 @@ export function StepRequirements({ vm }: Props) {
       ) : (
         <div className="mb-[22px]" />
       )}
-      <Field label="Do guests need to swim" hint="Only shown to guests on water and beach listings.">
+      <Field label="Do guests need to swim" hint="Only shown to guests on water and beach experiences.">
         <input value={draft.swim} maxLength={100} onChange={(e) => onField("swim", e.target.value)} className={inputClass} />
       </Field>
       <div className="mb-1 text-[13px] font-medium">Food you can work around</div>
-      <div className="mb-2.5 text-xs text-[#6F6B72]">Pick nothing if food is not part of your listing.</div>
+      <div className="mb-2.5 text-xs text-[#6F6B72]">Pick nothing if food is not part of your experience.</div>
       <div className="mb-[22px] flex flex-wrap gap-2">
         {options.diets.map((d) => (
           <Pill key={d} on={draft.diet.includes(d)} onClick={() => onToggle("diet", d)}>
@@ -145,19 +145,115 @@ export function StepPhotos({ vm }: Props) {
   );
 }
 
+export function StepReviews({ vm }: Props) {
+  const { reviews } = vm;
+  return (
+    <div>
+      <StepHeading
+        eyebrow="Step 9 of 11"
+        title="Reviews"
+        intro="New experiences start with none. Bring in the reviews you already have so guests have something to go on."
+      />
+      <div className="mb-1 text-[13px] font-medium">Bring in reviews you already have</div>
+      <p className="mb-3.5 text-[12.5px] leading-normal text-pretty text-[#6F6B72]">
+        Reviews stay exactly as written and are labelled with where they came from. You cannot edit them, and you can hide any you do not want shown.
+      </p>
+      <div className="mb-3.5 grid grid-cols-2 gap-2.5">
+        {reviews.platforms.map((platform) => (
+          <button
+            key={platform}
+            type="button"
+            aria-pressed={reviews.selected === platform}
+            onClick={() => reviews.onSelect(platform)}
+            className={cn(
+              "flex cursor-pointer flex-col gap-[3px] rounded-[14px] bg-white px-3.5 py-[13px] text-left hover:shadow-[inset_0_0_0_2px_#FF4540]",
+              reviews.selected === platform ? "shadow-[inset_0_0_0_2px_#F5032D]" : "shadow-[inset_0_0_0_1px_#E7E7E7]",
+            )}
+          >
+            <span className="text-sm font-medium">{platform}</span>
+            <span className="text-xs text-[#6F6B72]">Not connected</span>
+          </button>
+        ))}
+      </div>
+      {reviews.selected && (
+        <div className="mb-[18px] flex gap-2.5">
+          <input
+            aria-label={`${reviews.selected} link`}
+            value={reviews.url}
+            placeholder={reviews.urlPlaceholder}
+            onChange={(e) => reviews.onUrl(e.target.value)}
+            className={cn(inputClass, "min-w-0 flex-1 text-[14.5px]")}
+          />
+          <button
+            type="button"
+            disabled={!reviews.canImport}
+            onClick={reviews.onImport}
+            className="h-12 shrink-0 cursor-pointer rounded-full bg-[#F5032D] px-5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#BDBDBD]"
+          >
+            Import reviews
+          </button>
+        </div>
+      )}
+      <div className="rounded-[14px] bg-[#FAF9F7] p-[18px] text-[13.5px] leading-[1.6] text-pretty shadow-[inset_0_0_0_1px_#E9E1D2]">
+        No reviews yet. That is fine for a new experience. Pick a place above to bring in the ones you already have.
+      </div>
+    </div>
+  );
+}
+
+export function StepBooking({ vm }: Props) {
+  const { booking } = vm;
+  const group = (label: string, options: { key: string; label: string; sub: string; selected: boolean }[], onPick: (key: string) => void, saveable?: (key: string) => boolean) => (
+    <section aria-label={label} className="mb-[22px]">
+      <div className="mb-2.5 text-[13px] font-medium">{label}</div>
+      <div className="flex flex-col gap-2">
+        {options.map((o) => (
+          <button
+            key={o.key}
+            type="button"
+            aria-pressed={o.selected}
+            disabled={saveable ? !saveable(o.key) : false}
+            onClick={() => onPick(o.key)}
+            className={cn(
+              "flex w-full cursor-pointer items-start gap-2.5 rounded-xl bg-white px-3.5 py-3 text-left text-[13.5px] hover:shadow-[inset_0_0_0_2px_#FF4540] disabled:cursor-not-allowed disabled:bg-[#FAF9F7] disabled:hover:shadow-[inset_0_0_0_1px_#E7E7E7]",
+              o.selected ? "shadow-[inset_0_0_0_2px_#F5032D]" : "shadow-[inset_0_0_0_1px_#E7E7E7]",
+            )}
+          >
+            <span aria-hidden className={cn("mt-px size-[17px] shrink-0 rounded-full", o.selected ? "shadow-[inset_0_0_0_5px_#F5032D]" : "shadow-[inset_0_0_0_1.5px_#D2D2D2]")} />
+            <span>
+              <span className="block font-medium">{o.label}</span>
+              <span className="mt-0.5 block text-xs leading-normal text-[#6F6B72]">{o.sub}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+  return (
+    <div>
+      <StepHeading eyebrow="Step 10 of 11" title="How guests book" intro="How people book, and what happens if they cancel." />
+      {group("Booking type", booking.types, (key) => booking.onType(key as "instant" | "request"))}
+      {group("Cancellation terms", booking.tiers, booking.onTier, (key) => booking.tiers.find((t) => t.key === key)?.saveable ?? false)}
+      {booking.promise && (
+        <p className="mb-4 rounded-xl bg-[#FAF9F7] px-3.5 py-3 text-[13px] leading-normal shadow-[inset_0_0_0_1px_#E9E1D2]">
+          <span className="font-medium">Guests will read:</span> {booking.promise}
+        </p>
+      )}
+      <p className="text-xs leading-normal text-[#6F6B72]">{booking.unsaved}</p>
+    </div>
+  );
+}
+
 export function StepReview({ vm }: Props) {
   const { draft, derived, canPublish, onField, onStep, onPublish } = vm;
   return (
     <div>
-      <StepHeading eyebrow="Last look" title="Review and publish" intro="The panel on the right is exactly what a guest sees. One line from you, if you like, then you are done." />
-      <Field label="One line from you, in your own words" hint="Optional. Guests see it next to your name on the listing. Say the thing you would say to them at the gate.">
-        <input value={draft.quote} maxLength={140} onChange={(e) => onField("quote", e.target.value)} className={inputClass} />
-      </Field>
-      <div className="mb-6 rounded-[14px] bg-white shadow-[inset_0_0_0_1px_#E7E7E7]">
-        <div className="px-4 py-3 text-[13px] font-medium shadow-[inset_0_-1px_0_#E7E7E7]">Everything we need</div>
-        <ul>
+      <StepHeading eyebrow="Last look" title="Review and publish" intro="Anything still missing is listed below, and each line takes you to the step." />
+      <div className="mb-6 rounded-2xl bg-[#FAF9F7] p-[18px] shadow-[inset_0_0_0_1px_#E9E1D2]">
+        <div className="mb-3.5 text-[13px] font-medium">Everything we need</div>
+        <ul className="flex flex-col gap-[11px]">
           {derived.checklist.map((c) => (
-            <li key={c.step} className="flex items-center gap-2.5 px-4 py-2.5">
+            <li key={c.step} className="flex items-center gap-2.5">
               <span aria-hidden className={cn("flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white", c.ok ? "bg-[#0CBA65]" : "bg-[#D9921C]")}>
                 {c.ok ? "✓" : "!"}
               </span>
@@ -171,6 +267,9 @@ export function StepReview({ vm }: Props) {
           ))}
         </ul>
       </div>
+      <Field label="One line from you, in your own words" hint="Optional. Guests see it next to your name on the experience. Say the thing you would say to them at the gate.">
+        <input value={draft.quote} maxLength={140} onChange={(e) => onField("quote", e.target.value)} className={inputClass} />
+      </Field>
       {vm.publishBlock && <p className="mb-3 rounded-xl bg-[#FDF7EB] px-3.5 py-2.5 text-[13px] text-[#8A5A07]">{vm.publishBlock}</p>}
       <button
         type="button"
@@ -178,10 +277,10 @@ export function StepReview({ vm }: Props) {
         onClick={onPublish}
         className="h-12 cursor-pointer rounded-full bg-[#F5032D] px-[22px] text-[15px] font-medium text-white disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#BDBDBD]"
       >
-        {vm.publishing ? "Publishing…" : vm.editing ? "Save and publish" : "Publish this listing"}
+        {vm.publishing ? "Publishing…" : vm.editing ? "Save and publish" : "Publish this experience"}
       </button>
       <p className="mt-2.5 text-xs text-[#6F6B72]">
-        It goes live straight away. We look over new listings and will email you if anything needs to change.
+        It goes live straight away. We look over new experiences and will email you if anything needs to change.
       </p>
     </div>
   );

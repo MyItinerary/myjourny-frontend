@@ -15,8 +15,8 @@ export function Toolbar({ vm }: { vm: HostListingsViewModel }) {
           type="search"
           value={vm.query}
           onChange={(e) => vm.onQuery(e.target.value)}
-          placeholder="Search your listings"
-          aria-label="Search your listings"
+          placeholder="Search your experiences"
+          aria-label="Search your experiences"
           className="h-9 w-[280px] rounded-full bg-white pr-3 pl-[34px] text-[13px] text-[#333134] shadow-[inset_0_0_0_1px_#E7E7E7] outline-none placeholder:text-[#6F6B72] focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </div>

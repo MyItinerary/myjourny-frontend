@@ -131,22 +131,22 @@ export function toListingDetail(exp: GuideExperience): ListingDetail {
       exp.weather_dependent ? "We may move or cancel it" : "It goes ahead",
     ],
     actions: live
-      ? [act("Edit listing", "edit"), act("Preview as a guest", "preview"), act("Copy the link", "copy-link")]
-      : [act("Edit listing", "edit"), act("Preview as a guest", "preview")],
+      ? [act("Edit experience", "edit"), act("Preview as a guest", "preview"), act("Copy the link", "copy-link")]
+      : [act("Edit experience", "edit"), act("Preview as a guest", "preview")],
     banner:
       status === "Taken down"
         ? {
             kind: "rejected",
-            title: "We took this listing down",
+            title: "We took this experience down",
             body: `${exp.review_note} Fix it and publish it again, and it goes straight back up.`,
-            button: act("Fix the listing", "fix"),
+            button: act("Fix the experience", "fix"),
           }
         : status === "Incomplete"
           ? {
               kind: "review",
               title: "Not live yet",
               body: `Add ${missingLine(exp.missing_for_publish ?? []) || "the missing details"} and publish it to go live.`,
-              button: act("Finish the listing", "fix"),
+              button: act("Finish the experience", "fix"),
             }
           : undefined,
   };

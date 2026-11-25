@@ -29,13 +29,13 @@ export const GUIDES: HelpGuide[] = [
     n: "3",
     title: "The guest who is late, drunk, or difficult",
     meta: "5 minutes · what we back you on",
-    body: "You can refuse entry to anyone who is drunk or who is putting other guests at risk, and you keep the money. Tell us inside 24 hours with the booking reference and we handle the refund argument. For lateness, wait ten minutes at the meeting point and then go. Put the ten minutes in your listing so the guest agreed to it before they paid.",
+    body: "You can refuse entry to anyone who is drunk or who is putting other guests at risk, and you keep the money. Tell us inside 24 hours with the booking reference and we handle the refund argument. For lateness, wait ten minutes at the meeting point and then go. Put the ten minutes in your experience so the guest agreed to it before they paid.",
   },
   {
     n: "4",
     title: "Safety on water, with food, and with children",
     meta: "7 minutes · certifications and when you need one",
-    body: "On water you need enough life jackets for your maximum group, always, and a named boat operator. With food you say what you cannot work around rather than promising everything. Children under 16 need an adult on the booking. None of these need a certificate, but if you have one, upload it and a badge appears on your listing.",
+    body: "On water you need enough life jackets for your maximum group, always, and a named boat operator. With food you say what you cannot work around rather than promising everything. Children under 16 need an adult on the booking. None of these need a certificate, but if you have one, upload it and a badge appears on your experience.",
   },
 ];
 

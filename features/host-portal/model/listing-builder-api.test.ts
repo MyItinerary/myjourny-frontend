@@ -29,6 +29,21 @@ describe("place search", () => {
     expect(new URL(asked).searchParams.get("countrycodes")).toBe("ng");
   });
 
+  it("searches all of Nigeria when no city is given, and reads the city and neighbourhood a place is in", async () => {
+    let asked = "";
+    server.use(
+      http.get("https://nominatim.openstreetmap.org/search", ({ request }) => {
+        asked = request.url;
+        return HttpResponse.json([
+          { name: "Jabi Lake", display_name: "Jabi Lake, Jabi, Abuja", lat: "9.07", lon: "7.42", address: { city: "Abuja", suburb: "Jabi" } },
+        ]);
+      }),
+    );
+    expect(await searchPlaces("jabi lake", "")).toEqual([{ name: "Jabi Lake", area: "Jabi, Abuja", lat: 9.07, lng: 7.42, city: "Abuja", district: "Jabi" }]);
+    expect(new URL(asked).searchParams.get("q")).toBe("jabi lake");
+    expect(new URL(asked).searchParams.get("addressdetails")).toBe("1");
+  });
+
   it("waits for three letters", async () => {
     const short = renderHookWithProviders(() => usePlaceSearch("fr", "Lagos"));
     expect(short.result.current.fetchStatus).toBe("idle");
@@ -57,7 +72,7 @@ describe("categories", () => {
 });
 
 describe("saving", () => {
-  it("loads a listing and its price for editing", async () => {
+  it("loads an experience and its price for editing", async () => {
     server.use(
       http.get(apiUrl("/guide/experiences/e1"), () => HttpResponse.json({ id: "e1", status: "ACTIVE", title: "Kayak" })),
       http.get(apiUrl("/experiences/e1/pricing"), () =>
@@ -70,7 +85,7 @@ describe("saving", () => {
     });
   });
 
-  it("creates a new listing with its Adult ticket and private group price", async () => {
+  it("creates a new experience with its Adult ticket and private group price", async () => {
     let sent: Record<string, unknown> = {};
     server.use(
       http.post(apiUrl("/experiences/"), async ({ request }) => {
@@ -112,7 +127,7 @@ describe("saving", () => {
     expect(calls).toEqual(["put", "put", "patch"]);
   });
 
-  it("adds a ticket to a listing that has none", async () => {
+  it("adds a ticket to an experience that has none", async () => {
     let created: unknown = null;
     server.use(
       http.put(apiUrl("/experiences/e1"), () => HttpResponse.json({ id: "e1", status: "ACTIVE", title: "Lagoon kayak" })),

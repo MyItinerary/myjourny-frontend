@@ -4,17 +4,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HostAccess } from "../model/host-access";
 import { useHostGuardViewModel } from "./use-host-guard-view-model";
 
-const state = vi.hoisted(() => ({ access: "checking" as HostAccess, query: "", replace: vi.fn() }));
+const state = vi.hoisted(() => ({ access: "checking" as HostAccess, query: "", replace: vi.fn(), submitted: true }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: state.replace }),
   usePathname: () => "/host/dashboard/listings",
   useSearchParams: () => new URLSearchParams(state.query),
 }));
 vi.mock("../model/host-access", () => ({ useHostAccess: () => state.access }));
+vi.mock("@/lib/auth/session-store", () => ({ useSession: () => ({ user: null }) }));
+vi.mock("../model/profile-data", () => ({
+  useHostProfile: () => ({ setup: [{ title: "Confirm who you are", body: "", pane: "verify", done: state.submitted }] }),
+  verificationSubmitted: (p: { setup: { done: boolean }[] }) => p.setup[0].done,
+}));
 
 beforeEach(() => {
   state.access = "checking";
   state.query = "";
+  state.submitted = true;
   state.replace.mockReset();
 });
 afterEach(() => {
@@ -47,11 +53,17 @@ describe("useHostGuardViewModel", () => {
     expect(render()).toEqual({ ready: true, banner: null });
   });
 
-  it("lets a guide in review look around, and says so", () => {
+  it("lets a guide in review look around, and says so once they've sent their verification details", () => {
     state.access = "pending";
     const vm = render();
     expect(vm.ready).toBe(true);
     expect(vm.banner?.title).toBe("Your guide application is in review");
+  });
+
+  it("doesn't say a new guide is in review before they've sent anything to review", () => {
+    state.access = "pending";
+    state.submitted = false;
+    expect(render()).toEqual({ ready: true, banner: null });
   });
 
   it("tells a guide whose application wasn't approved what to do", () => {

@@ -14,9 +14,11 @@ const KAYAK = {
   review_note: "Use a photo from the trip, not a stock image.",
   title: "Lagoon kayak and breakfast",
   headline: "Paddle across the lagoon at sunrise",
-  description: "We meet at the jetty, paddle out past the fishing boats and eat breakfast on the sandbank as the sun comes up.",
+  // A long description needs 100 words or more before the builder lets a guide move on.
+  description: Array.from({ length: 5 }, () => "We meet at the jetty, paddle out past the fishing boats and eat breakfast on the sandbank as the sun comes up.").join(" "),
   city: "Lagos",
   interest_tags: ["nature-outdoors"],
+  tags: ["Small group"],
   meeting_landmark: "Five Cowries jetty",
   meeting_instructions: "The blue gate beside the jetty",
   meeting_photo_url: PHOTO(0),
@@ -61,8 +63,8 @@ async function openBuilder(page: Page, overrides: Handlers) {
   await page.goto(`/host/dashboard/listings/new?id=${ID}`);
 }
 
-test.describe("the listing builder", () => {
-  test("a guide fixes a listing we took down and publishes it again", async ({ page }) => {
+test.describe("the experience builder", () => {
+  test("a guide fixes an experience we took down and publishes it again", async ({ page }) => {
     let saved: Record<string, unknown> | null = null;
     let repriced: unknown = null;
     await openBuilder(page, {
@@ -100,7 +102,7 @@ test.describe("the listing builder", () => {
     expect(repriced).toEqual({ amount: 18000 });
   });
 
-  test("a guide still in review can build a listing but not publish it", async ({ page }) => {
+  test("a guide still in review can build an experience but not publish it", async ({ page }) => {
     await openBuilder(page, {
       "GET /auth/me": (r) => r.fulfill({ json: { id: "guide-1", email: "tunde@example.com", signup_type: "guide", guide_status: "pending" } }),
     });

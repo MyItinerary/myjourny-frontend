@@ -14,7 +14,8 @@ export function useInterestTree(): { tree: Category[]; ready: boolean } {
   return { tree: data ?? [], ready: isFetched };
 }
 
-type NominatimResult = { name?: string; display_name: string; lat: string; lon: string };
+type NominatimAddress = { city?: string; town?: string; village?: string; state?: string; suburb?: string; neighbourhood?: string; city_district?: string };
+type NominatimResult = { name?: string; display_name: string; lat: string; lon: string; address?: NominatimAddress };
 
 /** Places matching what the guide typed, each with its map pin. OpenStreetMap's
  * Nominatim, as helm uses: no key, and light enough for a guide typing. */
@@ -23,13 +24,24 @@ export async function searchPlaces(query: string, city: string): Promise<PlaceRe
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "5");
   url.searchParams.set("countrycodes", "ng");
+  url.searchParams.set("addressdetails", "1");
   url.searchParams.set("q", city ? `${query}, ${city}` : query);
   const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error("Place search failed");
   const results = (await response.json()) as NominatimResult[];
   return results.map((r) => {
     const [first, ...rest] = r.display_name.split(", ");
-    return { name: r.name || first, area: rest.slice(0, 2).join(", "), lat: Number(r.lat), lng: Number(r.lon) };
+    const a = r.address ?? {};
+    const city = a.city ?? a.town ?? a.village ?? a.state;
+    const district = a.suburb ?? a.neighbourhood ?? a.city_district;
+    return {
+      name: r.name || first,
+      area: rest.slice(0, 2).join(", "),
+      lat: Number(r.lat),
+      lng: Number(r.lon),
+      ...(city ? { city } : {}),
+      ...(district ? { district } : {}),
+    };
   });
 }
 

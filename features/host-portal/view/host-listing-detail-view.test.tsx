@@ -25,7 +25,7 @@ const detail = (over: Partial<ListingDetail> = {}): ListingDetail => ({
     { date: "Sat 20 Sept", when: "Tomorrow, 16:00", taken: 6, cap: 8 },
     { date: "Sat 27 Sept", when: "In 8 days, 16:00", taken: 8, cap: 8 },
   ],
-  noDates: "Dates appear here once the listing is approved.",
+  noDates: "Dates appear here once the experience is approved.",
   noReviews: "Reviews show up after your first guests have been.",
   reviews: [],
   rules: [],
@@ -58,18 +58,18 @@ const vm = (id = "l1", over: Partial<HostListingDetailViewModel> = {}): HostList
     next: { title: "Sat 20 Sept", meta: "Tomorrow, 16:00 · 6 of 8 booked", cue: d.cue, onGuests: vi.fn() },
     pay: { line: "8 guests at ₦10,000", gross: "₦80,000", commission: "₦12,000", net: "₦68,000", percent: 15 },
     meetCue: "The yellow gate beside Freedom Park",
-    actions: [{ label: "Edit this listing", onClick: vi.fn() }],
+    actions: [{ label: "Edit this experience", onClick: vi.fn() }],
     ...over,
   };
 };
 
-describe("the listing detail", () => {
+describe("the experience detail", () => {
   it("shows stats, dates, the next date, what the host keeps and where they meet", async () => {
     const props = vm();
     renderWithProviders(<HostListingDetailView vm={props} />);
 
     expect(screen.getByText("14 places")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "All listings" })).toHaveAttribute("href", "/host/dashboard/listings");
+    expect(screen.getByRole("link", { name: "All experiences" })).toHaveAttribute("href", "/host/dashboard/listings");
     expect(screen.getByRole("link", { name: "Open the calendar" })).toHaveAttribute("href", "/host/dashboard/calendar");
     expect(screen.getAllByRole("button", { name: /See guests for/ })).toHaveLength(2);
     expect(screen.getByText("Sold out")).toBeInTheDocument();
@@ -79,9 +79,9 @@ describe("the listing detail", () => {
     expect(props.next!.onGuests).toHaveBeenCalled();
 
     expect(within(screen.getByRole("region", { name: "What one full group pays you" })).getByText("₦68,000")).toBeInTheDocument();
-    expect(within(screen.getByRole("region", { name: "Where you meet" })).getByText("The yellow gate beside Freedom Park")).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Location" })).getByText("The yellow gate beside Freedom Park")).toBeInTheDocument();
 
-    await userEvent.click(within(screen.getByRole("region", { name: "Manage this listing" })).getByRole("button", { name: "Edit this listing" }));
+    await userEvent.click(within(screen.getByRole("region", { name: "Manage this experience" })).getByRole("button", { name: "Edit this experience" }));
     expect(props.actions[0].onClick).toHaveBeenCalled();
   });
 
@@ -95,7 +95,7 @@ describe("the listing detail", () => {
 
   it("explains an empty schedule and hides the guest list when nothing is coming", () => {
     renderWithProviders(<HostListingDetailView vm={vm("l2", { dates: [], next: null })} />);
-    expect(screen.getByText(/Dates appear here once the listing is approved/)).toBeInTheDocument();
+    expect(screen.getByText(/Dates appear here once the experience is approved/)).toBeInTheDocument();
     expect(screen.getByText("Nothing coming up")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "See the guest list" })).not.toBeInTheDocument();
   });
@@ -124,9 +124,9 @@ describe("the listing detail", () => {
     expect(screen.getByText("Request to book")).toBeInTheDocument();
   });
 
-  it("says when the listing isn't there", () => {
+  it("says when the experience isn't there", () => {
     renderWithProviders(<HostListingDetailView vm={vm("l1", { notFound: true, listing: null, detail: null })} />);
-    expect(screen.getByRole("heading", { name: /couldn.t find that listing/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to your listings" })).toHaveAttribute("href", "/host/dashboard/listings");
+    expect(screen.getByRole("heading", { name: /couldn.t find that experience/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to your experiences" })).toHaveAttribute("href", "/host/dashboard/listings");
   });
 });

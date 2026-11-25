@@ -19,21 +19,21 @@ beforeEach(() => {
 });
 
 describe("useHostListingDetail", () => {
-  it("loads one of the guide's listings, even one we took down", async () => {
+  it("loads one of the guide's experiences, even one we took down", async () => {
     const { result } = renderHookWithProviders(() => useHostListingDetail("e1", null));
     expect(result.current.loading).toBe(true);
 
     await waitFor(() => expect(result.current.listing?.status).toBe("Taken down"));
-    expect(result.current.detail?.banner?.title).toBe("We took this listing down");
+    expect(result.current.detail?.banner?.title).toBe("We took this experience down");
   });
 
-  it("finds nothing for a listing that isn't theirs", async () => {
+  it("finds nothing for an experience that isn't theirs", async () => {
     const { result } = renderHookWithProviders(() => useHostListingDetail("gone", null));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.listing).toBeNull();
   });
 
-  it("shows the design's sample listing for ?preview=full", () => {
+  it("shows the design's sample experience for ?preview=full", () => {
     const { result } = renderHookWithProviders(() => useHostListingDetail("l1", "full"));
     expect(result.current.detail?.id).toBe("l1");
     expect(renderHookWithProviders(() => useHostListingDetail("nope", "full")).result.current.listing).toBeNull();

@@ -34,21 +34,26 @@ describe("when it runs", () => {
     await userEvent.click(screen.getByRole("button", { name: /A repeating schedule/ }));
     await userEvent.click(screen.getByRole("button", { name: "Sat" }));
     await userEvent.click(screen.getByRole("button", { name: "Add another start time" }));
-    await userEvent.type(screen.getByLabelText("Start time 1"), "16:00");
+    await userEvent.click(screen.getByRole("button", { name: "Start time 1" }));
+    await userEvent.click(screen.getByRole("option", { name: "4:00pm" }));
+    expect(screen.getByRole("button", { name: "Start time 1" })).toHaveTextContent("4:00pm");
+    await userEvent.type(screen.getByLabelText(/^How long it lasts/), "3");
+    expect(screen.getByText("4:00pm – 7:00pm")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Every 2 weeks" }));
 
     expect(screen.getByText(/Sat at 16:00 · next five dates/)).toBeInTheDocument();
     expect(screen.getAllByText(/^Sat.*16:00$/)).toHaveLength(5);
 
     await userEvent.click(screen.getByRole("button", { name: "Remove start time 1" }));
-    expect(screen.queryByLabelText("Start time 1")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start time 1" })).not.toBeInTheDocument();
   });
 
   it("takes a one-off date and time, and explains on request", async () => {
     renderWithProviders(<Harness which="when" />);
     await userEvent.click(screen.getByRole("button", { name: /A one off/ }));
-    await userEvent.type(screen.getByLabelText("Start time"), "16:00");
-    expect(screen.getByLabelText("Start time")).toHaveValue("16:00");
+    await userEvent.click(screen.getByRole("button", { name: "Start time" }));
+    await userEvent.click(screen.getByRole("option", { name: "12:30am" }));
+    expect(screen.getByRole("button", { name: "Start time" })).toHaveTextContent("12:30am");
 
     await userEvent.click(screen.getByRole("button", { name: /Only on request/ }));
     expect(screen.getByText(/Guests will ask for a date/)).toBeInTheDocument();
@@ -61,11 +66,18 @@ describe("group size and price", () => {
     await userEvent.type(screen.getByLabelText(/^Price per person/), "9,0a00");
     await userEvent.type(screen.getByLabelText(/^Most you can handle/), "8");
     await userEvent.type(screen.getByLabelText(/^Smallest group you will run/), "2");
-    await userEvent.type(screen.getByLabelText(/Price for one private group/), "50000");
+    expect(screen.queryByLabelText(/Price for the private group/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Yes" }));
+    await userEvent.type(screen.getByLabelText(/Price for the private group/), "50000");
 
     expect(screen.getByText("8 guests at ₦9,000 = ₦72,000")).toBeInTheDocument();
     expect(screen.getByText("₦61,200")).toBeInTheDocument();
     expect(screen.getByText(/Our commission, 15 percent/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "No" }));
+    expect(screen.queryByLabelText(/Price for the private group/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Yes" }));
+    expect(screen.getByLabelText(/Price for the private group/)).toHaveValue("");
   });
 });
 

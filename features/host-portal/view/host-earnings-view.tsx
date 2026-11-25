@@ -97,7 +97,7 @@ export function HostEarningsView({ vm }: { vm: HostEarningsViewModel }) {
           <div role="table" aria-label="Earnings" className="min-w-[900px]">
             <div role="row" className="flex h-[38px] items-center gap-3.5 px-[18px] text-[11.5px] font-medium text-[#6F6B72] shadow-[inset_0_-1px_0_#F0F0F0]">
               <span role="columnheader" className="w-[104px] shrink-0">Reference</span>
-              <span role="columnheader" className="min-w-0 flex-1">Listing and guest</span>
+              <span role="columnheader" className="min-w-0 flex-1">Experience and guest</span>
               <span role="columnheader" className="w-24 shrink-0">Date</span>
               <span role="columnheader" className="w-[104px] shrink-0 text-right">Guests paid</span>
               <span role="columnheader" className="w-28 shrink-0 text-right">{vm.commissionHeading}</span>

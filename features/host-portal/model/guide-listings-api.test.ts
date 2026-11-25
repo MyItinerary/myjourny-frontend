@@ -14,7 +14,7 @@ import {
   useGuideExperiences,
 } from "./guide-listings-api";
 
-describe("guide listings api", () => {
+describe("guide experiences api", () => {
   it("lists the guide's experiences", async () => {
     server.use(http.get(apiUrl("/guide/experiences"), () => HttpResponse.json([{ id: "e1", status: "ACTIVE", title: "Kayak" }])));
     const { result } = renderHookWithProviders(() => useGuideExperiences(true));
@@ -26,13 +26,13 @@ describe("guide listings api", () => {
     expect(result.current.fetchStatus).toBe("idle");
   });
 
-  it("loads one listing from the guide endpoint", async () => {
+  it("loads one experience from the guide endpoint", async () => {
     server.use(http.get(apiUrl("/guide/experiences/e1"), () => HttpResponse.json({ id: "e1", status: "INACTIVE", title: "Kayak" })));
     const { result } = renderHookWithProviders(() => useGuideExperience("e1", true));
     await waitFor(() => expect(result.current.data?.status).toBe("INACTIVE"));
   });
 
-  it("gets a preview token for one of the guide's listings", async () => {
+  it("gets a preview token for one of the guide's experiences", async () => {
     server.use(
       http.post(apiUrl("/guide/experiences/e1/preview-token"), () =>
         HttpResponse.json({ token: "tok", expires_at: "2026-11-16T10:30:00Z" }),
@@ -41,7 +41,7 @@ describe("guide listings api", () => {
     await expect(fetchGuidePreviewToken("e1")).resolves.toBe("tok");
   });
 
-  it("deletes a listing and reloads the list", async () => {
+  it("deletes an experience and reloads the list", async () => {
     let lists = 0;
     let deleted = "";
     server.use(

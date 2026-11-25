@@ -1,7 +1,7 @@
 import type { Category } from "@/lib/queries/categories";
 
 import type { GuideExperience } from "./guide-listings.types";
-import { ACCESS_OPTIONS, AGE_POLICIES, blankDraft, FITNESS_LEVELS, isChoice, needsAge, REFUND_POLICIES } from "./listing-draft";
+import { ACCESS_OPTIONS, AGE_POLICIES, blankDraft, FITNESS_LEVELS, isChoice, mainPin, needsAge, REFUND_POLICIES } from "./listing-draft";
 import type { ListingDraft } from "./listing-draft.types";
 
 /** What itin's `POST /experiences/` and `PUT /experiences/{id}` take from the builder. */
@@ -64,11 +64,37 @@ const number = (value: string) => (value.trim() && Number.isFinite(Number(value)
 const text = (value: string, max?: number) => value.trim().slice(0, max) || null;
 
 /** The interest category slug for a name the builder shows, then its subcategory's. */
-export function interestTags(tree: Category[], category: string, subcategory: string): string[] {
-  const parent = tree.find((c) => c.text === category);
-  if (!parent) return [];
-  const child = parent.children?.find((c) => c.text === subcategory);
-  return child ? [parent.slug, child.slug] : [parent.slug];
+/** itin's slugs for the categories picked, each followed by the subcategories picked under it. */
+export function interestTags(tree: Category[], categories: string[], subcategories: string[]): string[] {
+  return categories.flatMap((name) => {
+    const parent = tree.find((c) => c.text === name);
+    if (!parent) return [];
+    const children = (parent.children ?? []).filter((c) => subcategories.includes(c.text));
+    return [parent.slug, ...children.map((c) => c.slug)];
+  });
+}
+
+/** The category and subcategory names behind itin's slugs. A subcategory brings its category with it. */
+export function namesFromTags(tree: Category[], tags: string[]): { cats: string[]; subs: string[] } {
+  const cats: string[] = [];
+  const subs: string[] = [];
+  const addCat = (name: string) => cats.includes(name) || cats.push(name);
+  for (const slug of tags) {
+    const parent = tree.find((c) => c.slug === slug);
+    if (parent) {
+      addCat(parent.text);
+      continue;
+    }
+    for (const c of tree) {
+      const child = c.children?.find((ch) => ch.slug === slug);
+      if (child) {
+        addCat(c.text);
+        if (!subs.includes(child.text)) subs.push(child.text);
+        break;
+      }
+    }
+  }
+  return { cats, subs };
 }
 
 /** Photos in the order guests swipe through, cover first. */
@@ -94,12 +120,12 @@ export function toExperiencePayload(d: ListingDraft, tree: Category[], today: st
     city: text(d.city),
     country: "Nigeria",
     currency: "NGN",
-    latitude: d.lat,
-    longitude: d.lng,
+    latitude: mainPin(d)?.lat ?? null,
+    longitude: mainPin(d)?.lng ?? null,
     duration_minutes: hours ? Math.round(hours * 60) : null,
     group_size_min: number(d.minG),
     group_size_max: number(d.maxG),
-    interest_tags: interestTags(tree, d.cat, d.sub),
+    interest_tags: interestTags(tree, d.cats, d.subs),
     schedule_type: once ? "one_off" : recurring ? "recurring" : null,
     event_start_date: once ? d.date || null : null,
     recurrence_type: recurring ? "weekly" : null,
@@ -111,7 +137,8 @@ export function toExperiencePayload(d: ListingDraft, tree: Category[], today: st
     start_times: once || recurring ? slots : null,
     cover_image_url: photos[0] ?? null,
     images: photos,
-    meeting_landmark: text(d.landmark, 120),
+    // itin keeps one line for this: every location, by name.
+    meeting_landmark: text(d.locations.map((l) => l.name).join(", "), 120),
     meeting_instructions: text(d.cue, 1000),
     meeting_photo_url: text(d.meetPhoto),
     whats_included: lines(d.inc, 10),
@@ -143,8 +170,7 @@ const asText = (value: number | null | undefined) => (value == null ? "" : Strin
 
 /** A draft for editing one of the guide's listings, with its ticket prices. */
 export function draftFromExperience(exp: GuideExperience, tree: Category[], prices: ListingPrices): ListingDraft {
-  const [catSlug, subSlug] = exp.interest_tags ?? [];
-  const parent = tree.find((c) => c.slug === catSlug);
+  const { cats, subs } = namesFromTags(tree, exp.interest_tags ?? []);
   const photos = exp.images?.length ? exp.images : exp.cover_image_url ? [exp.cover_image_url] : [];
   const whenType = exp.schedule_type === "one_off" ? "once" : exp.schedule_type === "recurring" ? "recurring" : "request";
   return {
@@ -153,15 +179,13 @@ export function draftFromExperience(exp: GuideExperience, tree: Category[], pric
     title: exp.title,
     hook: exp.headline ?? "",
     desc: exp.description ?? "",
-    cat: parent?.text ?? "",
-    sub: parent?.children?.find((c) => c.slug === subSlug)?.text ?? "",
+    cats,
+    subs,
     city: exp.city ?? "Lagos",
     area: exp.area ?? "",
-    landmark: exp.meeting_landmark ?? "",
+    locations: exp.meeting_landmark ? [{ name: exp.meeting_landmark, lat: exp.latitude ?? null, lng: exp.longitude ?? null }] : [],
     cue: exp.meeting_instructions ?? "",
     meetPhoto: exp.meeting_photo_url ?? "",
-    lat: exp.latitude ?? null,
-    lng: exp.longitude ?? null,
     whenType,
     date: exp.event_start_date ?? "",
     days: (exp.recurrence_days ?? []).map((day) => DAY_LABEL[day] ?? day),

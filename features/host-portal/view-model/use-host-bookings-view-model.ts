@@ -110,7 +110,7 @@ export function useHostBookingsViewModel(): HostBookingsViewModel {
     onClearFilters: () => setFilters(NO_BOOKING_FILTERS),
     groups: [
       group("status", "Status", "All", "Any status", filters.status, statusOptions),
-      group("listing", "Listing", "All", "Any listing", filters.listing, uniqueListings(bookings)),
+      group("listing", "Experience", "All", "Any experience", filters.listing, uniqueListings(bookings)),
       group("when", "When", "All dates", "All dates", filters.when, BOOKING_WHEN_OPTIONS),
     ],
     onPick,

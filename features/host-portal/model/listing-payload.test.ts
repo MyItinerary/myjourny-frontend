@@ -4,24 +4,25 @@ import type { Category } from "@/lib/queries/categories";
 
 import { blankDraft } from "./listing-draft";
 import type { ListingDraft } from "./listing-draft.types";
-import { draftFromExperience, interestTags, orderedPhotos, privatePrice, toExperiencePayload } from "./listing-payload";
+import { draftFromExperience, interestTags, namesFromTags, orderedPhotos, privatePrice, toExperiencePayload } from "./listing-payload";
 
 const cat = (id: number, slug: string, text: string, children: Category[] = []): Category => ({
   id, parent_id: null, slug, text, category_type: "interest", is_active: true, children,
 });
-const TREE = [cat(1, "nature-outdoors", "Nature & outdoors", [cat(2, "beaches-waterfronts", "Beaches & waterfronts")])];
+const TREE = [
+  cat(1, "nature-outdoors", "Nature & outdoors", [cat(2, "beaches-waterfronts", "Beaches & waterfronts")]),
+  cat(3, "food-drinks", "Local food & drinks", [cat(4, "cooking-class", "Cooking class")]),
+];
 
 const draft = (over: Partial<ListingDraft> = {}): ListingDraft => ({
   ...blankDraft(),
   title: " Lagoon kayak and breakfast ",
   hook: "Paddle at sunrise",
   desc: "We meet at the jetty.",
-  cat: "Nature & outdoors",
-  sub: "Beaches & waterfronts",
+  cats: ["Nature & outdoors"],
+  subs: ["Beaches & waterfronts"],
   city: "Lagos",
-  landmark: "Five Cowries jetty",
-  lat: 6.44,
-  lng: 3.42,
+  locations: [{ name: "Five Cowries jetty", lat: 6.44, lng: 3.42 }],
   cue: "The blue gate",
   meetPhoto: "https://res.cloudinary.com/demo/gate.jpg",
   whenType: "recurring",
@@ -55,7 +56,7 @@ const draft = (over: Partial<ListingDraft> = {}): ListingDraft => ({
 });
 
 describe("toExperiencePayload", () => {
-  it("turns a repeating listing into what itin stores", () => {
+  it("turns a repeating experience into what itin stores", () => {
     expect(toExperiencePayload(draft(), TREE, "2026-11-10")).toEqual({
       title: "Lagoon kayak and breakfast",
       status: "ACTIVE",
@@ -120,7 +121,7 @@ describe("toExperiencePayload", () => {
     expect(ending).toMatchObject({ recurrence_end_type: "on_date", recurrence_end_date: "2027-03-31" });
   });
 
-  it("sends no schedule for a listing guests ask about", () => {
+  it("sends no schedule for an experience guests ask about", () => {
     expect(toExperiencePayload(draft({ whenType: "request" }), TREE, "2026-11-10")).toMatchObject({
       schedule_type: null,
       recurrence_type: null,
@@ -137,8 +138,18 @@ describe("toExperiencePayload", () => {
     expect(payload).toMatchObject({ min_age: null, free_cancellation_hours: null, fitness_level: null });
   });
 
+  it("sends every location by name, pinned at the first one on the map", () => {
+    const payload = toExperiencePayload(
+      draft({ locations: [{ name: "the old fig tree", lat: null, lng: null }, { name: "Freedom Park", lat: 6.45, lng: 3.39 }, { name: "Tinubu Square", lat: 6.46, lng: 3.38 }] }),
+      TREE,
+      "2026-11-10",
+    );
+    expect(payload).toMatchObject({ meeting_landmark: "the old fig tree, Freedom Park, Tinubu Square", latitude: 6.45, longitude: 3.39 });
+    expect(toExperiencePayload(draft({ locations: [] }), TREE, "2026-11-10")).toMatchObject({ meeting_landmark: null, latitude: null, longitude: null });
+  });
+
   it("keeps within itin's limits", () => {
-    const payload = toExperiencePayload(draft({ landmark: "x".repeat(200), inc: Array(12).fill("y".repeat(200)) }), TREE, "2026-11-10");
+    const payload = toExperiencePayload(draft({ locations: [{ name: "x".repeat(200), lat: 1, lng: 1 }], inc: Array(12).fill("y".repeat(200)) }), TREE, "2026-11-10");
     expect(payload.meeting_landmark).toHaveLength(120);
     expect(payload.whats_included).toHaveLength(10);
     expect(payload.whats_included[0]).toHaveLength(140);
@@ -147,8 +158,21 @@ describe("toExperiencePayload", () => {
 
 describe("helpers", () => {
   it("finds category slugs by name, and nothing for a category itin doesn't have", () => {
-    expect(interestTags(TREE, "Nature & outdoors", "")).toEqual(["nature-outdoors"]);
-    expect(interestTags(TREE, "Water activity", "Kayak and canoe")).toEqual([]);
+    expect(interestTags(TREE, ["Nature & outdoors"], [])).toEqual(["nature-outdoors"]);
+    expect(interestTags(TREE, ["Water activity"], ["Kayak and canoe"])).toEqual([]);
+  });
+
+  it("sends every category picked, each followed by its subcategories", () => {
+    expect(interestTags(TREE, ["Nature & outdoors", "Local food & drinks"], ["Cooking class", "Beaches & waterfronts"])).toEqual([
+      "nature-outdoors", "beaches-waterfronts", "food-drinks", "cooking-class",
+    ]);
+  });
+
+  it("reads slugs back into names, a subcategory bringing its category with it", () => {
+    expect(namesFromTags(TREE, ["cooking-class", "nature-outdoors", "unknown"])).toEqual({
+      cats: ["Local food & drinks", "Nature & outdoors"],
+      subs: ["Cooking class"],
+    });
   });
 
   it("puts the cover first", () => {
@@ -158,7 +182,7 @@ describe("helpers", () => {
 });
 
 describe("draftFromExperience", () => {
-  it("reads a listing back into the builder", () => {
+  it("reads an experience back into the builder", () => {
     const d = draftFromExperience(
       {
         id: "e1",
@@ -196,9 +220,9 @@ describe("draftFromExperience", () => {
     expect(d).toMatchObject({
       editingId: "e1",
       title: "Lagoon kayak",
-      cat: "Nature & outdoors",
-      sub: "Beaches & waterfronts",
-      lat: 6.44,
+      cats: ["Nature & outdoors"],
+      subs: ["Beaches & waterfronts"],
+      locations: [{ name: "Five Cowries jetty", lat: 6.44, lng: 3.42 }],
       whenType: "recurring",
       days: ["Sat"],
       every: 2,
@@ -225,8 +249,8 @@ describe("draftFromExperience", () => {
     });
   });
 
-  it("treats a listing with no schedule as on request, and ignores values the builder doesn't offer", () => {
+  it("treats an experience with no schedule as on request, and ignores values the builder doesn't offer", () => {
     const d = draftFromExperience({ id: "e2", status: "ACTIVE", title: "Pottery", fitness_level: "extreme", cover_image_url: "c" }, [], { price: null, privatePrice: null });
-    expect(d).toMatchObject({ whenType: "request", fitness: "", price: "", priv: "", photos: ["c"], cat: "", tags: [], wear: [""], quote: "" });
+    expect(d).toMatchObject({ whenType: "request", fitness: "", price: "", priv: "", photos: ["c"], cats: [], subs: [], tags: [], wear: [""], quote: "" });
   });
 });

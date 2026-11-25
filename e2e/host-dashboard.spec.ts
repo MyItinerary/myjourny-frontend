@@ -96,30 +96,30 @@ test.describe("host dashboard access", () => {
     await expect(page.getByRole("link", { name: "Switch to travelling" })).toHaveAttribute("href", "/");
   });
 
-  test("lets a guide in review look around, and says so", async ({ page }) => {
+  test("lets a guide in review look around, with no in-review banner before they've sent verification details", async ({ page }) => {
     await signIn(page);
     await mockApi(page, { "GET /auth/me": me("guide", "pending") });
     await page.goto("/host/dashboard/listings");
-    await expect(page.getByRole("status")).toContainText("Your guide application is in review");
     await expect(page.getByRole("heading", { name: "Nothing here yet" })).toBeVisible();
+    await expect(page.getByText("Your guide application is in review")).toHaveCount(0);
   });
 });
 
-test.describe("a guide's listings", () => {
-  test("shows each listing's real status, price and what needs fixing", async ({ page }) => {
+test.describe("a guide's experiences", () => {
+  test("shows each experience's real status, price and what needs fixing", async ({ page }) => {
     await openAsGuide(page, "/host/dashboard/listings");
 
-    const table = page.getByRole("table", { name: "Your listings" });
+    const table = page.getByRole("table", { name: "Your experiences" });
     await expect(table.getByText("Lagoon kayak and breakfast")).toBeVisible();
     await expect(table.getByText("₦15,000")).toBeVisible();
     await expect(table.getByText("Nature & outdoors")).toBeVisible();
     await expect(table.getByText("Sat at 07:30")).toBeVisible();
     await expect(table.getByText("Taken down: Use a photo from the walk, not a stock image.")).toBeVisible();
     await expect(table.getByText("Still needs a map pin and a photo")).toBeVisible();
-    await expect(page.getByText("3 listings · 1 live · 0 in review")).toBeVisible();
+    await expect(page.getByText("3 experiences · 1 live · 0 in review")).toBeVisible();
   });
 
-  test("deletes a listing nobody has booked", async ({ page }) => {
+  test("deletes an experience nobody has booked", async ({ page }) => {
     let deleted = "";
     let listed = 0;
     await openAsGuide(page, "/host/dashboard/listings", {
@@ -138,30 +138,30 @@ test.describe("a guide's listings", () => {
     await page.getByRole("button", { name: "Delete and lose the reviews" }).click();
 
     await expect(page.getByText("Pottery in Ikoyi is deleted")).toBeVisible();
-    await expect(page.getByRole("table", { name: "Your listings" }).getByText("Pottery in Ikoyi")).toHaveCount(0);
+    await expect(page.getByRole("table", { name: "Your experiences" }).getByText("Pottery in Ikoyi")).toHaveCount(0);
     expect(deleted).toBe(POTTERY.id);
     expect(listed).toBeGreaterThan(1);
   });
 
-  test("says why a booked listing can't be deleted", async ({ page }) => {
+  test("says why a booked experience can't be deleted", async ({ page }) => {
     await openAsGuide(page, "/host/dashboard/listings", {
       [`DELETE /experiences/${KAYAK.id}`]: (r) =>
-        r.fulfill({ status: 409, json: { detail: "This listing has bookings, so it can't be deleted." } }),
+        r.fulfill({ status: 409, json: { detail: "This experience has bookings, so it can't be deleted." } }),
     });
 
     await page.getByRole("button", { name: "Actions for Lagoon kayak and breakfast" }).click();
     await page.getByRole("button", { name: "Delete", exact: true }).click();
     await page.getByRole("button", { name: "Delete and lose the reviews" }).click();
 
-    await expect(page.getByText("This listing has bookings, so it can't be deleted.")).toBeVisible();
+    await expect(page.getByText("This experience has bookings, so it can't be deleted.")).toBeVisible();
   });
 
-  test("opens a listing we took down, with our note", async ({ page }) => {
+  test("opens an experience we took down, with our note", async ({ page }) => {
     await openAsGuide(page, `/host/dashboard/listings/${MARKET.id}`, {
       [`GET /guide/experiences/${MARKET.id}`]: (r) => r.fulfill({ json: MARKET }),
     });
 
-    await expect(page.getByText("We took this listing down")).toBeVisible();
+    await expect(page.getByText("We took this experience down")).toBeVisible();
     await expect(page.getByText(/Use a photo from the walk, not a stock image\./)).toBeVisible();
   });
 });

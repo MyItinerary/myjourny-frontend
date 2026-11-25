@@ -1,15 +1,15 @@
 "use client";
 
-import { Menu, User } from "lucide-react";
+import { Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export interface BecomeAGuideNavProps {
-  /** Account settings when signed in; log in when signed out. */
-  profileLink: { href: string; label: string };
+  /** Opens the host application, same as the hero and closing CTA buttons. */
+  onStartApplication: () => void;
 }
 
-export function BecomeAGuideNav({ profileLink }: BecomeAGuideNavProps) {
+export function BecomeAGuideNav({ onStartApplication }: BecomeAGuideNavProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#F0EFEB] bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-[1360px] items-center justify-between px-4 sm:px-8">
@@ -32,13 +32,13 @@ export function BecomeAGuideNav({ profileLink }: BecomeAGuideNavProps) {
             Back to experiences
           </Link>
 
-          <Link
-            href={profileLink.href}
-            aria-label={profileLink.label}
-            className="flex size-9 items-center justify-center rounded-full border border-[#E0DFDD] text-[#333134] transition-colors hover:bg-[#FAF9F7]"
+          <button
+            type="button"
+            onClick={onStartApplication}
+            className="inline-flex h-9 cursor-pointer items-center justify-center rounded-full bg-[#F5032D] px-4 font-sans text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#D40226]"
           >
-            <User className="size-4" />
-          </Link>
+            Get Started
+          </button>
 
           <button
             type="button"

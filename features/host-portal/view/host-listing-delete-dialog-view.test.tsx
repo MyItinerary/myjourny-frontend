@@ -11,7 +11,7 @@ describe("DeleteDialogView", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("explains why a listing with bookings can't be deleted", async () => {
+  it("explains why an experience with bookings can't be deleted", async () => {
     const onClose = vi.fn();
     const { user } = renderWithProviders(
       <DeleteDialogView dialog={{ kind: "blocked", id: "l1", title: "Boat Morning", upcoming: 2 }} onClose={onClose} onConfirm={vi.fn()} onDelete={vi.fn()} />,
@@ -23,7 +23,7 @@ describe("DeleteDialogView", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("warns what deleting a finished listing loses", async () => {
+  it("warns what deleting a finished experience loses", async () => {
     renderWithProviders(
       <DeleteDialogView dialog={{ kind: "ok", id: "l1", title: "Portraits", rating: null }} onClose={vi.fn()} onConfirm={vi.fn()} onDelete={vi.fn()} />,
     );

@@ -45,7 +45,7 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
       "Easy walking, two short flights of stairs",
       "Guests move to the next Saturday for free or take a full refund. You decide by 10am on the day.",
     ],
-    actions: [act("Edit this listing", "edit"), act("Block a date", "block-date"), act("Pause new bookings", "pause"), act("Preview as a guest", "preview"), act("Copy the guest link", "copy-link")],
+    actions: [act("Edit this experience", "edit"), act("Block a date", "block-date"), act("Pause new bookings", "pause"), act("Preview as a guest", "preview"), act("Copy the guest link", "copy-link")],
   },
   l2: {
     id: "l2",
@@ -66,7 +66,7 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
       { label: "Seen by", value: "0 people", note: "goes live once approved" },
     ],
     dates: [],
-    noDates: "Dates appear here once the listing is approved.",
+    noDates: "Dates appear here once the experience is approved.",
     reviews: [],
     noReviews: "Reviews show up after your first guests have been.",
     rules: [
@@ -78,12 +78,12 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
       "Moderate, you paddle for about 40 minutes",
       "Guests move to the next Sunday for free or take a full refund.",
     ],
-    actions: [act("Edit this listing", "edit"), act("Withdraw from review", "withdraw"), act("Copy the guest link", "copy-link")],
+    actions: [act("Edit this experience", "edit"), act("Withdraw from review", "withdraw"), act("Copy the guest link", "copy-link")],
     banner: {
       kind: "review",
       title: "In review",
-      body: "We look at new listings within 48 hours and will text you either way. Guests cannot see it until then.",
-      button: act("Edit listing", "edit"),
+      body: "We look at new experiences within 48 hours and will text you either way. Guests cannot see it until then.",
+      button: act("Edit experience", "edit"),
     },
   },
   l3: {
@@ -96,7 +96,7 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
     area: "Ikoyi",
     guests: 4,
     price: 14000,
-    payNote: "This listing ran from November to February.",
+    payNote: "This experience ran from November to February.",
     cadence: "Ended 28 February 2026",
     stats: [
       { label: "Ran", value: "11 times", note: "before it was archived" },
@@ -111,12 +111,12 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
       { name: "Dapo A.", stars: 5, when: "January", text: "Worth it for the light alone." },
     ],
     rules: ["Request to book", "2 to 4 people", "2 hours, starting at 08:00", "Ended", "12", "Easy walking", "Not weather dependent"],
-    actions: [act("Duplicate this listing", "duplicate"), act("See past bookings", "past-bookings")],
+    actions: [act("Duplicate this experience", "duplicate"), act("See past bookings", "past-bookings")],
     banner: {
       kind: "archived",
       title: "Archived",
       body: "Guests cannot find it and nothing new can be booked. Your 11 past bookings and every review are kept.",
-      button: act("Duplicate this listing", "duplicate"),
+      button: act("Duplicate this experience", "duplicate"),
     },
   },
   l5: {
@@ -152,7 +152,7 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
       "Easy, you sit on a boat",
       "If the creek is too rough you choose a free move or a refund.",
     ],
-    actions: [act("Edit this listing", "edit"), act("Add more dates", "add-dates"), act("Block a date", "block-date")],
+    actions: [act("Edit this experience", "edit"), act("Add more dates", "add-dates"), act("Block a date", "block-date")],
     banner: {
       kind: "soldout",
       title: "Sold out on Sun 21 Sept",
@@ -184,7 +184,7 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
     ],
     reviews: [{ name: "Yemi B.", stars: 5, when: "last month", text: "Easy and quick. Exactly what I needed for my profile photo." }],
     rules: ["Request to book", "1 to 4 people", "90 minutes, starting at 09:00", "Sundays", "14", "Easy walking", "Rain moves it to the next Sunday."],
-    actions: [act("Show in search", "show"), act("Edit this listing", "edit"), act("Archive this listing", "archive")],
+    actions: [act("Show in search", "show"), act("Edit this experience", "edit"), act("Archive this experience", "archive")],
     banner: {
       kind: "hidden",
       title: "Hidden from search",
@@ -214,7 +214,7 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
     noDates: "No dates until you resume on 1 October.",
     reviews: [{ name: "Ife O.", stars: 5, when: "last month", text: "Humbling and beautifully handled." }],
     rules: ["Request to book", "2 to 8 people", "3 hours, starting at 09:00", "Saturdays", "12", "Easy, you sit on a boat", "Rain moves it to the next Saturday."],
-    actions: [act("Resume now", "resume"), act("Edit this listing", "edit"), act("Archive this listing", "archive")],
+    actions: [act("Resume now", "resume"), act("Edit this experience", "edit"), act("Archive this experience", "archive")],
     banner: {
       kind: "paused",
       title: "Paused until 1 October",
@@ -241,11 +241,11 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
       { label: "Seen by", value: "0 people", note: "not approved" },
     ],
     dates: [],
-    noDates: "Dates appear here once the listing is approved.",
+    noDates: "Dates appear here once the experience is approved.",
     reviews: [],
     noReviews: "No reviews yet.",
     rules: ["Request to book", "2 to 6 people", "2 hours, starting at 06:00", "Saturdays", "16", "Easy", "Rain cancels with a full refund."],
-    actions: [act("Fix and resubmit", "fix"), act("Delete this listing", "delete")],
+    actions: [act("Fix and resubmit", "fix"), act("Delete this experience", "delete")],
     banner: {
       kind: "rejected",
       title: "Not approved yet",

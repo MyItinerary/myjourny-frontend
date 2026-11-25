@@ -39,15 +39,15 @@ const render = () => renderHook(() => useHostListingsViewModel()).result;
 const titles = (result: { current: ReturnType<typeof useHostListingsViewModel> }) => result.current.rows.map((r) => r.listing.title);
 
 describe("page header and empty host", () => {
-  it("summarises the listings and offers a new one", () => {
+  it("summarises the experiences and offers a new one", () => {
     const { current } = render();
-    expect(current.header.title).toBe("Your listings");
-    expect(current.header.subtitle).toBe("8 listings · 1 live · 1 in review");
-    expect(current.header.actions[0]).toMatchObject({ label: "Start a new listing", href: "/host/dashboard/listings/new" });
+    expect(current.header.title).toBe("Your experiences");
+    expect(current.header.subtitle).toBe("8 experiences · 1 live · 1 in review");
+    expect(current.header.actions[0]).toMatchObject({ label: "Start a new experience", href: "/host/dashboard/listings/new" });
     expect(current.isEmpty).toBe(false);
   });
 
-  it("is empty with no listings", () => {
+  it("is empty with no experiences", () => {
     nav.preview = null;
     const { current } = render();
     expect(current.isEmpty).toBe(true);
@@ -60,13 +60,13 @@ describe("page header and empty host", () => {
 describe("search and filters", () => {
   it("searches by title and reports the count", () => {
     const result = render();
-    expect(result.current.resultLine).toBe("All 8 listings");
+    expect(result.current.resultLine).toBe("All 8 experiences");
 
     act(() => result.current.onQuery("portrait"));
 
     expect(titles(result)).toEqual(expect.arrayContaining(["Harmattan Portrait Session", "Freedom Park Portraits"]));
     expect(result.current.rows).toHaveLength(2);
-    expect(result.current.resultLine).toBe("2 listings");
+    expect(result.current.resultLine).toBe("2 experiences");
     expect(result.current.hasFilters).toBe(true);
   });
 
@@ -104,7 +104,7 @@ describe("search and filters", () => {
 
     expect(result.current.rows).toEqual([]);
     expect(result.current.noMatches).toBe(true);
-    expect(result.current.resultLine).toBe("0 listings");
+    expect(result.current.resultLine).toBe("0 experiences");
 
     act(() => result.current.onShowEverything());
     expect(result.current.rows).toHaveLength(8);
@@ -138,11 +138,11 @@ describe("selection and bulk actions", () => {
 
     act(() => result.current.selection.onToggleRow("l1"));
     act(() => result.current.selection.onToggleRow("l2"));
-    expect(result.current.selection.label).toBe("2 listings selected");
+    expect(result.current.selection.label).toBe("2 experiences selected");
     expect(result.current.rows.filter((r) => r.selected)).toHaveLength(2);
 
     act(() => result.current.selection.onToggleRow("l2"));
-    expect(result.current.selection.label).toBe("1 listing selected");
+    expect(result.current.selection.label).toBe("1 experience selected");
 
     act(() => result.current.selection.onToggleAll());
     expect(result.current.selection.allSelected).toBe(true);
@@ -197,7 +197,7 @@ describe("row actions", () => {
     expect(nav.push).toHaveBeenCalledWith("/host/dashboard/listings/new");
   });
 
-  it("opens a sample listing's guest page in a new tab", () => {
+  it("opens a sample experience's guest page in a new tab", () => {
     const open = vi.spyOn(window, "open").mockReturnValue(null);
     const result = render();
     act(() => result.current.onRowAction(listing, "preview"));
@@ -206,7 +206,7 @@ describe("row actions", () => {
     open.mockRestore();
   });
 
-  it("previews a real listing, live or not, with a token for it", async () => {
+  it("previews a real experience, live or not, with a token for it", async () => {
     nav.preview = null;
     data.real = [listing];
     openExperiencePreview.mockResolvedValueOnce(undefined);
@@ -251,7 +251,7 @@ describe("row actions", () => {
     expect(toast.info).toHaveBeenCalledTimes(5);
   });
 
-  it("blocks deleting a listing that still has bookings to come", () => {
+  it("blocks deleting an experience that still has bookings to come", () => {
     const result = render();
     act(() => result.current.onRowAction(listing, "delete"));
     expect(result.current.dialog).toEqual({ kind: "blocked", id: "l1", title: "Lagos Island Photowalk", upcoming: 4 });
@@ -275,7 +275,7 @@ describe("row actions", () => {
   });
 });
 
-describe("a guide's real listings", () => {
+describe("a guide's real experiences", () => {
   const kayak = { ...SAMPLE_LISTINGS[3], id: "e1", title: "Lagoon kayak", rating: "-", future: 0 };
 
   beforeEach(() => {
@@ -300,13 +300,13 @@ describe("a guide's real listings", () => {
     expect(toast.info).toHaveBeenCalled();
   });
 
-  it("edits a real listing in the builder", () => {
+  it("edits a real experience in the builder", () => {
     const result = render();
     act(() => result.current.onRowAction(kayak, "edit"));
     expect(nav.push).toHaveBeenCalledWith("/host/dashboard/listings/new?id=e1");
   });
 
-  it("deletes the listing in itin and says so", () => {
+  it("deletes the experience in itin and says so", () => {
     const result = render();
     act(() => result.current.onRowAction(kayak, "delete"));
     act(() => result.current.onDialogDelete());
@@ -322,7 +322,7 @@ describe("a guide's real listings", () => {
     act(() => result.current.onRowAction(kayak, "delete"));
     act(() => result.current.onDialogDelete());
 
-    remove.mutate.mock.calls[0][1].onError({ response: { data: { detail: "This listing has bookings, so it can't be deleted." } } });
-    expect(toast.error).toHaveBeenCalledWith("This listing has bookings, so it can't be deleted.");
+    remove.mutate.mock.calls[0][1].onError({ response: { data: { detail: "This experience has bookings, so it can't be deleted." } } });
+    expect(toast.error).toHaveBeenCalledWith("This experience has bookings, so it can't be deleted.");
   });
 });

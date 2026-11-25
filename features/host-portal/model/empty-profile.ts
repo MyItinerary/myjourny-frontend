@@ -31,7 +31,7 @@ export function emptyProfile(user: { fullName: string | null; email: string | nu
         row("Legal name", name || NOT_PROVIDED, name ? "Edit" : "Add", name ? {} : { muted: true }),
         row("What guests call you", first || NOT_PROVIDED, first ? "Edit" : "Add", {
           ...(first ? {} : { muted: true }),
-          help: "Your first name only is shown on listings and in the guest app.",
+          help: "Your first name only is shown on experiences and in the guest app.",
         }),
         todo("Phone number", NOT_PROVIDED, "Add", {
           help: "Booking requests reach you here on WhatsApp. Guests only see it 24 hours before an experience.",
@@ -57,7 +57,7 @@ export function emptyProfile(user: { fullName: string | null; email: string | nu
           help: "A CAC number adds a Registered business badge, makes you eligible for company and agency bookings, and raises your payout limit. Nothing is taken away if you never do it.",
         }),
         todo("Certifications", "None on file", "Upload", {
-          help: "Optional, and only relevant for water, fitness and food. When you have one it gets a badge on the listing.",
+          help: "Optional, and only relevant for water, fitness and food. When you have one it gets a badge on the experience.",
         }),
       ],
       payouts: [

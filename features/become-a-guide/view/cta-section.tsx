@@ -17,7 +17,7 @@ export function CtaSection({ onStartApplication }: CtaSectionProps) {
           onClick={onStartApplication}
           className="mt-8 inline-flex cursor-pointer items-center justify-center rounded-full bg-white px-8 py-3.5 font-sans text-sm font-bold text-[#2C0101] shadow-md transition-all hover:scale-105 hover:bg-[#FAF9F7] sm:mt-10 sm:px-10 sm:py-4 sm:text-base"
         >
-          Start your application
+          Get Started
         </button>
       </div>
     </section>

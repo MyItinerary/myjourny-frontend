@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 import type { HostHomeData, ListingStatus } from "../model/home.types";
 import type { HostHomeViewModel } from "../view-model/use-host-home-view-model";
+import { HostHomeTemplatesView } from "./host-home-templates-view";
+import { HostSetupCardView } from "./host-setup-card-view";
 
 const CARD = "rounded-2xl bg-white shadow-[inset_0_0_0_1px_#E7E7E7]";
 const EYEBROW = "text-[11px] font-medium tracking-[0.06em] text-[#F5032D] uppercase";
@@ -37,6 +39,7 @@ function FullHome({ vm, data }: { vm: HostHomeViewModel; data: HostHomeData }) {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#FCFCFC] px-7 pt-6 pb-[90px]">
+      {vm.setup && <HostSetupCardView setup={vm.setup} className="mb-5" />}
       <div className="mb-5 grid grid-cols-2 gap-3.5 xl:grid-cols-4">
         {data.stats.map((stat) => (
           <div key={stat.label} className={cn(CARD, "px-[18px] py-4")}>
@@ -81,7 +84,7 @@ function FullHome({ vm, data }: { vm: HostHomeViewModel; data: HostHomeData }) {
 
           <section>
             <div className="mb-3 flex items-center gap-2.5">
-              <h2 className="text-sm font-medium text-[#333134]">Your listings</h2>
+              <h2 className="text-sm font-medium text-[#333134]">Your experiences</h2>
               <Link href={vm.listingsHref} className="ml-auto text-[12.5px] font-medium text-[#F5032D]">
                 See all
               </Link>
@@ -198,7 +201,7 @@ function EmptyHome({ vm }: { vm: HostHomeViewModel }) {
   return (
     <div className="flex-1 overflow-y-auto bg-[#FCFCFC] px-7 pt-9 pb-[90px]">
       <div className="mx-auto max-w-[940px]">
-        <section className="mb-[34px] flex flex-col items-center gap-7 rounded-2xl bg-[#F4F2EE] px-8 py-[30px] md:flex-row">
+        <section className={cn(vm.setup ? "mb-6" : "mb-[34px]", "flex flex-col items-center gap-7 rounded-2xl bg-[#F4F2EE] px-8 py-[30px] md:flex-row")}>
           <div className="min-w-0 flex-1">
             <p className={EYEBROW}>{vm.pitch.eyebrow}</p>
             <h2 className="mt-2.5 mb-2.5 font-heading text-[30px] leading-[1.2] font-extrabold text-balance text-[#333134]">
@@ -216,33 +219,12 @@ function EmptyHome({ vm }: { vm: HostHomeViewModel }) {
             <Image src="/images/home/cities/lagos.jpg" alt="" fill sizes="260px" className="object-cover" />
           </div>
         </section>
+        {vm.setup && <HostSetupCardView setup={vm.setup} className="mb-[34px]" />}
 
-        <h2 className="mb-1.5 text-base font-medium text-[#333134]">{vm.examples.heading}</h2>
-        <p className="mb-4 text-[13.5px] text-[#6F6B72]">{vm.examples.body}</p>
-        <div className="mb-[34px] grid gap-4 md:grid-cols-3">
-          {vm.examples.items.map((example) => (
-            <div key={example.title} className={cn(CARD, "flex flex-col overflow-hidden")}>
-              <div className="relative h-[132px] w-full">
-                <Image src={example.imageUrl} alt="" fill sizes="300px" className="object-cover" />
-              </div>
-              <div className="flex flex-1 flex-col p-[15px]">
-                <p className={EYEBROW}>{example.eyebrow}</p>
-                <p className="mt-[7px] text-[15px] leading-[1.3] font-medium text-[#333134]">{example.title}</p>
-                <p className="mt-1.5 text-[13px] leading-normal text-pretty text-[#6F6B72]">{example.sub}</p>
-                <p className="mt-2.5 text-[13px] font-medium text-[#333134]">{example.money}</p>
-                <Link
-                  href={vm.newListingHref}
-                  className="mt-3.5 flex h-10 items-center justify-center rounded-full bg-white text-[13px] font-medium text-[#333134] shadow-[inset_0_0_0_1px_#E7E7E7] hover:bg-[#F5F5F5]"
-                >
-                  Start from this
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+        <HostHomeTemplatesView templates={vm.templates} />
 
         <section className={cn(CARD, "px-[26px] py-6")}>
-          <h2 className="mb-[18px] text-base font-medium text-[#333134]">What makes one sell</h2>
+          <h2 className="mb-[18px] text-base font-medium text-[#333134]">What makes an experience sell</h2>
           <div className="grid gap-6 md:grid-cols-3">
             {vm.sellPoints.map((point) => (
               <div key={point.n}>
@@ -261,7 +243,7 @@ function EmptyHome({ vm }: { vm: HostHomeViewModel }) {
 }
 
 // Figma / handoff "Listing Builder" prototype, Home: the populated dashboard,
-// and the screen a newly approved host sees before they have listed anything.
+// and the screen a new host sees before they have listed anything.
 export function HostHomeView(vm: HostHomeViewModel) {
   return vm.kind === "full" ? <FullHome vm={vm} data={vm.data} /> : <EmptyHome vm={vm} />;
 }

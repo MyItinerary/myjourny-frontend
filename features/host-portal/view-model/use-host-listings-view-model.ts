@@ -87,7 +87,7 @@ export type HostListingsViewModel = {
 };
 
 const COLUMNS: { key: ListingSortKey; label: string }[] = [
-  { key: "title", label: "Listing" },
+  { key: "title", label: "Experience" },
   { key: "cat", label: "Category" },
   { key: "status", label: "Status" },
   { key: "price", label: "Price" },
@@ -98,7 +98,7 @@ const COLUMNS: { key: ListingSortKey; label: string }[] = [
 
 // Nothing is saved to itin from here yet: these stay as the design draws them
 // (the menu closes, the selection clears) and say so.
-const NOT_CONNECTED = "This will work once your listings are connected.";
+const NOT_CONNECTED = "This will work once your experiences are connected.";
 const PREVIEW_FAILED = "Couldn't open the preview. Try again.";
 
 export function useHostListingsViewModel(): HostListingsViewModel {
@@ -199,9 +199,9 @@ export function useHostListingsViewModel(): HostListingsViewModel {
 
   return {
     header: {
-      title: "Your listings",
+      title: "Your experiences",
       subtitle: loading ? "" : listingsSummary(listings),
-      actions: [{ label: "Start a new listing", href: newListingHref, primary: true }],
+      actions: [{ label: "Start a new experience", href: newListingHref, primary: true }],
     },
     loading,
     isEmpty: !loading && listings.length === 0,
@@ -229,7 +229,7 @@ export function useHostListingsViewModel(): HostListingsViewModel {
     onShowEverything: () => change(NO_FILTERS),
     selection: {
       count: visibleSelected.length,
-      label: `${visibleSelected.length} ${visibleSelected.length === 1 ? "listing" : "listings"} selected`,
+      label: `${visibleSelected.length} ${visibleSelected.length === 1 ? "experience" : "experiences"} selected`,
       allSelected,
       onToggleAll: () => setSelected(allSelected ? [] : shown.map((l) => l.id)),
       onToggleRow: (id) => setSelected((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id])),
@@ -253,7 +253,7 @@ export function useHostListingsViewModel(): HostListingsViewModel {
         const { title } = dialog;
         remove.mutate(dialog.id, {
           onSuccess: () => toast.success(`${title} is deleted`),
-          onError: (error) => toast.error(apiErrorMessage(error, "Couldn't delete the listing. Please try again.")),
+          onError: (error) => toast.error(apiErrorMessage(error, "Couldn't delete the experience. Please try again.")),
         });
       }
       setDialog(null);

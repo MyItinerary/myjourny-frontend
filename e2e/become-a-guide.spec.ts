@@ -50,10 +50,12 @@ test.describe("become a guide application", () => {
       email: "amara@example.com",
     });
 
-    // Signed in already: straight on to the dashboard, which says the application is in review.
+    // Signed in already: straight on to the dashboard, which nudges them to get verified.
+    // "In review" waits until they've sent their verification details.
     await page.getByRole("button", { name: "Go to your dashboard" }).click();
     await expect(page).toHaveURL(/\/host\/dashboard$/);
-    await expect(page.getByRole("status")).toContainText("Your guide application is in review");
+    await expect(page.getByRole("heading", { name: "Finish setting up" })).toBeVisible();
+    await expect(page.getByText("Your guide application is in review")).toHaveCount(0);
   });
 
   test("completes registered business application with CAC number", async ({ page }) => {
@@ -186,19 +188,19 @@ test.describe("become a guide application", () => {
 
     await page.getByRole("button", { name: "Go to your dashboard" }).click();
     await expect(page).toHaveURL(/\/host\/dashboard$/);
-    await expect(page.getByRole("status")).toContainText("Your guide application is in review");
+    await expect(page.getByRole("heading", { name: "Finish setting up" })).toBeVisible();
 
     // And back to the traveller side.
     await page.getByRole("link", { name: "Switch to travelling" }).click();
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("signed out, the profile icon goes to log in and account settings stay closed", async ({ page }) => {
+  test("signed out, Get Started in the top bar opens the application and account settings stay closed", async ({ page }) => {
     await mockApi(page, {});
     await page.goto("/become-a-guide");
 
-    await page.getByRole("link", { name: "Log in" }).click();
-    await expect(page).toHaveURL(/\/login\?next=%2Fbecome-a-guide$/);
+    await page.getByRole("banner").getByRole("button", { name: "Get Started" }).click();
+    await expect(page).toHaveURL(/\/become-a-guide\/apply$/);
 
     // Typing the address doesn't open an empty settings page either.
     await page.goto("/profile?tab=security");
