@@ -7,25 +7,25 @@ import { SafetyView } from "./safety-view";
 const mockSafetyData: TermsData = {
   title: "Safety Guide",
   lastUpdated: "[DATE]",
-  companyAgreementText: "Most experiences on MyJourny go well.",
+  companyAgreementText: "Most experiences on Myjourny go well.",
   agreementNoticeText: "",
   tableOfContents: [
-    { id: "section-1", label: "1. How safety works on MyJourny" },
-    { id: "section-12", label: "12. Safe hosting: a plain checklist for hosts" },
+    { id: "section-1", label: "1. How safety works on Myjourny" },
+    { id: "section-12", label: "12. Safe guiding: a plain checklist for guides" },
   ],
   sections: [
     {
       id: "section-1",
       number: "1.",
-      title: "1. How safety works on MyJourny",
+      title: "1. How safety works on Myjourny",
       intro: "It helps to know who does what.",
       items: [],
-      bullets: ["Hosts run their experiences."],
+      bullets: ["Guides run their experiences."],
     },
     {
       id: "section-12",
       number: "12.",
-      title: "12. Safe hosting: a plain checklist for hosts",
+      title: "12. Safe guiding: a plain checklist for guides",
       items: [
         {
           subheading: "Before you list",
@@ -49,11 +49,11 @@ describe("SafetyView", () => {
     render(<SafetyView {...defaultProps} />);
 
     expect(screen.getByRole("heading", { name: "Safety Guide", level: 1 })).toBeInTheDocument();
-    expect(screen.getByText("Most experiences on MyJourny go well.")).toBeInTheDocument();
+    expect(screen.getByText("Most experiences on Myjourny go well.")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "1. How safety works on MyJourny", level: 2 })
+      screen.getByRole("heading", { name: "1. How safety works on Myjourny", level: 2 })
     ).toBeInTheDocument();
-    expect(screen.getByText("Hosts run their experiences.")).toBeInTheDocument();
+    expect(screen.getByText("Guides run their experiences.")).toBeInTheDocument();
   });
 
   it("renders checklist section with subheading and items", () => {
@@ -61,7 +61,7 @@ describe("SafetyView", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "12. Safe hosting: a plain checklist for hosts",
+        name: "12. Safe guiding: a plain checklist for guides",
         level: 2,
       })
     ).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe("SafetyView", () => {
     render(<SafetyView {...defaultProps} />);
 
     const btn = screen.getByRole("button", {
-      name: "12. Safe hosting: a plain checklist for hosts",
+      name: "12. Safe guiding: a plain checklist for guides",
     });
     fireEvent.click(btn);
     expect(defaultProps.onSectionSelect).toHaveBeenCalledWith("section-12");

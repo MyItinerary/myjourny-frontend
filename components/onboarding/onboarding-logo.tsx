@@ -7,7 +7,7 @@ export function OnboardingLogo({ className }: { className?: string }) {
   return (
     <Image
       src="/logo/myjourny-logo.svg"
-      alt="MyJourny"
+      alt="Myjourny"
       width={211}
       height={36}
       priority

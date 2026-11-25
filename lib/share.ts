@@ -14,7 +14,7 @@ export interface ShareExperienceOptions {
 export function buildSharePayload({ title, url }: ShareExperienceOptions): ShareDataPayload {
   return {
     title,
-    text: `Check out ${title} on MyJourny:`,
+    text: `Check out ${title} on Myjourny:`,
     url,
   };
 }

@@ -94,9 +94,9 @@ describe("PriceRangeControl", () => {
 describe("ToggleRow", () => {
   it("reports its state and flips on click", async () => {
     const onChange = vi.fn();
-    const { user } = renderWithProviders(<ToggleRow label="Verified host" on={false} onChange={onChange} />);
+    const { user } = renderWithProviders(<ToggleRow label="Verified guide" on={false} onChange={onChange} />);
 
-    const toggle = screen.getByRole("switch", { name: "Verified host" });
+    const toggle = screen.getByRole("switch", { name: "Verified guide" });
     expect(toggle).not.toBeChecked();
     await user.click(toggle);
     expect(onChange).toHaveBeenCalledWith(true);

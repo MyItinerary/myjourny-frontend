@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { GuideProfileContent } from "./content";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: "Guide Profile | MyJourny" };
+  return { title: "Guide Profile | Myjourny" };
 }
 
 export default async function GuideProfilePage({

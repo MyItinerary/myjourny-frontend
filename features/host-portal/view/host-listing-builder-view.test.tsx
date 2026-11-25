@@ -41,9 +41,9 @@ describe("the listing builder", () => {
 
   it("shows and hides the writing tip", async () => {
     renderWithProviders(<Builder />);
-    await userEvent.click(screen.getByRole("button", { name: /Most hosts describe the activity/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Most guides describe the activity/ }));
     expect(screen.getByText("Alive")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /Most hosts describe the activity/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Most guides describe the activity/ }));
     expect(screen.queryByText("Alive")).not.toBeInTheDocument();
   });
 

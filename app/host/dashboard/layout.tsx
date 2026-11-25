@@ -6,7 +6,7 @@ import { HostPreviewSwitch } from "./preview-switch";
 import { HostSidebar } from "./sidebar";
 
 export const metadata: Metadata = {
-  title: "Host portal — MyJourny",
+  title: "Guide portal — Myjourny",
 };
 
 // The host portal: the sidebar rail beside whichever section is open. Each

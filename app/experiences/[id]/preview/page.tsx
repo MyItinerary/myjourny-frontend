@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ExperiencePreviewContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Preview | MyJourny",
+  title: "Preview | Myjourny",
   robots: { index: false, follow: false },
 };
 

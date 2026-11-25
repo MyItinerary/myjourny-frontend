@@ -28,7 +28,7 @@ const vm = (open: number | null = null): HostHelpViewModel => ({
   onToggleGuide: vi.fn(),
   cards: {
     safety: { title: "When something goes wrong on the day", body: "What to do if a guest is hurt.", action: "Read the safety rules" },
-    community: { title: "Other hosts in Lagos", body: "A WhatsApp group of 40 hosts.", action: "Ask to join" },
+    community: { title: "Other guides in Lagos", body: "A WhatsApp group of 40 guides.", action: "Ask to join" },
   },
   onCardAction: vi.fn(),
 });
@@ -65,12 +65,12 @@ describe("HostHelpView", () => {
     expect(props.onToggleGuide).toHaveBeenCalledWith(1);
   });
 
-  it("offers the safety rules and the host group", async () => {
+  it("offers the safety rules and the guide group", async () => {
     const props = vm();
     const { user } = renderWithProviders(<HostHelpView vm={props} />);
 
     expect(screen.getByText("When something goes wrong on the day")).toBeInTheDocument();
-    expect(screen.getByText("Other hosts in Lagos")).toBeInTheDocument();
+    expect(screen.getByText("Other guides in Lagos")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Read the safety rules" }));
     await user.click(screen.getByRole("button", { name: "Ask to join" }));
     expect(props.onCardAction).toHaveBeenCalledTimes(2);

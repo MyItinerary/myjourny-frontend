@@ -41,7 +41,7 @@ describe("ExperiencesPageView", () => {
     renderWithProviders(<ExperiencesPageView {...viewModel()} />);
 
     expect(screen.getByLabelText("Experiences worth showing up for")).toBeInTheDocument();
-    expect(screen.getByText("Tours, tastings, workshops, and hidden spots, hosted by locals.")).toBeInTheDocument();
+    expect(screen.getByText("Tours, tastings, workshops, and hidden spots, guided by locals.")).toBeInTheDocument();
     const labels = screen.getAllByRole("region").map((section) => section.getAttribute("aria-label"));
     expect(labels).toEqual([
       "Pick up where you left off",

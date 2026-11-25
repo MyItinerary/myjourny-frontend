@@ -117,7 +117,7 @@ export function useGuideApplicationViewModel(): GuideApplicationViewModel {
     } else if (!dateOfBirth) {
       newErrors.dateOfBirth = "Enter your date of birth as DD/MM/YYYY";
     } else if (!isOldEnoughToGuide(dateOfBirth)) {
-      newErrors.dateOfBirth = `You need to be at least ${MIN_GUIDE_AGE} to guide on MyJourny`;
+      newErrors.dateOfBirth = `You need to be at least ${MIN_GUIDE_AGE} to guide on Myjourny`;
     }
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = "Phone number is required";

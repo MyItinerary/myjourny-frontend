@@ -7,7 +7,7 @@ describe("GuideApplicationNav", () => {
   it("renders Page 1 of 2 indicator on step 1", () => {
     render(<GuideApplicationNav step={1} />);
 
-    expect(screen.getByRole("link", { name: /MyJourny home/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Myjourny home/i })).toBeInTheDocument();
     expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
   });
 

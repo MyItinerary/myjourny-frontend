@@ -104,7 +104,7 @@ export function HostSidebarView({ open, onToggle, items, host }: HostSidebarView
         </button>
       </div>
 
-      <nav aria-label="Host portal" className="flex flex-col gap-0.5">
+      <nav aria-label="Guide portal" className="flex flex-col gap-0.5">
         {items.map((item) => (
           <Link
             key={item.key}

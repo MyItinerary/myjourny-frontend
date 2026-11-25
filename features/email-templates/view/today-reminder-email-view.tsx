@@ -109,7 +109,7 @@ export function TodayReminderEmailView({
           />
         </div>
         <div className="flex items-center gap-1.5 font-sans text-sm font-medium text-[#130404]">
-          <span>Hosted by {data.host.name}</span>
+          <span>Guided by {data.host.name}</span>
           {data.host.isVerified && <VerifiedCheckIcon />}
         </div>
       </div>

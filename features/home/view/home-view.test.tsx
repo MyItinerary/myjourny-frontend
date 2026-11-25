@@ -55,7 +55,7 @@ describe("HomeView", () => {
       "Dive deeper into Local food & drinks",
       "Cities",
       "Early bird ending soon",
-      "New on MyJourny",
+      "New on Myjourny",
       "Browse everything",
       "Unforgettable travel experiences",
       "Newsletter",

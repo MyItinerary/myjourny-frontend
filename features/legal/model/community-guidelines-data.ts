@@ -4,7 +4,7 @@ export const communityGuidelinesData: TermsData = {
   title: "Community Guidelines and Reviews Policy",
   lastUpdated: "9 November 2026",
   companyAgreementText:
-    "MyJourny runs on trust between people who have never met: guests, hosts, organisers, and curators. These guidelines say what we expect from everyone, and how we deal with it when someone does not meet it. They form part of our Terms of Use and our Host Terms.",
+    "Myjourny runs on trust between people who have never met: guests, guides, organisers, and curators. These guidelines say what we expect from everyone, and how we deal with it when someone does not meet it. They form part of our Terms of Use and our Guide Terms.",
   agreementNoticeText: "",
   shortVersion: {
     title: "The short version",
@@ -24,7 +24,7 @@ export const communityGuidelinesData: TermsData = {
       },
       {
         id: "short-4",
-        text: "**Keep it on MyJourny.** Payments, messages, and bookings stay on the platform, so we can help if something goes wrong.",
+        text: "**Keep it on Myjourny.** Payments, messages, and bookings stay on the platform, so we can help if something goes wrong.",
       },
       {
         id: "short-5",
@@ -37,7 +37,7 @@ export const communityGuidelinesData: TermsData = {
     { id: "section-a2", label: "PART A: COMMUNITY GUIDELINES", isPartHeading: true },
     { id: "section-a2", label: "A2. For everyone" },
     { id: "section-a3", label: "A3. For guests" },
-    { id: "section-a4", label: "A4. For hosts and organisers" },
+    { id: "section-a4", label: "A4. For guides and organisers" },
     { id: "section-a5", label: "A5. For curators" },
     { id: "section-a6", label: "A6. Listings and content standards" },
     { id: "section-a7", label: "A7. Messages and attendee connect" },
@@ -51,7 +51,7 @@ export const communityGuidelinesData: TermsData = {
     { id: "section-b4", label: "B4. What a good review says" },
     { id: "section-b5", label: "B5. What is not allowed in a review" },
     { id: "section-b6", label: "B6. What we do not remove" },
-    { id: "section-b7", label: "B7. Hosts and replies" },
+    { id: "section-b7", label: "B7. Guides and replies" },
     { id: "section-b8", label: "B8. Reporting a review" },
     { id: "section-b9", label: "B9. If we remove a review" },
     { id: "section-b10", label: "B10. Legal complaints about a review" },
@@ -74,7 +74,7 @@ export const communityGuidelinesData: TermsData = {
       intro: "You must not:",
       bullets: [
         "**Harass, threaten, or intimidate** anyone, in person, in messages, or in reviews.",
-        "**Discriminate** against or demean anyone because of their ethnicity, tribe, religion, gender, sexual orientation, disability, age, or any other protected characteristic. This includes refusing to host someone or treating them worse because of who they are.",
+        "**Discriminate** against or demean anyone because of their ethnicity, tribe, religion, gender, sexual orientation, disability, age, or any other protected characteristic. This includes refusing to guide someone or treating them worse because of who they are.",
         "**Behave in a sexual way that is unwelcome.** This includes comments, touching, messages, and pressure. Consent matters, and a booking is never consent.",
         "**Be violent,** threaten violence, or encourage it.",
         "**Break the law,** or use an experience for anything illegal. This includes using, selling, or sharing illegal drugs, and carrying weapons to an experience.",
@@ -83,7 +83,7 @@ export const communityGuidelinesData: TermsData = {
         "**Impersonate** another person or organisation, or use someone else's identity or payment method.",
         "**Scam or defraud** anyone, including by taking fake bookings, sending false payment links, or asking for money outside the platform.",
         "**Spam** people, or send them unwanted promotions.",
-        "**Misuse the platform,** by scraping, copying listings, or interfering with how MyJourny works.",
+        "**Misuse the platform,** by scraping, copying listings, or interfering with how Myjourny works.",
       ],
       note: "Photographing or filming other people needs their consent, especially children, and never in changing rooms, bathrooms, or other private spaces.",
     },
@@ -93,22 +93,22 @@ export const communityGuidelinesData: TermsData = {
       items: [],
       bullets: [
         "Read the listing, including the fitness level, the age limit, and the safety notes. Book only what suits you and your group.",
-        "Tell the host about anything that affects your safety, such as a health condition, an injury, an allergy, or a disability. Share only what is needed.",
-        "Arrive on time. If you are going to be late or cannot come, tell the host through MyJourny.",
-        "Follow the host's safety briefing and instructions. A host may ask you to stop if you are unsafe, and you will not get a refund if you are asked to leave for that reason.",
-        "Respect the host's property, the other guests, and the places you visit. Do not leave rubbish or damage anything.",
+        "Tell the guide about anything that affects your safety, such as a health condition, an injury, an allergy, or a disability. Share only what is needed.",
+        "Arrive on time. If you are going to be late or cannot come, tell the guide through Myjourny.",
+        "Follow the guide's safety briefing and instructions. A guide may ask you to stop if you are unsafe, and you will not get a refund if you are asked to leave for that reason.",
+        "Respect the guide's property, the other guests, and the places you visit. Do not leave rubbish or damage anything.",
         "If you book for others, make sure they know and follow these guidelines.",
-        "Never pay a host directly, or ask a host to take payment off the platform.",
+        "Never pay a guide directly, or ask a guide to take payment off the platform.",
       ],
     },
     {
       id: "section-a4",
-      title: "A4. For hosts and organisers",
+      title: "A4. For guides and organisers",
       items: [],
       bullets: [
         "**Describe your experience truthfully.** Photos must be of the real experience, taken by you or with permission. The title, description, price, meeting point, duration, and what is included must match what guests get.",
         "**Deliver what you listed,** on time, with the group size you said.",
-        "**Run it safely,** and meet the safety standards in the Host Terms for your category. Brief every group. Stop if it becomes unsafe.",
+        "**Run it safely,** and meet the safety standards in the Guide Terms for your category. Brief every group. Stop if it becomes unsafe.",
         "**Treat every guest fairly,** including those who are different from you.",
         "**Never ask for payment off the platform,** or use the booking to sell something else the guest did not agree to.",
         "**Do not contact guests outside the booking** for anything unrelated, and never for romantic or sexual purposes.",
@@ -122,7 +122,7 @@ export const communityGuidelinesData: TermsData = {
       title: "A5. For curators",
       items: [],
       bullets: [
-        "Recommend honestly. Say why you picked something, and tell us if you have any link to the host, such as a commission, a gift, or a friendship.",
+        "Recommend honestly. Say why you picked something, and tell us if you have any link to the guide, such as a commission, a gift, or a friendship.",
         "Do not accept payment to feature an experience. We never sell ranking or placement, and a curator's pick cannot be bought.",
         "Keep your collections accurate and up to date.",
       ],
@@ -146,7 +146,7 @@ export const communityGuidelinesData: TermsData = {
       title: "A7. Messages and attendee connect",
       items: [
         {
-          text: "Messages through MyJourny should be about the booking. Be polite, and do not send anything abusive, sexual, or threatening. We may review messages that are reported, or where we have a safety or fraud concern, as our Privacy Policy explains.",
+          text: "Messages through Myjourny should be about the booking. Be polite, and do not send anything abusive, sexual, or threatening. We may review messages that are reported, or where we have a safety or fraud concern, as our Privacy Policy explains.",
         },
         {
           boldPrefix: "Attendee connect",
@@ -195,7 +195,7 @@ export const communityGuidelinesData: TermsData = {
           text: "These include violence, sexual misconduct, anything involving a child, fraud, repeated discrimination, an unsafe experience that puts people at risk, and taking bookings off the platform to avoid our commission. We may suspend an account straight away while we investigate.",
         },
         {
-          text: "For hosts and organisers, we may also reduce visibility, hold a payout, or cancel bookings and refund guests in full, as set out in the Host Terms (clauses 6.5, 7, and 12).",
+          text: "For guides and organisers, we may also reduce visibility, hold a payout, or cancel bookings and refund guests in full, as set out in the Guide Terms (clauses 6.5, 7, and 12).",
         },
         {
           boldPrefix: "We tell you what we did, and why,",
@@ -203,7 +203,7 @@ export const communityGuidelinesData: TermsData = {
         },
         {
           boldPrefix: "Fairness.",
-          text: "We apply these guidelines the same way to everyone. We do not take action only because someone complained loudly, or because a host or guest is important to us.",
+          text: "We apply these guidelines the same way to everyone. We do not take action only because someone complained loudly, or because a guide or guest is important to us.",
         },
       ],
     },
@@ -235,7 +235,7 @@ export const communityGuidelinesData: TermsData = {
       items: [
         {
           subheading: "B1. Why reviews matter",
-          text: "Reviews help the next guest decide, and they help hosts improve. They only work if people can trust them. So we make them real, and we keep them honest.",
+          text: "Reviews help the next guest decide, and they help guides improve. They only work if people can trust them. So we make them real, and we keep them honest.",
         },
       ],
     },
@@ -266,8 +266,8 @@ export const communityGuidelinesData: TermsData = {
       items: [],
       bullets: [
         "It describes **your own experience**. What happened, what was good, what could be better.",
-        'It is **fair and specific**. "The host was late and the plan changed" is useful. "Worst people ever" is not.',
-        "It is about **the experience**, not a personal attack on the host, another guest, or anyone else.",
+        'It is **fair and specific**. "The guide was late and the plan changed" is useful. "Worst people ever" is not.',
+        "It is about **the experience**, not a personal attack on the guide, another guest, or anyone else.",
         "It may include **photos you took**, with consent from anyone identifiable. Do not post pictures of children without a parent's agreement.",
       ],
       note: "You can rate out of 5 stars. We show the average rating only when a listing has **at least 3 reviews**, so one review does not decide a listing.",
@@ -278,8 +278,8 @@ export const communityGuidelinesData: TermsData = {
       intro: "We will remove a review that:",
       items: [],
       bullets: [
-        "is **fake**, from someone who was not there, or from a person linked to the host",
-        "was **bought, rewarded, or pressured**. You must not offer or accept money, discounts, free places, gifts, or favours in exchange for a review, or for a better review, or for taking one down. This applies to hosts, guests, and anyone acting for them.",
+        "is **fake**, from someone who was not there, or from a person linked to the guide",
+        "was **bought, rewarded, or pressured**. You must not offer or accept money, discounts, free places, gifts, or favours in exchange for a review, or for a better review, or for taking one down. This applies to guides, guests, and anyone acting for them.",
         "contains **hate, harassment, threats, or discriminatory language**",
         "shares **personal information**, such as phone numbers, addresses, ID, social media handles, or private photos",
         "contains **advertising, links, or contact details**",
@@ -294,18 +294,18 @@ export const communityGuidelinesData: TermsData = {
       title: "B6. What we do not remove",
       items: [
         {
-          text: "We **do not remove a review because it is negative**, because the host disagrees, or because the host asks. A bad review that is honest and follows these rules stays up. We do not hide, push down, or delay reviews to help anyone. Hosts cannot pay to change what reviews show, and we never sell ranking or placement.",
+          text: "We **do not remove a review because it is negative**, because the guide disagrees, or because the guide asks. A bad review that is honest and follows these rules stays up. We do not hide, push down, or delay reviews to help anyone. Guides cannot pay to change what reviews show, and we never sell ranking or placement.",
         },
       ],
     },
     {
       id: "section-b7",
-      title: "B7. Hosts and replies",
+      title: "B7. Guides and replies",
       items: [],
       bullets: [
-        "Hosts can reply **publicly** to any review, once. A reply should be polite, factual, and short. Thank the guest, correct a fact if needed, and say what you changed.",
-        "Hosts must not argue with guests in public, name or shame them, share their personal details, or pressure them to change a review.",
-        "Hosts must not offer a refund, gift, or discount in return for changing or removing a review. If a guest had a problem, fix it separately through MyJourny.",
+        "Guides can reply **publicly** to any review, once. A reply should be polite, factual, and short. Thank the guest, correct a fact if needed, and say what you changed.",
+        "Guides must not argue with guests in public, name or shame them, share their personal details, or pressure them to change a review.",
+        "Guides must not offer a refund, gift, or discount in return for changing or removing a review. If a guest had a problem, fix it separately through Myjourny.",
       ],
     },
     {
@@ -322,7 +322,7 @@ export const communityGuidelinesData: TermsData = {
       title: "B9. If we remove a review",
       items: [
         {
-          text: "We tell the person who wrote it, which rule it broke, and how to appeal. The same appeal process in A9 applies. We tell the host that a review was removed only if they reported it. We do not delete the booking, and we do not adjust the host's rating in any other way.",
+          text: "We tell the person who wrote it, which rule it broke, and how to appeal. The same appeal process in A9 applies. We tell the guide that a review was removed only if they reported it. We do not delete the booking, and we do not adjust the guide's rating in any other way.",
         },
         {
           text: "If a review was removed because it was fake or bought, we may take action against the people responsible, under A8.",
@@ -343,7 +343,7 @@ export const communityGuidelinesData: TermsData = {
       title: "B11. Your content",
       items: [
         {
-          text: "You keep ownership of your reviews and photos. As the Terms of Use say, you give us a licence to show and use them on MyJourny, in our messages, and in our marketing, and to remove or edit them as these policies allow. We never change what a review says. If we need to edit one, for example to remove a phone number, we edit only that part and we say so.",
+          text: "You keep ownership of your reviews and photos. As the Terms of Use say, you give us a licence to show and use them on Myjourny, in our messages, and in our marketing, and to remove or edit them as these policies allow. We never change what a review says. If we need to edit one, for example to remove a phone number, we edit only that part and we say so.",
         },
       ],
     },
@@ -352,7 +352,7 @@ export const communityGuidelinesData: TermsData = {
       title: "B12. If a review is also a safety report",
       items: [
         {
-          text: "If your review says you were hurt, felt unsafe, or saw something dangerous, **we may contact you** to find out more, because we take safety seriously. A safety concern can lead to action on a host, even where the review itself is removed or stays up.",
+          text: "If your review says you were hurt, felt unsafe, or saw something dangerous, **we may contact you** to find out more, because we take safety seriously. A safety concern can lead to action on a guide, even where the review itself is removed or stays up.",
         },
       ],
     },
@@ -361,7 +361,7 @@ export const communityGuidelinesData: TermsData = {
       title: "B13. Changes",
       items: [
         {
-          text: "We may update these guidelines. For material changes, we give guests 14 days' notice and hosts and organisers 30 days, as set out in the Terms of Use and Host Terms.",
+          text: "We may update these guidelines. For material changes, we give guests 14 days' notice and guides and organisers 30 days, as set out in the Terms of Use and Guide Terms.",
         },
       ],
     },
@@ -382,7 +382,7 @@ export const communityGuidelinesData: TermsData = {
         eyebrow: "SAFETY AND COMMUNITY",
         title: "Safety Guide",
         description:
-          "What to do in an emergency, and practical advice for guests, hosts and organisers.",
+          "What to do in an emergency, and practical advice for guests, guides and organisers.",
         href: "/legal/safety",
       },
       {
@@ -393,10 +393,10 @@ export const communityGuidelinesData: TermsData = {
         href: "/legal/terms",
       },
       {
-        eyebrow: "FOR HOSTS AND ORGANISERS",
-        title: "Host Terms",
+        eyebrow: "FOR GUIDES AND ORGANISERS",
+        title: "Guide Terms",
         description:
-          "Who can host, the 15% commission and payouts, safety duties and cancellations.",
+          "Who can guide, the 15% commission and payouts, safety duties and cancellations.",
         href: "/legal/hosts",
       },
     ],

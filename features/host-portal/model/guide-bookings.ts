@@ -43,7 +43,7 @@ function ticketLine(b: GuideBooking): string {
 function contactOf(b: GuideBooking, tab: BookingTab): string {
   if (tab !== "Upcoming") return "Only shown while a booking is confirmed.";
   if (b.guest?.phone) return b.guest.phone;
-  return "They haven't added a verified phone number. Message them through MyJourny support if you need to reach them.";
+  return "They haven't added a verified phone number. Message them through Myjourny support if you need to reach them.";
 }
 
 /** One of itin's bookings in the shape the Bookings table and panel show.
@@ -91,7 +91,7 @@ export function toHostBooking(b: GuideBooking, today: string): HostBooking {
             { title: "Booked", body: `${places(guests)} for ${formatNaira(gross)}.` },
             {
               title: status,
-              body: refunded > 0 ? `${formatNaira(refunded)} went back to the guest.` : "Any refund is handled by MyJourny.",
+              body: refunded > 0 ? `${formatNaira(refunded)} went back to the guest.` : "Any refund is handled by Myjourny.",
             },
           ]
         : [],

@@ -108,7 +108,7 @@ const ACCESSIBILITY: Record<string, string> = {
   wheelchair_accessible: "Wheelchair accessible",
   partly_accessible: "Partly accessible",
   not_suitable: "Not suitable for wheelchairs",
-  not_confirmed: "Not confirmed. Ask the host before you book.",
+  not_confirmed: "Not confirmed. Ask the guide before you book.",
 };
 
 // Fixed platform wording: it is a refund promise, so hosts can't write it.
@@ -161,7 +161,7 @@ export function fitAndLogistics(experience: ExperienceDetailsFields): FitItem[] 
     items.push({ kind: "weather", label: "Weather dependent", value: WEATHER_LINE, note: null });
   }
   if (experience.pickup_available) {
-    items.push({ kind: "pickup", label: "Pickup available", value: note(experience.pickup_note) ?? "Ask the host for details.", note: null });
+    items.push({ kind: "pickup", label: "Pickup available", value: note(experience.pickup_note) ?? "Ask the guide for details.", note: null });
   }
   return items;
 }

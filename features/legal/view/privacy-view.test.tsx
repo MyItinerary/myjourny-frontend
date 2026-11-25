@@ -14,7 +14,7 @@ const mockPrivacyData: TermsData = {
     items: [
       {
         question: "Who is responsible for your data?",
-        answer: "MyJourny is the controller.",
+        answer: "Myjourny is the controller.",
       },
       {
         question: "Do you sell my data?",
@@ -34,7 +34,7 @@ const mockPrivacyData: TermsData = {
       title: "1. Who we are",
       items: [
         {
-          text: "MyJourny is a service operated in Nigeria.",
+          text: "Myjourny is a service operated in Nigeria.",
         },
       ],
     },
@@ -75,7 +75,7 @@ describe("PrivacyView", () => {
     render(<PrivacyView {...defaultProps} />);
 
     expect(screen.getByRole("heading", { name: "1. Who we are", level: 2 })).toBeInTheDocument();
-    expect(screen.getByText("MyJourny is a service operated in Nigeria.")).toBeInTheDocument();
+    expect(screen.getByText("Myjourny is a service operated in Nigeria.")).toBeInTheDocument();
 
     expect(
       screen.getByRole("heading", { name: "4. Why we use your data, and our legal basis", level: 2 })

@@ -66,7 +66,7 @@ describe("useHostSidebarViewModel", () => {
   });
 
   it.each([
-    ["verified", "Verified host", "green", false],
+    ["verified", "Verified guide", "green", false],
     ["business", "Registered business", "green", false],
     ["review", "Under review", "amber", true],
     ["info", "More info needed", "red", true],

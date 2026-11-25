@@ -30,7 +30,7 @@ test.describe("become a guide application", () => {
     await expect(page.getByLabel("Add a website")).toBeVisible();
     await page.getByLabel("Add a website").fill("amara.guide");
     await page.getByLabel("Email address").fill("amara@example.com");
-    await page.getByLabel("Password").fill("SecurePass123!");
+    await page.getByLabel("Password", { exact: true }).fill("SecurePass123!");
 
     await page.getByRole("button", { name: "Continue" }).filter({ visible: true }).click();
 
@@ -87,7 +87,7 @@ test.describe("become a guide application", () => {
     await page.getByLabel("CAC registration number").fill("RC1234567");
     await page.getByLabel("Add a website").fill("lagostours.ng");
     await page.getByLabel("Email address").fill("info@lagostours.ng");
-    await page.getByLabel("Password").fill("BusinessPass123!");
+    await page.getByLabel("Password", { exact: true }).fill("BusinessPass123!");
 
     await page.getByRole("button", { name: "Create an account" }).filter({ visible: true }).click();
 
@@ -112,7 +112,7 @@ test.describe("become a guide application", () => {
       "POST /auth/register/guide": (route) =>
         route.fulfill({
           status: 409,
-          json: { detail: "This email is already registered with MyJourny. Log in with it and you can add hosting to your account." },
+          json: { detail: "This email is already registered with Myjourny. Log in with it and you can add hosting to your account." },
         }),
     });
 
@@ -126,11 +126,11 @@ test.describe("become a guide application", () => {
 
     // Step 2
     await page.getByLabel("Email address").fill("amara@example.com");
-    await page.getByLabel("Password").fill("SecurePass123!");
+    await page.getByLabel("Password", { exact: true }).fill("SecurePass123!");
     await page.getByRole("button", { name: "Continue" }).filter({ visible: true }).click();
 
     // Said on the form, with a way forward; still on step 2.
-    await expect(page.getByRole("alert").filter({ hasText: "You already have a MyJourny account" })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: "You already have a Myjourny account" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "You're in review" })).not.toBeVisible();
 
     await page.getByRole("button", { name: "Log in to continue" }).click();
@@ -176,7 +176,7 @@ test.describe("become a guide application", () => {
     await page.getByRole("button", { name: "Continue" }).filter({ visible: true }).click();
 
     // No email or password: it's the same login.
-    await expect(page.getByText("ADD HOSTING TO YOUR ACCOUNT")).toBeVisible();
+    await expect(page.getByText("ADD GUIDING TO YOUR ACCOUNT")).toBeVisible();
     await expect(page.getByLabel("Email address")).toHaveCount(0);
     await page.getByRole("button", { name: "Submit application" }).filter({ visible: true }).click();
 

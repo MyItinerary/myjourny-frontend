@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { ReceiptContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Receipt | MyJourny",
-  description: "View and download your official MyJourny booking receipt.",
+  title: "Receipt | Myjourny",
+  description: "View and download your official Myjourny booking receipt.",
 };
 
 export default async function ReceiptDetailPage({

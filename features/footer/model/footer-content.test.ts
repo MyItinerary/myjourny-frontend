@@ -15,13 +15,13 @@ describe("footer content", () => {
   const visible = visibleFooterColumns(FOOTER_LINK_COLUMNS);
   const column = (heading: string) => visible.find((c) => c.heading === heading)?.links.map((l) => l.label);
 
-  it("shows the Support, Hosting and Legal columns in order", () => {
-    expect(visible.map((c) => c.heading)).toEqual(["Support", "Hosting and Curating", "Legal"]);
+  it("shows the Support, Guiding and Legal columns in order", () => {
+    expect(visible.map((c) => c.heading)).toEqual(["Support", "Guiding and Curating", "Legal"]);
     expect(column("Support")).toEqual(["Safety Guide", "Report a safety concern", "Cancellation and Refund Policy", "Contact us", "Blog"]);
-    expect(column("Hosting and Curating")).toEqual(["Become a host", "Host Terms"]);
+    expect(column("Guiding and Curating")).toEqual(["Become a guide", "Guide Terms"]);
   });
 
-  const hiddenForLater = ["Payment protection", "Help Center", "Host an event", "How hosting pays", "Hosting responsibly", "Why book with us", "Experiences", "Investors", "Gift cards"];
+  const hiddenForLater = ["Payment protection", "Help Center", "Guide an event", "How guiding pays", "Guiding responsibly", "Why book with us", "Experiences", "Investors", "Gift cards"];
 
   it("hides the links QA asked to remove, including anything about events while they're on hold", () => {
     const labels = visible.flatMap((c) => c.links.map((l) => l.label));
@@ -80,9 +80,9 @@ describe("footer content", () => {
     expect(href("Contact us")).toBe(CONTACT_MAILTO);
   });
 
-  it("sends Become a host to the guide sign-up page", () => {
-    const hosting = visible.find((c) => c.heading === "Hosting and Curating");
-    expect(hosting?.links.find((l) => l.label === "Become a host")?.href).toBe("/become-a-guide");
+  it("sends Become a guide to the guide sign-up page", () => {
+    const hosting = visible.find((c) => c.heading === "Guiding and Curating");
+    expect(hosting?.links.find((l) => l.label === "Become a guide")?.href).toBe("/become-a-guide");
   });
 
   it("only links to pages that exist", () => {

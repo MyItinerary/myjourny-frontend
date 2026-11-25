@@ -49,14 +49,14 @@ describe("HomeNav", () => {
 
     expect(screen.getByRole("link", { name: "Become a guide" })).toHaveAttribute("href", "/become-a-guide");
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
-    expect(screen.queryByText("Switch to host dashboard")).not.toBeInTheDocument();
+    expect(screen.queryByText("Switch to guide dashboard")).not.toBeInTheDocument();
   });
 
-  it("sends guides to their host dashboard from the nav and the profile menu", async () => {
+  it("sends guides to their guide dashboard from the nav and the profile menu", async () => {
     me.current = { signup_type: "guide" };
     const { user } = renderWithProviders(<HomeNav />);
 
-    expect(screen.getByRole("link", { name: "Switch to host dashboard" })).toHaveAttribute("href", "/host/dashboard");
+    expect(screen.getByRole("link", { name: "Switch to guide dashboard" })).toHaveAttribute("href", "/host/dashboard");
     await user.click(screen.getByRole("button", { name: "Profile menu" }));
     const links = screen.getAllByRole("link").filter((link) => link.getAttribute("href") === "/host/dashboard");
     expect(links).toHaveLength(2);
@@ -64,10 +64,10 @@ describe("HomeNav", () => {
     expect(screen.queryByText("Become a guide")).not.toBeInTheDocument();
   });
 
-  it("sends a traveller who added hosting to the host dashboard too", () => {
+  it("sends a traveller who added guiding to the guide dashboard too", () => {
     me.current = { signup_type: "both" };
     renderWithProviders(<HomeNav />);
 
-    expect(screen.getByRole("link", { name: "Switch to host dashboard" })).toHaveAttribute("href", "/host/dashboard");
+    expect(screen.getByRole("link", { name: "Switch to guide dashboard" })).toHaveAttribute("href", "/host/dashboard");
   });
 });

@@ -87,7 +87,7 @@ export function StepRequirements({ vm }: Props) {
         )}
       </div>
       <p className="flex gap-2.5 text-[13px] leading-relaxed text-[#6F6B72]">
-        I have read the host safety rules and everything above is true. I will tell MyJourny within 24 hours if a guest is hurt on my experience.
+        I have read the guide safety rules and everything above is true. I will tell Myjourny within 24 hours if a guest is hurt on my experience.
       </p>
     </div>
   );

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PreferencesContent } from "../profile/preferences/content";
 
 export const metadata: Metadata = {
-  title: "Your Preferences | MyJourny",
+  title: "Your Preferences | Myjourny",
   description: "View and edit your travel preferences.",
 };
 

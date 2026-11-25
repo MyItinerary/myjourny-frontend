@@ -58,7 +58,7 @@ export const DUMMY_LOCAL_FOOD_AND_DRINKS: PlaceholderCard[] = [
   placeholder("Street food crawl through Lagos Island", "FOOD", 10000),
   placeholder("Palm wine and suya tasting night", "DRINKS", 8000),
   placeholder("Cook jollof with a local chef", "FOOD", 20000),
-  placeholder("Market tour and breakfast with a host", "FOOD", 9000),
+  placeholder("Market tour and breakfast with a guide", "FOOD", 9000),
   placeholder("Craft cocktails with a Lagos mixologist", "DRINKS", 18000),
 ];
 

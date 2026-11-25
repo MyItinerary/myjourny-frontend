@@ -31,7 +31,7 @@ describe("buildExperiencePage", () => {
       location: "",
       rating: null,
       city: null,
-      host: { id: null, name: "Your host", verified: false },
+      host: { id: null, name: "Your guide", verified: false },
     });
   });
 

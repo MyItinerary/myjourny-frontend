@@ -64,7 +64,7 @@ export function EmailTemplatesPreviewView(props: EmailTemplatesViewModel) {
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-md bg-[#2C0101] px-2 py-0.5 font-sans text-xs font-bold text-white uppercase">
-                MyJourny
+                Myjourny
               </span>
               <h1 className="font-sans text-base font-extrabold tracking-tight sm:text-lg">
                 Email Templates

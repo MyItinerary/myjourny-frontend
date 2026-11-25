@@ -8,10 +8,10 @@ export const MOCK_REVIEW_TOTAL = 124;
 export const MOCK_REVIEW_RATING = 4.8;
 
 export const MOCK_REVIEW_SUMMARY =
-  "Guests talk about how easy the host makes it for first timers, the breakfast that arrives before anyone is ready for it, and a painting they were surprised to be proud of. A few mention the early start. Most say it was worth it.";
+  "Guests talk about how easy the guide makes it for first timers, the breakfast that arrives before anyone is ready for it, and a painting they were surprised to be proud of. A few mention the early start. Most say it was worth it.";
 
 export const MOCK_RATING_BREAKDOWN: RatingBreakdownRow[] = [
-  { label: "Host", value: 4.9 },
+  { label: "Guide", value: 4.9 },
   { label: "Value", value: 4.7 },
   { label: "Organisation", value: 4.8 },
 ];
@@ -47,7 +47,7 @@ export const MOCK_REVIEWS: PublicReview[] = [
     verified: true,
     helpful_count: 2,
     host_reply: {
-      author: "Tunde, host",
+      author: "Tunde, guide",
       text: "Thank you, Hauwa. I have added a note about layers to the packing list.",
     },
   },

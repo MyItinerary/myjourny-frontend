@@ -93,7 +93,7 @@ describe("email-templates-html injection prevention", () => {
     const html = generateBookingConfirmedEmailHtml(maliciousBooking);
 
     expect(html).toContain("Sat &amp; &quot;Sun&quot; &lt;Weekend&gt;");
-    expect(html).toContain("Hosted by Tunde &amp; &quot;Partner&quot; &lt;Guide&gt;");
+    expect(html).toContain("Guided by Tunde &amp; &quot;Partner&quot; &lt;Guide&gt;");
     expect(html).toContain("Boat &amp; &quot;Paddles&quot; &lt;Gear&gt;");
     expect(html).not.toContain('href="javascript:');
   });

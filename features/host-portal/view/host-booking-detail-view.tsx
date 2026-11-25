@@ -42,7 +42,7 @@ function Detail({ detail, vm }: { detail: BookingDetail; vm: HostBookingsViewMod
             <p className="text-[13.5px] font-medium text-[#333134]">{booking.deadline}</p>
           </div>
           <p className="mt-2 text-[12.5px] leading-[1.55] text-[#6F6B72]">
-            Answer inside 24 hours. Hosts who take longer drop down the list when guests search.
+            Answer inside 24 hours. Guides who take longer drop down the list when guests search.
           </p>
           <div className="mt-3.5 flex gap-2">
             <button

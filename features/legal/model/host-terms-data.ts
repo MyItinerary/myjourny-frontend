@@ -1,12 +1,12 @@
 import type { TermsData } from "./terms.types";
 
 export const hostTermsData: TermsData = {
-  title: "Host Terms",
+  title: "Guide Terms",
   lastUpdated: "9 November 2026",
   companyAgreementText:
-    'These terms are an agreement between Myjourny and Experiences LLC (RC 9460304), "MyJourny", "we", or "us", and you, the person or business that lists experiences or events on MyJourny, "the host" or "you". If you list as a business, the person accepting these terms confirms they have authority to bind it.',
+    'These terms are an agreement between Myjourny and Experiences LLC (RC 9460304), "Myjourny", "we", or "us", and you, the person or business that lists experiences or events on Myjourny, "the guide" or "you". If you list as a business, the person accepting these terms confirms they have authority to bind it.',
   agreementNoticeText:
-    "By applying to host, or by publishing a listing, you accept these terms, our [Terms of Use (Guests)](/legal/terms), our [Privacy Policy](/legal/privacy), and our [Cancellation and Refund Policy](/legal/cancellations). If these conflict, these Host Terms apply between you and us.",
+    "By applying to guide, or by publishing a listing, you accept these terms, our [Terms of Use (Guests)](/legal/terms), our [Privacy Policy](/legal/privacy), and our [Cancellation and Refund Policy](/legal/cancellations). If these conflict, these Guide Terms apply between you and us.",
   shortVersion: {
     title: "The short version",
     disclaimer: "This summary is for convenience. The full terms below are what apply.",
@@ -39,7 +39,7 @@ export const hostTermsData: TermsData = {
   },
   tableOfContents: [
     { id: "short-version", label: "The short version" },
-    { id: "section-1", label: "1. Who can host" },
+    { id: "section-1", label: "1. Who can guide" },
     { id: "section-2", label: "2. Our role, and yours" },
     { id: "section-3", label: "3. Your listing" },
     { id: "section-4", label: "4. Your legal and safety duties" },
@@ -70,7 +70,7 @@ export const hostTermsData: TermsData = {
     {
       id: "section-1",
       number: "1.",
-      title: "1. Who can host",
+      title: "1. Who can guide",
       items: [
         {
           number: "1.1",
@@ -82,11 +82,11 @@ export const hostTermsData: TermsData = {
         },
         {
           number: "1.3",
-          text: "You do not need a registered business to host. Registered businesses can provide their CAC details for an extra badge and for corporate bookings.",
+          text: "You do not need a registered business to guide. Registered businesses can provide their CAC details for an extra badge and for corporate bookings.",
         },
         {
           number: "1.4",
-          text: "We may approve, decline, or remove any host or listing at our discretion, and we may ask for more information at any time.",
+          text: "We may approve, decline, or remove any guide or listing at our discretion, and we may ask for more information at any time.",
         },
       ],
     },
@@ -97,11 +97,11 @@ export const hostTermsData: TermsData = {
       items: [
         {
           number: "2.1",
-          text: "MyJourny is a marketplace. We provide the platform and act as your agent to take bookings, collect payment, and apply your chosen cancellation policy.",
+          text: "Myjourny is a marketplace. We provide the platform and act as your agent to take bookings, collect payment, and apply your chosen cancellation policy.",
         },
         {
           number: "2.2",
-          boldPrefix: "You are an independent host.",
+          boldPrefix: "You are an independent guide.",
           text: "You are not our employee, partner, agent, or joint venturer. You decide how you run your experience, subject to these terms and the law. You are responsible for your own staff, helpers, and subcontractors.",
         },
         {
@@ -111,7 +111,7 @@ export const hostTermsData: TermsData = {
         },
         {
           number: "2.4",
-          text: "When a guest pays through MyJourny, they have paid you. We hold the payment through our payment partner and release it under these terms.",
+          text: "When a guest pays through Myjourny, they have paid you. We hold the payment through our payment partner and release it under these terms.",
         },
         {
           number: "2.5",
@@ -226,12 +226,12 @@ export const hostTermsData: TermsData = {
         {
           number: "5.3",
           boldPrefix: "Contact with guests.",
-          text: "We share your contact details with the guest 24 hours before the experience, and the guest's contact details with you. Before that, you can message through MyJourny. Keep booking communication on MyJourny where you can, because we can help if something goes wrong.",
+          text: "We share your contact details with the guest 24 hours before the experience, and the guest's contact details with you. Before that, you can message through Myjourny. Keep booking communication on Myjourny where you can, because we can help if something goes wrong.",
         },
         {
           number: "5.4",
           boldPrefix: "No taking bookings off-platform.",
-          text: "You may promote your listing to your own followers. You will receive a link that handles payment for you. You must not ask guests who found you through MyJourny to pay you directly to avoid our commission, and you must not take payments from MyJourny bookings outside the platform. If you do, we may suspend your account and withhold payouts we are entitled to withhold.",
+          text: "You may promote your listing to your own followers. You will receive a link that handles payment for you. You must not ask guests who found you through Myjourny to pay you directly to avoid our commission, and you must not take payments from Myjourny bookings outside the platform. If you do, we may suspend your account and withhold payouts we are entitled to withhold.",
         },
         {
           number: "5.5",
@@ -329,7 +329,7 @@ export const hostTermsData: TermsData = {
         },
         {
           number: "7.4",
-          boldPrefix: "Host cancellations.",
+          boldPrefix: "Guide cancellations.",
           text: "If you cancel a confirmed booking, except for a genuine safety reason, we may charge a cancellation fee of **15% of the booking value**, reduce your listing's visibility, and suspend your account if cancellations are repeated. We will help guests find alternatives.",
         },
       ],
@@ -356,7 +356,7 @@ export const hostTermsData: TermsData = {
       items: [
         {
           number: "9.1",
-          text: "We are a data controller for the personal data we collect through MyJourny. When we share a guest's contact and booking details with you, **you become an independent controller of that data** for your own purposes of running the booking.",
+          text: "We are a data controller for the personal data we collect through Myjourny. When we share a guest's contact and booking details with you, **you become an independent controller of that data** for your own purposes of running the booking.",
         },
         {
           number: "9.2",
@@ -371,7 +371,7 @@ export const hostTermsData: TermsData = {
         },
         {
           number: "9.3",
-          text: "If you suffer a data breach involving MyJourny guests, tell us within 24 hours.",
+          text: "If you suffer a data breach involving Myjourny guests, tell us within 24 hours.",
         },
         {
           number: "9.4",
@@ -386,7 +386,7 @@ export const hostTermsData: TermsData = {
       items: [
         {
           number: "10.1",
-          text: "You keep ownership of your listing content. You give us a free, worldwide licence to use it, including photos and descriptions, to run MyJourny and to promote you and your listing, in our own channels and with curators, for as long as your listing is live and for a reasonable time after for archival and legal use.",
+          text: "You keep ownership of your listing content. You give us a free, worldwide licence to use it, including photos and descriptions, to run Myjourny and to promote you and your listing, in our own channels and with curators, for as long as your listing is live and for a reasonable time after for archival and legal use.",
         },
         {
           number: "10.2",
@@ -394,7 +394,7 @@ export const hostTermsData: TermsData = {
         },
         {
           number: "10.3",
-          text: "We own MyJourny's brand, platform, and content. You may not use our name or logo without our written permission, except to say you host on MyJourny.",
+          text: "We own Myjourny's brand, platform, and content. You may not use our name or logo without our written permission, except to say you guide on Myjourny.",
         },
       ],
     },
@@ -470,7 +470,7 @@ export const hostTermsData: TermsData = {
         },
         {
           number: "14.3",
-          text: "We may update these terms with at least 30 days' notice for significant changes. If you keep hosting after the change, you accept it. You may stop hosting if you do not.",
+          text: "We may update these terms with at least 30 days' notice for significant changes. If you keep guiding after the change, you accept it. You may stop guiding if you do not.",
         },
         {
           number: "14.4",
@@ -527,7 +527,7 @@ export const hostTermsData: TermsData = {
         "Prepare and store food hygienically, and use safe water and ice.",
         "Ask about allergies, and tell guests which allergens are present.",
         "Serve alcohol only where licensed, only to adults, and never to anyone who is drunk.",
-        "If you host in your home or a private venue, make sure it is safe, clean, and permitted for the number of guests.",
+        "If you guide in your home or a private venue, make sure it is safe, clean, and permitted for the number of guests.",
       ],
     },
     {
@@ -572,7 +572,7 @@ export const hostTermsData: TermsData = {
       bullets: [
         "If you drive or arrange transport for guests, drivers hold valid licences and the vehicle is roadworthy and insured.",
         "Everyone wears seatbelts. Do not overload the vehicle.",
-        "Arrange pickups through MyJourny messaging where possible, so there is a record.",
+        "Arrange pickups through Myjourny messaging where possible, so there is a record.",
       ],
     },
     {

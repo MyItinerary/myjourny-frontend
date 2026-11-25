@@ -208,7 +208,7 @@ describe("fitAndLogistics", () => {
     expect(items.map((item) => [item.label, item.value, item.note])).toEqual([
       ["Fitness", "Moderate", "Two hours of easy paddling"],
       ["Age", "Ages 12+", null],
-      ["Accessibility", "Not confirmed. Ask the host before you book.", null],
+      ["Accessibility", "Not confirmed. Ask the guide before you book.", null],
       ["Languages", "English, Yoruba, Nigerian Pidgin", null],
       ["Swimming", "You need to swim 50 metres", null],
       ["Dietary needs", "Vegetarian, Halal", null],

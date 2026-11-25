@@ -9,7 +9,7 @@ describe("SignInLoaderView", () => {
 
     const loader = screen.getByRole("status");
     expect(loader).toHaveClass("fixed", "inset-0", "bg-white");
-    expect(screen.getByAltText("MyJourny")).toBeInTheDocument();
+    expect(screen.getByAltText("Myjourny")).toBeInTheDocument();
     expect(loader).toHaveTextContent("Signing you in…");
   });
 

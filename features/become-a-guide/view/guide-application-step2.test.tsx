@@ -20,7 +20,7 @@ describe("GuideApplicationStep2", () => {
 
     expect(screen.getByLabelText(/Add a website/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Email address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Continue" })[0]).toBeInTheDocument();
     expect(screen.queryByLabelText(/Registered business name/i)).not.toBeInTheDocument();
   });
@@ -52,18 +52,32 @@ describe("GuideApplicationStep2", () => {
   it("leaves out the email and password for a signed-in applicant", () => {
     render(<GuideApplicationStep2 {...defaultProps} signedInEmail="amara@example.com" />);
 
-    expect(screen.getByText("ADD HOSTING TO YOUR ACCOUNT")).toBeInTheDocument();
+    expect(screen.getByText("ADD GUIDING TO YOUR ACCOUNT")).toBeInTheDocument();
     expect(screen.getByText("amara@example.com")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Email address/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Password/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Submit application" })[0]).toBeInTheDocument();
+  });
+
+  it("toggles password visibility when the eye button is clicked", async () => {
+    const user = userEvent.setup();
+    render(<GuideApplicationStep2 {...defaultProps} />);
+
+    const passwordInput = screen.getByLabelText("Password");
+    expect(passwordInput).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: "Show password" }));
+    expect(passwordInput).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(passwordInput).toHaveAttribute("type", "password");
   });
 
   it("says when the email already has an account and offers to log in", async () => {
     const onLogIn = vi.fn();
     render(<GuideApplicationStep2 {...defaultProps} accountExists onLogIn={onLogIn} />);
 
-    expect(screen.getByRole("alert")).toHaveTextContent("You already have a MyJourny account with this email.");
+    expect(screen.getByRole("alert")).toHaveTextContent("You already have a Myjourny account with this email.");
     await userEvent.click(screen.getByRole("button", { name: "Log in to continue" }));
     expect(onLogIn).toHaveBeenCalled();
   });

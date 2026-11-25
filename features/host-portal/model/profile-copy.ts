@@ -11,11 +11,11 @@ export const PROFILE_PANES: { key: ProfilePaneKey; label: string; icon: "person"
 ];
 
 export const PANE_COPY: Record<ProfilePaneKey, { title: string; sub: string }> = {
-  personal: { title: "Personal information", sub: "Only you and MyJourny see this. Guests see your public profile instead." },
+  personal: { title: "Personal information", sub: "Only you and Myjourny see this. Guests see your public profile instead." },
   public: { title: "Your public profile", sub: "This is the page a guest reads before they decide whether to trust you with a Saturday." },
   verify: {
     title: "Verification",
-    sub: "You host as an individual, which is all most hosts ever need. A registered business adds one badge and opens up company bookings.",
+    sub: "You guide as an individual, which is all most guides ever need. A registered business adds one badge and opens up company bookings.",
   },
   notify: { title: "Notifications", sub: "Pick where each thing reaches you. Booking requests always reach WhatsApp, whatever else you turn off." },
   payouts: { title: "Payouts", sub: "One Naira account, paid within 24 hours of each experience or batched on Tuesdays." },

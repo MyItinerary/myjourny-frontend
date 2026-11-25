@@ -33,7 +33,7 @@ describe("shareExperience", () => {
 
     expect(payload).toEqual({
       title: "Lagos Boat Cruise",
-      text: "Check out Lagos Boat Cruise on MyJourny:",
+      text: "Check out Lagos Boat Cruise on Myjourny:",
       url: "https://myjourny.io/experiences/exp-1",
     });
   });
@@ -60,12 +60,12 @@ describe("shareExperience", () => {
 
     expect(mockCanShare).toHaveBeenCalledWith({
       title: "Lagos Boat Cruise",
-      text: "Check out Lagos Boat Cruise on MyJourny:",
+      text: "Check out Lagos Boat Cruise on Myjourny:",
       url: "https://myjourny.io/experiences/exp-1",
     });
     expect(mockShare).toHaveBeenCalledWith({
       title: "Lagos Boat Cruise",
-      text: "Check out Lagos Boat Cruise on MyJourny:",
+      text: "Check out Lagos Boat Cruise on Myjourny:",
       url: "https://myjourny.io/experiences/exp-1",
     });
     expect(mockWriteText).not.toHaveBeenCalled();

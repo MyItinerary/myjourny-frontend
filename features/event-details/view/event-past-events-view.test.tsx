@@ -13,7 +13,7 @@ const events = [
 describe("EventPastEventsView", () => {
   it("shows each past event by its title", () => {
     renderWithProviders(<EventPastEventsView events={events} />);
-    expect(screen.getByRole("heading", { name: "Past events by this host" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Past events by this guide" })).toBeInTheDocument();
     expect(screen.getByText("Afro Futures Summit 2025")).toBeInTheDocument();
     // No caption chips on the photos.
     expect(screen.queryByText("Round-table evening")).not.toBeInTheDocument();

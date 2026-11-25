@@ -19,7 +19,7 @@ const mockCancellationData: TermsData = {
       },
       {
         id: "short-2",
-        text: "If a host cancels, you get a **full refund**.",
+        text: "If a guide cancels, you get a **full refund**.",
       },
     ],
   },
@@ -36,7 +36,7 @@ const mockCancellationData: TermsData = {
       items: [
         {
           number: "1.1",
-          text: "MyJourny applies each host's policy for them.",
+          text: "Myjourny applies each guide's policy for them.",
         },
         {
           number: "1.3",

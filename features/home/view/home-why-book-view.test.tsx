@@ -13,7 +13,7 @@ describe("HomeWhyBookView", () => {
 
     expect(screen.getByRole("heading", { name: "Why book with us?" })).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
-    for (const title of ["Curated, not just listed", "Verified hosts", "Made for you"]) {
+    for (const title of ["Curated, not just listed", "Verified guides", "Made for you"]) {
       expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
     }
   });

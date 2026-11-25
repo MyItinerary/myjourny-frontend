@@ -13,8 +13,8 @@ import { MobileTabBar } from "./mobile-tab-bar";
 export const viewport: Viewport = { viewportFit: "cover" };
 
 export const metadata: Metadata = {
-  title: "MyJourny",
-  description: "MyJourny | connecting travellers with local guides for curated experiences",
+  title: "Myjourny",
+  description: "Myjourny | connecting travellers with local guides for curated experiences",
 };
 
 export default function RootLayout({

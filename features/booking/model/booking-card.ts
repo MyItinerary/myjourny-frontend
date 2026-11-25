@@ -61,7 +61,7 @@ export function cancellationTerms({
     return { body: "Non-refundable: there's no refund if you cancel.", short: "Non-refundable" };
   }
   if (refundPolicy === "custom") {
-    return { body: "The host sets the cancellation terms. See the details.", short: "See the host's cancellation terms" };
+    return { body: "The guide sets the cancellation terms. See the details.", short: "See the guide's cancellation terms" };
   }
   return {
     body: `You can only cancel up to ${CANCEL_CUTOFF_HOURS} hours before the experience.`,

@@ -14,10 +14,10 @@ vi.mock("@/features/footer", () => ({
 vi.mock("@/features/legal", () => ({
   useHostTermsViewModel: () => ({
     data: {
-      title: "Host Terms",
+      title: "Guide Terms",
       lastUpdated: "[DATE]",
-      companyAgreementText: "These terms are an agreement between [COMPANY LEGAL NAME] and the host.",
-      agreementNoticeText: "By applying to host, you accept these terms.",
+      companyAgreementText: "These terms are an agreement between [COMPANY LEGAL NAME] and the guide.",
+      agreementNoticeText: "By applying to guide, you accept these terms.",
       shortVersion: {
         title: "The short version",
         disclaimer: "Disclaimer",
@@ -40,7 +40,7 @@ describe("HostTermsContent", () => {
 
     expect(screen.getByTestId("mock-home-nav")).toBeInTheDocument();
     expect(screen.getByTestId("mock-host-terms-view")).toBeInTheDocument();
-    expect(screen.getByTestId("mock-host-terms-view")).toHaveTextContent("Host Terms");
+    expect(screen.getByTestId("mock-host-terms-view")).toHaveTextContent("Guide Terms");
     expect(screen.getByTestId("mock-footer")).toBeInTheDocument();
   });
 });

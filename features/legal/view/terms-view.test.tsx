@@ -15,13 +15,13 @@ const mockTermsData: TermsData = {
     items: [
       {
         id: "short-1",
-        text: "MyJourny is a marketplace. Hosts run the experiences.",
+        text: "Myjourny is a marketplace. Guides run the experiences.",
       },
     ],
   },
   tableOfContents: [
     { id: "short-version", label: "The short version" },
-    { id: "section-1", label: "1. What MyJourny is, and what it is not" },
+    { id: "section-1", label: "1. What Myjourny is, and what it is not" },
     { id: "section-2", label: "2. Your account" },
     { id: "section-11", label: "11. Acceptable use" },
     { id: "part-b", label: "PART II: EVENTS AND TICKETS", isPartHeading: true },
@@ -30,16 +30,16 @@ const mockTermsData: TermsData = {
     {
       id: "section-1",
       number: "1.",
-      title: "1. What MyJourny is, and what it is not",
+      title: "1. What Myjourny is, and what it is not",
       items: [
         {
           number: "1.1",
-          text: "MyJourny is an online marketplace.",
+          text: "Myjourny is an online marketplace.",
         },
         {
           number: "1.2",
-          boldPrefix: "The host is the seller.",
-          text: "When you book, the agreement is with the host.",
+          boldPrefix: "The guide is the seller.",
+          text: "When you book, the agreement is with the guide.",
         },
       ],
     },
@@ -108,7 +108,7 @@ describe("TermsView", () => {
     expect(screen.getByRole("navigation", { name: "Table of contents" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "The short version" })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "1. What MyJourny is, and what it is not" })
+      screen.getByRole("button", { name: "1. What Myjourny is, and what it is not" })
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "PART II: EVENTS AND TICKETS" })).toBeInTheDocument();
 
@@ -123,7 +123,7 @@ describe("TermsView", () => {
 
     expect(screen.getByRole("heading", { level: 2, name: "The short version" })).toBeInTheDocument();
     expect(
-      screen.getByText(/MyJourny is a marketplace\. Hosts run the experiences\./)
+      screen.getByText(/Myjourny is a marketplace\. Guides run the experiences\./)
     ).toBeInTheDocument();
     expect(
       screen.getByText("This summary is for convenience. The full terms below are what apply.")
@@ -135,9 +135,9 @@ describe("TermsView", () => {
 
     // Numbered sections and bold lead-ins
     expect(
-      screen.getByRole("heading", { level: 2, name: "1. What MyJourny is, and what it is not" })
+      screen.getByRole("heading", { level: 2, name: "1. What Myjourny is, and what it is not" })
     ).toBeInTheDocument();
-    expect(screen.getByText("The host is the seller.")).toBeInTheDocument();
+    expect(screen.getByText("The guide is the seller.")).toBeInTheDocument();
     expect(screen.getByText("Instant booking.")).toBeInTheDocument();
 
     // Acceptable use bullets
@@ -164,7 +164,7 @@ describe("TermsView", () => {
         items: [
           {
             question: "Who is responsible?",
-            answer: "MyJourny is responsible.",
+            answer: "Myjourny is responsible.",
           },
         ],
       },
@@ -192,7 +192,7 @@ describe("TermsView", () => {
 
     expect(screen.getByRole("heading", { level: 2, name: "At a glance" })).toBeInTheDocument();
     expect(screen.getByText("Who is responsible?")).toBeInTheDocument();
-    expect(screen.getByText("MyJourny is responsible.")).toBeInTheDocument();
+    expect(screen.getByText("Myjourny is responsible.")).toBeInTheDocument();
     expect(screen.getByText("Col 1")).toBeInTheDocument();
     expect(screen.getByText("Val 1")).toBeInTheDocument();
     expect(screen.getByText("Table note here")).toBeInTheDocument();

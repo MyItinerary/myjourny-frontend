@@ -11,14 +11,14 @@ describe("ExperienceFitView", () => {
       <ExperienceFitView
         items={[
           { kind: "fitness", label: "Fitness", value: "Moderate", note: "Two hours of easy paddling" },
-          { kind: "accessibility", label: "Accessibility", value: "Not confirmed. Ask the host before you book.", note: null },
+          { kind: "accessibility", label: "Accessibility", value: "Not confirmed. Ask the guide before you book.", note: null },
         ]}
       />,
     );
     expect(screen.getByRole("heading", { name: "Fit and logistics" })).toBeInTheDocument();
     expect(screen.getByText("Moderate")).toBeInTheDocument();
     expect(screen.getByText("Two hours of easy paddling")).toBeInTheDocument();
-    expect(screen.getByText("Not confirmed. Ask the host before you book.")).toBeInTheDocument();
+    expect(screen.getByText("Not confirmed. Ask the guide before you book.")).toBeInTheDocument();
   });
 
   it("shows swimming and dietary needs", () => {

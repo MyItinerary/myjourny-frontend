@@ -32,7 +32,7 @@ export function StepBasics({ vm }: Props) {
       <div className="overflow-hidden rounded-[14px] bg-[#FAF9F7] shadow-[inset_0_0_0_1px_#E9E1D2]">
         <button type="button" onClick={helper.onToggle} aria-expanded={helper.open} className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3.5 text-left">
           <Lightbulb className="size-[18px] shrink-0 text-[#333134]" />
-          <span className="flex-1 text-[13px] font-medium">Most hosts describe the activity. The ones who sell out describe the feeling.</span>
+          <span className="flex-1 text-[13px] font-medium">Most guides describe the activity. The ones who sell out describe the feeling.</span>
           <span className="text-xs font-medium text-[#F5032D]">{helper.open ? "Hide" : "Show me"}</span>
         </button>
         {helper.open && (

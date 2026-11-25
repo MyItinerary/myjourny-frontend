@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { SearchContent } from "./content";
 
 export const metadata: Metadata = {
-  title: "Search Experiences | MyJourny",
+  title: "Search Experiences | Myjourny",
   description: "Find unique travel experiences matched to your vibe and interests.",
 };
 

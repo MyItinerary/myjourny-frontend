@@ -60,7 +60,7 @@ export function HeroSection() {
             variants={heroItemVariants}
             className="max-w-[508px] font-sans text-lg font-normal leading-[28px] text-[#6F6B72] lg:text-[24px] lg:leading-normal"
           >
-            Real experiences hosted by real people, booked in under 2 minutes.
+            Real experiences guided by real people, booked in under 2 minutes.
           </motion.p>
         </div>
 

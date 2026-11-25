@@ -34,7 +34,7 @@ test.describe("signing in", () => {
 
     const loader = page.getByTestId("sign-in-loader");
     await expect(loader).toBeVisible();
-    await expect(loader.getByAltText("MyJourny")).toBeVisible();
+    await expect(loader.getByAltText("Myjourny")).toBeVisible();
     await expect(loader).toHaveCSS("background-color", "rgb(255, 255, 255)");
 
     await expect(page).toHaveURL(/\/$/);

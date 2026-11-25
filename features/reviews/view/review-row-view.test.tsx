@@ -56,9 +56,9 @@ describe("ReviewRowView", () => {
     expect(container.querySelector("img")).toBeInTheDocument();
   });
 
-  it("shows the host's reply with their initials", () => {
-    renderRow({ hostReply: { author: "Tunde, host", text: "Thank you!", initials: "T" } });
-    expect(screen.getByText("Reply from Tunde, host")).toBeInTheDocument();
+  it("shows the guide's reply with their initials", () => {
+    renderRow({ hostReply: { author: "Tunde, guide", text: "Thank you!", initials: "T" } });
+    expect(screen.getByText("Reply from Tunde, guide")).toBeInTheDocument();
     expect(screen.getByText("T")).toBeInTheDocument();
   });
 

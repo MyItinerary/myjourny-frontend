@@ -6,9 +6,9 @@ import { renderWithProviders } from "@/test/utils/render";
 import { ExternalBookingView } from "./external-booking-view";
 
 describe("ExternalBookingView", () => {
-  it("links a signed-in guest to the host's booking page", () => {
+  it("links a signed-in guest to the guide's booking page", () => {
     renderWithProviders(<ExternalBookingView url="https://tickets.example.com/kayak" signedIn loginHref="/login" />);
-    const link = screen.getByRole("link", { name: /Book on the host's site/ });
+    const link = screen.getByRole("link", { name: /Book on the guide's site/ });
     expect(link).toHaveAttribute("href", "https://tickets.example.com/kayak");
     expect(link).toHaveAttribute("target", "_blank");
   });
@@ -23,7 +23,7 @@ describe("ExternalBookingView", () => {
 
   it("tells a signed-in user when there's no usable link", () => {
     renderWithProviders(<ExternalBookingView url={null} signedIn loginHref="/login" />);
-    expect(screen.getByText("The host hasn't shared a booking link yet.")).toBeInTheDocument();
+    expect(screen.getByText("The guide hasn't shared a booking link yet.")).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

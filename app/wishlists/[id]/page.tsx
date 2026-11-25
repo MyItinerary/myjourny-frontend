@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { WishlistDetailContent } from "./content";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: "Wishlist Collection | MyJourny" };
+  return { title: "Wishlist Collection | Myjourny" };
 }
 
 export default async function WishlistDetailPage({

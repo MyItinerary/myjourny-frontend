@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { BookingDetail } from "@/components/bookings/booking-detail";
 
 export const metadata: Metadata = {
-  title: "Your booking — MyJourny",
+  title: "Your booking — Myjourny",
 };
 
 export default async function BookingPage({ params }: { params: Promise<{ id: string }> }) {

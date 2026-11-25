@@ -9,8 +9,8 @@ const REASONS = [
     icon: "/images/home/why-book-with-us/Curated-not-listed.jpg",
   },
   {
-    title: "Verified hosts",
-    description: "Every host is vetted, reviewed, and held to a standard. Quality is rewarded, not gamed.",
+    title: "Verified guides",
+    description: "Every guide is vetted, reviewed, and held to a standard. Quality is rewarded, not gamed.",
     icon: "/images/home/why-book-with-us/Verified-hosts.jpg",
   },
   {

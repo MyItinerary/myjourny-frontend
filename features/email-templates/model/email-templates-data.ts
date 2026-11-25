@@ -26,10 +26,10 @@ export const DEFAULT_PASSWORD_RESET_EMAIL: PasswordResetEmailData = {
   securityNote:
     "Wasn't you? No action needed, your password stays exactly as it is unless this code gets used.",
   signOffPrefix: "See you out there.",
-  signOffTeam: "From MyJourny",
+  signOffTeam: "From Myjourny",
   footerNotice: "This is an automated security message, replies to this address aren't monitored.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const DEFAULT_BOOKING_CONFIRMED_EMAIL: BookingConfirmedEmailData = {
@@ -58,10 +58,10 @@ export const DEFAULT_BOOKING_CONFIRMED_EMAIL: BookingConfirmedEmailData = {
   manageBookingUrl: "https://myjourny.io/bookings/2f6c1a9e-4b7d-4e2a-9c31-5d8e0f7a6b42",
   explorerCountNote: "6 other explorers are joining this sunrise. See you on the water.",
   signOffPrefix: "Go make a story,",
-  signOffTeam: "MyJourny team",
+  signOffTeam: "Myjourny team",
   footerNotice: "This confirms your booking, keep it for your records.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const DEFAULT_TODAY_REMINDER_EMAIL: TodayReminderEmailData = {
@@ -90,10 +90,10 @@ export const DEFAULT_TODAY_REMINDER_EMAIL: TodayReminderEmailData = {
   ],
   whatsappNote: "Running behind? Message Tobi on WhatsApp, he's expecting you and would rather know.",
   signOffPrefix: "See you at the jetty,",
-  signOffTeam: "MyJourny team",
-  footerNotice: "This is a copy of what's already in your MyJourny app and WhatsApp.",
+  signOffTeam: "Myjourny team",
+  footerNotice: "This is a copy of what's already in your Myjourny app and WhatsApp.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const DEFAULT_PAYMENT_CONFIRMED_EMAIL: PaymentConfirmedEmailData = {
@@ -113,10 +113,10 @@ export const DEFAULT_PAYMENT_CONFIRMED_EMAIL: PaymentConfirmedEmailData = {
   checkInCode: "MJ-84213",
   downloadReceiptUrl: "https://itin-adys.onrender.com/bookings/2f6c1a9e-4b7d-4e2a-9c31-5d8e0f7a6b42/receipt.pdf?token=9k2mxa71",
   billingEmail: "billing@myjourny.app",
-  signOffTeam: "MyJourny team",
+  signOffTeam: "Myjourny team",
   footerNotice:
-    "Keep this receipt for your records, it may be used for expense or tax purposes. MyJourny Ltd is the merchant of record for this transaction.",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+    "Keep this receipt for your records, it may be used for expense or tax purposes. Myjourny Ltd is the merchant of record for this transaction.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const DEFAULT_BOOKING_CANCELLED_EMAIL: BookingCancelledEmailData = {
@@ -135,10 +135,10 @@ export const DEFAULT_BOOKING_CANCELLED_EMAIL: BookingCancelledEmailData = {
   billingEmail: "billing@myjourny.app",
   bookingCode: "MJ-10552",
   signOffPrefix: "Until next time,",
-  signOffTeam: "MyJourny Team",
+  signOffTeam: "Myjourny Team",
   footerNotice: "This confirms the cancellation of booking MJ-10552.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const DEFAULT_VERIFY_EMAIL_EMAIL: VerifyEmailEmailData = {
@@ -150,13 +150,13 @@ export const DEFAULT_VERIFY_EMAIL_EMAIL: VerifyEmailEmailData = {
   buttonLabel: "Verify email",
   expiresInHours: 24,
   discoveryNote:
-    "Once verified, you'll be ready to browse and book real experiences in Lagos and Abuja, hosted by people who actually live there.",
-  unrecognizedNote: "Didn't create a MyJourny account? You can safely ignore this email.",
+    "Once verified, you'll be ready to browse and book real experiences in Lagos and Abuja, guided by people who actually live there.",
+  unrecognizedNote: "Didn't create a Myjourny account? You can safely ignore this email.",
   signOffPrefix: "Can't wait to see where you go,",
-  signOffTeam: "The MyJourny Team",
+  signOffTeam: "The Myjourny Team",
   footerNotice: "This is an automated message, replies to this address aren't monitored.",
   helpEmail: "support@myjourny.app",
-  copyright: "© 2026 MyJourny Ltd. Lagos, Nigeria.",
+  copyright: "© 2026 Myjourny Ltd. Lagos, Nigeria.",
 };
 
 export const EMAIL_TEMPLATES_CATALOG: EmailCatalogItem[] = [
@@ -171,7 +171,7 @@ export const EMAIL_TEMPLATES_CATALOG: EmailCatalogItem[] = [
     id: "booking-confirmed",
     title: "Booking Confirmed",
     eyebrow: "Bookings",
-    description: "Confirmation with date, time, host info and inclusions",
+    description: "Confirmation with date, time, guide info and inclusions",
     heroImageSrc: EMAIL_HERO_2_SRC,
   },
   {

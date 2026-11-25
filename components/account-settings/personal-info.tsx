@@ -179,12 +179,12 @@ export function PersonalInfoSection() {
         <Row
           label="Preferred name"
           value={values.preferredName}
-          note="Optional. Shown to hosts and other guests instead of your legal name."
+          note="Optional. Shown to guides and other guests instead of your legal name."
           actionLabel={preferredNameAction}
           onAction={() => openModal("preferredName")}
         />
         <Row
-          label="Display name for hosts and curators"
+          label="Display name for guides and curators"
           value={values.displayName}
           note="Choose between your full name and your first name only."
           actionLabel="Edit"
@@ -193,7 +193,7 @@ export function PersonalInfoSection() {
         <Row
           label="Phone number"
           value={values.phone}
-          note="Shared with your host for the day of the experience. Booking updates reach you by push and email, not by text."
+          note="Shared with your guide for the day of the experience. Booking updates reach you by push and email, not by text."
           actionLabel="Edit"
           onAction={() => openModal("phone1")}
         />
@@ -232,7 +232,7 @@ export function PersonalInfoSection() {
             onChange={(e) => setLegalNameDraft(e.target.value)}
           />
           <div className="mt-2.5 text-sm text-muted-foreground">
-            Use the name on your government ID. Guests and hosts see your display name, not this.
+            Use the name on your government ID. Guests and guides see your display name, not this.
           </div>
           <ModalFooter
             onCancel={closeModal}
@@ -254,7 +254,7 @@ export function PersonalInfoSection() {
             onChange={(e) => setPreferredNameDraft(e.target.value)}
           />
           <div className="mt-2.5 text-sm text-muted-foreground">
-            Shown to hosts and other guests instead of your legal name. Your legal name stays on
+            Shown to guides and other guests instead of your legal name. Your legal name stays on
             your ID and your receipts.
           </div>
           <ModalFooter
@@ -265,7 +265,7 @@ export function PersonalInfoSection() {
               save(
                 { preferred_name: trimmed || null },
                 trimmed
-                  ? `Saved. Hosts and other guests now see ${trimmed}.`
+                  ? `Saved. Guides and other guests now see ${trimmed}.`
                   : "Saved. Your preferred name has been removed.",
               );
             }}
@@ -274,7 +274,7 @@ export function PersonalInfoSection() {
       )}
 
       {modal === "displayName" && (
-        <ModalShell title="Display name for hosts and curators" onClose={closeModal}>
+        <ModalShell title="Display name for guides and curators" onClose={closeModal}>
           <div className="flex flex-col gap-2.5">
             {([SHOW_FULL, SHOW_FIRST] as const).map((label) => {
               const selected = displayNameDraft === label;
@@ -314,7 +314,7 @@ export function PersonalInfoSection() {
               const shown = full ? legalName : firstNameOf(legalName);
               save(
                 { display_name_preference: full ? "full" : "first_name_only" },
-                `Saved. Hosts and curators now see ${shown}.`,
+                `Saved. Guides and curators now see ${shown}.`,
               );
             }}
           />
@@ -404,7 +404,7 @@ export function PersonalInfoSection() {
                   confirmPhoneChange.mutate(otp.join(""), {
                     onSuccess: () => {
                       setSavedMessage(
-                        `Saved. Your host will reach you on ${maskPhone(nigerianE164(phoneDraft))} on the day.`,
+                        `Saved. Your guide will reach you on ${maskPhone(nigerianE164(phoneDraft))} on the day.`,
                       );
                       closeModal();
                     },
@@ -496,7 +496,7 @@ export function PersonalInfoSection() {
           </div>
           <div className="mt-2.5 text-sm text-muted-foreground">
             We contact this person only if something goes wrong during an experience. They are
-            never shown to hosts or other guests.
+            never shown to guides or other guests.
           </div>
           <ModalFooter
             onCancel={closeModal}

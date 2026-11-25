@@ -13,13 +13,13 @@ describe("termsData", () => {
   it("contains the short version summary bullets", () => {
     expect(termsData.shortVersion).toBeDefined();
     expect(termsData.shortVersion?.items.length).toBe(5);
-    expect(termsData.shortVersion?.items[0].text).toContain("MyJourny is a marketplace");
+    expect(termsData.shortVersion?.items[0].text).toContain("Myjourny is a marketplace");
   });
 
   it("defines all table of contents items including Part II", () => {
     expect(termsData.tableOfContents.length).toBe(18);
     expect(termsData.tableOfContents[0].id).toBe("short-version");
-    expect(termsData.tableOfContents[1].label).toBe("1. What MyJourny is, and what it is not");
+    expect(termsData.tableOfContents[1].label).toBe("1. What Myjourny is, and what it is not");
     expect(termsData.tableOfContents[17].id).toBe("part-b");
     expect(termsData.tableOfContents[17].isPartHeading).toBe(true);
   });
