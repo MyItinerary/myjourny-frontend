@@ -9,6 +9,7 @@ import { renderHookWithProviders } from "@/test/utils/render";
 import {
   startOfToday,
   toIsoDay,
+  formatGuests,
   withDate,
   DEFAULT_ACTIVITIES,
   DEFAULT_DESTINATIONS,
@@ -43,6 +44,8 @@ describe("search model constants & mappers", () => {
     expect(toIsoDay(new Date(2030, 0, 5))).toBe("2030-01-05");
     expect(withDate("/cities/lagos", "2030-01-05")).toBe("/cities/lagos?date=2030-01-05");
     expect(withDate("/cities/lagos", null)).toBe("/cities/lagos");
+    expect(withDate("/cities/lagos", "2030-01-05", true)).toBe("/cities/lagos?date=2030-01-05&children=true");
+    expect(withDate("/cities/lagos", null, true)).toBe("/cities/lagos?children=true");
     expect(startOfToday(new Date(2030, 0, 5, 17, 30))).toEqual(new Date(2030, 0, 5));
   });
 
@@ -121,5 +124,14 @@ describe("useSearchExperiences", () => {
 
     expect(result.current.fetchStatus).toBe("idle");
     expect(result.current.data).toBeUndefined();
+  });
+});
+
+describe("formatGuests", () => {
+  it("names each group picked", () => {
+    expect(formatGuests({ adults: 0, children: 2, infants: 0 })).toBe("2 children");
+    expect(formatGuests({ adults: 1, children: 1, infants: 0 })).toBe("1 adult, 1 child");
+    expect(formatGuests({ adults: 2, children: 0, infants: 1 })).toBe("2 adults, 1 infant");
+    expect(formatGuests({ adults: 0, children: 0, infants: 0 })).toBe("");
   });
 });

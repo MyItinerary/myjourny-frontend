@@ -74,6 +74,7 @@ function panelViewModel(overrides: Partial<BookingPanelViewModel> = {}): Booking
         body: "You can only cancel up to 24 hours before the experience.",
         hint: "Tickets are non-refundable and valid only for this edition of Lagos Trivia Night. Capacity is limited, and tickets may not be available at the door. Please confirm your availability before purchasing.",
       },
+      age: null,
     },
     ...overrides,
   };
@@ -257,6 +258,19 @@ describe("BookingPanelView", () => {
     renderWithProviders(<BookingPanelView {...panelViewModel({ card: { ...base.card, cancellation: { ...base.card.cancellation, hint: null } } })} />);
     expect(screen.queryByRole("button", { name: "About the cancellation policy" })).not.toBeInTheDocument();
     expect(screen.getByText("You can only cancel up to 24 hours before the experience.")).toBeInTheDocument();
+  });
+
+  it("shows who can come when the host limits it by age", () => {
+    const base = panelViewModel();
+    renderWithProviders(
+      <BookingPanelView
+        {...panelViewModel({
+          card: { ...base.card, age: { title: "Who can come", body: "Adults only. Children can't come on this experience.", hint: null } },
+        })}
+      />,
+    );
+    expect(screen.getByText("Who can come")).toBeInTheDocument();
+    expect(screen.getByText("Adults only. Children can't come on this experience.")).toBeInTheDocument();
   });
 
   it("shows no rows when there is nothing extra to say", () => {

@@ -159,6 +159,7 @@ export function BookingPanelView(props: Props) {
       <div className="flex flex-col gap-4">
         <div className="h-px bg-[#E7E7E7]" />
         <InfoRow {...card.cancellation} />
+        {card.age && <InfoRow {...card.age} />}
       </div>
     </div>
   );

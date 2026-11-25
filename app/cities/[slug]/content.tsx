@@ -40,12 +40,16 @@ export function CityContent({ cityName, country }: { cityName: string; country?:
   const [interest, setInterest] = useState<string | null>(null);
 
   // A day picked in the search bar narrows the results to that day.
-  const date = useSearchParams().get("date") ?? undefined;
+  const searchParams = useSearchParams();
+  const date = searchParams.get("date") ?? undefined;
+  // Children are coming: leave out adults-only listings.
+  const children = searchParams.get("children") === "true" || undefined;
   const filters = useListingFiltersViewModel();
   const cityQuery = useInfiniteFilteredExperiences({
     city: cityName,
     interest: interest ?? undefined,
     date,
+    children,
     ...filters.params,
     pageSize: PAGE_SIZE,
   });

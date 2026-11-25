@@ -352,6 +352,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               cancellationPolicy={experience.cancellation_policy}
               refundPolicy={experience.refund_policy}
               freeCancellationHours={experience.free_cancellation_hours}
+              agePolicy={experience.age_policy}
+              minAge={experience.min_age}
               onGuestBook={onGuestBook}
             />
           )}
@@ -408,6 +410,8 @@ export function ExperienceDetailContent({ id }: { id: string }) {
               cancellationPolicy={experience.cancellation_policy}
               refundPolicy={experience.refund_policy}
               freeCancellationHours={experience.free_cancellation_hours}
+              agePolicy={experience.age_policy}
+              minAge={experience.min_age}
               onGuestBook={onGuestBook}
               onClose={() => setMobileBookingOpen(false)}
             />

@@ -23,11 +23,15 @@ export function CategoryPageContent({ slug, label }: { slug: string; label: stri
   const resolvedLabel = matchedCategory ? matchedCategory.text : label;
 
   // A day picked in the search bar narrows the results to that day.
-  const date = useSearchParams().get("date") ?? undefined;
+  const searchParams = useSearchParams();
+  const date = searchParams.get("date") ?? undefined;
+  // Children are coming: leave out adults-only listings.
+  const children = searchParams.get("children") === "true" || undefined;
   const filters = useListingFiltersViewModel();
   const query = useInfiniteFilteredExperiences({
     interest: slug,
     date,
+    children,
     ...filters.params,
     pageSize: PAGE_SIZE,
     enabled: hydrated,

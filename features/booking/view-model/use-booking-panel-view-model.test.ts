@@ -435,6 +435,22 @@ describe("useBookingPanelViewModel", () => {
     });
   });
 
+  it("states the age rule on the card when the host limits who can come", async () => {
+    stubApi();
+    const { result } = renderHookWithProviders(() =>
+      useBookingPanelViewModel({ ...props, agePolicy: "adult_required_under", minAge: 12 }),
+    );
+    await waitFor(() => expect(result.current.quote).not.toBeNull());
+    expect(result.current.card.age).toEqual({
+      title: "Who can come",
+      body: "Under 12s must come with an adult, so book at least one adult ticket.",
+      hint: null,
+    });
+
+    const anyone = renderHookWithProviders(() => useBookingPanelViewModel({ ...props, agePolicy: "all_ages" }));
+    expect(anyone.result.current.card.age).toBeNull();
+  });
+
   it("shows only the day for an unscheduled experience, not the server's noon", async () => {
     stubApi({
       scheduled: false,

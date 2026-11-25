@@ -101,7 +101,7 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.guests.adults).toBe(1);
     expect(result.current.guests.children).toBe(1);
     expect(result.current.totalGuests).toBe(2);
-    expect(result.current.whoText).toContain("2 guests");
+    expect(result.current.whoText).toBe("1 adult, 1 child");
 
     act(() => {
       result.current.decrementGuest("adults");
@@ -164,6 +164,16 @@ describe("useSearchBarViewModel", () => {
     act(() => result.current.onSearch());
 
     expect(mockPush).toHaveBeenCalledWith("/cities/lagos?date=2030-06-01");
+  });
+
+  it("tells the city's results children are coming", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel());
+
+    act(() => result.current.onSelectDestination({ id: "lagos", city: "Lagos, Nigeria", description: "" }));
+    act(() => result.current.incrementGuest("children"));
+    act(() => result.current.onSearch());
+
+    expect(mockPush).toHaveBeenCalledWith("/cities/lagos?children=true");
   });
 
   it("navigates to city route on destination selection", () => {
@@ -262,6 +272,6 @@ describe("useSearchBarViewModel", () => {
     act(() => {
       result.current.incrementGuest("infants");
     });
-    expect(result.current.whoText).toBe("4 guests, 1 infant");
+    expect(result.current.whoText).toBe("3 adults, 1 infant");
   });
 });

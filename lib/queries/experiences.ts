@@ -311,6 +311,8 @@ export type ExperienceFilters = {
   rating_min?: number;
   /** YYYY-MM-DD: only experiences someone can start that day (today or later). */
   date?: string;
+  /** Only listings children can come on (leaves out adults-only ones). */
+  children?: boolean;
   sort?: "created_at_desc" | "rating_desc" | "price_asc" | "price_desc";
 };
 

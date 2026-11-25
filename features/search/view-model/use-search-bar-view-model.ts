@@ -12,6 +12,7 @@ import {
   startOfToday,
   toIsoDay,
   useSearchExperiences,
+  formatGuests,
   withDate,
 } from "../model/search";
 import type {
@@ -36,12 +37,6 @@ export const GUEST_TYPES: { key: keyof GuestCounts; label: string; description: 
   { key: "children", label: "Children", description: "Ages 2 - 12" },
   { key: "infants", label: "Infants", description: "Under 2" },
 ];
-
-function formatGuestsText(counts: GuestCounts) {
-  const total = counts.adults + counts.children + counts.infants;
-  if (total <= 0) return "";
-  return `${total} guest${total > 1 ? "s" : ""}${counts.infants > 0 ? `, ${counts.infants} infant${counts.infants > 1 ? "s" : ""}` : ""}`;
-}
 
 export function useSearchBarViewModel({
   variant = "hero",
@@ -138,7 +133,7 @@ export function useSearchBarViewModel({
     );
   }, [trimmedQuery]);
 
-  const whoText = typedWho ?? formatGuestsText(guests);
+  const whoText = typedWho ?? formatGuests(guests);
 
   const updateGuests = useCallback((newGuests: GuestCounts) => {
     setGuests(newGuests);
@@ -218,6 +213,8 @@ export function useSearchBarViewModel({
       handleClose();
       // The day they picked goes to city and category results.
       const day = selectedWhen && selectedDate && selectedDate >= minDate ? toIsoDay(selectedDate) : null;
+      // Children coming leaves out adults-only listings.
+      const withChildren = guests.children > 0;
 
       if (selectedType === "experience" && selectedWhereId) {
         router.push(`/experiences/${selectedWhereId}`);
@@ -225,12 +222,12 @@ export function useSearchBarViewModel({
       }
 
       if (selectedType === "activity" && selectedWhereId) {
-        router.push(withDate(`/categories/${selectedWhereId}`, day));
+        router.push(withDate(`/categories/${selectedWhereId}`, day, withChildren));
         return;
       }
 
       if (selectedType === "destination" && selectedWhereId) {
-        router.push(withDate(`/cities/${selectedWhereId}`, day));
+        router.push(withDate(`/cities/${selectedWhereId}`, day, withChildren));
         return;
       }
 
@@ -250,28 +247,28 @@ export function useSearchBarViewModel({
       );
 
       if (matchedDest && !matchedAct) {
-        router.push(withDate(`/cities/${matchedDest.id}`, day));
+        router.push(withDate(`/cities/${matchedDest.id}`, day, withChildren));
         return;
       }
 
       if (matchedAct) {
-        router.push(withDate(`/categories/${matchedAct.id}`, day));
+        router.push(withDate(`/categories/${matchedAct.id}`, day, withChildren));
         return;
       }
 
       if (matchedDest) {
-        router.push(withDate(`/cities/${matchedDest.id}`, day));
+        router.push(withDate(`/cities/${matchedDest.id}`, day, withChildren));
         return;
       }
 
       if (categoriesBySlug.has(trimmed)) {
-        router.push(withDate(`/categories/${trimmed}`, day));
+        router.push(withDate(`/categories/${trimmed}`, day, withChildren));
         return;
       }
 
       router.push(`/search?q=${encodeURIComponent(rawQuery)}`);
     },
-    [destinations, handleClose, minDate, router, selectedDate, selectedType, selectedWhen, selectedWhere, selectedWhereId],
+    [destinations, guests.children, handleClose, minDate, router, selectedDate, selectedType, selectedWhen, selectedWhere, selectedWhereId],
   );
 
   const onNavigateToDestination = useCallback(

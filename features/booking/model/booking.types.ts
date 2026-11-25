@@ -5,12 +5,16 @@ export type Money = string | number;
 
 export type PricingUnit = "per_person" | "per_booking" | "per_day";
 
+export type GuestType = "adult" | "child" | "student" | "other";
+
 export type TicketType = {
   id: string;
   label: string;
   description?: string | null;
   amount: Money;
   pricing_unit: PricingUnit;
+  /** Who the ticket is for, when the host says (helm "Guest types"). */
+  guest_type?: GuestType | null;
 };
 
 export type ExperienceAddon = {

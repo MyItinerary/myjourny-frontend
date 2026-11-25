@@ -24,9 +24,25 @@ export function toIsoDay(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-/** A results page link, carrying the searched day when there is one. */
-export function withDate(path: string, isoDay: string | null): string {
-  return isoDay ? `${path}?date=${isoDay}` : path;
+/** A results page link, carrying the searched day when there is one, and
+ * `children=true` when children are coming (leaves out adults-only listings). */
+export function withDate(path: string, isoDay: string | null, children = false): string {
+  const params = new URLSearchParams();
+  if (isoDay) params.set("date", isoDay);
+  if (children) params.set("children", "true");
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** "1 adult, 2 children, 1 infant"; only the groups picked. */
+export function formatGuests(counts: { adults: number; children: number; infants: number }): string {
+  const parts = [];
+  if (counts.adults > 0) parts.push(plural(counts.adults, "adult", "adults"));
+  if (counts.children > 0) parts.push(plural(counts.children, "child", "children"));
+  if (counts.infants > 0) parts.push(plural(counts.infants, "infant", "infants"));
+  return parts.join(", ");
 }
 
 export const DEFAULT_DESTINATIONS: DestinationSuggestion[] = [

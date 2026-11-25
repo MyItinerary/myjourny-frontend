@@ -22,6 +22,21 @@ const render = (options: Partial<Parameters<typeof useTicketSelection>[0]> = {})
   );
 
 describe("useTicketSelection", () => {
+  it("leaves child tickets out on an adults-only listing", () => {
+    const withChild: ExperiencePricing = {
+      ...pricing,
+      prices: [
+        { id: "adult", label: "Adult", amount: "5000.00", pricing_unit: "per_person", guest_type: "adult" },
+        { id: "child", label: "Child", amount: "2000.00", pricing_unit: "per_person", guest_type: "child" },
+      ],
+    };
+    const { result } = render({ pricing: withChild, adultsOnly: true });
+
+    expect(result.current.tickets.map((t) => t.id)).toEqual(["adult"]);
+    // The cheapest ticket left is the adult one, so that's where the group starts.
+    expect(result.current.picked.items).toEqual([{ experience_price_id: "adult", quantity: 2 }]);
+  });
+
   it("starts the cheapest ticket at the minimum group size", () => {
     const { result } = render();
     expect(result.current.priceFrom).toEqual({ amount: "₦3,000", unit: "/ person / day", unitWords: "per person, per day", showFrom: true });

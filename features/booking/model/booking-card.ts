@@ -1,4 +1,4 @@
-import type { PriceRule, PricingUnit, QuoteLine, QuoteSaving } from "./booking.types";
+import type { GuestType, PriceRule, PricingUnit, QuoteLine, QuoteSaving } from "./booking.types";
 import { parseDateKey } from "./sessions";
 
 // Stand-ins until itin serves the per-experience values (booking card spec):
@@ -169,4 +169,61 @@ export function groupHeadline(
     was: shortPrice(Number(ticket.unit_amount), currency),
     pill: min ? `Group of ${min}+` : "Group discount",
   };
+}
+
+const GUEST_WORDS: Partial<Record<GuestType, [string, string]>> = {
+  adult: ["adult", "adults"],
+  child: ["child", "children"],
+  student: ["student", "students"],
+};
+
+/** "1 adult, 2 children" from the tickets picked. Tickets the host hasn't
+ * typed keep their own label ("2 Standard"). Null when there's nothing to say
+ * beyond a guest count (several untyped tickets). */
+export function guestSummary(
+  items: { experience_price_id: string; quantity: number }[],
+  tickets: { id: string; label: string; guest_type?: GuestType | null }[],
+): string | null {
+  const counts = new Map<string, number>();
+  const words = new Map<string, [string, string]>();
+  for (const item of items) {
+    if (item.quantity <= 0) continue;
+    const ticket = tickets.find((t) => t.id === item.experience_price_id);
+    const typed = ticket?.guest_type ? GUEST_WORDS[ticket.guest_type] : undefined;
+    const key = typed ? `type:${ticket?.guest_type}` : `label:${ticket?.label ?? "ticket"}`;
+    words.set(key, typed ?? [ticket?.label ?? "ticket", ticket?.label ?? "tickets"]);
+    counts.set(key, (counts.get(key) ?? 0) + item.quantity);
+  }
+  if (counts.size === 0) return null;
+  const typedKeys = [...counts.keys()].filter((k) => k.startsWith("type:"));
+  if (typedKeys.length === 0 && counts.size > 1) return null;
+  const order = ["type:adult", "type:child", "type:student"];
+  const keys = [...counts.keys()].sort((a, b) => {
+    const ia = order.indexOf(a);
+    const ib = order.indexOf(b);
+    return (ia === -1 ? order.length : ia) - (ib === -1 ? order.length : ib);
+  });
+  return keys
+    .map((key) => {
+      const n = counts.get(key) ?? 0;
+      const [one, many] = words.get(key) ?? ["ticket", "tickets"];
+      return `${n} ${n === 1 ? one : many}`;
+    })
+    .join(", ");
+}
+
+/** Who can come, from the host's age policy; null when anyone can. */
+export function ageRule(agePolicy?: string | null, minAge?: number | null): string | null {
+  switch (agePolicy) {
+    case "adults_only":
+      return "Adults only. Children can't come on this experience.";
+    case "adult_required_under":
+      return minAge
+        ? `Under ${minAge}s must come with an adult, so book at least one adult ticket.`
+        : "Children must come with an adult, so book at least one adult ticket.";
+    case "minimum_age":
+      return minAge ? `Every guest must be ${minAge} or older.` : null;
+    default:
+      return null;
+  }
 }
