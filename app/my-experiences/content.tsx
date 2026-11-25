@@ -31,12 +31,12 @@ const EMPTY_STATES: Record<
   past: {
     title: "No past experiences",
     body: "You haven't completed any experiences yet. Once you take a trip, your details will be saved here.",
-    ctaLabel: "Homepage",
+    ctaLabel: "Discover experiences",
   },
   cancelled: {
     title: "No cancelled experiences",
     body: "You haven't cancelled any bookings. All your confirmed bookings remain on your schedule.",
-    ctaLabel: "Homepage",
+    ctaLabel: "Discover experiences",
   },
 };
 

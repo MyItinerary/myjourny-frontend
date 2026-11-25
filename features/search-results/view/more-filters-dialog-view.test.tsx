@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
@@ -17,6 +17,14 @@ describe("MoreFiltersDialogView", () => {
     renderWithProviders(<MoreFiltersDialogView {...buildResultsVm()} />);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("rolls away when closed, leaving the page once it has gone", async () => {
+    const { rerender } = renderWithProviders(<MoreFiltersDialogView {...open()} />);
+    expect(screen.getByRole("dialog", { name: "Filters" })).toBeInTheDocument();
+
+    rerender(<MoreFiltersDialogView {...buildResultsVm()} />);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("shows every section, with Experiences and Events as separate category groups", () => {

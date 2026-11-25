@@ -95,6 +95,8 @@ export function ResultsFilterRowView(props: ResultsFilterRowViewProps) {
   useEffect(() => {
     if (!openDropdown) return;
     function onDown(e: globalThis.MouseEvent) {
+      // The phone date sheet sits on the page itself, outside the row, so a tap in it isn't outside.
+      if ((e.target as Element).closest?.("[data-filter-sheet]")) return;
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) closeDropdown();
     }
     function onKey(e: KeyboardEvent) {

@@ -149,6 +149,15 @@ describe("useSearchBarViewModel", () => {
     expect(result.current.activeTab).toBe("who");
   });
 
+  it("sets dates outright for the phone sheet, staying on the same tab", () => {
+    const { result } = renderHookWithProviders(() => useSearchBarViewModel({ initialActiveTab: "when" }));
+
+    act(() => result.current.onSetDates({ start: new Date(2030, 5, 15), end: new Date(2030, 5, 16) }));
+    expect(result.current.selectedWhen).toBe("15 Jun – 16 Jun");
+    expect(result.current.draftRange).toEqual({ start: new Date(2030, 5, 15), end: new Date(2030, 5, 16) });
+    expect(result.current.activeTab).toBe("when");
+  });
+
   it("starts a new range when the second tap is earlier, and drops unapplied dates on close", () => {
     const { result } = renderHookWithProviders(() => useSearchBarViewModel());
 

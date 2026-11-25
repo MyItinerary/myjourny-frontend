@@ -27,21 +27,22 @@ export function CategoryPillsView({ categories, hrefBase, visibleCount = 7 }: Ca
 
   return (
     <section aria-label="Discover by categories" className="w-full overflow-x-clip bg-[#f4f2ee]">
-      <div className="mx-auto flex w-full max-w-[1512px] flex-col items-start gap-8 px-6 py-12 lg:gap-[34px] lg:px-32 lg:py-[66px]">
+      <div className="mx-auto flex w-full max-w-[1512px] flex-col items-start gap-6 px-6 py-12 lg:gap-[34px] lg:px-32 lg:py-[66px]">
         <h2 className="font-sans text-[28px] leading-[120%] font-extrabold text-[#333134]">Discover by categories</h2>
 
         <div className="flex w-full max-w-[1256px] flex-col items-start gap-3">
-          <div className="flex flex-wrap gap-4">
+          {/* Phones get smaller pills, so more fit on a line; desktop keeps the Figma size. */}
+          <div className="flex flex-wrap gap-2.5 lg:gap-4">
             {visible.map((category) => (
               <Link
                 key={category.id}
                 href={`${hrefBase}/${category.id}`}
-                className="flex items-center gap-[13px] rounded-[14.783px] border border-[#E0DFDD] bg-white p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-xs"
+                className="flex items-center gap-2 rounded-xl border border-[#E0DFDD] bg-white px-2.5 py-2 transition-all lg:gap-[13px] lg:rounded-[14.783px] lg:p-3 duration-200 hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-xs"
               >
-                <span aria-hidden className="relative flex size-[27px] shrink-0 items-center justify-center rounded-full bg-[#F4F2EE]">
-                  {category.iconSrc ? <Image src={category.iconSrc} alt="" width={21} height={21} className="object-cover" /> : null}
+                <span aria-hidden className="relative flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#F4F2EE] lg:size-[27px]">
+                  {category.iconSrc ? <Image src={category.iconSrc} alt="" width={21} height={21} className="size-[17px] object-cover lg:size-[21px]" /> : null}
                 </span>
-                <span className="font-sans text-lg leading-[27px] font-medium whitespace-nowrap text-[#333134]">{category.label}</span>
+                <span className="font-sans text-[15px] leading-[22px] font-medium whitespace-nowrap text-[#333134] lg:text-lg lg:leading-[27px]">{category.label}</span>
               </Link>
             ))}
           </div>

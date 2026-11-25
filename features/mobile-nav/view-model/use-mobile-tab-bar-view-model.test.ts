@@ -1,70 +1,54 @@
-import { act } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderHookWithProviders } from "@/test/utils/render";
 
-import { closeMobileSearch } from "./mobile-search-store";
-import { tabBarVisible, useMobileTabBarViewModel } from "./use-mobile-tab-bar-view-model";
+import { useMobileTabBarViewModel } from "./use-mobile-tab-bar-view-model";
 
 const nav = vi.hoisted(() => ({ pathname: "/" }));
 vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }));
-const session = vi.hoisted(() => ({ user: null as null | { email: string } }));
-vi.mock("@/lib/auth/session-store", () => ({ useSession: () => ({ user: session.user }) }));
 
 afterEach(() => {
   nav.pathname = "/";
-  session.user = null;
-  act(() => closeMobileSearch());
+  vi.unstubAllEnvs();
 });
 
 describe("useMobileTabBarViewModel", () => {
-  it("sends a signed-in traveller to their wishlists, trips and profile", () => {
-    session.user = { email: "ada@example.com" };
-    nav.pathname = "/wishlists/abc";
+  it("shows Home, Experiences, Events and My wishlists on the home page, with the desktop pictures", () => {
+    vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true");
     const { result } = renderHookWithProviders(() => useMobileTabBarViewModel());
 
-    expect(result.current.tabs.map((t) => [t.label, t.href, t.active])).toEqual([
-      ["Home", "/", false],
-      ["Search", null, false],
-      ["Wishlists", "/wishlists", true],
-      ["Trips", "/my-experiences", false],
-      ["Profile", "/profile", false],
+    expect(result.current.visible).toBe(true);
+    expect(result.current.tabs.map((t) => [t.label, t.href, t.icon, t.active])).toEqual([
+      ["Home", "/", "/icons/nav/home.png", true],
+      ["Experiences", "/experiences", "/icons/nav/experiences.png", false],
+      ["Events", "/events", "/icons/nav/events.png", false],
+      ["My wishlists", "/wishlists", "/icons/nav/wishlist.png", false],
     ]);
   });
 
-  it("sends a guest to log in for the account tabs", () => {
+  it("leaves Events out while events are off", () => {
+    vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "");
     const { result } = renderHookWithProviders(() => useMobileTabBarViewModel());
 
-    expect(result.current.tabs.find((t) => t.id === "home")?.active).toBe(true);
-    expect(result.current.tabs.filter((t) => t.href === "/login").map((t) => t.label)).toEqual([
-      "Wishlists",
-      "Trips",
-      "Log in",
-    ]);
+    expect(result.current.tabs.map((t) => t.id)).toEqual(["home", "experiences", "wishlists"]);
   });
 
-  it("opens and closes the one search sheet, marking Search as the active tab", () => {
-    const { result } = renderHookWithProviders(() => useMobileTabBarViewModel());
-
-    act(() => result.current.onOpenSearch());
-    expect(result.current.searchOpen).toBe(true);
-    expect(result.current.tabs.filter((t) => t.active).map((t) => t.id)).toEqual(["search"]);
-
-    act(() => result.current.onCloseSearch());
-    expect(result.current.searchOpen).toBe(false);
-  });
-});
-
-describe("tabBarVisible", () => {
-  it("shows on browsing and account pages", () => {
-    for (const path of ["/", "/search", "/categories/street-life", "/cities/lagos", "/wishlists", "/my-experiences", "/profile"]) {
-      expect(tabBarVisible(path)).toBe(true);
+  it("stays on every page its tabs open, marking the one you're on", () => {
+    vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true");
+    for (const path of ["/", "/experiences", "/events", "/wishlists"]) {
+      nav.pathname = path;
+      const { result } = renderHookWithProviders(() => useMobileTabBarViewModel());
+      expect(result.current.visible).toBe(true);
+      expect(result.current.tabs.filter((t) => t.active).map((t) => t.href)).toEqual([path]);
     }
   });
 
-  it("stays out of pages with their own bottom bar or flow", () => {
-    for (const path of ["/experiences/abc", "/checkout", "/bookings/b-1", "/login", "/onboarding/interests", "/host/dashboard"]) {
-      expect(tabBarVisible(path)).toBe(false);
+  it("isn't on deeper pages, or on Events while events are off", () => {
+    vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "");
+    for (const path of ["/search", "/experiences/exp-1", "/wishlists/abc", "/cities/lagos", "/events"]) {
+      nav.pathname = path;
+      const { result } = renderHookWithProviders(() => useMobileTabBarViewModel());
+      expect(result.current.visible).toBe(false);
     }
   });
 });

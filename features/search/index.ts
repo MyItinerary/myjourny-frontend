@@ -30,6 +30,10 @@ export { GUEST_TYPES, useSearchBarViewModel } from "./view-model/use-search-bar-
 export type { SearchBarViewProps } from "./view/search-bar-view";
 export { SearchBarView } from "./view/search-bar-view";
 
+export type { SearchSheetViewModel } from "./view-model/use-search-sheet-view-model";
+export { useSearchSheetViewModel } from "./view-model/use-search-sheet-view-model";
+export { SearchSheetView } from "./view/search-sheet-view";
+
 export type { MobileSearchModalViewProps } from "./view/mobile-search-modal-view";
 export { MobileSearchModalView } from "./view/mobile-search-modal-view";
 

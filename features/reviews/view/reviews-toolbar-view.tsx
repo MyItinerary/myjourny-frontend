@@ -86,7 +86,7 @@ export function ReviewsToolbarView(props: ToolbarProps) {
             <ul
               role="menu"
               aria-label="Sort reviews"
-              className="absolute right-0 top-14 z-10 w-60 rounded-2xl border border-[#E7E7E7] bg-white p-2 shadow-lg"
+              className="absolute left-0 top-14 z-10 w-60 max-w-[calc(100vw-32px)] rounded-2xl md:left-auto md:right-0 border border-[#E7E7E7] bg-white p-2 shadow-lg"
             >
               {props.sortOptions.map((option) => (
                 <li key={option.value} role="none">

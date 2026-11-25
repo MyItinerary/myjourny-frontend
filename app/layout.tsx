@@ -6,10 +6,11 @@ import "@fontsource/tiktok-sans/700.css";
 import "@fontsource/tiktok-sans/800.css";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { MobileSearchHost } from "./mobile-search-host";
 import { MobileTabBar } from "./mobile-tab-bar";
 
-// viewportFit "cover" lets the phone bottom bar sit under the iPhone home
-// indicator, padded by env(safe-area-inset-bottom).
+// viewportFit "cover" lets the phone bottom bar and full-screen sheets pad
+// themselves with env(safe-area-inset-*).
 export const viewport: Viewport = { viewportFit: "cover" };
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <MobileTabBar />
+          <MobileSearchHost />
         </Providers>
       </body>
     </html>

@@ -53,6 +53,14 @@ describe("ReviewsToolbarView", () => {
     expect(props.onSortChange).toHaveBeenCalledWith("newest");
   });
 
+  // On a phone Sort is the left half of its row, so a menu pinned to its right edge ran off the left of the screen.
+  it("opens the sort menu from the button's left edge on phones and keeps it inside the screen", () => {
+    renderWithProviders(<ReviewsToolbarView {...base()} sortOpen />);
+    const menu = screen.getByRole("menu");
+    expect(menu).toHaveClass("left-0", "md:left-auto", "md:right-0", "max-w-[calc(100vw-32px)]");
+    expect(menu).not.toHaveClass("right-0");
+  });
+
   it("marks the current sort as checked", () => {
     renderWithProviders(<ReviewsToolbarView {...base()} sortOpen />);
     expect(screen.getByRole("menuitemradio", { name: "Most relevant" })).toHaveAttribute("aria-checked", "true");
