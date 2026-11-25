@@ -9,7 +9,9 @@ import { useCreateBooking } from "../model/bookings";
 import {
   breakdownRows,
   type BreakdownRow,
+  ageRule,
   cancellationTerms,
+  guestSummary,
   groupHeadline,
   shortDay,
   shortPrice,
@@ -39,6 +41,9 @@ export type BookingPanelProps = {
   /** The structured policy (itin#113): full_refund_until, non_refundable or custom. */
   refundPolicy?: string | null;
   freeCancellationHours?: number | null;
+  /** The host's age policy (all_ages, minimum_age, adult_required_under, adults_only) and its age. */
+  agePolicy?: string | null;
+  minAge?: number | null;
   /** Set for guests: they pick tickets and a date like anyone else, and
    * "Book now" hands what they picked to this callback (to collect their
    * details) instead of creating a booking. */
@@ -115,6 +120,8 @@ export type BookingCardState = {
   button: { label: string | null; loading: boolean; disabled: boolean; onClick: () => void };
   /** Every experience says the same line under the button; its own policy, when it has one, is in the tooltip. */
   cancellation: { title: string; body: string; hint: string | null };
+  /** Who can come, when the host limits it by age. */
+  age: { title: string; body: string; hint: null } | null;
 };
 
 /** What the trip costs: the quote's total without the processing fee, which
@@ -136,6 +143,8 @@ export function useBookingPanelViewModel({
   cancellationPolicy,
   refundPolicy,
   freeCancellationHours,
+  agePolicy,
+  minAge,
   onGuestBook,
 }: BookingPanelProps): BookingPanelViewModel {
   const minGuests = Math.max(1, minSpots ?? 1);
@@ -154,6 +163,7 @@ export function useBookingPanelViewModel({
     maxGuests,
     // A scheduled session's length is set by the schedule.
     daysFixed: sessions.scheduled,
+    adultsOnly: agePolicy === "adults_only",
   });
   const createBooking = useCreateBooking();
   const bookingAttemptKey = useRef<string | null>(null);
@@ -232,12 +242,9 @@ export function useBookingPanelViewModel({
     if (session) return formatSessionWhen(session.starts_at, session.ends_at, sessionsQuery.data?.timezone);
     return sessions.dateLabel;
   };
-  const ticketsLabel = () => {
-    if (picked.items.length !== 1) return `${quotedGuests} guests`;
-    const item = picked.items[0];
-    const label = (pricing?.prices ?? prices).find((price) => price.id === item.experience_price_id)?.label;
-    return `${item.quantity} ${label ?? "ticket"}`;
-  };
+  const ticketsLabel = () =>
+    guestSummary(picked.items, pricing?.prices ?? prices) ?? `${quotedGuests} guest${quotedGuests === 1 ? "" : "s"}`;
+  const ageNote = ageRule(agePolicy, minAge);
   // Until a guest can be quoted, the list prices give a total to show.
   const estimateTotal = () => {
     const list = pricing?.prices ?? [];
@@ -356,6 +363,7 @@ export function useBookingPanelViewModel({
       body: terms.body,
       hint: cancellationPolicy?.trim() || null,
     },
+    age: ageNote ? { title: "Who can come", body: ageNote, hint: null } : null,
   };
 
   return {

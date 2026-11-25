@@ -128,10 +128,10 @@ describe("useSearchSheetViewModel", () => {
     act(() => result.current.onAddGuest("adults"));
     act(() => result.current.onAddGuest("adults"));
     act(() => result.current.onAddGuest("infants"));
-    expect(result.current.whoSummary).toBe("3 guests, 1 infant");
+    expect(result.current.whoSummary).toBe("2 adults, 1 infant");
     expect(type("adults").canRemove).toBe(true);
     act(() => result.current.onRemoveGuest("infants"));
-    expect(result.current.whoSummary).toBe("2 guests");
+    expect(result.current.whoSummary).toBe("2 adults");
 
     for (let i = 0; i < 25; i++) act(() => result.current.onAddGuest("children"));
     expect(type("children").count).toBe(18);
@@ -195,7 +195,7 @@ describe("useSearchSheetViewModel", () => {
     ]);
 
     act(() => result.current.recentSearches[1].onSelect());
-    expect([result.current.whereSummary, result.current.whenSummary, result.current.whoSummary]).toEqual(["Yaba", "This weekend", "2 guests"]);
+    expect([result.current.whereSummary, result.current.whenSummary, result.current.whoSummary]).toEqual(["Yaba", "This weekend", "2 adults"]);
     expect(result.current.openCard).toBeNull();
 
     act(() => result.current.recentSearches[0].onSelect());

@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { dateFieldLabel, shortDay, shortPrice, shortPriceOrFree, urgencyFor, weekdayDay, cancellationTerms } from "./booking-card";
+import {
+  ageRule,
+  cancellationTerms,
+  dateFieldLabel,
+  guestSummary,
+  shortDay,
+  shortPrice,
+  shortPriceOrFree,
+  urgencyFor,
+  weekdayDay,
+} from "./booking-card";
 
 describe("shortPrice", () => {
   it("drops the decimals from whole naira and keeps kobo", () => {
@@ -82,5 +92,72 @@ describe("cancellationTerms", () => {
     expect(cancellationTerms({ refundPolicy: "non_refundable" }).short).toBe("Non-refundable");
     expect(cancellationTerms({ refundPolicy: "custom" }).short).toBe("See the host's cancellation terms");
     expect(cancellationTerms({}).body).toBe("You can only cancel up to 24 hours before the experience.");
+  });
+});
+
+describe("guestSummary", () => {
+  const tickets = [
+    { id: "a", label: "Adult", guest_type: "adult" as const },
+    { id: "c", label: "Child", guest_type: "child" as const },
+    { id: "s", label: "Standard" },
+    { id: "v", label: "VIP" },
+  ];
+
+  it("names typed guests, adults first", () => {
+    expect(guestSummary([{ experience_price_id: "c", quantity: 2 }], tickets)).toBe("2 children");
+    expect(
+      guestSummary(
+        [
+          { experience_price_id: "c", quantity: 1 },
+          { experience_price_id: "a", quantity: 1 },
+        ],
+        tickets,
+      ),
+    ).toBe("1 adult, 1 child");
+  });
+
+  it("keeps an untyped ticket's label", () => {
+    expect(guestSummary([{ experience_price_id: "s", quantity: 2 }], tickets)).toBe("2 Standard");
+    expect(
+      guestSummary(
+        [
+          { experience_price_id: "a", quantity: 2 },
+          { experience_price_id: "s", quantity: 1 },
+        ],
+        tickets,
+      ),
+    ).toBe("2 adults, 1 Standard");
+  });
+
+  it("leaves several untyped tickets, or nothing picked, to a guest count", () => {
+    expect(
+      guestSummary(
+        [
+          { experience_price_id: "s", quantity: 1 },
+          { experience_price_id: "v", quantity: 1 },
+        ],
+        tickets,
+      ),
+    ).toBeNull();
+    expect(guestSummary([{ experience_price_id: "a", quantity: 0 }], tickets)).toBeNull();
+  });
+});
+
+describe("ageRule", () => {
+  it("states each limit", () => {
+    expect(ageRule("adults_only")).toBe("Adults only. Children can't come on this experience.");
+    expect(ageRule("adult_required_under", 12)).toBe(
+      "Under 12s must come with an adult, so book at least one adult ticket.",
+    );
+    expect(ageRule("adult_required_under")).toBe(
+      "Children must come with an adult, so book at least one adult ticket.",
+    );
+    expect(ageRule("minimum_age", 16)).toBe("Every guest must be 16 or older.");
+  });
+
+  it("says nothing when anyone can come", () => {
+    expect(ageRule("all_ages")).toBeNull();
+    expect(ageRule(null)).toBeNull();
+    expect(ageRule("minimum_age")).toBeNull();
   });
 });

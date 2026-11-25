@@ -292,3 +292,29 @@ test("a signed-in user gets the host's booking link, never the log-in prompt", a
   );
   await expect(page.getByText("Log in to see the booking link")).toHaveCount(0);
 });
+
+test("an adults-only listing offers no child ticket and says who can come", async ({ page }) => {
+  await mockApi(
+    page,
+    experienceApi(
+      { ...EXPERIENCE, age_policy: "adults_only" },
+      {
+        "GET /experiences/exp-1/pricing": (r: Route) =>
+          r.fulfill({
+            json: {
+              ...PRICING,
+              prices: [
+                { id: "adult", label: "Adult", amount: "7500", pricing_unit: "per_person", guest_type: "adult" },
+                { id: "child", label: "Child", amount: "4000", pricing_unit: "per_person", guest_type: "child" },
+              ],
+            },
+          }),
+      },
+    ),
+  );
+  await page.goto("/experiences/exp-1");
+
+  const card = page.locator("div.sticky");
+  await expect(card.getByText("Adults only. Children can't come on this experience.")).toBeVisible();
+  await expect(card.getByText("Child", { exact: true })).toHaveCount(0);
+});

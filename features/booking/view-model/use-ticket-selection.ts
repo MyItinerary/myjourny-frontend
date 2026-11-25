@@ -44,6 +44,8 @@ type Options = {
   /** The schedule sets how many days a session lasts, so per-day tickets
    * cover that many and the customer doesn't choose. */
   daysFixed?: boolean;
+  /** An adults-only listing: child tickets aren't offered (itin refuses them). */
+  adultsOnly?: boolean;
 };
 
 /** Ticket quantities, add-ons and days. By default the cheapest ticket type
@@ -55,13 +57,15 @@ export function useTicketSelection({
   minGuests,
   maxGuests,
   daysFixed = false,
+  adultsOnly = false,
 }: Options): TicketSelection {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedAddons, setSelectedAddons] = useState<Record<string, boolean>>({});
   const [days, setDays] = useState(1);
 
-  const tickets: TicketType[] =
+  const all: TicketType[] =
     pricing?.prices ?? fallbackPrices.map((p) => ({ ...p, pricing_unit: "per_person" as PricingUnit }));
+  const tickets = all.filter((t) => !(adultsOnly && t.guest_type === "child"));
   const addons = pricing?.addons ?? [];
   const cheapest = tickets.reduce<TicketType | null>(
     (min, t) => (!min || Number(t.amount) < Number(min.amount) ? t : min),

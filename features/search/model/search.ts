@@ -44,6 +44,17 @@ export function linkDates({ start, end }: DateRange): { day: string | null; unti
   return { day, until: day && end && toIsoDay(end) !== day ? toIsoDay(end) : null };
 }
 
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** "1 adult, 2 children, 1 infant"; only the groups picked. */
+export function formatGuests(counts: { adults: number; children: number; infants: number }): string {
+  const parts = [];
+  if (counts.adults > 0) parts.push(plural(counts.adults, "adult", "adults"));
+  if (counts.children > 0) parts.push(plural(counts.children, "child", "children"));
+  if (counts.infants > 0) parts.push(plural(counts.infants, "infant", "infants"));
+  return parts.join(", ");
+}
+
 export const DEFAULT_DESTINATIONS: DestinationSuggestion[] = [
   ...suggestedDestinations,
   { id: "abeokuta", city: "Abeokuta, Nigeria", description: "For its iconic rocks and heritage" },

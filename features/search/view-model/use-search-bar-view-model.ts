@@ -13,10 +13,10 @@ import {
   DEFAULT_EVENTS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
-  formatGuestsText,
   linkDates,
   startOfToday,
   useSearchExperiences,
+  formatGuests,
   withDate,
   withGuests,
 } from "../model/search";
@@ -151,7 +151,7 @@ export function useSearchBarViewModel({
     );
   }, [trimmedQuery]);
 
-  const whoText = typedWho ?? formatGuestsText(guests);
+  const whoText = typedWho ?? formatGuests(guests);
 
   const updateGuests = useCallback((newGuests: GuestCounts) => {
     setGuests(newGuests);

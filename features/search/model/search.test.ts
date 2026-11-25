@@ -9,6 +9,7 @@ import { renderHookWithProviders } from "@/test/utils/render";
 import {
   startOfToday,
   toIsoDay,
+  formatGuests,
   withDate,
   withGuests,
   DEFAULT_ACTIVITIES,
@@ -131,5 +132,14 @@ describe("useSearchExperiences", () => {
 
     expect(result.current.fetchStatus).toBe("idle");
     expect(result.current.data).toBeUndefined();
+  });
+});
+
+describe("formatGuests", () => {
+  it("names each group picked", () => {
+    expect(formatGuests({ adults: 0, children: 2, infants: 0 })).toBe("2 children");
+    expect(formatGuests({ adults: 1, children: 1, infants: 0 })).toBe("1 adult, 1 child");
+    expect(formatGuests({ adults: 2, children: 0, infants: 1 })).toBe("2 adults, 1 infant");
+    expect(formatGuests({ adults: 0, children: 0, infants: 0 })).toBe("");
   });
 });

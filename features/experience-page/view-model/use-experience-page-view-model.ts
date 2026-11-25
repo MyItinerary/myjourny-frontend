@@ -145,6 +145,8 @@ export function useExperiencePageViewModel(id: string, { preview = false } = {})
     cancellationPolicy: experience?.cancellation_policy,
     refundPolicy: experience?.refund_policy,
     freeCancellationHours: experience?.free_cancellation_hours,
+    agePolicy: experience?.age_policy,
+    minAge: experience?.min_age,
     onGuestBook,
   });
   // The dates and tickets still work so the prices can be checked; only the button is off.

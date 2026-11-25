@@ -119,6 +119,12 @@ describe("useExperiencePageViewModel", () => {
     );
   });
 
+  it("tells the booking panel who can come, so adults-only listings offer no child tickets", () => {
+    queries.detail = { data: { ...experience, age_policy: "adults_only", min_age: 18 }, isLoading: false, isError: false };
+    renderHook(() => useExperiencePageViewModel("exp-1"));
+    expect(bookingProps).toHaveBeenLastCalledWith(expect.objectContaining({ agePolicy: "adults_only", minAge: 18 }));
+  });
+
   it("hands a listing that books on the host's site a link instead of the card", () => {
     queries.detail = {
       data: { ...experience, has_external_booking: true, booking_url: "https://host.test/book" },
