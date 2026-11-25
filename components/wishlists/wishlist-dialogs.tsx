@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const MAX_NAME_LENGTH = 50;
 
+// The same motion as the site's other bottom sheets (search, filters, dates): up in 250ms,
+// down in 200ms, the backdrop fading alongside. From sm up it's a centred card that rises a little.
+const SHEET_IN = { duration: 0.25, ease: [0.2, 0, 0, 1] as const };
+const SHEET_OUT = { duration: 0.2, ease: [0.4, 0, 1, 1] as const };
+const FADE = { duration: 0.15 };
+
+/** Render it inside AnimatePresence (as the dialogs below do) so it can slide away when closed. */
 export function WishlistDialogShell({
   title,
   onClose,
@@ -18,6 +28,10 @@ export function WishlistDialogShell({
   className?: string;
   children: React.ReactNode;
 }) {
+  const reduce = useReducedMotion();
+  const [wide] = useState(() => typeof window !== "undefined" && window.matchMedia?.("(min-width: 640px)").matches);
+  const hidden = reduce ? { opacity: 0 } : wide ? { opacity: 0, y: 16 } : { y: "100%" };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -25,38 +39,48 @@ export function WishlistDialogShell({
   }, [onClose]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(18,18,18,0.3)] sm:items-center sm:p-4"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+      <motion.div
+        aria-hidden
+        onMouseDown={onClose}
+        className="absolute inset-0 bg-[rgba(18,18,18,0.3)]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: reduce ? FADE : SHEET_IN }}
+        exit={{ opacity: 0, transition: reduce ? FADE : SHEET_OUT }}
+      />
+      <motion.div
+        initial={hidden}
+        animate={{ opacity: 1, y: 0, transition: reduce ? FADE : SHEET_IN }}
+        exit={{ ...hidden, transition: reduce ? FADE : SHEET_OUT }}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "max-h-[85dvh] w-full overflow-y-auto rounded-t-[20px] bg-white p-5 pb-[calc(20px+env(safe-area-inset-bottom))] sm:max-h-[90vh] sm:rounded-[20px] sm:p-[30px]",
+          "relative max-h-[85dvh] w-full overflow-y-auto rounded-t-[20px] bg-white p-5 pb-[calc(20px+env(safe-area-inset-bottom))] sm:max-h-[90vh] sm:rounded-[20px] sm:p-[30px]",
           className
         )}
       >
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="flex-1 text-center text-xl font-semibold text-[#333134] sm:text-2xl">{title}</h2>
+          <h2 className="flex-1 text-center text-lg font-semibold text-[#333134] sm:text-xl">{title}</h2>
           <button
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#212121] hover:bg-[#F5F5F5]"
+            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#212121] hover:bg-[#F5F5F5]"
           >
-            <X className="size-6" />
+            <X className="size-5" />
           </button>
         </div>
         {children}
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-const outlineButton =
-  "flex-1 cursor-pointer rounded-full border border-[#40000B] px-4 py-[18px] text-xl font-medium text-[#40000B] transition-colors hover:bg-[#40000B]/5 sm:text-2xl";
+// The site's standard 48px pill buttons (Button size="cta"), side by side.
+const ACTION = "flex-1";
+// Name, rename and delete are short asks, so the card stays small.
+const SMALL_DIALOG = "max-w-[440px] sm:p-6";
 
 function NameForm({
   title,
@@ -78,7 +102,7 @@ function NameForm({
   const canSubmit = !!trimmed && !pending;
 
   return (
-    <WishlistDialogShell title={title} onClose={onClose} className="max-w-[662px]">
+    <WishlistDialogShell title={title} onClose={onClose} className={SMALL_DIALOG}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -86,36 +110,28 @@ function NameForm({
         }}
         className="flex flex-col gap-5"
       >
-        <div className="flex flex-col gap-2">
-          <input
+        <div className="flex flex-col gap-1.5">
+          <Input
+            size="cta"
             autoFocus
             value={name}
             maxLength={MAX_NAME_LENGTH}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter wishlist name"
             aria-label="Wishlist name"
-            className="h-[72px] w-full rounded-full bg-[#F4F2EE] px-4 text-xl font-medium text-[#333134] placeholder:text-[#858585] focus:outline-none focus:ring-2 focus:ring-[#40000B]/30"
+            className="text-[#333134]"
           />
-          <p className="text-sm text-[#6F6B72]">
+          <p className="px-4 text-xs text-[#6F6B72]">
             {name.length}/{MAX_NAME_LENGTH}
           </p>
         </div>
-        <div className="flex gap-5">
-          <button type="button" onClick={onClose} className={outlineButton}>
+        <div className="flex gap-3">
+          <Button type="button" variant="outline" size="cta" onClick={onClose} className={ACTION}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className={cn(
-              "flex-1 rounded-full px-4 py-[18px] text-xl font-medium transition-colors sm:text-2xl",
-              canSubmit
-                ? "cursor-pointer bg-[#F5032D] text-white hover:bg-[#d90227]"
-                : "cursor-not-allowed bg-[#F5F5F5] text-[#BDBDBD]"
-            )}
-          >
+          </Button>
+          <Button type="submit" variant="brand" size="cta" disabled={!canSubmit} className={ACTION}>
             {pending ? "Saving..." : submitLabel}
-          </button>
+          </Button>
         </div>
       </form>
     </WishlistDialogShell>
@@ -136,42 +152,36 @@ export function NameWishlistDialog({
   onSubmit: (name: string) => void;
   onClose: () => void;
 }) {
-  if (!open) return null;
-  return <NameForm {...rest} initialName={rest.initialName ?? ""} />;
+  // `propagate`: when a parent (the save modal) closes it by unmounting, it still slides away.
+  return <AnimatePresence propagate>{open && <NameForm key="name" {...rest} initialName={rest.initialName ?? ""} />}</AnimatePresence>;
 }
 
-export function DeleteWishlistDialog({
-  open,
-  name,
-  pending,
-  onConfirm,
-  onClose,
-}: {
+type DeleteWishlistDialogProps = {
   open: boolean;
   name: string;
   pending: boolean;
   onConfirm: () => void;
   onClose: () => void;
-}) {
-  if (!open) return null;
+};
+
+export function DeleteWishlistDialog({ open, ...rest }: DeleteWishlistDialogProps) {
+  return <AnimatePresence propagate>{open && <DeleteConfirm key="delete" {...rest} />}</AnimatePresence>;
+}
+
+function DeleteConfirm({ name, pending, onConfirm, onClose }: Omit<DeleteWishlistDialogProps, "open">) {
   return (
-    <WishlistDialogShell title="Delete wishlist" onClose={onClose} className="max-w-[662px]">
-      <p className="mb-5 text-center text-base text-[#6F6B72]">
+    <WishlistDialogShell title="Delete wishlist" onClose={onClose} className={SMALL_DIALOG}>
+      <p className="mb-5 text-center text-sm text-[#6F6B72] sm:text-base">
         &ldquo;{name}&rdquo; and its saved experiences will be removed from your wishlists. This can&apos;t be
         undone.
       </p>
-      <div className="flex gap-5">
-        <button type="button" onClick={onClose} className={outlineButton}>
+      <div className="flex gap-3">
+        <Button type="button" variant="outline" size="cta" onClick={onClose} className={ACTION}>
           Cancel
-        </button>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onConfirm}
-          className="flex-1 cursor-pointer rounded-full bg-[#F5032D] px-4 py-[18px] text-xl font-medium text-white transition-colors hover:bg-[#d90227] disabled:opacity-60 sm:text-2xl"
-        >
+        </Button>
+        <Button type="button" variant="brand" size="cta" disabled={pending} onClick={onConfirm} className={ACTION}>
           {pending ? "Deleting..." : "Delete"}
-        </button>
+        </Button>
       </div>
     </WishlistDialogShell>
   );

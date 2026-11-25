@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
@@ -11,6 +11,27 @@ describe("FilterDropdownView", () => {
     const { container } = renderWithProviders(<FilterDropdownView {...buildResultsVm()} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("puts the phone date sheet on the page itself, over the navbar, with a backdrop that closes it", async () => {
+    const closeDropdown = vi.fn();
+    const { container, user } = renderWithProviders(<FilterDropdownView {...buildResultsVm({ openDropdown: "dates", closeDropdown })} />);
+
+    const sheet = screen.getByRole("dialog", { name: "Dates" });
+    expect(container).not.toContainElement(sheet);
+    const layer = sheet.closest("[data-filter-sheet]") as HTMLElement;
+    expect(layer).toHaveClass("fixed", "inset-0", "z-[60]");
+
+    await user.click(layer.querySelector('[aria-hidden="true"]') as HTMLElement);
+    expect(closeDropdown).toHaveBeenCalled();
+  });
+
+  it("lets the date sheet roll away when it closes, then leaves the page", async () => {
+    const { rerender } = renderWithProviders(<FilterDropdownView {...buildResultsVm({ openDropdown: "dates" })} />);
+    expect(screen.getByRole("dialog", { name: "Dates" })).toBeInTheDocument();
+
+    rerender(<FilterDropdownView {...buildResultsVm()} />);
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Dates" })).not.toBeInTheDocument());
   });
 
   it("opens the date picker with two months, Tonight first, and applies or clears", async () => {

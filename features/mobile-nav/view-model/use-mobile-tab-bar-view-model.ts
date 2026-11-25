@@ -1,60 +1,36 @@
 import { usePathname } from "next/navigation";
 
-import { useSession } from "@/lib/auth/session-store";
+import { eventsEnabled } from "@/lib/feature-flags";
 
-import { closeMobileSearch, openMobileSearch, useMobileSearchOpen } from "./mobile-search-store";
-
-export type MobileTabId = "home" | "search" | "wishlists" | "trips" | "profile";
+export type MobileTabId = "home" | "experiences" | "events" | "wishlists";
 
 export type MobileTab = {
   id: MobileTabId;
   label: string;
-  /** Null for Search, which opens the search sheet instead of a page. */
-  href: string | null;
+  href: string;
+  /** The desktop nav pill's illustration. */
+  icon: string;
   active: boolean;
 };
 
 export type MobileTabBarViewModel = {
-  /** Hidden where a page has its own bottom bar or flow (booking, checkout, sign-in, host portal). */
+  /** On the pages its tabs open (Home, Experiences, Events, My wishlists), so it stays put as you
+   * move between them; deeper pages (a listing, a results page) have their own bars. */
   visible: boolean;
   tabs: MobileTab[];
-  searchOpen: boolean;
-  onOpenSearch: () => void;
-  onCloseSearch: () => void;
 };
 
-const HIDDEN_ON = ["/experiences/", "/checkout", "/bookings/", "/login", "/onboarding", "/host", "/verify-email", "/email-templates"];
+const under = (pathname: string, prefix: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
 
-export function tabBarVisible(pathname: string): boolean {
-  return !HIDDEN_ON.some((prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix));
-}
-
-/** The phone bottom bar: Home, Search, Wishlists, Trips and Profile. */
+/** The phone bottom bar: the desktop nav's sections, with its pictures. */
 export function useMobileTabBarViewModel(): MobileTabBarViewModel {
   const pathname = usePathname() ?? "/";
-  const { user } = useSession();
-  const searchOpen = useMobileSearchOpen();
-  const signedIn = user !== null;
-  const under = (...prefixes: string[]) => prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-
   const tabs: MobileTab[] = [
-    { id: "home", label: "Home", href: "/", active: !searchOpen && pathname === "/" },
-    { id: "search", label: "Search", href: null, active: searchOpen || under("/search") },
-    { id: "wishlists", label: "Wishlists", href: signedIn ? "/wishlists" : "/login", active: !searchOpen && under("/wishlists") },
-    { id: "trips", label: "Trips", href: signedIn ? "/my-experiences" : "/login", active: !searchOpen && under("/my-experiences") },
-    {
-      id: "profile",
-      label: signedIn ? "Profile" : "Log in",
-      href: signedIn ? "/profile" : "/login",
-      active: !searchOpen && under("/profile", "/notifications"),
-    },
-  ];
+    { id: "home" as const, label: "Home", href: "/", icon: "/icons/nav/home.png", active: pathname === "/" },
+    { id: "experiences" as const, label: "Experiences", href: "/experiences", icon: "/icons/nav/experiences.png", active: under(pathname, "/experiences") },
+    { id: "events" as const, label: "Events", href: "/events", icon: "/icons/nav/events.png", active: under(pathname, "/events") },
+    { id: "wishlists" as const, label: "My wishlists", href: "/wishlists", icon: "/icons/nav/wishlist.png", active: under(pathname, "/wishlists") },
+  ].filter((tab) => tab.id !== "events" || eventsEnabled());
 
-  return {
-    visible: tabBarVisible(pathname),
-    tabs,
-    searchOpen,
-    onOpenSearch: openMobileSearch,
-    onCloseSearch: closeMobileSearch,
-  };
+  return { visible: tabs.some((tab) => tab.href === pathname), tabs };
 }

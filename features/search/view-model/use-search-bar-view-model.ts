@@ -13,6 +13,7 @@ import {
   DEFAULT_EVENTS,
   FALLBACK_IMAGE,
   formatExperienceSubtitle,
+  formatGuestsText,
   linkDates,
   startOfToday,
   useSearchExperiences,
@@ -45,12 +46,6 @@ export const GUEST_TYPES: { key: keyof GuestCounts; label: string; description: 
   { key: "children", label: "Children", description: "Ages 2 - 12" },
   { key: "infants", label: "Infants", description: "Under 2" },
 ];
-
-function formatGuestsText(counts: GuestCounts) {
-  const total = counts.adults + counts.children + counts.infants;
-  if (total <= 0) return "";
-  return `${total} guest${total > 1 ? "s" : ""}${counts.infants > 0 ? `, ${counts.infants} infant${counts.infants > 1 ? "s" : ""}` : ""}`;
-}
 
 export function useSearchBarViewModel({
   variant = "hero",
@@ -235,6 +230,12 @@ export function useSearchBarViewModel({
     setActiveTab("who");
   }, [draftRange]);
 
+  /** Sets the dates outright, with no Apply step and no move to Who (the phone search sheet). */
+  const onSetDates = useCallback((range: DateRange) => {
+    setDraftRange(range);
+    setDateRange(range);
+  }, []);
+
   const onClearDates = useCallback(() => {
     setDraftRange({ start: null, end: null });
     setDateRange({ start: null, end: null });
@@ -393,6 +394,7 @@ export function useSearchBarViewModel({
     onPickDate,
     onPickDatePreset,
     onApplyDates,
+    onSetDates,
     onClearDates,
     onAnyDate,
     onNavigateToDestination,

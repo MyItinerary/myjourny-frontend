@@ -24,10 +24,11 @@ async function logIn(page: Page, path = "/login") {
 }
 
 test.describe("signing in", () => {
+  // The loader covers the wait after the details are accepted (loading the account, opening the page).
   test("covers the screen with the pulsing logo, then opens the home page", async ({ page }) => {
     await mockApi(page, {
-      "POST /auth/login": slowly((r) => r.fulfill({ json: TOKENS })),
-      "GET /auth/me": (r) => r.fulfill({ json: ME }),
+      "POST /auth/login": (r) => r.fulfill({ json: TOKENS }),
+      "GET /auth/me": slowly((r) => r.fulfill({ json: ME })),
     });
 
     await logIn(page);
@@ -43,8 +44,8 @@ test.describe("signing in", () => {
 
   test("goes where the sign-in was headed", async ({ page }) => {
     await mockApi(page, {
-      "POST /auth/login": slowly((r) => r.fulfill({ json: TOKENS })),
-      "GET /auth/me": (r) => r.fulfill({ json: ME }),
+      "POST /auth/login": (r) => r.fulfill({ json: TOKENS }),
+      "GET /auth/me": slowly((r) => r.fulfill({ json: ME })),
     });
 
     await logIn(page, `/login?next=${encodeURIComponent("/experiences")}`);
@@ -54,25 +55,30 @@ test.describe("signing in", () => {
     await expect(page.getByTestId("sign-in-loader")).toBeHidden();
   });
 
-  test("steps aside for a two-factor code", async ({ page }) => {
+  test("asks for a two-factor code without the loader", async ({ page }) => {
     await mockApi(page, {
       "POST /auth/login": slowly((r) => r.fulfill({ json: { "2fa_required": true } })),
     });
 
     await logIn(page);
 
+    await expect(page.getByRole("button", { name: "Signing in…" })).toBeVisible();
+    await expect(page.getByTestId("sign-in-loader")).toBeHidden();
     await expect(page.getByLabel("Two-factor code")).toBeVisible();
     await expect(page.getByTestId("sign-in-loader")).toBeHidden();
   });
 
-  test("goes back to the form when the details are wrong", async ({ page }) => {
+  test("shows the error straight away when the details are wrong, with no loader", async ({ page }) => {
     await mockApi(page, {
       "POST /auth/login": slowly((r) => r.fulfill({ status: 400, json: { detail: "Incorrect email or password" } })),
     });
 
     await logIn(page);
 
-    await expect(page.getByTestId("sign-in-loader")).toBeVisible();
+    // While the details are checked only the button says so.
+    await expect(page.getByRole("button", { name: "Signing in…" })).toBeVisible();
+    await expect(page.getByTestId("sign-in-loader")).toBeHidden();
+    await expect(page.getByText("Incorrect email or password")).toBeVisible();
     await expect(page.getByTestId("sign-in-loader")).toBeHidden();
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByPlaceholder("Enter email address")).toBeVisible();

@@ -113,7 +113,9 @@ export function useRegister() {
   });
 }
 
-export function useLogin() {
+/** `onAccepted`: the details were right and sign-in is going ahead (not a 2FA code request), called
+ * before the account is loaded, so a caller can cover that wait without covering a wrong password. */
+export function useLogin({ onAccepted }: { onAccepted?: () => void } = {}) {
   return useMutation({
     mutationFn: async (payload: { email: string; password: string; code?: string }) => {
       // /auth/login is OAuth2PasswordRequestForm-based (form-urlencoded),
@@ -123,7 +125,10 @@ export function useLogin() {
       const { data } = await apiClient.post<AuthResponse>("/auth/login", body);
       return data;
     },
-    onSuccess: (data, variables) => completeAuthUnlessChallenged(data, variables.email),
+    onSuccess: (data, variables) => {
+      if (!isTwoFactorChallenge(data)) onAccepted?.();
+      return completeAuthUnlessChallenged(data, variables.email);
+    },
     onError: (error, variables) =>
       toast.error(
         apiErrorMessage(error, variables.code ? "That code didn't work." : "Incorrect email or password.")
@@ -131,7 +136,8 @@ export function useLogin() {
   });
 }
 
-export function useGoogleAuth() {
+/** `onAccepted`: as for useLogin. */
+export function useGoogleAuth({ onAccepted }: { onAccepted?: () => void } = {}) {
   return useMutation({
     mutationFn: async (payload: {
       token: string;
@@ -145,7 +151,10 @@ export function useGoogleAuth() {
       });
       return data;
     },
-    onSuccess: (data) => completeAuthUnlessChallenged(data, null),
+    onSuccess: (data) => {
+      if (!isTwoFactorChallenge(data)) onAccepted?.();
+      return completeAuthUnlessChallenged(data, null);
+    },
     onError: (error) =>
       toast.error(apiErrorMessage(error, "Couldn't sign in with Google. Please try again.")),
   });

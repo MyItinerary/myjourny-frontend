@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils/render";
@@ -12,6 +12,18 @@ beforeEach(() => vi.stubEnv("NEXT_PUBLIC_EVENTS_ENABLED", "true"));
 afterEach(() => vi.unstubAllEnvs());
 
 describe("ResultsFilterRowView", () => {
+  // The phone date sheet sits on the page itself, outside the row; a tap in it used to count as outside.
+  it("keeps the phone date sheet open when it's tapped, and closes it from the backdrop", () => {
+    const closeDropdown = vi.fn();
+    renderWithProviders(<ResultsFilterRowView {...buildResultsVm({ openDropdown: "dates", closeDropdown })} />);
+
+    fireEvent.mouseDown(within(screen.getByRole("dialog", { name: "Dates" })).getByText("Tonight"));
+    expect(closeDropdown).not.toHaveBeenCalled();
+
+    fireEvent.mouseDown(document.body);
+    expect(closeDropdown).toHaveBeenCalled();
+  });
+
   it("shows More filters, Dates and the categories, with no icons on the chips", () => {
     renderWithProviders(<ResultsFilterRowView {...buildResultsVm()} />);
 
