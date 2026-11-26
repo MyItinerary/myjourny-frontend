@@ -51,4 +51,6 @@ export const SAMPLE_DRAFT: ListingDraft = {
   photos: ["/images/home/cities/lagos.jpg", "/images/home/cities/abuja.jpg", "/images/home/cities/calabar.jpg", "/images/home/cities/ibadan.jpg"],
   cover: 0,
   quote: "See you at the yellow gate.",
+  safetyAgreed: true,
+  photoRightsAgreed: true,
 };

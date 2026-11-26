@@ -10,10 +10,6 @@ vi.mock("next/navigation", () => ({
 }));
 const toast = vi.hoisted(() => ({ info: vi.fn(), success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
-const fetchGuidePreviewToken = vi.hoisted(() => vi.fn());
-vi.mock("../model/guide-listings-api", () => ({ fetchGuidePreviewToken }));
-const openExperiencePreview = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/experience-preview", () => ({ openExperiencePreview }));
 // The design's samples for ?preview=full; `real` stands in for itin.
 const data = vi.hoisted(() => ({ real: null as null | { loading: boolean; found: boolean } }));
 vi.mock("../model/listing-detail-data", async () => {
@@ -38,7 +34,6 @@ beforeEach(() => {
   data.real = null;
   nav.push.mockReset();
   Object.values(toast).forEach((t) => t.mockReset());
-  openExperiencePreview.mockReset();
 });
 
 const render = (id: string) => renderHook(() => useHostListingDetailViewModel(id)).result;
@@ -164,33 +159,8 @@ describe("an experience that isn't there", () => {
 });
 
 describe("preview as a guest", () => {
-  const previewAction = (result: ReturnType<typeof render>) =>
-    result.current.actions.find((a) => a.label === "Preview as a guest")!;
-
-  it("opens a sample experience's guest page in a new tab", () => {
-    const open = vi.spyOn(window, "open").mockReturnValue(null);
+  it("isn't offered any more", () => {
     const result = render("l1");
-    act(() => previewAction(result).onClick());
-    expect(open).toHaveBeenCalledWith("/experiences/l1", "_blank", "noopener");
-    expect(openExperiencePreview).not.toHaveBeenCalled();
-    open.mockRestore();
-  });
-
-  it("previews a real experience, live or not, with a token for it", async () => {
-    nav.preview = null;
-    data.real = { loading: false, found: true };
-    openExperiencePreview.mockResolvedValueOnce(undefined);
-    const result = render("l1");
-    await act(async () => previewAction(result).onClick());
-    expect(openExperiencePreview).toHaveBeenCalledWith("l1", fetchGuidePreviewToken);
-  });
-
-  it("says so when the preview can't be opened", async () => {
-    nav.preview = null;
-    data.real = { loading: false, found: true };
-    openExperiencePreview.mockRejectedValueOnce(new Error("404"));
-    const result = render("l1");
-    await act(async () => previewAction(result).onClick());
-    expect(toast.error).toHaveBeenCalledWith("Couldn't open the preview. Try again.");
+    expect(result.current.actions.map((a) => a.label)).not.toContain("Preview as a guest");
   });
 });

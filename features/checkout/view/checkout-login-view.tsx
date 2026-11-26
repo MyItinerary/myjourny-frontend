@@ -31,7 +31,7 @@ function LoginForm({ login, header }: { login: CheckoutLogin; header: React.Reac
 
       {login.googleOnly ? (
         <p className="text-center font-sans text-sm text-[#6F6B72]">
-          {login.email} signs in with Google, so there&apos;s no password to enter.
+          This email usually signs in with Google.
         </p>
       ) : (
         <>

@@ -14,7 +14,7 @@ describe("SAMPLE_DRAFT", () => {
     expect(wordCount(SAMPLE_DRAFT.desc)).toBeLessThanOrEqual(DESC_MAX_WORDS);
   });
 
-  it("is a new experience, not an edit or a template", () => {
-    expect(SAMPLE_DRAFT).toMatchObject({ editingId: null, template: null, prefilled: [] });
+  it("is a new experience, not an edit", () => {
+    expect(SAMPLE_DRAFT.editingId).toBeNull();
   });
 });

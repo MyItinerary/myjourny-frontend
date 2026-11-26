@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("../model/host-access", () => ({ useHostAccess: () => state.access }));
 vi.mock("@/lib/auth/session-store", () => ({ useSession: () => ({ user: null }) }));
 vi.mock("../model/profile-data", () => ({
-  useHostProfile: () => ({ setup: [{ title: "Confirm who you are", body: "", pane: "verify", done: state.submitted }] }),
+  useHostProfile: () => ({ setup: [{ title: "Verify your account", body: "", pane: "verify", done: state.submitted }] }),
   verificationSubmitted: (p: { setup: { done: boolean }[] }) => p.setup[0].done,
 }));
 

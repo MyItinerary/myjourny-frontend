@@ -6,6 +6,7 @@ import { server } from "@/test/msw/server";
 import { renderHookWithProviders } from "@/test/utils/render";
 import {
   clearApplicationDraft,
+  emailHasAccount,
   loadApplicationDraft,
   saveApplicationDraft,
   submitGuideApplication,
@@ -15,7 +16,8 @@ import { DEFAULT_APPLICATION_DATA } from "./guide-application.types";
 
 const individual = {
   ...DEFAULT_APPLICATION_DATA,
-  fullName: " Jane Doe ",
+  firstName: " Jane ",
+  lastName: "Doe ",
   dateOfBirth: "12/03/1994",
   phoneNumber: "0801 234 5678",
   website: "",
@@ -71,6 +73,12 @@ describe("guide-application-api", () => {
       business_name: null,
       cac_number: null,
     });
+  });
+
+  it("sends an individual's brand name and a website with https in front", async () => {
+    const sent = capture();
+    await submitGuideApplication({ ...individual, businessName: "Jane's Walks", website: "janewalks.com" });
+    expect(sent.body).toMatchObject({ applicant_type: "individual", business_name: "Jane's Walks", website: "https://janewalks.com" });
   });
 
   it("sends a business's name and CAC number", async () => {
@@ -157,8 +165,23 @@ describe("guide-application-api", () => {
   it("keeps a draft until it's cleared, without the password", () => {
     saveApplicationDraft(individual);
 
-    expect(loadApplicationDraft()).toMatchObject({ fullName: " Jane Doe ", password: "" });
+    expect(loadApplicationDraft()).toMatchObject({ firstName: " Jane ", lastName: "Doe ", password: "" });
     clearApplicationDraft();
     expect(loadApplicationDraft()).toBeNull();
+  });
+
+  it("asks whether an email has an account, and says no when the lookup fails", async () => {
+    let asked: unknown = null;
+    server.use(
+      http.post(apiUrl("/auth/email-exists"), async ({ request }) => {
+        asked = await request.json();
+        return HttpResponse.json({ exists: true });
+      }),
+    );
+    expect(await emailHasAccount(" Jane@Example.com ")).toBe(true);
+    expect(asked).toEqual({ email: "jane@example.com" });
+
+    server.use(http.post(apiUrl("/auth/email-exists"), () => HttpResponse.json({}, { status: 500 })));
+    expect(await emailHasAccount("jane@example.com")).toBe(false);
   });
 });

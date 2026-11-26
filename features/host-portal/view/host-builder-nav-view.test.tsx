@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { BuilderStepNumber } from "../model/listing-draft.types";
 import { HostBuilderNavView } from "./host-builder-nav-view";
 
-const STEP_LABELS = ["Title and description", "Category and tags", "Location", "When it runs", "Group size and price", "What's included", "Requirements and safety", "Photos", "Reviews", "How guests book", "Review and publish"];
+const STEP_LABELS = ["Title and description", "Category and tags", "Location", "Date and time", "Group size and price", "What's included", "Requirements and safety", "Photos", "Reviews", "How guests book", "Review and publish"];
 
 function setup(over: { step?: number; open?: boolean; attention?: Record<number, string>; doneCount?: number; furthest?: number } = {}) {
   const step = over.step ?? 1;

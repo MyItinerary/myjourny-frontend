@@ -16,10 +16,24 @@ let memoryOnly = false;
 
 /** A draft saved before a host could pick more than one category held `cat` and `sub`, and
  * before more than one location, `landmark`, `lat` and `lng`. */
-type StoredDraft = Partial<ListingDraft> & { cat?: string; sub?: string; landmark?: string; lat?: number | null; lng?: number | null };
+type StoredDraft = Partial<ListingDraft> & {
+  cat?: string;
+  sub?: string;
+  landmark?: string;
+  lat?: number | null;
+  lng?: number | null;
+  /** Left from when a template's steps had to be ticked. */
+  template?: unknown;
+  prefilled?: unknown;
+  checked?: unknown;
+};
 
 /** A saved draft, filled out to the current shape. */
-export function fromStored({ cat, sub, landmark, lat, lng, ...saved }: StoredDraft): ListingDraft {
+export function fromStored({ cat, sub, landmark, lat, lng, ...stored }: StoredDraft): ListingDraft {
+  const saved: Partial<ListingDraft> & Record<string, unknown> = { ...stored };
+  delete saved.template;
+  delete saved.prefilled;
+  delete saved.checked;
   return {
     ...blankDraft(),
     ...(cat ? { cats: [cat], subs: sub ? [sub] : [] } : {}),

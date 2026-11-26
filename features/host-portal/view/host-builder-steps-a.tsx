@@ -152,7 +152,11 @@ export function StepWhere({ vm }: Props) {
           accept="image/*"
           aria-label="Photo of the meeting point"
           className="sr-only"
-          onChange={(e) => onMeetPhoto(e.target.files?.[0])}
+          onChange={(e) => {
+            onMeetPhoto(e.target.files?.[0]);
+            // Cleared, so picking the same photo again (say, after deleting it) still uploads.
+            e.target.value = "";
+          }}
         />
       </label>
       {draft.meetPhoto && (

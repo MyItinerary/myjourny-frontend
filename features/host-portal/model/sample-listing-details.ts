@@ -45,7 +45,7 @@ export const SAMPLE_LISTING_DETAILS: Record<string, ListingDetail> = {
       "Easy walking, two short flights of stairs",
       "Guests move to the next Saturday for free or take a full refund. You decide by 10am on the day.",
     ],
-    actions: [act("Edit this experience", "edit"), act("Block a date", "block-date"), act("Pause new bookings", "pause"), act("Preview as a guest", "preview"), act("Copy the guest link", "copy-link")],
+    actions: [act("Edit this experience", "edit"), act("Block a date", "block-date"), act("Pause new bookings", "pause"), act("Copy the guest link", "copy-link")],
   },
   l2: {
     id: "l2",

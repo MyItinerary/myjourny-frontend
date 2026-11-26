@@ -40,21 +40,19 @@ describe("templateById", () => {
 });
 
 describe("draftFromTemplate", () => {
-  it("fills a fresh draft, with every filled step waiting to be checked", () => {
+  it("fills a fresh draft, with nothing to tick", () => {
     const d = draftFromTemplate(LISTING_TEMPLATES[0]);
-
     expect(d.title).toBe("Golden hour portrait walk");
     expect(d.city).toBe("Lagos");
     expect(d.editingId).toBeNull();
-    expect(d.template).toBe("Golden hour portrait walk");
-    expect(d.prefilled).toEqual([1, 2, 4, 5, 6, 7]);
-    expect(d.checked).toEqual([]);
+    expect(d).not.toHaveProperty("checked");
   });
 
-  it("fills in enough that each checked step is done, apart from the schedule and the host's own long description", () => {
+  it("fills in enough for the steps it covers, leaving the schedule, the host's own long description and the safety tick", () => {
     for (const template of LISTING_TEMPLATES) {
-      const d = { ...draftFromTemplate(template), checked: [1, 2, 4, 5, 6, 7] as const };
-      expect(sectionsDone({ ...d, checked: [...d.checked] })).toMatchObject({ 1: false, 2: true, 4: false, 5: true, 6: true, 7: true });
+      const d = draftFromTemplate(template);
+      expect(sectionsDone(d)).toMatchObject({ 1: false, 2: true, 4: false, 5: true, 6: true, 7: false });
+      expect(sectionsDone({ ...d, safetyAgreed: true })[7]).toBe(true);
     }
   });
 });

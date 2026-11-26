@@ -58,7 +58,7 @@ const SETUP = {
   count: "0 of 3 done",
   percent: 6,
   note: "We review every host before their experiences go live.",
-  tasks: [{ title: "Confirm who you are", body: "Your NIN.", done: false, href: "/host/dashboard/profile?pane=verify" }],
+  tasks: [{ title: "Verify your account", body: "Your NIN.", done: false, href: "/host/dashboard/profile?pane=verify" }],
 };
 
 const base = {
@@ -180,7 +180,7 @@ describe("HostHomeView, a host with nothing listed", () => {
     const pitch = screen.getByRole("heading", { name: /make some money/ });
     const setup = screen.getByRole("heading", { name: "Finish setting up" });
     expect(pitch.compareDocumentPosition(setup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Confirm who you are/ })).toHaveAttribute("href", "/host/dashboard/profile?pane=verify");
+    expect(screen.getByRole("link", { name: /Verify your account/ })).toHaveAttribute("href", "/host/dashboard/profile?pane=verify");
   });
 
   it("leaves the setup card out when there's nothing to set up", () => {

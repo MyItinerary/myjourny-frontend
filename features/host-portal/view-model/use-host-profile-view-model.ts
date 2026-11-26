@@ -75,7 +75,7 @@ export function useHostProfileViewModel(): HostProfileViewModel {
       title: "Your profile",
       chip: profile.setup ? "Not live yet" : "Live",
       subtitle: "This is what guests see before they book",
-      actions: [{ label: "View as a guest", onClick: soon, primary: false }],
+      actions: [],
     },
     nav: PROFILE_PANES.map((p) => ({
       ...p,

@@ -21,9 +21,9 @@ export function emptyProfile(user: { fullName: string | null; email: string | nu
 
   return {
     setup: [
-      { title: "Confirm who you are", body: "Your NIN or driver licence, and one selfie. Takes about four minutes.", pane: "verify", done: false },
-      { title: "Write your public profile", body: "A photo of your face and a few lines about what you do. Guests book people.", pane: "public", done: false },
-      { title: "Add the account we pay into", body: "Nigerian bank account. The name has to match your ID.", pane: "payouts", done: false },
+      { title: "Verify your account", body: "Upload your NIN or driver's licence and take a selfie. It takes about four minutes.", pane: "verify", done: false },
+      { title: "Fill in your profile details", body: "Add a photo of yourself and a few lines about what you do.", pane: "public", done: false },
+      { title: "Add your bank details", body: "We pay you into this account. The name on it has to match your ID.", pane: "payouts", done: false },
     ],
     verifyLeft: 3,
     rows: {

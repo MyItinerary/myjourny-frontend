@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Coins,
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Row, SavedBanner } from "@/components/account-settings/section-ui";
+import { type ProfileUpdatePayload, type UserProfile, useGetProfile, useUpdateProfile } from "@/lib/queries/profile";
 
 interface PickOption {
   label: string;
@@ -86,12 +87,43 @@ interface PreferenceValues {
   vibe: string;
 }
 
-const INITIAL_VALUES: PreferenceValues = {
-  interests: ["Art & creativity", "Street life", "Local food & drinks"],
-  budget: "Mid-range",
-  social: "Small group (2–4 people)",
-  vibe: "Explore the local scene",
-};
+// What the profile stores for each option, in the same order as the lists above (the taste
+// quiz saves these ids).
+const INTEREST_IDS = ["food", "culture", "nature", "art", "wellness", "street-life", "events"];
+const PACE_IDS = ["chill", "balanced", "exploratory", "high"];
+const VIBE_IDS = ["escape", "learn", "adventure", "romance", "celebrate", "local-scene"];
+const SOCIAL_IDS = ["solo", "couple", "group", "open", "low_interaction"];
+const BUDGET_IDS = ["low", "medium", "high", "flexible"];
+
+const labelFor = (options: PickOption[], ids: string[], id: string | null | undefined) =>
+  options[ids.indexOf(id ?? "")]?.label ?? "";
+const idFor = (options: PickOption[], ids: string[], label: string) =>
+  ids[options.findIndex((o) => o.label === label)];
+
+/** The saved profile's answers, as the labels this section shows. Blank until it loads. */
+function fromProfile(profile: UserProfile | undefined): { values: PreferenceValues; pace: string } {
+  return {
+    values: {
+      interests: (profile?.interests ?? []).map((id) => labelFor(INTERESTS, INTEREST_IDS, id)).filter(Boolean),
+      budget: labelFor(BUDGET_OPTIONS, BUDGET_IDS, profile?.budget_range),
+      social: labelFor(SOCIAL_OPTIONS, SOCIAL_IDS, profile?.social_style),
+      vibe: labelFor(VIBE_OPTIONS, VIBE_IDS, profile?.trip_intent?.[0]),
+    },
+    pace: labelFor(PACE_OPTIONS, PACE_IDS, profile?.energy_level),
+  };
+}
+
+/** The answers as the profile stores them. */
+function toPayload(values: PreferenceValues): ProfileUpdatePayload {
+  const pick = (options: PickOption[], ids: string[], label: string) => idFor(options, ids, label) ?? undefined;
+  const vibe = pick(VIBE_OPTIONS, VIBE_IDS, values.vibe);
+  return {
+    interests: values.interests.map((l) => idFor(INTERESTS, INTEREST_IDS, l)).filter((id): id is string => Boolean(id)),
+    budget_range: pick(BUDGET_OPTIONS, BUDGET_IDS, values.budget),
+    social_style: pick(SOCIAL_OPTIONS, SOCIAL_IDS, values.social),
+    ...(vibe ? { trip_intent: [vibe] } : {}),
+  };
+}
 
 const STEPS = ["interests", "budget", "pace", "social", "vibe"] as const;
 type Screen = "settings" | (typeof STEPS)[number];
@@ -245,9 +277,30 @@ function PickerScreen({
 }
 
 export function PreferencesSection() {
-  const [quizTaken, setQuizTaken] = useState(true);
-  const [values, setValues] = useState<PreferenceValues>(INITIAL_VALUES);
-  const [pace, setPace] = useState("Balanced mix");
+  // The answers come from the saved profile, and every save goes back to it.
+  const { data: profile } = useGetProfile();
+  const updateProfile = useUpdateProfile();
+  const saved = useMemo(() => fromProfile(profile), [profile]);
+  const [quizTakenHere, setQuizTaken] = useState(false);
+  const quizTaken = quizTakenHere || Boolean(profile?.completed || profile?.interests?.length);
+  const [editedValues, setEditedValues] = useState<PreferenceValues | null>(null);
+  const [editedPace, setEditedPace] = useState<string | null>(null);
+  const values = editedValues ?? saved.values;
+  const pace = editedPace ?? saved.pace;
+  const persist = (change: ProfileUpdatePayload) =>
+    updateProfile.mutate(change, {
+      onError: () => setSavedMessage("That didn't save. Check your connection and try again."),
+    });
+  const setValues = (next: PreferenceValues | ((current: PreferenceValues) => PreferenceValues)) => {
+    const value = typeof next === "function" ? next(values) : next;
+    setEditedValues(value);
+    persist(toPayload(value));
+  };
+  const setPace = (label: string) => {
+    setEditedPace(label);
+    const id = idFor(PACE_OPTIONS, PACE_IDS, label);
+    if (id) persist({ energy_level: id });
+  };
   const [screen, setScreen] = useState<Screen>("settings");
   const [quizStep, setQuizStep] = useState<number | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);

@@ -65,9 +65,9 @@ describe("useHostHomeViewModel", () => {
     expect(result.current.setup).toMatchObject({ heading: "Finish setting up", count: "0 of 3 done", percent: 6 });
     expect(result.current.setup!.note).toMatch(/review every host before their experiences go live/);
     expect(result.current.setup!.tasks.map((t) => [t.title, t.href])).toEqual([
-      ["Confirm who you are", "/host/dashboard/profile?pane=verify"],
-      ["Write your public profile", "/host/dashboard/profile?pane=public"],
-      ["Add the account we pay into", "/host/dashboard/profile?pane=payouts"],
+      ["Verify your account", "/host/dashboard/profile?pane=verify"],
+      ["Fill in your profile details", "/host/dashboard/profile?pane=public"],
+      ["Add your bank details", "/host/dashboard/profile?pane=payouts"],
     ]);
   });
 

@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { ListingDraft } from "./listing-draft.types";
 import {
-  awaitingCheck, basicsWritten, blankDraft, capWords, descLengthOk, wordCountLine, descShortBy, checklistFor, doneCountOf, furthestStep, metaLine, photoHint, photoLabel,
+  basicsWritten, blankDraft, capWords, descLengthOk, wordCountLine, descShortBy, checklistFor, doneCountOf, firstIncomplete, metaLine, photoHint, photoLabel,
   isChoice, FITNESS_LEVELS, needsAge, priceBreakdown, sectionsDone, slotSummary, upcomingDates, wordCount,
-  formatTime, TIME_OPTIONS, timeChoices, timeRange,
+  endTime, formatTime, hoursBetween, TIME_OPTIONS, timeChoices, timeRange,
 } from "./listing-draft";
 
 const complete = (): ListingDraft => ({
@@ -14,7 +14,7 @@ const complete = (): ListingDraft => ({
   locations: [{ name: "Freedom Park", lat: 6.45, lng: 3.39 }],
   whenType: "recurring" as const, days: ["Sat"], slots: ["16:00"],
   price: "9000", maxG: "8", refund: "full_refund_until", refundHours: "24", inc: ["Photos"], exc: ["Lunch"],
-  fitness: "easy", agePolicy: "minimum_age", ageMin: "12", access: "not_confirmed",
+  fitness: "easy", agePolicy: "minimum_age", ageMin: "12", access: "not_confirmed", safetyAgreed: true, photoRightsAgreed: true,
   photos: ["a", "b", "c", "d"],
 });
 
@@ -56,10 +56,9 @@ describe("sectionsDone", () => {
     expect(sectionsDone({ ...complete(), locations: [] })[3]).toBe(false);
   });
 
-  it("needs a refund policy, with hours for a full refund", () => {
-    expect(sectionsDone({ ...complete(), refund: "" })[5]).toBe(false);
-    expect(sectionsDone({ ...complete(), refundHours: "" })[5]).toBe(false);
-    expect(sectionsDone({ ...complete(), refund: "non_refundable", refundHours: "" })[5]).toBe(true);
+  it("doesn't ask for a refund policy: a new draft follows ours", () => {
+    expect(sectionsDone({ ...complete(), refund: "" })[5]).toBe(true);
+    expect(blankDraft()).toMatchObject({ refund: "full_refund_until", refundHours: "24" });
   });
 
   it("needs real choices for fit, and an age only when the policy has one", () => {
@@ -68,6 +67,14 @@ describe("sectionsDone", () => {
     // A draft saved when these were free text doesn't count.
     expect(sectionsDone({ ...complete(), fitness: "Easy, light walking" as ListingDraft["fitness"] })[7]).toBe(false);
     expect(sectionsDone({ ...complete(), access: "" })[7]).toBe(false);
+  });
+
+  it("needs the safety declaration ticked", () => {
+    expect(sectionsDone({ ...complete(), safetyAgreed: false })[7]).toBe(false);
+  });
+
+  it("needs the photo rights ticked as well as four photos", () => {
+    expect(sectionsDone({ ...complete(), photoRightsAgreed: false })[8]).toBe(false);
   });
 });
 
@@ -118,32 +125,12 @@ describe("helpers", () => {
   });
 });
 
-describe("a draft started from a template", () => {
-  const fromTemplate = (checked: ListingDraft["checked"] = []): ListingDraft => ({
-    ...complete(),
-    template: "Golden hour portrait walk",
-    prefilled: [1, 2, 4, 5, 6, 7],
-    checked,
-  });
-
-  it("waits for the host to check each step the template filled in", () => {
-    const d = fromTemplate([1]);
-    expect(awaitingCheck(d, 1)).toBe(false);
-    expect(awaitingCheck(d, 2)).toBe(true);
-    expect(awaitingCheck(d, 3)).toBe(false);
-  });
-
-  it("lets the host go no further than the first step still to check", () => {
-    expect(furthestStep(fromTemplate())).toBe(1);
-    expect(furthestStep(fromTemplate([1, 2]))).toBe(4);
-    expect(furthestStep(fromTemplate([2, 1, 4, 5, 6, 7]))).toBe(11);
-    expect(furthestStep(blankDraft())).toBe(11);
-  });
-
-  it("doesn't count a filled-in step as done until it is checked", () => {
-    expect(sectionsDone(fromTemplate())).toMatchObject({ 1: false, 2: false, 3: true, 8: true });
-    expect(doneCountOf(fromTemplate())).toBe(2);
-    expect(doneCountOf(fromTemplate([1, 2, 4, 5, 6, 7]))).toBe(8);
+describe("firstIncomplete", () => {
+  it("is the first required step not filled in, or the last step once all eight are", () => {
+    expect(firstIncomplete(blankDraft())).toBe(1);
+    expect(firstIncomplete({ ...complete(), cue: "" })).toBe(3);
+    expect(firstIncomplete({ ...complete(), photos: [] })).toBe(8);
+    expect(firstIncomplete(complete())).toBe(11);
   });
 });
 
@@ -194,5 +181,23 @@ describe("the long description's length", () => {
     expect(basicsWritten(d)).toBe(true);
     expect(basicsWritten({ ...d, hook: "  " })).toBe(false);
     expect(basicsWritten({ ...d, desc: words(60) })).toBe(false);
+  });
+});
+
+describe("start and end times", () => {
+  it("works out the end from the start and how long it lasts, past midnight too", () => {
+    expect(endTime("16:00", "3")).toBe("19:00");
+    expect(endTime("16:00", "1.5")).toBe("17:30");
+    expect(endTime("22:00", "3")).toBe("01:00");
+    expect(endTime("", "3")).toBe("");
+    expect(endTime("16:00", "")).toBe("");
+  });
+
+  it("works out how long it lasts from the start and the end, an earlier end being the next day", () => {
+    expect(hoursBetween("16:00", "19:00")).toBe("3");
+    expect(hoursBetween("16:00", "17:30")).toBe("1.5");
+    expect(hoursBetween("22:00", "01:00")).toBe("3");
+    expect(hoursBetween("16:00", "16:00")).toBe("24");
+    expect(hoursBetween("", "19:00")).toBe("");
   });
 });

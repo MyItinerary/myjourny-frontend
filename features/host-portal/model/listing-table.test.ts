@@ -99,7 +99,7 @@ describe("rowActions", () => {
   it("offers nine actions, with Delete last and dangerous", () => {
     const live = rowActions(SAMPLE_LISTINGS[0]);
     expect(live.map((a) => a.label)).toEqual([
-      "See details", "Edit", "Duplicate", "Preview as a guest", "Copy the link", "Hide from search", "Pause new bookings", "Archive", "Delete",
+      "See details", "Edit", "Duplicate", "Copy the link", "Hide from search", "Pause new bookings", "Archive", "Delete",
     ]);
     expect(live.filter((a) => a.danger).map((a) => a.action)).toEqual(["delete"]);
   });

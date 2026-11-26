@@ -5,15 +5,16 @@ import { describe, expect, it, vi } from "vitest";
 import { ChoiceCard, Field, LineList, Pill, StepHeading } from "./host-builder-parts";
 
 describe("builder parts", () => {
-  it("heads a section", () => {
-    render(<StepHeading eyebrow="Section 1 of 8" title="The basics" intro="Three things." />);
-    expect(screen.getByRole("heading", { name: "The basics" })).toBeInTheDocument();
-    expect(screen.getByText("Section 1 of 8")).toBeInTheDocument();
+  it("heads a step at one size, with its intro and no step count", () => {
+    render(<StepHeading title="What's included" intro="One item per line." />);
+    expect(screen.getByRole("heading", { name: "What's included" })).toHaveClass("text-[28px]");
+    expect(screen.getByText("One item per line.")).toHaveClass("text-base");
+    expect(screen.queryByText(/Step \d+ of/)).not.toBeInTheDocument();
   });
 
-  it("heads a section without an intro", () => {
-    render(<StepHeading eyebrow="Step 1 of 10" title="The basics" />);
-    expect(screen.getByRole("heading", { name: "The basics" })).toBeInTheDocument();
+  it("heads a step without an intro", () => {
+    render(<StepHeading title="Photos" />);
+    expect(screen.getByRole("heading", { name: "Photos" })).toBeInTheDocument();
   });
 
   it("heads a section compactly, with a badge and no eyebrow", () => {
@@ -57,7 +58,7 @@ describe("builder parts", () => {
     expect(onSet).toHaveBeenCalledWith(1, "a");
     await userEvent.click(screen.getByRole("button", { name: "Remove Included line 1" }));
     expect(onDel).toHaveBeenCalledWith(0);
-    await userEvent.click(screen.getByRole("button", { name: "Add a line" }));
+    await userEvent.click(screen.getByRole("button", { name: "Add item" }));
     expect(onAdd).toHaveBeenCalled();
   });
 

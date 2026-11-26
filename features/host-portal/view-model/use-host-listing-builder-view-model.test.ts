@@ -65,7 +65,9 @@ describe("the step navigator", () => {
     act(() => result.current.onNext());
     expect(result.current.stepBar).toMatchObject({ eyebrow: "Step 2 of 11", title: "Category and tags", canPrev: true, canNext: true });
     act(() => result.current.onNext());
-    act(() => result.current.onNext());
+    expect(result.current.step).toBe(3);
+    // Going back from an unfinished step flags it.
+    act(() => result.current.onBack());
     expect(result.current.steps[0].attention).toBeNull();
     expect(result.current.steps[2].attention).toBe("A location on the map, a meeting point and a photo");
     expect(result.current.steps[4].attention).toBeNull();
@@ -88,25 +90,39 @@ describe("the step navigator", () => {
 });
 
 describe("how guests book", () => {
-  it("sets the refund hours from Flexible or Strict and leaves Moderate alone", () => {
+  it("asks no cancellation terms: a new draft follows our 24-hour policy", () => {
     const { result } = render();
-    expect(result.current.booking.tiers.every((t) => !t.selected)).toBe(true);
-    act(() => result.current.booking.onTier("Flexible"));
+    expect(result.current.booking).not.toHaveProperty("tiers");
     expect(result.current.draft).toMatchObject({ refund: "full_refund_until", refundHours: "24" });
-    expect(result.current.booking.tiers.find((t) => t.key === "Flexible")?.selected).toBe(true);
-    expect(result.current.booking.promise).toMatch(/24 hours/);
-    act(() => result.current.booking.onTier("Strict"));
-    expect(result.current.draft.refundHours).toBe("168");
-    act(() => result.current.booking.onTier("Moderate"));
-    expect(result.current.draft.refundHours).toBe("168");
-    expect(result.current.booking.tiers.find((t) => t.key === "Moderate")?.saveable).toBe(false);
+    expect(result.current.steps[9].done).toBe(false);
+    act(() => result.current.booking.onType("request"));
+    expect(result.current.steps[9].done).toBe(true);
   });
 
-  it("remembers the booking type for the session and says it is not saved", () => {
+  it("breaks down each step for the review, with a way back to edit it", () => {
+    const { result } = render();
+    act(() => writeRequired(result.current));
+    expect(result.current.review.map((r) => r.label)).toEqual([
+      "Title and description", "Category and tags", "Location", "Date and time", "Group size and price",
+      "What's included", "Requirements and safety", "Photos", "Reviews", "How guests book",
+    ]);
+    expect(result.current.review[0]).toMatchObject({ ok: true, optional: false });
+    expect(result.current.review[0].rows).toEqual([
+      { label: "Title", value: "Lagoon kayak" },
+      { label: "Short description", value: "Paddle at sunrise." },
+      { label: "Long description", value: "500 words" },
+    ]);
+    expect(result.current.review[2].ok).toBe(false);
+    expect(result.current.review[8]).toMatchObject({ ok: true, optional: true });
+    act(() => result.current.review[1].onEdit());
+    expect(result.current.step).toBe(2);
+  });
+
+  it("remembers the booking type for the session", () => {
     const { result } = render();
     act(() => result.current.booking.onType("instant"));
     expect(result.current.booking.types.find((t) => t.key === "instant")?.selected).toBe(true);
-    expect(result.current.booking.unsaved).toMatch(/can't be saved/);
+    expect(result.current.booking).not.toHaveProperty("unsaved");
   });
 });
 
@@ -155,7 +171,7 @@ describe("moving through the sections", () => {
 
   it("goes forward, back and straight to a section, staying inside 1 to 11", () => {
     const { result } = render();
-    act(() => writeRequired(result.current));
+    act(() => fillEverything(result.current));
     act(() => result.current.onNext());
     expect(result.current.step).toBe(2);
     act(() => result.current.onBack());
@@ -225,6 +241,56 @@ describe("moving through the sections", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("takes a repeating schedule's start and end time, keeping the end when the start moves", () => {
+    const { result } = render();
+    act(() => result.current.derived.hours.onStart("16:00"));
+    act(() => result.current.derived.hours.onEnd("19:00"));
+    expect(result.current.draft).toMatchObject({ slots: ["16:00"], dur: "3" });
+    expect(result.current.derived.hours).toMatchObject({ start: "16:00", end: "19:00" });
+
+    act(() => result.current.derived.hours.onStart("17:00"));
+    expect(result.current.draft).toMatchObject({ slots: ["17:00"], dur: "2" });
+    expect(result.current.derived.hours.end).toBe("19:00");
+  });
+
+  it("offers every day as a repeating schedule, picking all seven days", () => {
+    const { result } = render();
+    expect(result.current.howOften.map((o) => o.label)).toEqual(["Every day", "Every week", "Every 2 weeks", "Once a month"]);
+    expect(result.current.howOften.find((o) => o.key === "1")?.selected).toBe(true);
+
+    act(() => result.current.howOften[0].onPick());
+    expect(result.current.draft).toMatchObject({ every: 1, days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] });
+    expect(result.current.howOften.filter((o) => o.selected).map((o) => o.label)).toEqual(["Every day"]);
+
+    // Taking a day off makes it weekly again.
+    act(() => result.current.onToggle("days", "Sun"));
+    expect(result.current.howOften.filter((o) => o.selected).map((o) => o.label)).toEqual(["Every week"]);
+
+    act(() => result.current.howOften[0].onPick());
+    act(() => result.current.howOften[1].onPick());
+    expect(result.current.draft.days).toEqual([]);
+  });
+
+  it("opens one date calendar at a time, closes it on a pick, and lets the end date be cleared", () => {
+    const { result } = render();
+    expect(result.current.derived.date).toMatchObject({ value: null, open: false, onClear: null });
+
+    act(() => result.current.derived.date.onOpenChange(true));
+    act(() => result.current.derived.until.onOpenChange(true));
+    expect(result.current.derived.date.open).toBe(false);
+    expect(result.current.derived.until.open).toBe(true);
+
+    act(() => result.current.derived.until.onPick(new Date(2030, 5, 12)));
+    expect(result.current.draft.until).toBe("2030-06-12");
+    expect(result.current.derived.until).toMatchObject({ value: "Wednesday 12 June 2030", open: false });
+    act(() => result.current.derived.until.onClear!());
+    expect(result.current.draft.until).toBe("");
+
+    act(() => result.current.derived.date.onPick(new Date(2030, 5, 14)));
+    expect(result.current.draft.date).toBe("2030-06-14");
+    expect(result.current.derived.date.onClear).toBeNull();
   });
 
   it("keeps the long description to 1,000 words and counts them", () => {
@@ -322,22 +388,33 @@ describe("photos", () => {
   // Uploads come back numbered in the order they arrive (see builderHandlers).
   const file = (name: string, type = "image/jpeg") => new File([name], name, { type });
 
-  it("uploads only images, in the order picked, then reorders, moves the cover and deletes", async () => {
+  it("uploads only images, in the order picked, then reorders and deletes, the first always the main photo", async () => {
     const { result } = render();
     act(() => result.current.onAddPhotos([file("a.jpg"), file("b.jpg"), file("notes.pdf", "application/pdf")]));
     expect(result.current.uploading).toBe(2);
     await waitFor(() => expect(result.current.draft.photos).toEqual([`${CLOUDINARY}photo-1.jpg`, `${CLOUDINARY}photo-2.jpg`]));
     expect(result.current.uploading).toBe(0);
-    expect(result.current.derived.photoLabel).toBe("2 photos");
+    expect(result.current.photos).toEqual([`${CLOUDINARY}photo-1.jpg`, `${CLOUDINARY}photo-2.jpg`]);
 
-    act(() => result.current.onMovePhoto(0, 1));
-    expect(result.current.draft.photos).toEqual([`${CLOUDINARY}photo-2.jpg`, `${CLOUDINARY}photo-1.jpg`]);
-    expect(result.current.draft.cover).toBe(1);
-    act(() => result.current.onMovePhoto(0, -1));
-    expect(result.current.draft.photos[0]).toBe(`${CLOUDINARY}photo-2.jpg`);
+    act(() => result.current.onReorderPhoto(1, 0));
+    expect(result.current.photos).toEqual([`${CLOUDINARY}photo-2.jpg`, `${CLOUDINARY}photo-1.jpg`]);
+    expect(result.current.draft.cover).toBe(0);
+    // Out of range does nothing.
+    act(() => result.current.onReorderPhoto(0, -1));
+    act(() => result.current.onReorderPhoto(1, 2));
+    expect(result.current.photos[0]).toBe(`${CLOUDINARY}photo-2.jpg`);
 
     act(() => result.current.onDeletePhoto(0));
-    expect(result.current.draft.photos).toEqual([`${CLOUDINARY}photo-1.jpg`]);
+    expect(result.current.photos).toEqual([`${CLOUDINARY}photo-1.jpg`]);
+  });
+
+  it("shows an old draft's cover first, and keeps it first once the order changes", () => {
+    const store = renderHook(() => useListingDraft());
+    act(() => store.result.current.update((d) => ({ ...d, photos: ["a", "b", "c"], cover: 2 })));
+    const { result } = render();
+    expect(result.current.photos).toEqual(["c", "a", "b"]);
+    act(() => result.current.onReorderPhoto(2, 1));
+    expect(result.current.draft).toMatchObject({ photos: ["c", "b", "a"], cover: 0 });
   });
 
   it("uploads the meeting point photo", async () => {
@@ -348,11 +425,11 @@ describe("photos", () => {
     await waitFor(() => expect(result.current.draft.meetPhoto).toBe(`${CLOUDINARY}photo-1.jpg`));
   });
 
-  it("says when a photo couldn't be uploaded, and keeps the rest", async () => {
+  it("says why a photo couldn't be uploaded when itin does, and keeps the rest", async () => {
     server.use(http.get(apiUrl("/guide/uploads/cloudinary-signature"), () => HttpResponse.json({ detail: "Uploads are not configured" }, { status: 503 })));
     const { result } = render();
     act(() => result.current.onAddPhotos([file("a.jpg")]));
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't upload a.jpg. Please try again."));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Uploads are not configured"));
     expect(result.current.draft.photos).toEqual([]);
     expect(result.current.uploading).toBe(0);
   });
@@ -435,6 +512,8 @@ function fillEverything(r: ReturnType<typeof useHostListingBuilderViewModel>) {
   r.onListSet("inc", 0, "Breakfast"); r.onListSet("exc", 0, "Transport");
   r.onField("fitness", "moderate"); r.onField("agePolicy", "all_ages"); r.onField("access", "not_suitable");
   r.onField("photos", ["1", "2", "3", "4"].map((n) => `${CLOUDINARY}${n}.jpg`));
+  r.onField("safetyAgreed", true);
+  r.onField("photoRightsAgreed", true);
 }
 
 describe("review and publish", () => {
@@ -569,53 +648,36 @@ describe("starting from a template", () => {
     nav.template = "nope";
     const { result } = render();
     expect(result.current.draft.title).toBe("");
-    expect(result.current.check).toBeNull();
   });
 
-  it("asks the host to check a filled-in step before they can move past it", () => {
+  it("asks for nothing to be ticked, but still needs each required step filled in before the next", () => {
     nav.template = "portrait-walk";
     const { result } = render();
-
-    expect(result.current.check).toMatchObject({ checked: false });
-    expect(result.current.check!.note).toContain('"Golden hour portrait walk" template');
-    expect(result.current.canContinue).toBe(false);
-    expect(result.current.steps[1].blocked).toBe(true);
-    act(() => result.current.onNext());
-    act(() => result.current.onStep(9));
-    expect(result.current.step).toBe(1);
+    expect(result.current).not.toHaveProperty("check");
 
     // The template's description is a start; it still needs the host's own 100 words.
-    act(() => result.current.check!.onToggle());
     expect(result.current.canContinue).toBe(false);
     act(() => result.current.onField("desc", LONG));
     expect(result.current.canContinue).toBe(true);
-    expect(result.current.steps[0].done).toBe(true);
     act(() => result.current.onNext());
     expect(result.current.step).toBe(2);
-  });
-
-  it("lets the host through the steps the template left to them, up to the next one to check", () => {
-    nav.template = "portrait-walk";
-    const { result } = render();
-    act(() => result.current.onField("desc", LONG));
-    act(() => result.current.check!.onToggle());
-    act(() => result.current.onNext());
-    act(() => result.current.check!.onToggle());
-    act(() => result.current.onNext());
-
-    expect(result.current.step).toBe(3);
-    expect(result.current.check).toBeNull();
-    expect(result.current.canContinue).toBe(true);
+    // Categories come from the template, but the location doesn't: step 3 is as far as it goes.
     act(() => result.current.onStep(9));
-    expect(result.current.step).toBe(4);
+    expect(result.current.step).toBe(3);
+    expect(result.current.canContinue).toBe(false);
   });
 
-  it("can untick a step it ticked", () => {
-    nav.template = "portrait-walk";
+  it("won't skip past any required step that isn't filled in", () => {
     const { result } = render();
-    act(() => result.current.check!.onToggle());
-    act(() => result.current.check!.onToggle());
-    expect(result.current.canContinue).toBe(false);
+    act(() => writeRequired(result.current));
+    act(() => result.current.onStep(9));
+    expect(result.current.step).toBe(3);
+    expect(result.current.steps[3].blocked).toBe(true);
+    act(() => result.current.onField("locations", [{ name: "Freedom Park", lat: 6.45, lng: 3.39 }]));
+    act(() => result.current.onField("cue", "The blue gate"));
+    act(() => result.current.onField("meetPhoto", "x.jpg"));
+    act(() => result.current.onNext());
+    expect(result.current.step).toBe(4);
   });
 
   it("offers to bring back a draft the template replaced", () => {

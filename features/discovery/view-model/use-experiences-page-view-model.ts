@@ -9,6 +9,7 @@ import { useSession } from "@/lib/auth/session-store";
 import { useGeolocation } from "@/lib/hooks/use-geolocation";
 import { guestCategories, type Category as DefaultCategory } from "@/lib/mock-data/home";
 import { useInterestCategories, type Category } from "@/lib/queries/categories";
+import { useGetProfile } from "@/lib/queries/profile";
 import {
   experienceListItemToCardProps,
   experienceMatchToCardProps,
@@ -17,6 +18,7 @@ import {
   useRecommendedExperiences,
 } from "@/lib/queries/experiences";
 
+import { categoryIcon, DEFAULT_SUBCATEGORIES, quizCategorySlugs, slugOf } from "../model/category-icons";
 import { nextSaturday } from "../model/weekend";
 
 export type DiscoveryRail = {
@@ -26,13 +28,30 @@ export type DiscoveryRail = {
   show: boolean;
 };
 
-/** `iconSrc` is only set for the categories the design gives an icon (the rest show a plain dot). */
+/** `iconSrc` is only set for the categories the design gives an icon. */
 export type CategoryPill = { id: string; label: string; iconSrc?: string };
 
-const CATEGORY_ICONS: Record<string, string> = { "local-food-drinks": "/images/discovery/local-food-drinks.png" };
+const uniqueBySlug = (list: Category[]) => [...new Map(list.map((c) => [c.slug, c])).values()];
 
 function toCategoryPill(id: string, label: string): CategoryPill {
-  return { id, label, iconSrc: CATEGORY_ICONS[id] };
+  return { id, label, iconSrc: categoryIcon(id, label) };
+}
+
+/** The subcategories under the categories someone picked in the taste quiz, as pills. While the API
+ * has none, the design's subcategories stand in. Empty when they picked nothing we know. */
+export function toSubcategoryPills(categories: Category[] | undefined, interests: string[] | null | undefined): CategoryPill[] {
+  const picked = new Set(quizCategorySlugs(interests));
+  if (picked.size === 0) return [];
+  // The API can send a subcategory both in the list and nested under its category: keep one of each.
+  const all = uniqueBySlug((categories ?? []).flatMap((c) => [c, ...(c.children ?? [])]));
+  const children = all.filter((c) => c.parent_id !== null);
+  if (children.length > 0) {
+    const parentIds = new Set(
+      all.filter((c) => c.parent_id === null && (picked.has(c.slug) || picked.has(slugOf(c.text)))).map((c) => c.id),
+    );
+    return children.filter((c) => parentIds.has(c.parent_id!)).map((c) => toCategoryPill(c.slug, c.text));
+  }
+  return DEFAULT_SUBCATEGORIES.filter((c) => picked.has(c.parent)).map((c) => toCategoryPill(c.id, c.label));
 }
 
 /** The top-level interest categories as pills. While the API has none (loading, failed or empty) the
@@ -41,7 +60,7 @@ export function toCategoryPills(
   categories: Category[] | undefined,
   fallback: DefaultCategory[] = guestCategories,
 ): CategoryPill[] {
-  const parents = (categories ?? []).filter((c) => c.parent_id === null);
+  const parents = uniqueBySlug((categories ?? []).filter((c) => c.parent_id === null));
   return parents.length > 0
     ? parents.map((c) => toCategoryPill(c.slug, c.text))
     : fallback.map((c) => toCategoryPill(c.id, c.label));
@@ -56,7 +75,10 @@ export type ExperiencesPageViewModel = {
   availableThisWeekend: DiscoveryRail;
   pickedForYou: DiscoveryRail;
   nearYouInLagos: DiscoveryRail;
+  /** Categories for guests; subcategories once the taste quiz is done. */
   categories: CategoryPill[];
+  /** How many pills show before "See more": every subcategory, or the first seven categories. */
+  categoriesVisible: number;
   cities: DiscoverCitiesViewModel;
 };
 
@@ -90,6 +112,9 @@ export function useExperiencesPageViewModel(): ExperiencesPageViewModel {
   const weekendQuery = useFilteredExperiences({ date: weekend, sort: "rating_desc", limit: RAIL_SIZE, enabled: hydrated });
   const lagosQuery = useFilteredExperiences({ city: NEAR_CITY, sort: "rating_desc", limit: RAIL_SIZE, enabled: hydrated });
   const categoriesQuery = useInterestCategories();
+  // After the quiz: the subcategories under what they said they're into. Before it, the categories.
+  const profile = useGetProfile();
+  const subcategoryPills = quizDone ? toSubcategoryPills(categoriesQuery.data, profile.data?.interests) : [];
   const searchedArea = useLastSearchArea();
   const searchQuery = useFilteredExperiences({
     search: searchedArea ?? undefined,
@@ -116,7 +141,9 @@ export function useExperiencesPageViewModel(): ExperiencesPageViewModel {
     availableThisWeekend: rail((weekendQuery.data?.items ?? []).map(experienceListItemToCardProps), weekendQuery.isPending),
     pickedForYou,
     nearYouInLagos: rail((lagosQuery.data?.items ?? []).map(experienceListItemToCardProps), lagosQuery.isPending),
-    categories: toCategoryPills(categoriesQuery.data),
+    categories: subcategoryPills.length > 0 ? subcategoryPills : toCategoryPills(categoriesQuery.data),
+    // Subcategories all show at once; the categories fold after seven behind "See more".
+    categoriesVisible: subcategoryPills.length > 0 ? subcategoryPills.length : 7,
     cities: useDiscoverCitiesViewModel(),
   };
 }

@@ -77,7 +77,7 @@ export function BookingPanelView(props: Props) {
         ) : (
           <SessionDateView sessions={sessions} label={card.dateField} locked={card.locked} open={datesOpen} onOpenChange={setDatesOpen} />
         )}
-        {!datesOpen && <SessionTimesView sessions={sessions} locked={card.locked} />}
+        <SessionTimesView sessions={sessions} locked={card.locked} />
         {urgent && <UrgencyBadge {...urgent} />}
 
         <div className={cn("flex flex-col gap-2 pt-1", card.locked && "opacity-60")}>

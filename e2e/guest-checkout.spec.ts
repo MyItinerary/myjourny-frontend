@@ -374,6 +374,6 @@ test("an account made with Google is offered Google, not a password", async ({ p
   await page.getByLabel("Phone number").fill("7016377711");
   await page.getByRole("button", { name: "Login and continue to book" }).click();
 
-  await expect(page.getByText("juliet@example.com signs in with Google")).toBeVisible();
+  await expect(page.getByText("This email usually signs in with Google.")).toBeVisible();
   await expect(page.getByPlaceholder("Enter password")).toHaveCount(0);
 });

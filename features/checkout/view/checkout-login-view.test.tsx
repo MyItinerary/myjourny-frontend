@@ -118,7 +118,8 @@ describe("CheckoutLoginView on desktop", () => {
 
   it("offers only Google to an account made with Google", () => {
     renderWithProviders(<CheckoutLoginView login={login({ googleOnly: true })} />);
-    expect(screen.getByText(/juliet@example.com signs in with Google/)).toBeInTheDocument();
+    expect(screen.getByText("This email usually signs in with Google.")).toBeInTheDocument();
+    expect(screen.queryByText(/no password to enter/)).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText("Enter password")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
   });

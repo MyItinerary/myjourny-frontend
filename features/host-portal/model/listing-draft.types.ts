@@ -56,18 +56,16 @@ export type ListingDraft = {
   /** Hours before the start a guest can still cancel for a full refund. */
   refundHours: string;
   weather: boolean;
+  /** The host has ticked that they've read the safety rules and what they wrote is true. Asked again each time; itin doesn't keep it. */
+  safetyAgreed: boolean;
+  /** The host has ticked that they own the photos and the people in them agreed. Asked again each time; itin doesn't keep it. */
+  photoRightsAgreed: boolean;
   photos: string[];
   cover: number;
   /** The host's one line to guests. */
   quote: string;
   /** The itin listing being edited, or null for a new one. */
   editingId: string | null;
-  /** The template this draft started from, by name, or null. */
-  template: string | null;
-  /** Steps the template filled in. Each needs the host to check it before they can move past it. */
-  prefilled: BuilderStepNumber[];
-  /** Prefilled steps the host has checked. */
-  checked: BuilderStepNumber[];
 };
 
 /** The fields on the first step that have writing tips. */
@@ -82,7 +80,7 @@ export type BuilderStep = {
   active: boolean;
   /** Review stays muted until every section is done. */
   locked: boolean;
-  /** Can't be opened until an earlier step a template filled in is checked. */
+  /** Can't be opened until the required steps before it are filled in. */
   blocked: boolean;
   /** What is still missing, for a section the guest has left unfinished. */
   attention: string | null;

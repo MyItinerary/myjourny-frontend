@@ -11,9 +11,9 @@ const SETUP = {
   percent: 33,
   note: "We review every host before their experiences go live.",
   tasks: [
-    { title: "Confirm who you are", body: "Your NIN and a selfie.", done: false, href: "/host/dashboard/profile?pane=verify" },
-    { title: "Write your public profile", body: "A photo and a few lines.", done: true, href: "/host/dashboard/profile?pane=public" },
-    { title: "Add the account we pay into", body: "Nigerian bank account.", done: false, href: "/host/dashboard/profile?pane=payouts" },
+    { title: "Verify your account", body: "Your NIN and a selfie.", done: false, href: "/host/dashboard/profile?pane=verify" },
+    { title: "Fill in your profile details", body: "A photo and a few lines.", done: true, href: "/host/dashboard/profile?pane=public" },
+    { title: "Add your bank details", body: "Nigerian bank account.", done: false, href: "/host/dashboard/profile?pane=payouts" },
   ],
 };
 
@@ -30,9 +30,9 @@ describe("HostSetupCardView", () => {
   it("links each step to the right part of the profile, ticking the ones done", () => {
     renderWithProviders(<HostSetupCardView setup={SETUP} />);
 
-    expect(screen.getByRole("link", { name: /Confirm who you are/ })).toHaveAttribute("href", "/host/dashboard/profile?pane=verify");
-    expect(screen.getByRole("link", { name: /Add the account we pay into/ })).toHaveAttribute("href", "/host/dashboard/profile?pane=payouts");
-    expect(screen.getByRole("link", { name: /Write your public profile/ })).toHaveTextContent("✓");
-    expect(screen.getByRole("link", { name: /Confirm who you are/ })).not.toHaveTextContent("✓");
+    expect(screen.getByRole("link", { name: /Verify your account/ })).toHaveAttribute("href", "/host/dashboard/profile?pane=verify");
+    expect(screen.getByRole("link", { name: /Add your bank details/ })).toHaveAttribute("href", "/host/dashboard/profile?pane=payouts");
+    expect(screen.getByRole("link", { name: /Fill in your profile details/ })).toHaveTextContent("✓");
+    expect(screen.getByRole("link", { name: /Verify your account/ })).not.toHaveTextContent("✓");
   });
 });

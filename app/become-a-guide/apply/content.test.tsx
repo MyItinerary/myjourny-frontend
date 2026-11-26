@@ -10,11 +10,12 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("GuideApplicationContent", () => {
-  it("renders guide application view and step 1 fields", () => {
+  it("opens on step 1 of the application", () => {
     renderWithProviders(<GuideApplicationContent />);
 
+    expect(screen.getByText("Step 1 of 2")).toBeInTheDocument();
     expect(screen.getByText("CREATE AN ACCOUNT")).toBeInTheDocument();
-    expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
-    expect(screen.getByText("An individual")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Let's get to know you" })).toBeInTheDocument();
+    expect(screen.getByLabelText("How do you run your business?")).toHaveValue("individual");
   });
 });

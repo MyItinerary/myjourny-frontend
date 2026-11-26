@@ -36,6 +36,13 @@ describe("BookingConfirmedView", () => {
     expect(screen.queryByText(/total/)).not.toBeInTheDocument();
   });
 
+  it("labels the price in the phone bar as the total, like the design", () => {
+    renderWithProviders(<BookingConfirmedView confirmation={confirmation} />);
+    const bar = screen.getByRole("button", { name: "Show booking" }).parentElement!;
+    expect(bar).toHaveTextContent("₦10,000.00total");
+    expect(screen.getByRole("heading", { name: "You’re going!" })).toHaveClass("text-[32px]");
+  });
+
   it("opens the booking bar on a phone", async () => {
     const { user } = renderWithProviders(<BookingConfirmedView confirmation={confirmation} />);
     const before = screen.getAllByText("Kayaking").length;

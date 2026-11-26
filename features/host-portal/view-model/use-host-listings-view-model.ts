@@ -3,7 +3,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { apiErrorMessage } from "@/lib/api-error";
-import { openExperiencePreview } from "@/lib/experience-preview";
 
 import {
   CATEGORY_TREE,
@@ -19,7 +18,7 @@ import {
   sortListings,
   STATUS_OPTIONS,
 } from "../model/listing-table";
-import { fetchGuidePreviewToken, useDeleteGuideExperience } from "../model/guide-listings-api";
+import { useDeleteGuideExperience } from "../model/guide-listings-api";
 import { isSample, useHostListings } from "../model/listings-data";
 import type { FilterGroup } from "../model/filter-group.types";
 import type {
@@ -99,7 +98,6 @@ const COLUMNS: { key: ListingSortKey; label: string }[] = [
 // Nothing is saved to itin from here yet: these stay as the design draws them
 // (the menu closes, the selection clears) and say so.
 const NOT_CONNECTED = "This will work once your experiences are connected.";
-const PREVIEW_FAILED = "Couldn't open the preview. Try again.";
 
 export function useHostListingsViewModel(): HostListingsViewModel {
   const router = useRouter();
@@ -173,11 +171,6 @@ export function useHostListingsViewModel(): HostListingsViewModel {
       case "edit":
         // The design's sample listings aren't in itin, so they open an empty builder.
         router.push(isSample(preview) ? newListingHref : `${newListingHref}?id=${listing.id}`);
-        return;
-      case "preview":
-        // The design's sample listings aren't in itin, so there's nothing to get a token for.
-        if (isSample(preview)) window.open(`/experiences/${listing.id}`, "_blank", "noopener");
-        else void openExperiencePreview(listing.id, fetchGuidePreviewToken).catch(() => toast.error(PREVIEW_FAILED));
         return;
       case "copy-link":
         void navigator.clipboard

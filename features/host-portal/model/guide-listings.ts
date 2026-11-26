@@ -131,8 +131,8 @@ export function toListingDetail(exp: GuideExperience): ListingDetail {
       exp.weather_dependent ? "We may move or cancel it" : "It goes ahead",
     ],
     actions: live
-      ? [act("Edit experience", "edit"), act("Preview as a guest", "preview"), act("Copy the link", "copy-link")]
-      : [act("Edit experience", "edit"), act("Preview as a guest", "preview")],
+      ? [act("Edit experience", "edit"), act("Copy the link", "copy-link")]
+      : [act("Edit experience", "edit")],
     banner:
       status === "Taken down"
         ? {

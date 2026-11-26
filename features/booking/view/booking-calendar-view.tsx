@@ -12,14 +12,17 @@ import type { SessionChoice } from "../view-model/use-session-choice";
 type Props = Pick<
   SessionChoice,
   "selectedDate" | "endDate" | "minDate" | "isDateSelectable" | "dayState" | "onSelectDate"
->;
+> & {
+  /** The key under the month (few spots, sold out, no times). On by default; off where days have no availability to explain. */
+  legend?: boolean;
+};
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const same = (a: Date | null, b: Date) => !!a && startOfDay(a).getTime() === startOfDay(b).getTime();
 
 /** The booking card's month: espresso for the picked day, cream across a run of days, an amber dot where
  * spots are few, struck through when sold out, grey when nothing runs. */
-export function BookingCalendarView({ selectedDate, endDate, minDate, isDateSelectable, dayState, onSelectDate }: Props) {
+export function BookingCalendarView({ selectedDate, endDate, minDate, isDateSelectable, dayState, onSelectDate, legend = true }: Props) {
   const [view, setView] = useState(() => startOfDay(selectedDate ?? new Date()));
   const year = view.getFullYear();
   const month = view.getMonth();
@@ -97,11 +100,13 @@ export function BookingCalendarView({ selectedDate, endDate, minDate, isDateSele
             );
           })}
         </div>
-        <div className="flex flex-wrap gap-x-4 px-1 pt-2 text-xs text-[#6F6B72]">
-          <span className="flex items-center gap-1.5"><span aria-hidden className="size-[5px] rounded-full bg-[#FFB020]" />Few spots left</span>
-          <span className="flex items-center gap-1.5"><s className="text-[#BDBDBD]">12</s>Sold out</span>
-          <span className="flex items-center gap-1.5"><span className="text-[#BDBDBD]">12</span>No times</span>
-        </div>
+        {legend && (
+          <div className="flex flex-wrap gap-x-4 px-1 pt-2 text-xs text-[#6F6B72]">
+            <span className="flex items-center gap-1.5"><span aria-hidden className="size-[5px] rounded-full bg-[#FFB020]" />Few spots left</span>
+            <span className="flex items-center gap-1.5"><s className="text-[#BDBDBD]">12</s>Sold out</span>
+            <span className="flex items-center gap-1.5"><span className="text-[#BDBDBD]">12</span>No times</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -87,6 +87,13 @@ describe("fromStored", () => {
     expect(d).not.toHaveProperty("landmark");
   });
 
+  it("drops what's left from when template steps had to be ticked", () => {
+    const d = fromStored({ title: "Walk", template: "Golden hour portrait walk", prefilled: [1], checked: [] } as never);
+    expect(d).not.toHaveProperty("template");
+    expect(d).not.toHaveProperty("prefilled");
+    expect(d).not.toHaveProperty("checked");
+  });
+
   it("leaves a current draft as it is", () => {
     expect(fromStored({ cats: ["Water activity"], locations: [] })).toMatchObject({ cats: ["Water activity"], locations: [] });
   });

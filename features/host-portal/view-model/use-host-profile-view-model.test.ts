@@ -117,13 +117,13 @@ describe("row actions", () => {
 
   it("says edits and uploads aren't connected yet", () => {
     const result = render();
+    expect(result.current.header.actions).toEqual([]);
     act(() => result.current.onRowAction(result.current.rows[0]));
-    act(() => result.current.header.actions[0].onClick?.());
     act(() => result.current.onPane("tax"));
     act(() => result.current.tax!.onAction());
     act(() => result.current.onPane("security"));
     act(() => result.current.danger!.onStart());
-    expect(toast.info).toHaveBeenCalledTimes(4);
+    expect(toast.info).toHaveBeenCalledTimes(3);
     expect(nav.push).not.toHaveBeenCalled();
   });
 });

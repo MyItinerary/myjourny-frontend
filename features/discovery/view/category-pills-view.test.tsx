@@ -31,11 +31,28 @@ describe("CategoryPillsView", () => {
     expect(screen.getAllByRole("link")).toHaveLength(9);
   });
 
-  it("shows a category's icon when it has one", () => {
+  it("shows a category's icon beside its name, and none when it has no icon", () => {
     const { container } = renderWithProviders(
-      <CategoryPillsView categories={[{ id: "a", label: "A", iconSrc: "/images/discovery/local-food-drinks.png" }]} hrefBase="/c" />,
+      <CategoryPillsView
+        categories={[
+          { id: "a", label: "A", iconSrc: "/images/discovery/categories/street-food-markets.svg" },
+          { id: "b", label: "B" },
+        ]}
+        hrefBase="/c"
+      />,
     );
-    expect(container.querySelector("img")).not.toBeNull();
+    const icons = container.querySelectorAll('a img');
+    expect(icons).toHaveLength(1);
+    expect(icons[0]).toHaveAttribute("src", "/images/discovery/categories/street-food-markets.svg");
+    expect(icons[0]).toHaveAttribute("width", "30");
+  });
+
+  it("uses the design's chevron for See more, turned over for See less", async () => {
+    const { user, container } = renderWithProviders(<CategoryPillsView categories={categories(12)} hrefBase="/c" visibleCount={9} />);
+    const chevron = () => container.querySelector('button img[src="/images/discovery/categories/chevron-down.svg"]')!;
+    expect(chevron()).not.toHaveClass("rotate-180");
+    await user.click(screen.getByRole("button", { name: "See more" }));
+    expect(chevron()).toHaveClass("rotate-180");
   });
 
   it("renders nothing without categories", () => {

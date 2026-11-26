@@ -5,19 +5,17 @@ import { toast } from "sonner";
 
 import { apiErrorMessage } from "@/lib/api-error";
 
+import { dateKey, longDate, parseKey } from "../model/calendar";
 import { useListingDraft, useSampleDraft } from "../model/draft-store";
 import { useHostAccess } from "../model/host-access";
 import { fetchListingForEdit, uploadPhoto, useInterestTree, usePlaceSearch, useSaveListing } from "../model/listing-builder-api";
 import {
   ACCESS_OPTIONS,
   AGE_POLICIES,
-  awaitingCheck,
   isPinned,
-  firstUnwritten,
+  firstIncomplete,
   subcategoryGroups,
   BOOKING_TYPES,
-  CANCEL_TIERS,
-  cancelTierOf,
   CATEGORIES,
   checklistFor,
   COMMISSION_PERCENT,
@@ -25,8 +23,9 @@ import {
   doneCountOf,
   EVERY_OPTIONS,
   FITNESS_LEVELS,
+  endTime,
   formatTime,
-  furthestStep,
+  hoursBetween,
   needsAge,
   photoHint,
   photoLabel,
@@ -36,6 +35,7 @@ import {
   slotSummary,
   STEP_LABELS,
   SUBCATEGORIES,
+  SWIM_CHOICES,
   TAGS,
   timeChoices,
   timeRange,
@@ -66,9 +66,10 @@ import type {
   RefundPolicy,
   ToggleKey,
 } from "../model/listing-draft.types";
-import { draftFromExperience, privatePrice, toExperiencePayload } from "../model/listing-payload";
+import { draftFromExperience, orderedPhotos, privatePrice, toExperiencePayload } from "../model/listing-payload";
 import { draftFromTemplate, hasContent, templateById } from "../model/listing-templates";
 import { HOST_PORTAL_BASE } from "../model/nav";
+import { draftSummary, type SummaryRow } from "../model/listing-summary";
 import { POPULAR_LOCATIONS } from "../model/popular-locations";
 import type { HostPageHeader } from "./use-host-home-view-model";
 import { usePreviewMode } from "./use-preview-mode";
@@ -86,7 +87,23 @@ export type BuilderOptions = {
   fitnessLevels: Choice<FitnessLevel>[];
   agePolicies: Choice<AgePolicy>[];
   accessOptions: Choice<Accessibility>[];
+  swimChoices: typeof SWIM_CHOICES;
   refundPolicies: Choice<RefundPolicy>[];
+};
+
+/** A date field that opens the app's calendar in a dropdown. */
+export type DateFieldModel = {
+  /** "Saturday 19 December 2026", or null before one is picked. */
+  value: string | null;
+  selected: Date | null;
+  /** The first day that can be picked. */
+  min: Date;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Sets the date and closes the calendar. */
+  onPick: (date: Date) => void;
+  /** Empties an optional date; null when the date is required. */
+  onClear: (() => void) | null;
 };
 
 export type HostListingBuilderViewModel = {
@@ -102,10 +119,8 @@ export type HostListingBuilderViewModel = {
   onBack: () => void;
   onNext: () => void;
   nextLabel: string;
-  /** False while this step was filled in by a template and the host hasn't checked it. */
+  /** False until this step's required details are filled in. */
   canContinue: boolean;
-  /** The "I've checked this" box, on a step a template filled in. */
-  check: { note: string; checked: boolean; onToggle: () => void } | null;
   onSaveLater: () => void;
   onPublish: () => void;
   canPublish: boolean;
@@ -130,6 +145,8 @@ export type HostListingBuilderViewModel = {
   /** The "why categories and tags matter" card, once the host has spent two minutes on that step. */
   categoryTip: boolean;
   onToggle: (key: ToggleKey, value: string) => void;
+  /** How often a repeating schedule runs: every day, or every week, two weeks or month on the days picked. */
+  howOften: { key: string; label: string; selected: boolean; onPick: () => void }[];
   /** Picks or unpicks a category; unpicking drops its subcategories too. */
   onPickCategory: (category: string) => void;
   onListSet: (key: ListKey, index: number, value: string) => void;
@@ -137,19 +154,26 @@ export type HostListingBuilderViewModel = {
   onListDel: (key: ListKey, index: number) => void;
   onAddPhotos: (files: File[]) => void;
   onMeetPhoto: (file: File | undefined) => void;
-  onMovePhoto: (index: number, direction: -1 | 1) => void;
+  /** The photos in the order guests see them; the first is the main photo. */
+  photos: string[];
+  /** Moves a photo from one place to another, by drag and drop or the arrow keys. */
+  onReorderPhoto: (from: number, to: number) => void;
   onDeletePhoto: (index: number) => void;
   /** How guests book and what happens if they cancel. */
   booking: {
     types: { key: BookingType; label: string; sub: string; selected: boolean }[];
-    tiers: { key: string; label: string; sub: string; selected: boolean; saveable: boolean }[];
-    /** What guests will read for the policy picked, or empty. */
-    promise: string;
-    /** Why part of this step is not saved, or empty. */
-    unsaved: string;
     onType: (type: BookingType) => void;
-    onTier: (key: string) => void;
   };
+  /** The review page: what the host entered on each step, with a way back to edit it. */
+  review: {
+    n: BuilderStepNumber;
+    label: string;
+    /** Has everything it needs. */
+    ok: boolean;
+    optional: boolean;
+    rows: SummaryRow[];
+    onEdit: () => void;
+  }[];
   /** Bringing in reviews from other places. */
   reviews: {
     platforms: string[];
@@ -196,6 +220,12 @@ export type HostListingBuilderViewModel = {
     descError: string | null;
     upcoming: string[];
     slotSummary: string;
+    /** A one-off's date. */
+    date: DateFieldModel;
+    /** When a repeating schedule stops. Optional: clearing it runs on. */
+    until: DateFieldModel;
+    /** A repeating schedule's hours. Picking an end time sets how long it lasts; moving the start keeps the end. */
+    hours: { start: string; end: string; onStart: (time: string) => void; onEnd: (time: string) => void };
     /** Start time picker helpers. */
     times: { choices: (current: string) => string[]; format: (time: string) => string; range: (start: string) => string };
     price: PriceBreakdown;
@@ -266,6 +296,8 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
   const [placeOpen, setPlaceOpen] = useState(false);
   const [uploading, setUploading] = useState(0);
   const [tip, setTip] = useState<BasicsField | null>(null);
+  // At most one date calendar is open at a time.
+  const [openDate, setOpenDate] = useState<"date" | "until" | null>(null);
   // Each move between steps is a new visit. The category tip belongs to the visit it waited through.
   const [visit, setVisit] = useState(0);
   const [tipVisit, setTipVisit] = useState(-1);
@@ -318,6 +350,7 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
   const childrenOf = (category: string) =>
     tree.length ? (tree.find((c) => c.text === category)?.children ?? []).map((c) => c.text) : (SUBCATEGORIES[category] ?? []);
   const subGroups = subcategoryGroups(draft.cats, childrenOf);
+  const summary = draftSummary(draft);
   const subsAvailable = subGroups.length > 0;
   const done = sectionsDone(draft, subsAvailable);
   const doneCount = doneCountOf(draft, subsAvailable);
@@ -326,11 +359,9 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
 
   const set = <K extends keyof ListingDraft>(key: K, value: ListingDraft[K]) =>
     update((d) => ({ ...d, [key]: key in WORD_LIMITS ? capWords(value as string, WORD_LIMITS[key as WordLimited]) : value }));
-  // A step a template filled in has to be checked before the host can move past it.
-  // The title and both descriptions come first: nothing past step 1 until they're written.
-  // The title, descriptions, categories and tags come first: nothing past them until they're filled in.
-  const furthest = Math.min(firstUnwritten(draft, subsAvailable), furthestStep(draft)) as BuilderStepNumber;
-  const waiting = awaitingCheck(draft, step);
+  // Each required step has to be filled in before the host moves past it.
+  const daily = draft.every === 1 && WEEK_DAYS.every((day) => draft.days.includes(day));
+  const furthest = firstIncomplete(draft, subsAvailable);
   const go = useCallback((n: number) => {
     const next = Math.min(furthest, Math.max(1, n)) as BuilderStepNumber;
     setStep(next);
@@ -362,6 +393,22 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
   const results = typing && searchFor === query ? (search.data ?? []) : [];
   const searched = typing && searchFor === query && (search.isSuccess || search.isError || query.trim().length < 3);
 
+  const dateField = (key: "date" | "until", optional: boolean): DateFieldModel => {
+    const value = draft[key];
+    return {
+      value: value ? `${longDate(value)} ${parseKey(value).getFullYear()}` : null,
+      selected: value ? parseKey(value) : null,
+      min: today ? parseKey(today) : new Date(),
+      open: openDate === key,
+      onOpenChange: (open) => setOpenDate(open ? key : null),
+      onPick: (date) => {
+        set(key, dateKey(date));
+        setOpenDate(null);
+      },
+      onClear: optional && value ? () => set(key, "") : null,
+    };
+  };
+
   /** Picks a place, or unpicks it when it's already picked. The first place picked says which
    * city and area the experience is in. */
   const togglePlace = (place: PlaceResult) =>
@@ -385,8 +432,9 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
       images.map(async (file) => {
         try {
           return await uploadPhoto(file);
-        } catch {
-          toast.error(`Couldn't upload ${file.name}. Please try again.`);
+        } catch (error) {
+          // Say why when itin does (for example, an account that can't upload yet).
+          toast.error(apiErrorMessage(error, `Couldn't upload ${file.name}. Please try again.`));
           return null;
         } finally {
           setUploading((n) => n - 1);
@@ -426,7 +474,7 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
     return {
       n,
       label,
-      done: n === REVIEW_STEP ? canPublish : n === REVIEWS_STEP ? false : n === BOOKING_STEP ? cancelTierOf(draft) !== "" : done[n],
+      done: n === REVIEW_STEP ? canPublish : n === REVIEWS_STEP ? false : n === BOOKING_STEP ? bookingType !== "" : done[n],
       active: n === step,
       locked,
       blocked: n > furthest,
@@ -459,17 +507,6 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
     onNext: () => go(step + 1),
     nextLabel: step === BOOKING_STEP ? "Review and publish" : "Continue",
     canContinue: step < furthest,
-    check: draft.prefilled.includes(step)
-      ? {
-          note: `We filled this in from the "${draft.template}" template. Change anything that isn't true for your experience, then tick the box to carry on.`,
-          checked: !waiting,
-          onToggle: () =>
-            update((d) => ({
-              ...d,
-              checked: d.checked.includes(step) ? d.checked.filter((n) => n !== step) : [...d.checked, step],
-            })),
-        }
-      : null,
     onSaveLater: () => {
       toast.success("Saved. Pick it up again from Experiences.");
       router.push(LISTINGS);
@@ -493,12 +530,23 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
       fitnessLevels: FITNESS_LEVELS,
       agePolicies: AGE_POLICIES,
       accessOptions: ACCESS_OPTIONS,
+      swimChoices: SWIM_CHOICES,
       refundPolicies: REFUND_POLICIES,
     },
     onField: set,
     tip,
     onFocusField: setTip,
     categoryTip: step === CATEGORY_STEP && tipVisit === visit,
+    howOften: [
+      { key: "daily", label: "Every day", selected: daily, onPick: () => update((d) => ({ ...d, days: [...WEEK_DAYS], every: 1 })) },
+      ...EVERY_OPTIONS.map((o) => ({
+        key: String(o.value),
+        label: o.label,
+        selected: draft.every === o.value && !(o.value === 1 && daily),
+        onPick: () =>
+          update((d) => ({ ...d, every: o.value, ...(o.value === 1 && d.days.length === WEEK_DAYS.length ? { days: [] } : {}) })),
+      })),
+    ],
     onToggle: (key, value) =>
       update((d) => ({ ...d, [key]: d[key].includes(value) ? d[key].filter((v) => v !== value) : [...d[key], value] })),
     onPickCategory: (category) =>
@@ -512,30 +560,38 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
     onListDel: (key, index) => update((d) => ({ ...d, [key]: d[key].filter((_, i) => i !== index) })),
     onAddPhotos: (files) => void upload(files, (urls) => update((d) => ({ ...d, photos: [...d.photos, ...urls] }))),
     onMeetPhoto: (file) => void (file && upload([file], ([url]) => set("meetPhoto", url))),
-    onMovePhoto: (index, direction) =>
+    // The photos are kept in the order guests see them, so the first is always the main photo.
+    photos: orderedPhotos(draft),
+    onReorderPhoto: (from, to) =>
       update((d) => {
-        const j = index + direction;
-        if (j < 0 || j >= d.photos.length) return d;
-        const photos = d.photos.slice();
-        [photos[index], photos[j]] = [photos[j], photos[index]];
-        const cover = d.cover === index ? j : d.cover === j ? index : d.cover;
-        return { ...d, photos, cover };
+        const photos = orderedPhotos(d);
+        if (from === to || from < 0 || to < 0 || from >= photos.length || to >= photos.length) return d;
+        const [moved] = photos.splice(from, 1);
+        photos.splice(to, 0, moved);
+        return { ...d, photos, cover: 0 };
       }),
-    onDeletePhoto: (index) => update((d) => ({ ...d, photos: d.photos.filter((_, i) => i !== index), cover: 0 })),
+    onDeletePhoto: (index) => update((d) => ({ ...d, photos: orderedPhotos(d).filter((_, i) => i !== index), cover: 0 })),
     booking: {
       types: BOOKING_TYPES.map((t) => ({ ...t, selected: bookingType === t.key })),
-      tiers: CANCEL_TIERS.map((t) => ({ key: t.key, label: t.label, sub: t.sub, selected: cancelTierOf(draft) === t.key, saveable: t.hours !== null })),
-      promise: CANCEL_TIERS.find((t) => t.key === cancelTierOf(draft))?.sub ?? "",
-      unsaved: bookingType
-        ? "Booking type can't be saved from here yet, so new experiences keep the current default. Moderate cancellation isn't available yet either."
-        : "Moderate cancellation isn't available yet.",
       onType: setBookingType,
-      onTier: (key) => {
-        const hours = CANCEL_TIERS.find((t) => t.key === key)?.hours;
-        if (hours == null) return;
-        update((d) => ({ ...d, refund: "full_refund_until", refundHours: String(hours) }));
-      },
     },
+    review: STEP_LABELS.slice(0, REVIEW_STEP - 1).map((label, i) => {
+      const n = (i + 1) as BuilderStepNumber;
+      const rows =
+        n === REVIEWS_STEP
+          ? [{ label: "Reviews", value: "None brought in" }]
+          : n === BOOKING_STEP
+            ? [{ label: "Booking type", value: BOOKING_TYPES.find((t) => t.key === bookingType)?.label ?? "Not picked" }]
+            : summary[n];
+      return {
+        n,
+        label,
+        ok: n === REVIEWS_STEP ? true : n === BOOKING_STEP ? bookingType !== "" : done[n],
+        optional: n === REVIEWS_STEP,
+        rows,
+        onEdit: () => go(n),
+      };
+    }),
     reviews: {
       platforms: REVIEW_PLATFORMS,
       selected: reviewPlatform,
@@ -594,6 +650,18 @@ export function useHostListingBuilderViewModel(): HostListingBuilderViewModel {
       descError: descShortBy(wordCount(draft.desc)),
       upcoming: today ? upcomingDates(draft, new Date(`${today}T00:00:00`)) : [],
       slotSummary: slotSummary(draft),
+      date: dateField("date", false),
+      until: dateField("until", true),
+      hours: {
+        start: draft.slots[0] ?? "",
+        end: endTime(draft.slots[0] ?? "", draft.dur),
+        onStart: (time) =>
+          update((d) => {
+            const end = endTime(d.slots[0] ?? "", d.dur);
+            return { ...d, slots: [time], dur: end ? hoursBetween(time, end) : d.dur };
+          }),
+        onEnd: (time) => update((d) => ({ ...d, dur: hoursBetween(d.slots[0] ?? "", time) })),
+      },
       times: { choices: timeChoices, format: formatTime, range: (start) => timeRange(start, draft.dur) },
       price: priceBreakdown(draft),
       commissionPercent: COMMISSION_PERCENT,

@@ -84,6 +84,12 @@ test.describe("the experience builder", () => {
     await page.getByRole("button", { name: /Group size and price/ }).first().click();
     await page.getByLabel(/^Price per person/).fill("18000");
 
+    // The safety declaration is asked again each time; itin doesn't keep it.
+    await page.getByRole("button", { name: /Requirements and safety/ }).first().click();
+    await page.getByRole("checkbox", { name: /host safety rules/ }).check();
+    await page.getByRole("button", { name: /^Photos/ }).first().click();
+    await page.getByRole("checkbox", { name: /These are my photos/ }).check();
+
     await page.getByRole("button", { name: /Review and (publish|save)/ }).first().click();
     await page.getByRole("button", { name: "Save and publish" }).click();
 
@@ -108,6 +114,10 @@ test.describe("the experience builder", () => {
     });
 
     await expect(page.getByPlaceholder("Lagos Island Photowalk")).toHaveValue("Lagoon kayak and breakfast");
+    await page.getByRole("button", { name: /Requirements and safety/ }).first().click();
+    await page.getByRole("checkbox", { name: /host safety rules/ }).check();
+    await page.getByRole("button", { name: /^Photos/ }).first().click();
+    await page.getByRole("checkbox", { name: /These are my photos/ }).check();
     await page.getByRole("button", { name: /Review and (publish|save)/ }).first().click();
     await expect(page.getByText("You can publish once your guide application is approved.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Save and publish" })).toBeDisabled();

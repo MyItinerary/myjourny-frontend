@@ -100,10 +100,10 @@ export function BookingConfirmedView({
         )}
 
         <div className="flex flex-col gap-6 lg:w-[428px] lg:pt-0">
-          <h1 className="font-sans text-[40px] font-extrabold leading-[1.2] text-[#333134] lg:text-5xl">
+          <h1 className="font-sans text-[32px] font-extrabold leading-[1.2] text-[#333134] lg:text-5xl">
             {heading}
           </h1>
-          <p className="-mt-2 font-sans text-xl leading-[30px] text-[#6F6B72]">
+          <p className="-mt-2 font-sans text-base leading-6 text-[#6F6B72] lg:text-xl lg:leading-[30px]">
             {body}
           </p>
           <div className="flex gap-4">
@@ -164,29 +164,32 @@ export function BookingConfirmedView({
             {open && (
               <Card confirmation={confirmation} className="m-4 border-0 p-0" />
             )}
-            <div className="flex items-center gap-3 p-4">
-              <div className="relative size-[60px] shrink-0 overflow-hidden rounded-lg bg-muted">
+            <div className="flex items-center gap-4 p-4">
+              <div className="relative size-[89px] shrink-0 overflow-hidden rounded-[13px] bg-muted">
                 {confirmation.imageUrl && (
                   <Image
                     src={confirmation.imageUrl}
                     alt=""
                     fill
-                    sizes="60px"
+                    sizes="89px"
                     unoptimized
                     className="object-cover"
                   />
                 )}
               </div>
               <div className="min-w-0 flex-1 font-sans">
-                <p className="text-sm text-[#333134]">
+                <p className="text-sm font-medium leading-[21px] text-[#00100C]">
                   {confirmation.guestsLabel}
                 </p>
                 {confirmation.totalLabel && (
-                  <p className="text-2xl font-medium leading-8 text-[#333134]">
+                  <p className="text-2xl font-medium leading-9 text-[#333134]">
                     {confirmation.totalLabel}
+                    {confirmation.totalLabel !== "Free" && (
+                      <span className="ml-1.5 text-sm font-normal leading-[22px] text-[#6F6B72]">total</span>
+                    )}
                   </p>
                 )}
-                <p className="text-sm text-[#6F6B72]">
+                <p className="text-sm leading-[22px] text-[#6F6B72]">
                   {confirmation.dateLabel}
                 </p>
               </div>

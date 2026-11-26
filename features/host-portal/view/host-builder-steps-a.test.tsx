@@ -102,6 +102,10 @@ describe("where you meet", () => {
     await userEvent.click(screen.getByRole("button", { name: "Delete the meeting point photo" }));
     expect(screen.queryByAltText("Meeting point")).not.toBeInTheDocument();
     expect(screen.getByText("Choose a photo")).toBeInTheDocument();
+
+    // The same photo can be picked again after deleting it.
+    await userEvent.upload(screen.getByLabelText("Photo of the meeting point"), new File(["x"], "gate.jpg", { type: "image/jpeg" }));
+    expect(await screen.findByAltText("Meeting point")).toBeInTheDocument();
   });
 });
 

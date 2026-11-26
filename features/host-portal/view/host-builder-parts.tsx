@@ -6,28 +6,24 @@ import { cn } from "@/lib/utils";
 export const inputClass =
   "h-12 w-full rounded-xl bg-white px-3.5 text-[15px] text-[#333134] shadow-[inset_0_0_0_1px_#E7E7E7] outline-none placeholder:text-[#A09DA3] focus-visible:shadow-[inset_0_0_0_2px_#333134]";
 
-/** The top of a step. With a `badge` it is the compact form: no eyebrow, since the step bar already says where you are. */
-export function StepHeading({ eyebrow, title, intro, badge }: { eyebrow?: string; title: string; intro?: string; badge?: string }) {
-  if (badge) {
-    return (
-      <>
-        <div className="mb-1.5 flex items-center gap-[9px]">
-          <h2 className="font-heading text-xl leading-tight font-extrabold text-[#333134]">{title}</h2>
-          <span className="rounded-full bg-[#FEF2F3] px-2 py-0.5 text-[10.5px] font-medium text-[#F5032D]">{badge}</span>
-        </div>
-        {intro ? <p className="mb-5 text-[13.5px] leading-[1.55] text-pretty text-[#6F6B72]">{intro}</p> : <div className="mb-5" />}
-      </>
-    );
-  }
+/** The top of a step: its title, with a "Required" chip when it must be filled in, and a line about it. */
+export function StepHeading({ title, intro, badge }: { title: string; intro?: string; badge?: string }) {
   return (
     <>
-      {eyebrow && <div className="mb-2 text-[11px] font-medium tracking-[0.06em] text-[#F5032D] uppercase">{eyebrow}</div>}
-      <h2 className="mb-2 font-heading text-[28px] leading-tight font-extrabold text-[#333134]">{title}</h2>
-      {intro ? (
-        <p className="mb-7 text-base leading-relaxed text-pretty text-[#6F6B72]">{intro}</p>
-      ) : (
-        <div className="mb-7" />
-      )}
+      <div className="mb-2 flex items-center gap-2.5">
+        <h2 className="font-heading text-[28px] leading-tight font-extrabold text-[#333134]">{title}</h2>
+        {badge && (
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[10.5px] font-medium",
+              badge === "Required" ? "bg-[#FEF2F3] text-[#F5032D]" : "bg-[#F4F2EE] text-[#6F6B72]",
+            )}
+          >
+            {badge}
+          </span>
+        )}
+      </div>
+      {intro ? <p className="mb-7 text-base leading-relaxed text-pretty text-[#6F6B72]">{intro}</p> : <div className="mb-6" />}
     </>
   );
 }
@@ -174,7 +170,7 @@ export function LineList({
 }) {
   return (
     <section className="mb-7" aria-label={title}>
-      <div className="mb-2.5 text-[13px] font-medium text-[#333134]">{title}</div>
+      <div className="mb-2.5 text-base font-medium text-[#333134]">{title}</div>
       <div className="flex flex-col gap-2">
         {lines.map((line, i) => (
           <div key={i} className="flex items-center gap-2">
@@ -199,7 +195,7 @@ export function LineList({
       </div>
       {(max === undefined || lines.length < max) && (
         <button type="button" onClick={onAdd} className="mt-2.5 cursor-pointer text-[13px] font-medium text-[#F5032D]">
-          Add a line
+          Add item
         </button>
       )}
     </section>
@@ -213,6 +209,7 @@ export function TimeSelect({
   options,
   format,
   onChange,
+  disabled = false,
   className,
 }: {
   value: string;
@@ -220,6 +217,7 @@ export function TimeSelect({
   options: string[];
   format: (time: string) => string;
   onChange: (time: string) => void;
+  disabled?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -230,9 +228,10 @@ export function TimeSelect({
         aria-label={label}
         aria-haspopup="listbox"
         aria-expanded={open}
+        disabled={disabled}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex h-12 w-full cursor-pointer items-center rounded-xl bg-white px-3.5 text-left text-[15px]",
+          "flex h-12 w-full cursor-pointer items-center rounded-xl bg-white px-3.5 text-left text-[15px] disabled:cursor-not-allowed disabled:bg-[#FAFAFA]",
           value ? "text-[#333134]" : "text-[#A09DA3]",
           open ? "shadow-[inset_0_0_0_1.5px_#F5032D]" : "shadow-[inset_0_0_0_1px_#E7E7E7]",
         )}

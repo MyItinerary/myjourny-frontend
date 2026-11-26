@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderHookWithProviders } from "@/test/utils/render";
 
@@ -14,6 +14,8 @@ vi.mock("@/features/search", () => ({ useLastSearchArea: () => searchedArea.valu
 vi.mock("@/features/home", () => ({ useHomeHeroViewModel: () => ({}) }));
 vi.mock("@/features/cities", () => ({ useDiscoverCitiesViewModel: () => ({ cities: [], show: false }) }));
 const categoryData = vi.hoisted(() => ({ value: undefined as unknown[] | undefined }));
+const profile = vi.hoisted(() => ({ interests: ["nature"] as string[] | null }));
+vi.mock("@/lib/queries/profile", () => ({ useGetProfile: () => ({ data: { interests: profile.interests } }) }));
 vi.mock("@/lib/queries/categories", () => ({
   useInterestCategories: () => ({
     data: categoryData.value ?? [
@@ -36,6 +38,12 @@ vi.mock("@/lib/queries/experiences", () => ({
   experienceMatchToCardProps: (i: { id: string; title: string }) => ({ id: i.id, title: i.title }),
 }));
 
+afterEach(() => {
+  audience.value = "guest";
+  categoryData.value = undefined;
+  profile.interests = ["nature"];
+});
+
 describe("useExperiencesPageViewModel", () => {
   it("gives guests public rails, no pick-up rail, and top-level categories as pills", () => {
     session.user = null;
@@ -47,8 +55,69 @@ describe("useExperiencesPageViewModel", () => {
     expect(result.current.nearYouInLagos.items).toHaveLength(1);
     expect(result.current.categories).toEqual([
       { id: "food", label: "Food", iconSrc: undefined },
-      { id: "local-food-drinks", label: "Local food & drinks", iconSrc: "/images/discovery/local-food-drinks.png" },
+      { id: "local-food-drinks", label: "Local food & drinks", iconSrc: "/images/discovery/categories/street-food-markets.svg" },
     ]);
+    expect(result.current.categoriesVisible).toBe(7);
+  });
+
+  it("shows the subcategories under what they picked in the taste quiz, with icons, nine at first", () => {
+    session.user = { id: "u1" } as never;
+    audience.value = "taken";
+    categoryData.value = [
+      { id: 1, parent_id: null, slug: "nature-outdoors", text: "Nature & outdoors" },
+      { id: 2, parent_id: 1, slug: "beaches-waterfronts", text: "Beaches & waterfronts" },
+      { id: 3, parent_id: 1, slug: "hiking-trails", text: "Hiking & trails" },
+      { id: 4, parent_id: null, slug: "local-food-drinks", text: "Local food & drinks" },
+      { id: 5, parent_id: 4, slug: "street-food-markets", text: "Street food & markets" },
+    ];
+    const { result } = renderHookWithProviders(() => useExperiencesPageViewModel());
+
+    expect(result.current.categories).toEqual([
+      { id: "beaches-waterfronts", label: "Beaches & waterfronts", iconSrc: "/images/discovery/categories/umbrella-03.svg" },
+      { id: "hiking-trails", label: "Hiking & trails", iconSrc: "/images/discovery/categories/hiking-trails.svg" },
+    ]);
+    // All of them, with no "See more".
+    expect(result.current.categoriesVisible).toBe(result.current.categories.length);
+  });
+
+  it("shows each subcategory once when the API sends it both in the list and under its category", () => {
+    session.user = { id: "u1" } as never;
+    audience.value = "taken";
+    profile.interests = ["wellness"];
+    const spas = { id: 2, parent_id: 1, slug: "spas-massage", text: "Spas & massage" };
+    const yoga = { id: 3, parent_id: 1, slug: "yoga-meditation", text: "Yoga & meditation" };
+    categoryData.value = [{ id: 1, parent_id: null, slug: "wellness-calm", text: "Wellness & calm", children: [spas, yoga] }, spas, yoga];
+    const { result } = renderHookWithProviders(() => useExperiencesPageViewModel());
+    expect(result.current.categories.map((c) => c.label)).toEqual(["Spas & massage", "Yoga & meditation"]);
+  });
+
+  it("falls back to the design's subcategories for what they picked when the API has none", () => {
+    session.user = { id: "u1" } as never;
+    audience.value = "taken";
+    profile.interests = ["food", "events"];
+    categoryData.value = [{ id: 1, parent_id: null, slug: "nature-outdoors", text: "Nature & outdoors" }];
+    const { result } = renderHookWithProviders(() => useExperiencesPageViewModel());
+    expect(result.current.categories.map((c) => c.label)).toEqual([
+      "Street food & markets", "Cafés & coffee culture", "Bars & nightlife drinks", "Markets & vendors",
+      "Concerts & festivals", "Comedy & theatre", "Sports & watch parties",
+    ]);
+    expect(result.current.categories.every((c) => c.iconSrc)).toBe(true);
+  });
+
+  it("shows the categories to someone who finished the quiz without picking anything", () => {
+    session.user = { id: "u1" } as never;
+    audience.value = "taken";
+    profile.interests = null;
+    const { result } = renderHookWithProviders(() => useExperiencesPageViewModel());
+    expect(result.current.categories.map((c) => c.id)).toEqual(["food", "local-food-drinks"]);
+    expect(result.current.categoriesVisible).toBe(7);
+  });
+
+  it("shows the categories, not subcategories, before the quiz", () => {
+    session.user = { id: "u1" } as never;
+    audience.value = "no-quiz";
+    const { result } = renderHookWithProviders(() => useExperiencesPageViewModel());
+    expect(result.current.categories.map((c) => c.id)).toEqual(["food", "local-food-drinks"]);
   });
 
   it("shows 'Based on your search in {area}' as soon as an area has been searched", () => {

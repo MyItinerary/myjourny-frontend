@@ -1,6 +1,6 @@
 import type { ExampleListing } from "./home-copy.types";
 import { blankDraft } from "./listing-draft";
-import type { BuilderStepNumber, ListingDraft } from "./listing-draft.types";
+import type { ListingDraft } from "./listing-draft.types";
 
 /** A ready-made listing a new host can start from: the card on Home, and what it fills in. */
 export type ListingTemplate = {
@@ -8,10 +8,6 @@ export type ListingTemplate = {
   /** The parts of a listing the template fills in. Location, when it runs and photos are the host's own. */
   fill: Partial<ListingDraft>;
 };
-
-// The steps every template fills in, which the host checks one by one: the
-// basics, category, duration, group and price, what's included, requirements.
-const TEMPLATE_STEPS: BuilderStepNumber[] = [1, 2, 4, 5, 6, 7];
 
 // Stand-in photos until the design system imagery is brought across.
 export const LISTING_TEMPLATES: ListingTemplate[] = [
@@ -107,7 +103,7 @@ export const LISTING_TEMPLATES: ListingTemplate[] = [
       fitness: "easy",
       agePolicy: "adult_required_under",
       ageMin: "12",
-      swim: "You don't need to swim. Everyone wears a life jacket.",
+      swim: "Guests don't need to know how to swim.",
       access: "not_suitable",
     },
   },
@@ -115,15 +111,9 @@ export const LISTING_TEMPLATES: ListingTemplate[] = [
 
 export const templateById = (id: string | null) => LISTING_TEMPLATES.find((t) => t.card.id === id) ?? null;
 
-/** A fresh draft from a template, with every step it filled waiting to be checked. */
+/** A fresh draft from a template. */
 export function draftFromTemplate(template: ListingTemplate): ListingDraft {
-  return {
-    ...blankDraft(),
-    ...template.fill,
-    template: template.card.title,
-    prefilled: TEMPLATE_STEPS,
-    checked: [],
-  };
+  return { ...blankDraft(), ...template.fill };
 }
 
 /** The host has typed or picked something into this draft. */

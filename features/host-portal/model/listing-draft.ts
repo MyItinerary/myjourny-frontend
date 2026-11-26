@@ -20,7 +20,7 @@ export const STEP_LABELS = [
   "Title and description",
   "Category and tags",
   "Location",
-  "When it runs",
+  "Date and time",
   "Group size and price",
   "What's included",
   "Requirements and safety",
@@ -57,12 +57,18 @@ export const TAGS = [
   "Street food", "Solo friendly", "Indoors", "Kid friendly", "Quiet", "Physical",
 ];
 
+/** What a host answers to "Do guests need to know how to swim?", in the words guests see. */
+export const SWIM_CHOICES = [
+  { label: "Yes", value: "Guests need to know how to swim." },
+  { label: "No", value: "Guests don't need to know how to swim." },
+] as const;
+
 export const DIETS = ["Vegetarian", "No pork", "Halal", "Nut allergy", "Cannot accommodate"];
 export const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export const WHEN_TYPES: { key: WhenType; label: string; sub: string }[] = [
-  { key: "once", label: "A one off", sub: "One date, one time" },
-  { key: "recurring", label: "A repeating schedule", sub: "Same days every week" },
+  { key: "once", label: "One off", sub: "One date, one time" },
+  { key: "recurring", label: "Repeating schedule", sub: "Same days every week" },
   { key: "request", label: "Only on request", sub: "Guests ask, you pick the date" },
 ];
 
@@ -112,36 +118,18 @@ export const blankDraft = (): ListingDraft => ({
   minG: "", maxG: "", price: "", priv: "",
   inc: [""], exc: [""], bring: [""], wear: [""],
   agePolicy: "", ageMin: "", fitness: "", swim: "", diet: [], access: "", accessNote: "",
-  refund: "", refundHours: "",
-  weather: false, photos: [], cover: 0, quote: "", editingId: null,
-  template: null, prefilled: [], checked: [],
+  // Our policy unless the host picks another on "How guests book": a full refund up to 24 hours before.
+  refund: "full_refund_until", refundHours: "24",
+  weather: false, safetyAgreed: false, photoRightsAgreed: false, photos: [], cover: 0, quote: "", editingId: null,
 });
 
 const filled = (lines: string[]) => lines.filter((line) => line.trim());
 
-/** A step a template filled in that the host hasn't checked yet. */
-export const awaitingCheck = (d: ListingDraft, step: BuilderStepNumber) =>
-  d.prefilled.includes(step) && !d.checked.includes(step);
-
-/** The furthest step the host can reach: up to the first one still waiting to be checked. */
-export function furthestStep(d: ListingDraft): BuilderStepNumber {
-  const waiting = d.prefilled.filter((step) => !d.checked.includes(step));
-  return (waiting.length ? Math.min(...waiting) : STEP_LABELS.length) as BuilderStepNumber;
-}
-
 /** Whether any category picked has subcategories to choose from. Only then is one required. */
 export type SubsAvailable = boolean;
 
-/** Which of the eight sections have everything the review needs. A section a
- * template filled in isn't done until the host has checked it. */
+/** Which of the eight required sections have everything the review needs. */
 export function sectionsDone(d: ListingDraft, subsAvailable: SubsAvailable = true): Record<number, boolean> {
-  const fields = fieldsDone(d, subsAvailable);
-  return Object.fromEntries(
-    Object.entries(fields).map(([step, ok]) => [step, ok && !awaitingCheck(d, Number(step) as BuilderStepNumber)]),
-  );
-}
-
-function fieldsDone(d: ListingDraft, subsAvailable: SubsAvailable): Record<number, boolean> {
   return {
     1: basicsWritten(d),
     2: categoriesPicked(d, subsAvailable),
@@ -151,15 +139,16 @@ function fieldsDone(d: ListingDraft, subsAvailable: SubsAvailable): Record<numbe
         (d.whenType === "once" && d.date && filled(d.slots).length) ||
         (d.whenType === "recurring" && d.days.length && filled(d.slots).length),
     ),
-    5: Boolean(Number(d.price) && Number(d.maxG) && d.refund && (d.refund !== "full_refund_until" || d.refundHours)),
+    5: Boolean(Number(d.price) && Number(d.maxG)),
     6: filled(d.inc).length > 0 && filled(d.exc).length > 0,
     7: Boolean(
       isChoice(FITNESS_LEVELS, d.fitness) &&
         isChoice(AGE_POLICIES, d.agePolicy) &&
         (!needsAge(d.agePolicy) || d.ageMin) &&
-        isChoice(ACCESS_OPTIONS, d.access),
+        isChoice(ACCESS_OPTIONS, d.access) &&
+        d.safetyAgreed,
     ),
-    8: d.photos.length >= 4,
+    8: d.photos.length >= 4 && d.photoRightsAgreed,
   };
 }
 
@@ -170,11 +159,11 @@ const CHECKLIST: [BuilderStepNumber, string][] = [
   [1, "Title, short description and a long description of 100 words or more"],
   [2, "A category, a subcategory and a tag"],
   [3, "A location on the map, a meeting point and a photo"],
-  [4, "When it runs"],
-  [5, "Group size, price and refunds"],
+  [4, "Date and time"],
+  [5, "Group size and price"],
   [6, "What is and is not included"],
-  [7, "Requirements and safety"],
-  [8, "Four photos or more"],
+  [7, "Requirements and safety, with the safety rules ticked"],
+  [8, "Four photos or more, with the photo rights ticked"],
 ];
 
 export function checklistFor(d: ListingDraft, subsAvailable: SubsAvailable = true): ChecklistItem[] {
@@ -209,9 +198,13 @@ export const basicsWritten = (d: ListingDraft) => Boolean(d.title.trim() && d.ho
 export const categoriesPicked = (d: ListingDraft, subsAvailable: SubsAvailable = true) =>
   d.cats.length > 0 && (d.subs.length > 0 || !subsAvailable) && d.tags.length > 0;
 
-/** The first of the steps that must be filled in before the host moves on (1 and 2), or the last step when both are. */
-export const firstUnwritten = (d: ListingDraft, subsAvailable: SubsAvailable = true): BuilderStepNumber =>
-  !basicsWritten(d) ? 1 : !categoriesPicked(d, subsAvailable) ? 2 : (STEP_LABELS.length as BuilderStepNumber);
+/** The furthest step the host can reach: the first of the eight required steps not filled in yet,
+ * or the last step once they all are. Each required step has to be done before the next. */
+export function firstIncomplete(d: ListingDraft, subsAvailable: SubsAvailable = true): BuilderStepNumber {
+  const done = sectionsDone(d, subsAvailable);
+  for (let n = 1; n <= 8; n += 1) if (!done[n]) return n as BuilderStepNumber;
+  return STEP_LABELS.length as BuilderStepNumber;
+}
 
 /** Each category picked, with the subcategories that can be picked under it. */
 export function subcategoryGroups(cats: string[], childrenOf: (category: string) => string[]): { category: string; subs: string[] }[] {
@@ -296,14 +289,34 @@ export function formatTime(time: string): string {
 export const timeChoices = (current: string): string[] =>
   /^\d{1,2}:\d{2}$/.test(current) && !TIME_OPTIONS.includes(current) ? [...TIME_OPTIONS, current].sort() : TIME_OPTIONS;
 
+const minutesOf = (time: string): number | null => {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(time);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+};
+
+/** "16:00" and a length of "3" hours as "19:00", past midnight wrapping round. Empty until both are known. */
+export function endTime(start: string, hours: string): string {
+  const from = minutesOf(start);
+  const length = Number(hours);
+  if (from === null || !length) return "";
+  const total = (from + Math.round(length * 60)) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/** The hours from a start time to an end time, as the builder keeps them: "3", "2.5". An end at or
+ * before the start is the next day. Empty until both are known. */
+export function hoursBetween(start: string, end: string): string {
+  const from = minutesOf(start);
+  const to = minutesOf(end);
+  if (from === null || to === null) return "";
+  const span = (to - from + 1440) % 1440 || 1440;
+  return String(Math.round((span / 60) * 100) / 100);
+}
+
 /** "4:00pm to 7:00pm" for a start time and a length in hours; empty until both are known. */
 export function timeRange(start: string, hours: string): string {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(start);
-  const length = Number(hours);
-  if (!m || !length) return "";
-  const total = (Number(m[1]) * 60 + Number(m[2]) + Math.round(length * 60)) % 1440;
-  const end = `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-  return `${formatTime(start)} – ${formatTime(end)}`;
+  const end = endTime(start, hours);
+  return end ? `${formatTime(start)} – ${formatTime(end)}` : "";
 }
 
 export const BOOKING_TYPES: (Choice<BookingType> & { sub: string })[] = [

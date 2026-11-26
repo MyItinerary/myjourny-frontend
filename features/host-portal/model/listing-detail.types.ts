@@ -6,7 +6,6 @@ export type DetailAction =
   | "pause"
   | "resume"
   | "copy-link"
-  | "preview"
   | "withdraw"
   | "duplicate"
   | "past-bookings"

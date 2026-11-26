@@ -111,7 +111,8 @@ export function toExperiencePayload(d: ListingDraft, tree: Category[], today: st
   const photos = orderedPhotos(d);
   const hours = number(d.dur);
   const age = isChoice(AGE_POLICIES, d.agePolicy) ? d.agePolicy : null;
-  const refund = isChoice(REFUND_POLICIES, d.refund) ? d.refund : null;
+  // A draft with no refund setting follows our policy: a full refund up to 24 hours before.
+  const refund = isChoice(REFUND_POLICIES, d.refund) ? d.refund : "full_refund_until";
   return {
     title: d.title.trim(),
     status: "ACTIVE",
@@ -151,7 +152,7 @@ export function toExperiencePayload(d: ListingDraft, tree: Category[], today: st
     accessibility_note: text(d.accessNote, 100),
     weather_dependent: d.weather,
     refund_policy: refund,
-    free_cancellation_hours: refund === "full_refund_until" ? number(d.refundHours) : null,
+    free_cancellation_hours: refund === "full_refund_until" ? (number(d.refundHours) ?? 24) : null,
     area: text(d.area, 120),
     tags: d.tags.slice(0, 12),
     swim_requirement: text(d.swim, 100),

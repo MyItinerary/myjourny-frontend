@@ -42,7 +42,6 @@ export type ListingRowAction =
   | "details"
   | "edit"
   | "duplicate"
-  | "preview"
   | "copy-link"
   | "hide"
   | "show"

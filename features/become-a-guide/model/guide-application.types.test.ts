@@ -1,18 +1,14 @@
 import { describe, expect, it } from "vitest";
-import {
-  DEFAULT_APPLICATION_DATA,
-  NIGERIAN_CITIES,
-} from "./guide-application.types";
+
+import { COUNTRIES, DEFAULT_APPLICATION_DATA, VERIFICATION_TYPES } from "./guide-application.types";
 
 describe("guide-application.types", () => {
-  it("provides valid defaults with individual verification and Lagos default city", () => {
-    expect(DEFAULT_APPLICATION_DATA.verificationType).toBe("individual");
-    expect(DEFAULT_APPLICATION_DATA.city).toBe("Lagos");
-    expect(DEFAULT_APPLICATION_DATA.countryCode).toBe("+234");
+  it("starts as an individual in Nigeria's dialling code, with no country picked yet", () => {
+    expect(DEFAULT_APPLICATION_DATA).toMatchObject({ verificationType: "individual", countryCode: "+234", country: "", firstName: "", lastName: "" });
   });
 
-  it("exports city options including major Nigerian cities", () => {
-    expect(NIGERIAN_CITIES).toContain("Lagos");
-    expect(NIGERIAN_CITIES).toContain("Abuja");
+  it("offers the two ways to run a business and a list of countries", () => {
+    expect(VERIFICATION_TYPES.map((t) => t.label)).toEqual(["As an individual", "As a business"]);
+    expect(COUNTRIES).toContain("Nigeria");
   });
 });

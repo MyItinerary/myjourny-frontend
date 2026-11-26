@@ -92,7 +92,6 @@ export function rowActions(listing: HostListing): { action: ListingRowAction; la
     ["details", listing.status === "Draft" ? "Continue editing" : "See details"],
     ["edit", "Edit"],
     ["duplicate", "Duplicate"],
-    ["preview", "Preview as a guest"],
     ["copy-link", "Copy the link"],
     listing.status === "Hidden" ? ["show", "Show in search"] : ["hide", "Hide from search"],
     ["pause", "Pause new bookings"],

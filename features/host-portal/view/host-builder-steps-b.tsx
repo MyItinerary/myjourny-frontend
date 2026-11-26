@@ -1,23 +1,40 @@
-import { X } from "lucide-react";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
 import type { HostListingBuilderViewModel } from "../view-model/use-host-listing-builder-view-model";
-import { ChoiceCard, Field, inputClass, LineList, Pill, StepHeading, TimeSelect } from "./host-builder-parts";
+import { DateField } from "./host-builder-date-field-view";
+import { Field, inputClass, LineList, Pill, StepHeading, TimeSelect } from "./host-builder-parts";
 
 type Props = { vm: HostListingBuilderViewModel };
 
 const numeric = (value: string) => value.replace(/[^\d]/g, "");
 
+/** A start time and an end time, side by side. The end can't be picked before the start. */
+function StartEnd({ vm }: Props) {
+  const { hours, times } = vm.derived;
+  return (
+    <div className="flex gap-3">
+      <div className="min-w-0 flex-1">
+        <span className="mb-1.5 block text-base font-medium text-[#333134]">Start time</span>
+        <TimeSelect label="Start time" value={hours.start} options={times.choices(hours.start)} format={times.format} onChange={hours.onStart} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <span className="mb-1.5 block text-base font-medium text-[#333134]">End time</span>
+        <TimeSelect label="End time" value={hours.end} options={times.choices(hours.end)} format={times.format} onChange={hours.onEnd} disabled={!hours.start} />
+      </div>
+    </div>
+  );
+}
+
 export function StepWhen({ vm }: Props) {
-  const { draft, options, derived, onField, onToggle, onListSet, onListAdd, onListDel } = vm;
-  const { times } = derived;
+  const { draft, options, derived, onField, onToggle } = vm;
   return (
     <div>
       <StepHeading
         badge="Required"
-        title="When it runs"
-        intro="Pick the shape of your schedule. You can block single dates later from your calendar without touching this."
+        title="Date and time"
+        intro="Select the date and time of this experience. You can also block dates from your calendar."
       />
       <div className="mb-[26px] flex gap-2">
         {options.whenTypes.map((w) => (
@@ -39,7 +56,7 @@ export function StepWhen({ vm }: Props) {
 
       {draft.whenType === "recurring" && (
         <div>
-          <div className="mb-2.5 text-[13px] font-medium">Which days</div>
+          <div className="mb-2.5 text-base font-medium text-[#333134]">Which days</div>
           <div className="mb-6 flex flex-wrap gap-1.5">
             {options.weekDays.map((d) => (
               <Pill key={d} on={draft.days.includes(d)} onClick={() => onToggle("days", d)} className="h-[38px] w-11 rounded-xl px-0">
@@ -47,49 +64,23 @@ export function StepWhen({ vm }: Props) {
               </Pill>
             ))}
           </div>
-          <div className="mb-2.5 text-[13px] font-medium">How often</div>
+          <div className="mb-2.5 text-base font-medium text-[#333134]">How often</div>
           <div className="mb-6 flex flex-wrap gap-1.5">
-            {options.everyOptions.map((e) => (
-              <Pill key={e.value} on={draft.every === e.value} onClick={() => onField("every", e.value)}>
+            {vm.howOften.map((e) => (
+              <Pill key={e.key} on={e.selected} onClick={e.onPick}>
                 {e.label}
               </Pill>
             ))}
           </div>
-          <div className="mb-6 flex gap-3">
-            <Field label="How long it lasts" className="mb-0 flex-1">
-              <div className="relative">
-                <input inputMode="numeric" value={draft.dur} onChange={(e) => onField("dur", numeric(e.target.value))} className={`${inputClass} pr-16`} />
-                <span className="pointer-events-none absolute top-[15px] right-3.5 text-[13px] text-[#6F6B72]">hours</span>
-              </div>
-            </Field>
-            <Field label="Repeat until" className="mb-0 flex-1">
-              <input type="date" aria-label="Repeat until" value={draft.until} onChange={(e) => onField("until", e.target.value)} className={cn(inputClass, "accent-[#F5032D]")} />
-            </Field>
+          <div className="mb-6">
+            <StartEnd vm={vm} />
           </div>
-          <div className="mb-2 text-[13px] font-medium">Start times</div>
-          <div className="mb-2.5 flex flex-col gap-2">
-            {draft.slots.map((t, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <TimeSelect
-                  className="w-[150px] shrink-0"
-                  label={`Start time ${i + 1}`}
-                  value={t}
-                  options={times.choices(t)}
-                  format={times.format}
-                  onChange={(v) => onListSet("slots", i, v)}
-                />
-                <span className="text-[13px] text-[#6F6B72]">{times.range(t)}</span>
-                <button type="button" aria-label={`Remove start time ${i + 1}`} onClick={() => onListDel("slots", i)} className="ml-auto flex size-8 cursor-pointer items-center justify-center rounded-full text-[#6F6B72] hover:bg-[#F5F5F5]">
-                  <X className="size-3.5" />
-                </button>
-              </div>
-            ))}
+          <div className="mb-[26px]">
+            <span className="mb-1.5 block text-base font-medium text-[#333134]">Repeat until</span>
+            <DateField label="Repeat until" field={derived.until} />
           </div>
-          <button type="button" onClick={() => onListAdd("slots")} className="mb-[26px] h-[38px] cursor-pointer rounded-full px-3.5 text-[13px] font-medium shadow-[inset_0_0_0_1px_#E7E7E7] hover:bg-[#F5F5F5]">
-            Add another start time
-          </button>
           <div className="rounded-[14px] bg-[#F4F2EE] p-4">
-            <div className="mb-1 text-[13px] font-medium">This is what you just made</div>
+            <div className="mb-1 text-[13px] font-medium">Preview</div>
             <div className="mb-3 text-[13px] text-[#6F6B72]">{derived.slotSummary} · next five dates</div>
             <ul className="flex flex-col gap-[7px]">
               {derived.upcoming.map((label) => (
@@ -104,20 +95,18 @@ export function StepWhen({ vm }: Props) {
       )}
 
       {draft.whenType === "once" && (
-        <div className="flex gap-3">
-          <Field label="Date" className="mb-0 flex-1">
-            <input type="date" aria-label="Date" value={draft.date} onChange={(e) => onField("date", e.target.value)} className={cn(inputClass, "accent-[#F5032D]")} />
-          </Field>
-          <div className="flex-1">
-            <span className="mb-1.5 block text-[13px] font-medium">Start time</span>
-            <TimeSelect label="Start time" value={draft.slots[0] ?? ""} options={times.choices(draft.slots[0] ?? "")} format={times.format} onChange={(v) => onField("slots", [v])} />
+        <div className="flex flex-col gap-[22px]">
+          <div>
+            <span className="mb-1.5 block text-base font-medium text-[#333134]">Date</span>
+            <DateField label="Date" field={derived.date} />
           </div>
+          <StartEnd vm={vm} />
         </div>
       )}
 
       {draft.whenType === "request" && (
         <div className="rounded-[14px] bg-[#FAF9F7] p-4 text-[13px] leading-[1.6] text-[#6F6B72] shadow-[inset_0_0_0_1px_#E9E1D2]">
-          Guests will ask for a date and you reply with what works. Fewer bookings come in this way, but you keep every weekend free until you say yes. You still need to answer within 24 hours.
+          Guests send you a request, and we email it to you with their contact details. It&apos;s important you reply within 24 hours.
         </div>
       )}
     </div>
@@ -125,7 +114,7 @@ export function StepWhen({ vm }: Props) {
 }
 
 export function StepPrice({ vm }: Props) {
-  const { draft, derived, options, privateGroup, onField } = vm;
+  const { draft, derived, privateGroup, onField } = vm;
   const money = (key: "price" | "priv", label: string, placeholder: string) => (
     <Field label={label}>
       <div className="relative">
@@ -138,16 +127,16 @@ export function StepPrice({ vm }: Props) {
     <div>
       <StepHeading badge="Required" title="Group size and price" />
       <div className="flex gap-3">
-        <Field label="Smallest group you will run" className="flex-1">
+        <Field label="Minimum guests" className="flex-1">
           <input inputMode="numeric" value={draft.minG} placeholder="2" onChange={(e) => onField("minG", numeric(e.target.value))} className={inputClass} />
         </Field>
-        <Field label="Most you can handle" className="flex-1">
+        <Field label="Maximum guests" className="flex-1">
           <input inputMode="numeric" value={draft.maxG} placeholder="8" onChange={(e) => onField("maxG", numeric(e.target.value))} className={inputClass} />
         </Field>
       </div>
       {money("price", "Price per person", "10,000")}
       <div className="mb-[26px]">
-        <div className="mb-2 text-[13px] font-medium">Do you want to include a private group option?</div>
+        <div className="mb-2 text-base font-medium text-[#333134]">Do you want to include a private group option?</div>
         <div className="flex gap-2">
           <Pill on={privateGroup.on} onClick={() => privateGroup.onChange(true)}>Yes</Pill>
           <Pill on={!privateGroup.on} onClick={() => privateGroup.onChange(false)}>No</Pill>
@@ -170,19 +159,12 @@ export function StepPrice({ vm }: Props) {
           That is {derived.price.perSeat} per seat, in your bank within 24 hours of the walk finishing. No listing fee, nothing else taken.
         </p>
       </div>
-      <div className="mt-6 mb-2.5 text-[13px] font-medium">If a guest cancels</div>
-      <div className="mb-3 flex flex-col gap-2">
-        {options.refundPolicies.map((r) => (
-          <ChoiceCard key={r.key} radio selected={draft.refund === r.key} onClick={() => onField("refund", r.key)}>
-            <span className="text-[13.5px] font-medium">{r.label}</span>
-          </ChoiceCard>
-        ))}
-      </div>
-      {draft.refund === "full_refund_until" && (
-        <Field label="Hours before the start" hint="24 is usual. Guests who cancel later than this get nothing back.">
-          <input inputMode="numeric" value={draft.refundHours} onChange={(e) => onField("refundHours", numeric(e.target.value))} className={inputClass} />
-        </Field>
-      )}
+      <p className="mt-6 rounded-[14px] bg-[#FAF9F7] p-4 text-[13px] leading-[1.6] text-[#6F6B72] shadow-[inset_0_0_0_1px_#E9E1D2]">
+        Our cancellation policy lets guests cancel up to 24 hours before the experience and get a full refund.{" "}
+        <Link href="/legal/cancellations" className="font-medium text-[#F5032D] underline underline-offset-2">
+          Read the cancellation policy
+        </Link>
+      </p>
     </div>
   );
 }
@@ -205,11 +187,10 @@ export function StepIncluded({ vm }: Props) {
   return (
     <div>
       <StepHeading
-        eyebrow="Step 6 of 11"
         title="What's included"
-        intro="Four short lists, one item per line. Plain beats clever."
+        intro="Tell guests what's included, what isn't, what to bring and what to wear. Add one item per line."
       />
-      {list("inc", "Included in the price", "Included line", "Ten edited photos within five days", 100)}
+      {list("inc", "Included", "Included line", "Ten edited photos within five days", 100)}
       {list("exc", "Not included", "Not included line", "Transport to the meeting point", 100)}
       {list("bring", "What to bring", "Bring line", "Shoes you can walk in", 80)}
       {list("wear", "What to wear", "Wear line", "Something you do not mind sweating in", 80)}

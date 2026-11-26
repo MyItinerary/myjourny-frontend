@@ -16,6 +16,7 @@ export function ExperiencesPageView({
   pickedForYou,
   nearYouInLagos,
   categories,
+  categoriesVisible,
   cities,
 }: ExperiencesPageViewModel) {
   return (
@@ -71,7 +72,7 @@ export function ExperiencesPageView({
       )}
 
       <Reveal>
-        <CategoryPillsView categories={categories} hrefBase="/categories" />
+        <CategoryPillsView categories={categories} hrefBase="/categories" visibleCount={categoriesVisible} />
       </Reveal>
 
       {cities.show && (

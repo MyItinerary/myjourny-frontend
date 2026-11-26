@@ -35,6 +35,25 @@ const seedBasics = (extra: Record<string, unknown> = {}) =>
     JSON.stringify({ title: "Island walk", hook: "Six streets.", desc: LONG, cats: ["Art & creativity"], subs: ["Photography walk"], tags: ["Walking"], ...extra }),
   );
 
+/** Every required step filled in, so the host can go anywhere. */
+const seedComplete = () =>
+  seedBasics({
+    locations: [{ name: "Freedom Park", lat: 6.45, lng: 3.39 }],
+    cue: "The blue gate",
+    meetPhoto: "https://res.cloudinary.com/demo/gate.jpg",
+    whenType: "request",
+    price: "15000",
+    maxG: "8",
+    inc: ["Photos"],
+    exc: ["Lunch"],
+    fitness: "easy",
+    agePolicy: "all_ages",
+    access: "not_suitable",
+    safetyAgreed: true,
+    photos: ["1", "2", "3", "4"].map((n) => `https://res.cloudinary.com/demo/${n}.jpg`),
+    photoRightsAgreed: true,
+  });
+
 describe("the experience builder", () => {
   it("opens on the title and description, with no guest preview beside it, and counts the title", async () => {
     renderWithProviders(<Builder />);
@@ -75,22 +94,38 @@ describe("the experience builder", () => {
   });
 
   it("walks every section and can go back", async () => {
-    seedBasics();
+    seedComplete();
     renderWithProviders(<Builder />);
-    for (const title of ["Category and tags", "Location", "When it runs", "Group size and price", "What's included", "Requirements and safety", "Photos", "Reviews", "How guests book"]) {
+    for (const title of ["Category and tags", "Location", "Date and time", "Group size and price", "What's included", "Requirements and safety", "Photos", "Reviews", "How guests book"]) {
       await next();
       expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
     }
     await userEvent.click(screen.getAllByRole("button", { name: "Review and publish" }).at(-1)!);
     expect(screen.getByRole("heading", { name: "Review and publish" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Publish this experience" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Publish this experience" })).toBeInTheDocument();
 
-    // Steps 1 and 2 are filled in, so the first thing still missing is where to meet.
-    await userEvent.click(screen.getAllByRole("button", { name: "Finish this" })[0]);
+    // Edit from the review goes straight to that step.
+    const location = within(screen.getByRole("list", { name: "Your experience, step by step" })).getAllByRole("listitem")[2];
+    await userEvent.click(within(location).getByText("Location"));
+    await userEvent.click(within(location).getByRole("button", { name: "Edit Location" }));
     expect(screen.getByRole("heading", { name: "Location" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Back" })).not.toBeInTheDocument();
     await userEvent.click(within(screen.getByRole("navigation", { name: "Experience sections" })).getByRole("button", { name: /Title and description/ }));
     expect(screen.getByLabelText(/^Title/)).toBeInTheDocument();
+  });
+
+  it("puts Publish where Continue sits, beside Save and exit, and edits a step from the review", async () => {
+    seedComplete();
+    renderWithProviders(<Builder />);
+    await userEvent.click(within(screen.getByRole("navigation", { name: "Experience sections" })).getByRole("button", { name: /Review and publish/ }));
+    const publish = screen.getByRole("button", { name: "Publish this experience" });
+    expect(publish.parentElement).toContainElement(screen.getByRole("button", { name: "Save and exit" }));
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+
+    const location = within(screen.getByRole("list", { name: "Your experience, step by step" })).getAllByRole("listitem")[2];
+    await userEvent.click(within(location).getByText("Location"));
+    await userEvent.click(within(location).getByRole("button", { name: "Edit Location" }));
+    expect(screen.getByRole("heading", { name: "Location" })).toBeInTheDocument();
   });
 
   it("saves and leaves", async () => {
@@ -104,21 +139,15 @@ describe("the experience builder", () => {
 
 describe("the experience builder, from a template", () => {
   beforeEach(() => {
-    seedBasics({ title: "Golden hour portrait walk", template: "Golden hour portrait walk", prefilled: [1, 2, 4, 5, 6, 7], checked: [] });
+    seedBasics({ title: "Golden hour portrait walk" });
   });
 
-  it("holds Continue until the host ticks that they checked the section", async () => {
+  it("has no box to tick, and moves on once the step is filled in", async () => {
     renderWithProviders(<Builder />);
-
     expect(screen.getByLabelText(/^Title/)).toHaveValue("Golden hour portrait walk");
-    expect(screen.getByText(/filled this in from the "Golden hour portrait walk" template/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Category and tags/ })).toBeDisabled();
-
-    await userEvent.click(screen.getByRole("checkbox", { name: /I have checked this section/ }));
-    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
+    expect(screen.queryByRole("checkbox", { name: /I have checked this section/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/filled this in from/)).not.toBeInTheDocument();
     await next();
     expect(screen.getByRole("heading", { name: "Category and tags" })).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /I have checked this section/ })).not.toBeChecked();
   });
 });
