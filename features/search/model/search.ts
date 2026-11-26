@@ -11,6 +11,7 @@ import type {
   DestinationSuggestion,
   EventSuggestion,
   ExperienceSuggestion,
+  GuestCounts,
   SearchExperiencesParams,
 } from "./search.types";
 
@@ -83,6 +84,13 @@ export const DEFAULT_EVENTS: EventSuggestion[] = [
   { id: "ibadan-highlife-evening", title: "Ibadan Highlife Evening", subtitle: "Ibadan · Live music · from NGN 4,000" },
   { id: "art-film-weekender", title: "Art & Film Weekender", subtitle: "Lagos · Arts & film · from NGN 3,500" },
 ];
+
+/** "3 guests", "3 guests, 1 infant"; empty for nobody. */
+export function formatGuestsText(counts: GuestCounts) {
+  const total = counts.adults + counts.children + counts.infants;
+  if (total <= 0) return "";
+  return `${total} guest${total > 1 ? "s" : ""}${counts.infants > 0 ? `, ${counts.infants} infant${counts.infants > 1 ? "s" : ""}` : ""}`;
+}
 
 export function formatExperienceSubtitle(
   exp: Pick<ExperienceSuggestion, "city" | "price_from" | "currency" | "headline">,

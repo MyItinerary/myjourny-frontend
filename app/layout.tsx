@@ -6,15 +6,22 @@ import "@fontsource/tiktok-sans/700.css";
 import "@fontsource/tiktok-sans/800.css";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { SITE_DESCRIPTION } from "@/lib/site";
+import { MobileSearchHost } from "./mobile-search-host";
 import { MobileTabBar } from "./mobile-tab-bar";
 
-// viewportFit "cover" lets the phone bottom bar sit under the iPhone home
-// indicator, padded by env(safe-area-inset-bottom).
-export const viewport: Viewport = { viewportFit: "cover" };
+// viewportFit "cover" lets the phone bottom bar and full-screen sheets pad
+// themselves with env(safe-area-inset-*). themeColor tints the browser's bars
+// (and the installed app's status bar) to match the page.
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#FFFFFF" };
 
 export const metadata: Metadata = {
   title: "MyJourny",
-  description: "MyJourny | connecting travellers with local guides for curated experiences",
+  description: SITE_DESCRIPTION,
+  applicationName: "MyJourny",
+  // Added to an iPhone's home screen: opens full-screen, named MyJourny (the icon is app/apple-icon.tsx).
+  appleWebApp: { capable: true, title: "MyJourny", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
 };
 
 export default function RootLayout({
@@ -31,6 +38,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <MobileTabBar />
+          <MobileSearchHost />
         </Providers>
       </body>
     </html>

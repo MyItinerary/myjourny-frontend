@@ -21,6 +21,15 @@ describe("rangePresets", () => {
 });
 
 describe("DateRangePanel", () => {
+  it("keeps the quick picks on one row that scrolls sideways", () => {
+    setup();
+
+    const row = screen.getByRole("button", { name: "Tonight" }).parentElement!;
+    expect(row).toHaveClass("overflow-x-auto");
+    expect(row).not.toHaveClass("flex-wrap");
+    expect(screen.getByRole("button", { name: "Next weekend" })).toHaveClass("shrink-0", "whitespace-nowrap");
+  });
+
   it("shows two months and a caption that asks for the end date", () => {
     setup();
 
