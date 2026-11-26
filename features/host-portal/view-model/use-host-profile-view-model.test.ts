@@ -38,7 +38,6 @@ describe("a host who has finished setting up", () => {
     expect(current.nav[0].active).toBe(true);
     expect(current.title).toBe("Personal information");
     expect(current.rows).toHaveLength(6);
-    expect(current.setup).toBeNull();
   });
 
   it("switches pane, and shows what each one has", () => {
@@ -118,13 +117,13 @@ describe("row actions", () => {
 
   it("says edits and uploads aren't connected yet", () => {
     const result = render();
+    expect(result.current.header.actions).toEqual([]);
     act(() => result.current.onRowAction(result.current.rows[0]));
-    act(() => result.current.header.actions[0].onClick?.());
     act(() => result.current.onPane("tax"));
     act(() => result.current.tax!.onAction());
     act(() => result.current.onPane("security"));
     act(() => result.current.danger!.onStart());
-    expect(toast.info).toHaveBeenCalledTimes(4);
+    expect(toast.info).toHaveBeenCalledTimes(3);
     expect(nav.push).not.toHaveBeenCalled();
   });
 });
@@ -134,23 +133,12 @@ describe("a host who hasn't finished setting up", () => {
     nav.query = "";
   });
 
-  it("shows the account's own details, not live yet, with three things to finish", () => {
+  it("shows the account's own details, not live yet, with three verification steps left", () => {
     const { current } = render();
 
     expect(current.header.chip).toBe("Not live yet");
     expect(current.rows[0].value).toBe("Tunde Bakare");
-    expect(current.setup).toMatchObject({ count: "0 of 3 done", percent: 6, note: "You cannot be paid until these three are done." });
-    expect(current.setup!.tasks.map((t) => t.title)).toEqual([
-      "Confirm who you are", "Write your public profile", "Add the account we pay into",
-    ]);
     expect(current.nav.find((n) => n.key === "verify")!.badge).toBe("3 left");
-  });
-
-  it("takes you to the pane a task is about, and only shows the card on personal information", () => {
-    const result = render();
-    act(() => result.current.setup!.tasks[2].onOpen());
-    expect(result.current.pane).toBe("payouts");
-    expect(result.current.setup).toBeNull();
   });
 
   it("says nothing stands in the way of closing the account", () => {

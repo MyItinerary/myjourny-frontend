@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
 import { completeAuth, type MeResponse } from "@/lib/queries/auth";
-import { dateOfBirthToIso, fullPhoneNumber } from "./guide-application-rules";
+import { dateOfBirthToIso, fullNameOf, fullPhoneNumber, normalizeWebsite } from "./guide-application-rules";
 import type { GuideApplicationFormData } from "./guide-application.types";
 
 export interface GuideApplicationSubmissionResult {
@@ -30,17 +30,29 @@ function isConflict(err: unknown): boolean {
   return (err as { response?: { status?: number } })?.response?.status === 409;
 }
 
+/** Whether the email already has an account (itin's /auth/email-exists). A failed lookup counts as
+ * no account; the "already registered" answer on submit still catches it. */
+export async function emailHasAccount(email: string): Promise<boolean> {
+  try {
+    const { data } = await apiClient.post<{ exists?: boolean }>("/auth/email-exists", { email: email.trim().toLowerCase() });
+    return data.exists === true;
+  } catch {
+    return false;
+  }
+}
+
 /** What admins review, without the account details. */
 function applicationPayload(data: GuideApplicationFormData) {
   const business = data.verificationType === "business";
   return {
-    full_name: data.fullName.trim(),
+    full_name: fullNameOf(data.firstName, data.lastName),
     date_of_birth: dateOfBirthToIso(data.dateOfBirth),
     phone_number: fullPhoneNumber(data.countryCode, data.phoneNumber),
     city: data.city,
     applicant_type: data.verificationType,
-    website: data.website.trim() || null,
-    business_name: business ? data.businessName?.trim() || null : null,
+    website: normalizeWebsite(data.website),
+    // An individual can host under a brand name too; itin keeps it in the same place.
+    business_name: data.businessName?.trim() || null,
     cac_number: business ? data.cacNumber?.trim() || null : null,
   };
 }

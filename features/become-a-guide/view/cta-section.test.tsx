@@ -12,7 +12,7 @@ describe("CtaSection", () => {
       screen.getByRole("heading", { name: /Start making money off/i })
     ).toBeInTheDocument();
 
-    const button = screen.getByRole("button", { name: /Start your application/i });
+    const button = screen.getByRole("button", { name: /Get Started/i });
     fireEvent.click(button);
     expect(onStartApplication).toHaveBeenCalledTimes(1);
   });

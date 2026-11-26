@@ -18,15 +18,15 @@ const card = "rounded-2xl bg-white shadow-[inset_0_0_0_1px_#E7E7E7]";
 export function HostListingDetailView({ vm }: { vm: HostListingDetailViewModel }) {
   const { listing, detail } = vm;
   if (vm.loading) {
-    return <p className="flex-1 px-7 pt-8 text-sm text-[#6F6B72]">Loading your listing…</p>;
+    return <p className="flex-1 px-7 pt-8 text-sm text-[#6F6B72]">Loading your experience…</p>;
   }
   if (!listing || !detail) {
     return (
       <div className="flex-1 overflow-y-auto bg-[#FCFCFC] p-10">
-        <h2 className="font-heading text-2xl font-extrabold text-[#333134]">We couldn&apos;t find that listing</h2>
+        <h2 className="font-heading text-2xl font-extrabold text-[#333134]">We couldn&apos;t find that experience</h2>
         <p className="mt-2 text-sm text-[#6F6B72]">It may have been deleted, or it isn&apos;t yours.</p>
         <Link href={vm.listingsHref} className="mt-5 inline-flex h-11 items-center rounded-full bg-[#F5032D] px-5 text-sm font-medium text-white">
-          Back to your listings
+          Back to your experiences
         </Link>
       </div>
     );
@@ -36,7 +36,7 @@ export function HostListingDetailView({ vm }: { vm: HostListingDetailViewModel }
     <div className="flex-1 overflow-y-auto bg-[#FCFCFC] px-4 pt-[18px] pb-24 md:px-7">
       <Link href={vm.listingsHref} className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-[#6F6B72] hover:text-[#333134]">
         <ArrowLeft className="size-4" />
-        All listings
+        All experiences
       </Link>
 
       {vm.banner && (
@@ -182,8 +182,8 @@ export function HostListingDetailView({ vm }: { vm: HostListingDetailViewModel }
             <p className="mt-3 text-xs leading-relaxed text-[#6F6B72]">{detail.payNote}</p>
           </section>
 
-          <section aria-label="Where you meet" className={cn(card, "p-[18px]")}>
-            <h2 className="mb-3 text-sm font-medium">Where you meet</h2>
+          <section aria-label="Location" className={cn(card, "p-[18px]")}>
+            <h2 className="mb-3 text-sm font-medium">Location</h2>
             <div className="flex gap-[11px]">
               <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-muted">
                 {listing.imageUrl && <Image src={listing.imageUrl} alt="" fill sizes="64px" className="object-cover" />}
@@ -195,8 +195,8 @@ export function HostListingDetailView({ vm }: { vm: HostListingDetailViewModel }
             </div>
           </section>
 
-          <section aria-label="Manage this listing" className="rounded-2xl bg-[#F4F2EE] p-[18px]">
-            <h2 className="mb-3 text-sm font-medium">Manage this listing</h2>
+          <section aria-label="Manage this experience" className="rounded-2xl bg-[#F4F2EE] p-[18px]">
+            <h2 className="mb-3 text-sm font-medium">Manage this experience</h2>
             <div className="flex flex-col gap-[7px]">
               {vm.actions.map((a) => (
                 <button key={a.label} type="button" onClick={a.onClick} className="flex h-10 cursor-pointer items-center gap-2.5 rounded-full bg-white px-[13px] text-left text-[13px] font-medium hover:brightness-[0.98]">

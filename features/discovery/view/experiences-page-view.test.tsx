@@ -31,6 +31,7 @@ function viewModel(overrides: Partial<ExperiencesPageViewModel> = {}): Experienc
     pickedForYou: rail(true),
     nearYouInLagos: rail(true),
     categories: [],
+    categoriesVisible: 7,
     cities: { cities: [], show: true },
     ...overrides,
   };

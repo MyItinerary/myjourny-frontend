@@ -4,7 +4,7 @@ import { STATUS_OPTIONS } from "./listing-table";
 import { SAMPLE_LISTINGS } from "./sample-listings";
 
 describe("SAMPLE_LISTINGS", () => {
-  it("has eight listings, one in every status the design draws", () => {
+  it("has eight experiences, one in every status the design draws", () => {
     // "Incomplete" and "Taken down" come from itin, not the design.
     const drawn = STATUS_OPTIONS.filter((s) => s !== "Incomplete" && s !== "Taken down");
     expect(SAMPLE_LISTINGS).toHaveLength(8);
@@ -16,7 +16,7 @@ describe("SAMPLE_LISTINGS", () => {
     expect(SAMPLE_LISTINGS.every((l) => l.price > 0)).toBe(true);
   });
 
-  it("blocks deleting only listings with bookings still to come", () => {
+  it("blocks deleting only experiences with bookings still to come", () => {
     expect(SAMPLE_LISTINGS.filter((l) => l.future > 0).map((l) => l.status).sort()).toEqual(["Hidden", "Live", "Sold out"]);
   });
 });

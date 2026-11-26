@@ -33,3 +33,49 @@ export function isOldEnoughToGuide(isoDate: string, today: Date = new Date()): b
   const hadBirthday = today.getMonth() + 1 > month || (today.getMonth() + 1 === month && today.getDate() >= day);
   return today.getFullYear() - year - (hadBirthday ? 0 : 1) >= MIN_GUIDE_AGE;
 }
+
+/** "Samuel" and "Okafor" as the one name itin keeps. */
+export function fullNameOf(firstName: string, lastName: string): string {
+  return [firstName.trim(), lastName.trim()].filter(Boolean).join(" ");
+}
+
+/** The account's name split back into first and last, for a signed-in applicant. */
+export function splitName(fullName: string): { firstName: string; lastName: string } {
+  const [firstName = "", ...rest] = fullName.trim().split(/\s+/);
+  return { firstName, lastName: rest.join(" ") };
+}
+
+/** The password rules the form lists, each with whether it's met. */
+export function passwordChecks(password: string): { label: string; met: boolean }[] {
+  return [
+    { label: "Between 8 and 30 characters", met: password.length >= 8 && password.length <= 30 },
+    { label: "Include a number (1234) and one special character (#%!.^)", met: /\d/.test(password) && /[^A-Za-z0-9\s]/.test(password) },
+    { label: "Uppercase (ABC) and lowercase (abc) letters", met: /[A-Z]/.test(password) && /[a-z]/.test(password) },
+    { label: "No blank spaces", met: password.length > 0 && !/\s/.test(password) },
+  ];
+}
+
+export const isStrongPassword = (password: string) => passwordChecks(password).every((c) => c.met);
+
+/** "samuel.com" or "https://samuel.com/tours": a web address with a real-looking domain. */
+export function isValidWebsite(value: string): boolean {
+  const withScheme = /^https?:\/\//i.test(value.trim()) ? value.trim() : `https://${value.trim()}`;
+  try {
+    const url = new URL(withScheme);
+    return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/** The website as itin keeps it, with https:// in front. */
+export function normalizeWebsite(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+/** A CAC number: RC or BN, then the digits, e.g. "RC1234566" or "BN 3456789". */
+export function isValidCacNumber(value: string): boolean {
+  return /^(RC|BN)\s?\d{4,8}$/i.test(value.trim());
+}

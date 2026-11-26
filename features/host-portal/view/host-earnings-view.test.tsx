@@ -39,7 +39,7 @@ describe("HostEarningsView", () => {
     expect(screen.getByText("₦1,046,000")).toBeInTheDocument();
     expect(screen.getByText("in your bank Tue 22 Sept")).toBeInTheDocument();
     expect(screen.getByText("Every booking, and what we took")).toBeInTheDocument();
-    for (const heading of ["Reference", "Listing and guest", "Date", "Guests paid", "Our 15 percent", "You receive", "Status"]) {
+    for (const heading of ["Reference", "Experience and guest", "Date", "Guests paid", "Our 15 percent", "You receive", "Status"]) {
       expect(screen.getByRole("columnheader", { name: heading })).toBeInTheDocument();
     }
     expect(screen.getAllByRole("row")).toHaveLength(3);

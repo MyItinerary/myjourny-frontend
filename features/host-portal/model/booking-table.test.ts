@@ -23,7 +23,7 @@ describe("filterBookings", () => {
     ]);
   });
 
-  it("filters by status and listing", () => {
+  it("filters by status and experience", () => {
     expect(names(filterBookings(bookings, { ...NO_BOOKING_FILTERS, status: "Upcoming" }))).toEqual(["Ifeoma Adeyemi", "Yemi Balogun"]);
     expect(names(filterBookings(bookings, { ...NO_BOOKING_FILTERS, listing: "Freedom Park Portraits" }))).toEqual(["Yemi Balogun"]);
   });
@@ -70,11 +70,11 @@ describe("reference data", () => {
     expect(BOOKING_WHEN_OPTIONS).toEqual(["Today", "Tomorrow", "Still to come", "Already run"]);
   });
 
-  it("lists each listing once", () => {
+  it("lists each experience once", () => {
     expect(uniqueListings(bookings)).toEqual(["Lagos Island Photowalk", "Freedom Park Portraits"]);
   });
 
-  it("colours a status like the matching listing status", () => {
+  it("colours a status like the matching experience status", () => {
     expect(bookingChip("Confirmed")).toBe("Live");
     expect(bookingChip("Waiting on you")).toBe("In review");
     expect(bookingChip("Cancelled by guest")).toBe("Rejected");

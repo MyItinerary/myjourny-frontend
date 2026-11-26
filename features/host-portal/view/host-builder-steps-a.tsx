@@ -1,99 +1,113 @@
-import { Check, Lightbulb, MapPin, Search, Upload } from "lucide-react";
+import { MapPin, Upload, X } from "lucide-react";
 import { useId } from "react";
 
 import type { HostListingBuilderViewModel } from "../view-model/use-host-listing-builder-view-model";
+import { LocationPicker } from "./host-builder-location-view";
 import { ChoiceCard, Field, inputClass, Pill, StepHeading } from "./host-builder-parts";
 
 type Props = { vm: HostListingBuilderViewModel };
 
+const textareaClass =
+  "w-full resize-y rounded-xl bg-white px-3.5 py-3 text-[15px] leading-relaxed shadow-[inset_0_0_0_1px_#E7E7E7] outline-none placeholder:text-[#A09DA3] focus-visible:shadow-[inset_0_0_0_2px_#333134]";
+
 export function StepBasics({ vm }: Props) {
-  const { draft, derived, helper, onField } = vm;
+  const { draft, derived, onField, onFocusField } = vm;
   return (
     <div>
-      <StepHeading
-        eyebrow="Section 1 of 8"
-        title="The basics"
-        intro="Three things: what it is called, the one line people read first, and the full story. Write the last one like you are telling a friend what the afternoon feels like."
-      />
-      <Field label="Title" aside={`${derived.titleCount}/60`} hint="Say the place and the thing. People search for both.">
-        <input value={draft.title} maxLength={60} placeholder="Lagos Island Photowalk" onChange={(e) => onField("title", e.target.value)} className={inputClass} />
-      </Field>
-      <Field label="The one line" hint="This sits under your title in search. One sentence, no full stop needed.">
-        <input value={draft.hook} onChange={(e) => onField("hook", e.target.value)} className={inputClass} />
-      </Field>
-      <Field label="The full description" aside={`${derived.descWords} words`} className="mb-3.5">
-        <textarea
-          value={draft.desc}
-          rows={7}
-          onChange={(e) => onField("desc", e.target.value)}
-          className="w-full resize-y rounded-xl bg-white px-3.5 py-3 text-[15px] leading-relaxed shadow-[inset_0_0_0_1px_#E7E7E7] outline-none focus-visible:shadow-[inset_0_0_0_2px_#333134]"
+      <StepHeading badge="Required" title="Title and description" />
+      <Field
+        label="Title"
+        sub="Add the place and the activity. It helps people find your experience faster."
+        count={`${derived.titleCount}/60`}
+      >
+        <input
+          value={draft.title}
+          maxLength={60}
+          placeholder="Lagos Island Photowalk"
+          onChange={(e) => onField("title", e.target.value)}
+          onFocus={() => onFocusField("title")}
+          className={inputClass}
         />
       </Field>
-      <div className="overflow-hidden rounded-[14px] bg-[#FAF9F7] shadow-[inset_0_0_0_1px_#E9E1D2]">
-        <button type="button" onClick={helper.onToggle} aria-expanded={helper.open} className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3.5 text-left">
-          <Lightbulb className="size-[18px] shrink-0 text-[#333134]" />
-          <span className="flex-1 text-[13px] font-medium">Most hosts describe the activity. The ones who sell out describe the feeling.</span>
-          <span className="text-xs font-medium text-[#F5032D]">{helper.open ? "Hide" : "Show me"}</span>
-        </button>
-        {helper.open && (
-          <div className="flex flex-col gap-3 px-4 pb-4">
-            <div className="rounded-xl bg-white px-3.5 py-3 shadow-[inset_0_0_0_1px_#E7E7E7]">
-              <div className="mb-1.5 text-[11px] font-medium tracking-[0.06em] text-[#6F6B72] uppercase">Flat</div>
-              <p className="text-sm leading-relaxed text-[#6F6B72]">A 3 hour photography walk around Lagos Island. We visit 6 locations. Photos are included. Suitable for all levels.</p>
-            </div>
-            <div className="rounded-xl bg-white px-3.5 py-3 shadow-[inset_0_0_0_1px_#E7E7E7]">
-              <div className="mb-1.5 text-[11px] font-medium tracking-[0.06em] text-[#0CBA65] uppercase">Alive</div>
-              <p className="text-sm leading-relaxed">You do not need a camera and you do not need to know how to pose. I will tell you where to stand. By the third street you will have stopped checking the screen.</p>
-            </div>
-            <p className="text-xs leading-relaxed text-[#6F6B72]">Three questions worth answering somewhere in your description: what will someone feel, what will they leave with, and who is this not for.</p>
-          </div>
-        )}
-      </div>
+      <Field
+        label="Short description"
+        sub="Two or three sentences that give guests a taste of what they'll do. It's the first thing they read after the title, so make them want to read on."
+        count={derived.hookCount}
+      >
+        <textarea
+          value={draft.hook}
+          rows={3}
+          placeholder="Three hours, six streets, and photos of you that you will actually use."
+          onChange={(e) => onField("hook", e.target.value)}
+          onFocus={() => onFocusField("hook")}
+          className={textareaClass}
+        />
+      </Field>
+      <Field
+        label="Long description"
+        sub="Take guests through it from start to finish: what happens, how it feels, and what they leave with."
+        count={derived.descCount}
+        error={derived.descError}
+        className="mb-0"
+      >
+        <textarea
+          value={draft.desc}
+          rows={10}
+          placeholder="Tell people what the afternoon feels like, who it is for and what they will walk away with."
+          onChange={(e) => onField("desc", e.target.value)}
+          onFocus={() => onFocusField("desc")}
+          className={textareaClass}
+        />
+      </Field>
     </div>
   );
 }
 
+const SECTION_LABEL = "mb-2.5 text-base font-medium text-[#333134]";
+/** Matches the label on `Field`, for inputs laid out by hand. */
+const FIELD_LABEL = "mb-1.5 text-base font-medium text-[#333134]";
+
 export function StepCategory({ vm }: Props) {
-  const { draft, options, onPickCategory, onField, onToggle } = vm;
+  const { draft, options, onPickCategory, onToggle } = vm;
   return (
     <div>
       <StepHeading
-        eyebrow="Section 2 of 8"
+        badge="Required"
         title="Category and tags"
-        intro="One category. It decides where you appear when someone is browsing. Tags are how you get found by people who already know what they want."
+        intro="Pick every category that fits your experience. That's where people find you when they browse. Tags help people who are looking for something specific."
       />
-      <div className="mb-2.5 text-[13px] font-medium">Category</div>
+      <div className={SECTION_LABEL}>Category</div>
       <div className="mb-6 grid grid-cols-2 gap-2">
         {options.categories.map((c) => (
-          <ChoiceCard key={c} selected={draft.cat === c} onClick={() => onPickCategory(c)}>
+          <ChoiceCard key={c} selected={draft.cats.includes(c)} onClick={() => onPickCategory(c)}>
             <span className="font-medium">{c}</span>
           </ChoiceCard>
         ))}
       </div>
       <div className="mb-6">
-        <div className="mb-1 flex items-baseline gap-2">
-          <span className="text-[13px] font-medium">Subcategory</span>
-          <span className="ml-auto text-xs text-[#6F6B72]">Pick one</span>
-        </div>
-        {draft.cat && <div className="mb-2.5 text-xs text-[#6F6B72]">The ones we list under {draft.cat}.</div>}
-        {options.subcategories.length ? (
-          <div className="grid grid-cols-2 gap-2">
-            {options.subcategories.map((s) => (
-              <ChoiceCard key={s} radio selected={draft.sub === s} onClick={() => onField("sub", s)}>
-                {s}
-              </ChoiceCard>
+        <div className={SECTION_LABEL}>Subcategory</div>
+        {options.subGroups.length ? (
+          <div className="flex flex-col gap-4">
+            {options.subGroups.map((group) => (
+              <div key={group.category}>
+                {options.subGroups.length > 1 && <div className="mb-2 text-xs text-[#6F6B72]">{group.category}</div>}
+                <div className="grid grid-cols-2 gap-2">
+                  {group.subs.map((s) => (
+                    <ChoiceCard key={s} selected={draft.subs.includes(s)} onClick={() => onToggle("subs", s)}>
+                      {s}
+                    </ChoiceCard>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         ) : (
-          <div className="mt-2.5 rounded-xl bg-[#FAF9F7] p-4 text-[13px] text-[#6F6B72] shadow-[inset_0_0_0_1px_#E7E7E7]">
+          <div className="rounded-xl bg-[#FAF9F7] p-4 text-[13px] text-[#6F6B72] shadow-[inset_0_0_0_1px_#E7E7E7]">
             Pick a category first and the subcategories appear here.
           </div>
         )}
       </div>
-      <div className="mb-2.5 flex items-baseline gap-2">
-        <span className="text-[13px] font-medium">Tags</span>
-        <span className="ml-auto text-xs text-[#6F6B72]">{draft.tags.length} picked · optional</span>
-      </div>
+      <div className={SECTION_LABEL}>Tags</div>
       <div className="flex flex-wrap gap-2">
         {options.tags.map((t) => (
           <Pill key={t} on={draft.tags.includes(t)} onClick={() => onToggle("tags", t)}>
@@ -110,98 +124,55 @@ export function StepWhere({ vm }: Props) {
   const fileId = useId();
   return (
     <div>
-      <StepHeading
-        eyebrow="Section 3 of 8"
-        title="Where you meet"
-        intro="A landmark, not an address. Guests will be standing on a road they do not know, on a phone, ten minutes late. Give them something they can see."
-      />
+      <StepHeading badge="Required" title="Location" />
       <div className="mb-6 flex gap-2.5 rounded-[14px] bg-[#FAF9F7] p-3.5 shadow-[inset_0_0_0_1px_#E9E1D2]">
         <MapPin className="mt-px size-[18px] shrink-0 text-[#333134]" />
         <p className="text-[13px] leading-relaxed text-[#6F6B72]">
-          <span className="font-medium text-[#333134]">Why we ask for a landmark.</span> Street numbers on the island are unreliable and map pins land in the wrong place often enough that we do not trust them alone. Every experience that gets a &ldquo;we could not find you&rdquo; review had an address instead of a landmark.
+          <span className="font-medium text-[#333134]">Why we ask for these details.</span> Map pins can land in the wrong
+          place. Your location puts you on the map, the meeting point tells guests where to stand, and the photo helps them spot it.
         </p>
       </div>
-      <div className="mb-[22px] flex gap-3">
-        <Field label="City" className="mb-0 flex-1">
-          <input value={draft.city} onChange={(e) => onField("city", e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="Area" className="mb-0 flex-1">
-          <input value={draft.area} onChange={(e) => onField("area", e.target.value)} className={inputClass} />
-        </Field>
-      </div>
-      <div className="mb-[22px]">
-        <div className="mb-1.5 text-[13px] font-medium">The landmark</div>
-        <div className="relative">
-          <Search className="pointer-events-none absolute top-[15px] left-3.5 size-[18px] text-[#6F6B72]" />
-          <input
-            aria-label="The landmark"
-            value={place.query}
-            placeholder="Search for a landmark, park, or building"
-            onChange={(e) => place.onQuery(e.target.value)}
-            onFocus={place.onOpen}
-            className={`${inputClass} pl-[42px]`}
-          />
-          {place.open && (
-            <div className="absolute inset-x-0 top-[54px] z-30 flex flex-col rounded-[14px] bg-white p-1.5 shadow-[inset_0_0_0_1px_#E7E7E7,0_12px_32px_rgba(16,24,40,0.14)]">
-              {place.results.map((r) => (
-                <button key={`${r.lat},${r.lng}`} type="button" onClick={() => place.onPick(r)} className="flex w-full cursor-pointer items-start gap-2.5 rounded-[10px] p-2.5 text-left hover:bg-[#F5F5F5]">
-                  <MapPin className="mt-px size-[18px] shrink-0 text-[#6F6B72]" />
-                  <span>
-                    <span className="block text-[13.5px] font-medium">{r.name}</span>
-                    <span className="mt-px block text-xs text-[#6F6B72]">{r.area}</span>
-                  </span>
-                </button>
-              ))}
-              {place.noMatch && (
-                <div>
-                  <p className="p-2.5 text-[13px] leading-normal text-[#6F6B72]">Nothing by that name. Try a nearby place we can pin on the map, or use your words and pick a place later.</p>
-                  <button type="button" onClick={place.onUseTyped} className="h-9 w-full cursor-pointer rounded-[9px] bg-[#F4F2EE] px-2.5 text-left text-[12.5px] font-medium">
-                    Use &ldquo;{place.query}&rdquo; anyway
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        {draft.landmark ? (
-          <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#F0FCF5] px-3 py-2.5 shadow-[inset_0_0_0_1px_#C8EED7]">
-            <Check className="size-4 shrink-0 text-[#0CBA65]" />
-            <span className="text-[12.5px]">
-              Guests will be sent to {draft.landmark}
-              {!place.pinned && <span className="block text-[#B4760A]">Not on the map yet. Search again and pick it from the list.</span>}
-            </span>
-            <button type="button" onClick={place.onClear} className="ml-auto cursor-pointer text-xs font-medium text-[#F5032D]">Change</button>
-          </div>
-        ) : (
-          <div className="mt-1.5 text-xs text-[#6F6B72]">A place a driver would know without being told twice.</div>
-        )}
-      </div>
-      <Field label="The one line a guest reads while standing there" hint={'Name a colour, a sign, or a gate. "The yellow gate beside Freedom Park" beats "Freedom Park main entrance".'} className="mb-6">
-        <input value={draft.cue} onChange={(e) => onField("cue", e.target.value)} className={inputClass} />
+      <LocationPicker place={place} />
+      <Field label="Specific meeting point" sub={'Give a specific description that helps people find the spot, for example "behind the black 2 storey building".'} className="mb-6">
+        <input value={draft.cue} placeholder="Behind the black 2 storey building" onChange={(e) => onField("cue", e.target.value)} className={inputClass} />
       </Field>
-      <div className="mb-1.5 text-[13px] font-medium">Photo of the meeting point</div>
-      <div className="mb-2.5 text-xs text-[#6F6B72]">Required. Stand where the guest will stand and take one picture.</div>
-      <div className="flex items-stretch gap-3">
-        {draft.meetPhoto && (
-          // eslint-disable-next-line @next/next/no-img-element -- the photo the host just uploaded
-          <img src={draft.meetPhoto} alt="Meeting point" className="h-[110px] w-[150px] shrink-0 rounded-[14px] object-cover" />
-        )}
-        <label htmlFor={fileId} className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[14px] bg-[#FCFCFC] p-3.5 text-center shadow-[inset_0_0_0_1px_#E0DFDD] hover:bg-[#FAF9F7]">
-          <Upload className="size-5 text-[#6F6B72]" />
-          <span className="text-[13px] font-medium">
-            {vm.uploading > 0 ? "Uploading…" : draft.meetPhoto ? "Choose a different photo" : "Choose a photo"}
-          </span>
-          <span className="text-[11.5px] text-[#6F6B72]">JPG or PNG, up to 10 MB</span>
-          <input
-            id={fileId}
-            type="file"
-            accept="image/*"
-            aria-label="Photo of the meeting point"
-            className="sr-only"
-            onChange={(e) => onMeetPhoto(e.target.files?.[0])}
-          />
-        </label>
-      </div>
+      <div className={FIELD_LABEL}>Photo of the meeting point</div>
+      <label
+        htmlFor={fileId}
+        className="flex min-h-[180px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[14px] bg-[#FCFCFC] p-5 text-center shadow-[inset_0_0_0_1px_#E0DFDD] hover:bg-[#FAF9F7]"
+      >
+        <Upload className="size-6 text-[#6F6B72]" />
+        <span className="text-[13.5px] font-medium">
+          {vm.uploading > 0 ? "Uploading…" : draft.meetPhoto ? "Choose a different photo" : "Choose a photo"}
+        </span>
+        <span className="text-[11.5px] text-[#6F6B72]">JPG or PNG, up to 10 MB</span>
+        <input
+          id={fileId}
+          type="file"
+          accept="image/*"
+          aria-label="Photo of the meeting point"
+          className="sr-only"
+          onChange={(e) => {
+            onMeetPhoto(e.target.files?.[0]);
+            // Cleared, so picking the same photo again (say, after deleting it) still uploads.
+            e.target.value = "";
+          }}
+        />
+      </label>
+      {draft.meetPhoto && (
+        <div className="relative mt-3 h-[72px] w-24 overflow-hidden rounded-xl">
+          {/* eslint-disable-next-line @next/next/no-img-element -- the photo the host just uploaded */}
+          <img src={draft.meetPhoto} alt="Meeting point" className="size-full object-cover" />
+          <button
+            type="button"
+            aria-label="Delete the meeting point photo"
+            onClick={() => onField("meetPhoto", "")}
+            className="absolute top-1 right-1 flex size-6 cursor-pointer items-center justify-center rounded-full bg-white/90 text-[#333134] hover:bg-white"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

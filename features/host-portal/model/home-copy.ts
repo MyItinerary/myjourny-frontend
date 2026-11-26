@@ -1,4 +1,5 @@
-import type { EmptyPitch, ExampleListing, SellPoint } from "./home-copy.types";
+import { COMMISSION_RATE } from "./earnings";
+import type { EmptyPitch, SellPoint } from "./home-copy.types";
 
 const NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 
@@ -23,61 +24,44 @@ export function fullSubtitle(date: Date, attentionCount: number): string {
   return `${day} · ${n} ${attentionCount === 1 ? "thing needs" : "things need"} you today`;
 }
 
-export const EMPTY_SUBTITLE = "You are approved. Nothing listed yet.";
+export const EMPTY_SUBTITLE = "Nothing listed yet.";
 
-// The pitch for a host with nothing listed yet. Copy from the design.
+/** What a host keeps of each booking, as a percentage. */
+const KEEP_PERCENT = 100 - Math.round(COMMISSION_RATE * 100);
+
+// The pitch for a host with nothing listed yet.
 export const EMPTY_PITCH: EmptyPitch = {
-  eyebrow: "You are approved",
-  heading: "You already know how to do the thing, now sell it to eight people at once.",
-  body: "A private shoot at ₦50,000 is one client and three hours. The same three hours as a photowalk for eight people at ₦10,000 is ₦80,000, and you keep ₦68,000 of it.",
+  eyebrow: "Create your first experience",
+  heading: "You probably do this often, now you can make some money out of it.",
+  body: `When you list an experience, you get to keep ${KEEP_PERCENT}% of the payout and get paid the same day.`,
   cta: "Create your first experience",
 };
 
-export const EXAMPLES_COPY = {
-  heading: "Three that work in your category",
-  body: "Photography, Lagos. Open one and we will fill in the shape of it for you, then you change the words.",
+export const TEMPLATES_COPY = {
+  heading: "Templates you can start from",
 };
 
-// Stand-in photos until the design system imagery is brought across.
-export const EXAMPLES: ExampleListing[] = [
-  {
-    imageUrl: "/images/home/cities/abuja.jpg",
-    eyebrow: "Art & creativity",
-    title: "Golden hour portrait walk",
-    sub: "Six people, three streets, everyone leaves with ten edited photos.",
-    money: "8 guests × ₦10,000 = ₦80,000",
-  },
-  {
-    imageUrl: "/images/home/cities/jos.jpg",
-    eyebrow: "Street life",
-    title: "Market to plate, on camera",
-    sub: "Shoot the market, then eat what you bought. Two hours.",
-    money: "6 guests × ₦12,000 = ₦72,000",
-  },
-  {
-    imageUrl: "/images/home/experiences/kayaking.jpg",
-    eyebrow: "Water activity",
-    title: "Boat morning, film only",
-    sub: "One boat, one roll of film each, back before the heat.",
-    money: "5 guests × ₦18,000 = ₦90,000",
-  },
-];
+/** The card that nudges a new host to get verified. Verification is where our review starts. */
+export const SETUP_COPY = {
+  heading: "Finish setting up",
+  note: "We review every host before their experiences go live, and it starts here. You can build your first experience while we check.",
+};
 
 export const SELL_POINTS: SellPoint[] = [
   {
     n: "1",
     title: "Sell the feeling, not the schedule",
-    body: 'Nobody books "six locations in three hours". They book leaving with photos they will actually post.',
+    body: "Guests don't book six stops in three hours. They book the photos they'll post and the story they'll tell.",
   },
   {
     n: "2",
-    title: "One landmark beats any address",
-    body: "The yellow gate beside Freedom Park. If a guest cannot find you, the review says so.",
+    title: "Give one clear meeting point",
+    body: "Name a landmark guests can spot, like the yellow gate beside Freedom Park. If they can't find you, it shows in your reviews.",
   },
   {
     n: "3",
-    title: "Price the seat, not your day",
-    body: "Work out your day rate, divide it by the group, add a little back for the work of running it.",
+    title: "Price per guest, not per day",
+    body: "Take your day rate, divide it by the group size, then add a little for the work of running it.",
   },
 ];
 

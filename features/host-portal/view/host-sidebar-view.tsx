@@ -72,7 +72,7 @@ export function HostSidebarView({ open, onToggle, items, host }: HostSidebarView
       <div className="flex min-h-6 items-center gap-2 px-1.5 pb-[22px]">
         {open && (
           <>
-            <Image src="/images/host-portal/mark-red.svg" alt="Myjourny" width={22} height={22} className="size-[22px] shrink-0" />
+            <Image src="/images/host-portal/mark-red.svg" alt="Myjourny" width={32} height={32} className="size-8 shrink-0" />
             <span className="font-heading text-base font-extrabold tracking-[-0.2px] text-[#333134]">myjourny</span>
           </>
         )}

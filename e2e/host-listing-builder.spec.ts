@@ -14,9 +14,11 @@ const KAYAK = {
   review_note: "Use a photo from the trip, not a stock image.",
   title: "Lagoon kayak and breakfast",
   headline: "Paddle across the lagoon at sunrise",
-  description: "We meet at the jetty, paddle out past the fishing boats and eat breakfast on the sandbank as the sun comes up.",
+  // A long description needs 100 words or more before the builder lets a guide move on.
+  description: Array.from({ length: 5 }, () => "We meet at the jetty, paddle out past the fishing boats and eat breakfast on the sandbank as the sun comes up.").join(" "),
   city: "Lagos",
   interest_tags: ["nature-outdoors"],
+  tags: ["Small group"],
   meeting_landmark: "Five Cowries jetty",
   meeting_instructions: "The blue gate beside the jetty",
   meeting_photo_url: PHOTO(0),
@@ -61,8 +63,8 @@ async function openBuilder(page: Page, overrides: Handlers) {
   await page.goto(`/host/dashboard/listings/new?id=${ID}`);
 }
 
-test.describe("the listing builder", () => {
-  test("a guide fixes a listing we took down and publishes it again", async ({ page }) => {
+test.describe("the experience builder", () => {
+  test("a guide fixes an experience we took down and publishes it again", async ({ page }) => {
     let saved: Record<string, unknown> | null = null;
     let repriced: unknown = null;
     await openBuilder(page, {
@@ -82,6 +84,12 @@ test.describe("the listing builder", () => {
     await page.getByRole("button", { name: /Group size and price/ }).first().click();
     await page.getByLabel(/^Price per person/).fill("18000");
 
+    // The safety declaration is asked again each time; itin doesn't keep it.
+    await page.getByRole("button", { name: /Requirements and safety/ }).first().click();
+    await page.getByRole("checkbox", { name: /host safety rules/ }).check();
+    await page.getByRole("button", { name: /^Photos/ }).first().click();
+    await page.getByRole("checkbox", { name: /These are my photos/ }).check();
+
     await page.getByRole("button", { name: /Review and (publish|save)/ }).first().click();
     await page.getByRole("button", { name: "Save and publish" }).click();
 
@@ -100,12 +108,16 @@ test.describe("the listing builder", () => {
     expect(repriced).toEqual({ amount: 18000 });
   });
 
-  test("a guide still in review can build a listing but not publish it", async ({ page }) => {
+  test("a guide still in review can build an experience but not publish it", async ({ page }) => {
     await openBuilder(page, {
       "GET /auth/me": (r) => r.fulfill({ json: { id: "guide-1", email: "tunde@example.com", signup_type: "guide", guide_status: "pending" } }),
     });
 
     await expect(page.getByPlaceholder("Lagos Island Photowalk")).toHaveValue("Lagoon kayak and breakfast");
+    await page.getByRole("button", { name: /Requirements and safety/ }).first().click();
+    await page.getByRole("checkbox", { name: /host safety rules/ }).check();
+    await page.getByRole("button", { name: /^Photos/ }).first().click();
+    await page.getByRole("checkbox", { name: /These are my photos/ }).check();
     await page.getByRole("button", { name: /Review and (publish|save)/ }).first().click();
     await expect(page.getByText("You can publish once your guide application is approved.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Save and publish" })).toBeDisabled();

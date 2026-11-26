@@ -11,10 +11,9 @@ import {
   PANE_COPY,
   PAYOUT_SCHEDULES,
   PROFILE_PANES,
-  SETUP_NOTE,
 } from "../model/profile-copy";
 import { useHostProfile } from "../model/profile-data";
-import type { HostProfile, PayoutSchedule, ProfilePaneKey, ProfileRow, SetupTask } from "../model/profile.types";
+import type { HostProfile, PayoutSchedule, ProfilePaneKey, ProfileRow } from "../model/profile.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
 import { usePreviewMode } from "./use-preview-mode";
@@ -35,7 +34,6 @@ export type HostProfileViewModel = {
   pane: ProfilePaneKey;
   title: string;
   subtitle: string;
-  setup: { count: string; percent: number; note: string; tasks: (SetupTask & { onOpen: () => void })[] } | null;
   rows: ProfileRow[];
   onRowAction: (row: ProfileRow) => void;
   preview: HostProfile["preview"] | null;
@@ -72,14 +70,12 @@ export function useHostProfileViewModel(): HostProfileViewModel {
   const schedule = scheduleOverride ?? profile.schedule;
   const soon = () => toast.info(NOT_CONNECTED);
 
-  const doneTasks = profile.setup?.filter((t) => t.done).length ?? 0;
-
   return {
     header: {
       title: "Your profile",
       chip: profile.setup ? "Not live yet" : "Live",
       subtitle: "This is what guests see before they book",
-      actions: [{ label: "View as a guest", onClick: soon, primary: false }],
+      actions: [],
     },
     nav: PROFILE_PANES.map((p) => ({
       ...p,
@@ -90,15 +86,6 @@ export function useHostProfileViewModel(): HostProfileViewModel {
     pane,
     title: PANE_COPY[pane].title,
     subtitle: PANE_COPY[pane].sub,
-    setup:
-      pane === "personal" && profile.setup
-        ? {
-            count: `${doneTasks} of ${profile.setup.length} done`,
-            percent: Math.max(6, Math.round((doneTasks / profile.setup.length) * 100)),
-            note: SETUP_NOTE,
-            tasks: profile.setup.map((task) => ({ ...task, onOpen: () => setPane(task.pane) })),
-          }
-        : null,
     rows: pane === "notify" ? [] : profile.rows[pane],
     onRowAction: (row) => {
       if (row.link === "earnings") router.push(`${HOST_PORTAL_BASE}/earnings`);

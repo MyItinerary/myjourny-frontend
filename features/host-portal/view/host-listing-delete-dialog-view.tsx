@@ -36,7 +36,7 @@ export function DeleteDialogView({
                 <p className="mb-[22px] rounded-[14px] bg-[#FAF9F7] p-3.5 text-[13.5px] leading-[1.6] text-[#333134] shadow-[inset_0_0_0_1px_#E9E1D2]">
                   {dialog.kind === "blocked"
                     ? "Hide it instead. It comes off search straight away, nobody new can book, and the bookings you already have still happen."
-                    : "Archiving keeps the reviews and the history, takes it off search, and lets you copy it into a new listing later."}
+                    : "Archiving keeps the reviews and the history, takes it off search, and lets you copy it into a new experience later."}
                 </p>
                 <div className="flex flex-wrap gap-2.5">
                   <button

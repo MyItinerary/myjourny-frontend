@@ -9,6 +9,12 @@ import { SAMPLE_PROFILE } from "./sample-profile";
 //
 // While the design is reviewed, `?preview=full` shows the design's host. That's
 // off in production builds.
+/** The host has sent us their ID and selfie, so there's something for us to review.
+ * A profile with nothing left to set up has long since sent it. */
+export function verificationSubmitted(profile: Pick<HostProfile, "setup">): boolean {
+  return profile.setup === null || profile.setup.some((task) => task.pane === "verify" && task.done);
+}
+
 export function useHostProfile(
   preview: string | null,
   user: { fullName: string | null; email: string | null } | null,

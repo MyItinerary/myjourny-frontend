@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EXAMPLES, fullSubtitle, greetingFor, longDay, SELL_POINTS } from "./home-copy";
+import { EMPTY_PITCH, EMPTY_SUBTITLE, fullSubtitle, greetingFor, longDay, SELL_POINTS, TEMPLATES_COPY } from "./home-copy";
 
 const at = (hour: number) => new Date(2026, 8, 19, hour, 30);
 
@@ -32,8 +32,15 @@ describe("fullSubtitle", () => {
 });
 
 describe("static copy", () => {
-  it("has three examples and three selling points", () => {
-    expect(EXAMPLES).toHaveLength(3);
+  it("has three selling points", () => {
     expect(SELL_POINTS.map((p) => p.n)).toEqual(["1", "2", "3"]);
+  });
+
+  it("pitches a new host their first experience, without saying they are approved", () => {
+    expect(EMPTY_PITCH.eyebrow).toBe("Create your first experience");
+    expect(EMPTY_PITCH.heading).toBe("You probably do this often, now you can make some money out of it.");
+    expect(EMPTY_PITCH.body).toBe("When you list an experience, you get to keep 85% of the payout and get paid the same day.");
+    expect(`${EMPTY_SUBTITLE} ${EMPTY_PITCH.eyebrow}`).not.toMatch(/approved/i);
+    expect(TEMPLATES_COPY.heading).toBe("Templates you can start from");
   });
 });

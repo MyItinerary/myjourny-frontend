@@ -2,10 +2,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { openExperiencePreview } from "@/lib/experience-preview";
 
 import { BANNER_TONE, capitalise, DETAIL_TABS, dateFill, payout, RULE_LABELS, stars } from "../model/listing-detail";
-import { fetchGuidePreviewToken } from "../model/guide-listings-api";
 import { useHostListingDetail } from "../model/listing-detail-data";
 import type { DetailAction, DetailTab, ListingDetail } from "../model/listing-detail.types";
 import type { HostListing } from "../model/listings.types";
@@ -36,8 +34,7 @@ export type HostListingDetailViewModel = {
   actions: { label: string; onClick: () => void }[];
 };
 
-const NOT_CONNECTED = "This will work once your listings are connected.";
-const PREVIEW_FAILED = "Couldn't open the preview. Try again.";
+const NOT_CONNECTED = "This will work once your experiences are connected.";
 const BASE = HOST_PORTAL_BASE;
 
 export function useHostListingDetailViewModel(id: string): HostListingDetailViewModel {
@@ -62,11 +59,6 @@ export function useHostListingDetailViewModel(id: string): HostListingDetailView
       case "see-guests":
         router.push(`${BASE}/bookings`);
         return;
-      case "preview":
-        // The design's sample listings aren't in itin, so there's nothing to get a token for.
-        if (preview === "full") window.open(`/experiences/${id}`, "_blank", "noopener");
-        else void openExperiencePreview(id, fetchGuidePreviewToken).catch(() => toast.error(PREVIEW_FAILED));
-        return;
       case "copy-link":
         void navigator.clipboard
           ?.writeText(`${window.location.origin}/experiences/${id}`)
@@ -83,10 +75,10 @@ export function useHostListingDetailViewModel(id: string): HostListingDetailView
 
   return {
     header: {
-      title: listing?.title ?? "Listing",
+      title: listing?.title ?? "Experience",
       chip: listing?.status,
       subtitle: listing ? `${listing.cat} · ${listing.sub}` : "",
-      actions: listing && listing.status !== "Archived" ? [{ label: "Edit listing", href: editHref, primary: true }] : [],
+      actions: listing && listing.status !== "Archived" ? [{ label: "Edit experience", href: editHref, primary: true }] : [],
     },
     notFound: !loading && (!listing || !detail),
     loading,

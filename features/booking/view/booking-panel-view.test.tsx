@@ -147,12 +147,14 @@ describe("BookingPanelView", () => {
     expect(vm.card.button.onClick).toHaveBeenCalled();
   });
 
-  it("opens the calendar from the date field and hides the times behind it", async () => {
+  it("opens the calendar from the date field as a dropdown over the card, leaving the rest in place", async () => {
     const { user } = renderWithProviders(<BookingPanelView {...panelViewModel()} />);
+    expect(screen.getByText("Choose a time")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^Date:/ }));
 
-    expect(screen.getByRole("group", { name: "Pick a date" })).toBeInTheDocument();
-    expect(screen.queryByText("Choose a time")).not.toBeInTheDocument();
+    const calendar = screen.getByRole("group", { name: "Pick a date" });
+    expect(calendar.parentElement).toHaveClass("absolute", "top-full", "z-30");
+    expect(screen.getByText("Choose a time")).toBeInTheDocument();
   });
 
   it("shows an urgency badge only when the view-model has one", () => {
@@ -262,15 +264,8 @@ describe("BookingPanelView", () => {
     expect(screen.queryByText("From")).not.toBeInTheDocument();
   });
 
-  it("explains the experience's own policy in a tooltip next to the cancellation line", async () => {
-    const { user } = renderWithProviders(<BookingPanelView {...panelViewModel()} />);
-    await user.hover(screen.getByRole("button", { name: "About the cancellation policy" }));
-    expect(await screen.findByText(/Tickets are non-refundable and valid only for this edition of Lagos Trivia Night/)).toBeInTheDocument();
-  });
-
-  it("has no tooltip when the experience has no policy of its own", () => {
-    const base = panelViewModel();
-    renderWithProviders(<BookingPanelView {...panelViewModel({ card: { ...base.card, cancellation: { ...base.card.cancellation, hint: null } } })} />);
+  it("shows the cancellation line with no info icon, even when the experience has a policy of its own", () => {
+    renderWithProviders(<BookingPanelView {...panelViewModel()} />);
     expect(screen.queryByRole("button", { name: "About the cancellation policy" })).not.toBeInTheDocument();
     expect(screen.getByText("You can only cancel up to 24 hours before the experience.")).toBeInTheDocument();
   });

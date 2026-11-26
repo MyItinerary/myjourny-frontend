@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Flags/Round" clip-path="url(#clip0_0_126)">
+<path id="Vector" d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#F0F0F0"/>
+<g id="Group">
+<path id="Vector_2" d="M0 12.0002C0 17.1598 3.2565 21.5583 7.82611 23.2538V0.746601C3.2565 2.44207 0 6.84063 0 12.0002V12.0002Z" fill="#6DA544"/>
+<path id="Vector_3" d="M24 12.0002C24 6.84063 20.7435 2.44207 16.1739 0.746601V23.2539C20.7435 21.5583 24 17.1598 24 12.0002V12.0002Z" fill="#6DA544"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_126">
+<rect width="24" height="24" fill="white"/>
+</clipPath>
+</defs>
+</svg>

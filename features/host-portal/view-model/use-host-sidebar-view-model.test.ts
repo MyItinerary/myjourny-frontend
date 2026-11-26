@@ -31,18 +31,18 @@ describe("useHostSidebarViewModel", () => {
     const { result } = renderHook(() => useHostSidebarViewModel());
 
     expect(result.current.items.map((i) => i.label)).toEqual([
-      "Home", "Listings", "Calendar", "Bookings", "Earnings", "Profile", "Help",
+      "Home", "Experiences", "Calendar", "Bookings", "Earnings", "Profile", "Help",
     ]);
     expect(result.current.items.filter((i) => i.active).map((i) => i.key)).toEqual(["bookings"]);
   });
 
-  it("keeps Listings active inside the builder", () => {
+  it("keeps Experiences active inside the builder", () => {
     state.pathname = "/host/dashboard/listings/new";
     const { result } = renderHook(() => useHostSidebarViewModel());
     expect(result.current.items.find((i) => i.active)?.key).toBe("listings");
   });
 
-  it("puts counts on Listings and Bookings only, none for a new host", () => {
+  it("puts counts on Experiences and Bookings only, none for a new host", () => {
     state.data = data({}, { listings: 3, bookings: 120 });
     const { result } = renderHook(() => useHostSidebarViewModel());
     expect(Object.fromEntries(result.current.items.map((i) => [i.key, i.badge]))).toMatchObject({

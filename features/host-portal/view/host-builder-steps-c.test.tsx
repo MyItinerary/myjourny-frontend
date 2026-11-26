@@ -2,27 +2,21 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { builderHandlers, CLOUDINARY } from "@/test/msw/host-builder";
+import { builderHandlers } from "@/test/msw/host-builder";
 import { server } from "@/test/msw/server";
 import { renderWithProviders } from "@/test/utils/render";
 
 import { useHostListingBuilderViewModel } from "../view-model/use-host-listing-builder-view-model";
-import { HostBuilderPreviewView } from "./host-builder-preview-view";
-import { StepPhotos, StepRequirements, StepReview } from "./host-builder-steps-c";
+import { StepBooking, StepReview, StepReviews } from "./host-builder-steps-c";
 
 const toast = vi.hoisted(() => ({ info: vi.fn(), success: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), useSearchParams: () => new URLSearchParams() }));
 vi.mock("../model/host-access", () => ({ useHostAccess: () => "approved" }));
 vi.mock("sonner", () => ({ toast }));
 
-function Harness({ which }: { which: "requirements" | "photos" | "review" }) {
+function Harness({ which }: { which: "reviews" | "booking" | "review" }) {
   const vm = useHostListingBuilderViewModel();
-  return (
-    <>
-      {which === "requirements" ? <StepRequirements vm={vm} /> : which === "photos" ? <StepPhotos vm={vm} /> : <StepReview vm={vm} />}
-      <HostBuilderPreviewView vm={vm} />
-    </>
-  );
+  return which === "reviews" ? <StepReviews vm={vm} /> : which === "booking" ? <StepBooking vm={vm} /> : <StepReview vm={vm} />;
 }
 
 beforeEach(() => {
@@ -31,64 +25,60 @@ beforeEach(() => {
   toast.info.mockReset();
 });
 
-const jpg = (name: string) => new File([name], name, { type: "image/jpeg" });
+describe("reviews", () => {
+  it("is optional, offers four places, asks for a link and says importing isn't available yet", async () => {
+    renderWithProviders(<Harness which="reviews" />);
+    expect(screen.getByRole("heading", { name: "Reviews" })).toBeInTheDocument();
+    expect(screen.getByText("Optional")).toBeInTheDocument();
+    expect(screen.getByText(/Already have reviews on another site/)).toBeInTheDocument();
+    expect(screen.queryByText(/No reviews yet/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Reviews stay exactly as written/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Google link")).not.toBeInTheDocument();
 
-describe("requirements and safety", () => {
-  it("takes how physical it is, who can come, getting around, food chips and the weather rule", async () => {
-    renderWithProviders(<Harness which="requirements" />);
-    await userEvent.click(screen.getByRole("button", { name: "Moderate" }));
-    expect(screen.getByRole("button", { name: "Moderate" })).toHaveAttribute("aria-pressed", "true");
-
-    // An age box only for the policies that need one.
-    await userEvent.click(screen.getByRole("button", { name: "All ages" }));
-    expect(screen.queryByLabelText("Youngest age allowed")).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "From a set age" }));
-    await userEvent.type(screen.getByLabelText("Youngest age allowed"), "1x2");
-    expect(screen.getByLabelText("Youngest age allowed")).toHaveValue("12");
-
-    await userEvent.click(screen.getByRole("button", { name: "Partly accessible" }));
-    await userEvent.type(screen.getByLabelText(/Anything else about getting around/), "Two flights of stairs");
-    expect(screen.getByLabelText(/Anything else about getting around/)).toHaveValue("Two flights of stairs");
-    await userEvent.click(screen.getByRole("button", { name: "Halal" }));
-    expect(screen.getByRole("button", { name: "Halal" })).toHaveAttribute("aria-pressed", "true");
-
-    expect(screen.queryByText(/Your rule:/)).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("switch", { name: "Weather can stop this happening" }));
-    expect(screen.getByText(/Your rule:/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Google/ }));
+    expect(screen.getByRole("button", { name: "Import reviews" })).toBeDisabled();
+    await userEvent.type(screen.getByLabelText("Google link"), "https://maps.app.goo.gl/x");
+    await userEvent.click(screen.getByRole("button", { name: "Import reviews" }));
+    expect(toast.info).toHaveBeenCalledWith("Importing reviews isn't available yet, so nothing was imported.");
   });
 });
 
-describe("photos", () => {
-  it("adds photos, marks the cover, reorders, changes the cover and removes", async () => {
-    renderWithProviders(<Harness which="photos" />);
-    expect(screen.getByText("No photos yet")).toBeInTheDocument();
+describe("how guests book", () => {
+  it("asks only for the booking type, with no cancellation terms", () => {
+    renderWithProviders(<Harness which="booking" />);
+    expect(screen.getByRole("heading", { name: "How guests book" })).toBeInTheDocument();
+    expect(screen.queryByText(/what happens if they cancel/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Cancellation terms")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Strict/ })).not.toBeInTheDocument();
+  });
 
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await userEvent.upload(input, [jpg("a.jpg"), jpg("b.jpg")]);
-    expect(await screen.findByText("2 photos")).toBeInTheDocument();
-    expect(screen.getByText("Cover")).toBeInTheDocument();
-    expect(within(screen.getByRole("complementary")).getByAltText("Cover")).toHaveAttribute("src", `${CLOUDINARY}photo-1.jpg`);
-
-    await userEvent.click(screen.getByRole("button", { name: "Make cover" }));
-    expect(within(screen.getByRole("complementary")).getByAltText("Cover")).toHaveAttribute("src", `${CLOUDINARY}photo-2.jpg`);
-
-    await userEvent.click(screen.getByRole("button", { name: "Move photo 1 later" }));
-    await userEvent.click(screen.getByRole("button", { name: "Remove photo 1" }));
-    expect(screen.getByText("1 photo")).toBeInTheDocument();
+  it("takes a booking type, with no note about saving", async () => {
+    renderWithProviders(<Harness which="booking" />);
+    await userEvent.click(screen.getByRole("button", { name: /Instant book/ }));
+    expect(screen.getByRole("button", { name: /Instant book/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByText(/can't be saved from here yet/)).not.toBeInTheDocument();
   });
 });
 
 describe("review and publish", () => {
-  it("lists what is missing, takes the host's line, and keeps publish locked", async () => {
+  it("breaks down each step in a section that opens, with what was entered and an edit link", async () => {
     renderWithProviders(<Harness which="review" />);
-    expect(screen.getAllByRole("button", { name: "Finish this" })).toHaveLength(8);
+    expect(screen.getByRole("heading", { name: "Review and publish" })).toBeInTheDocument();
+    expect(screen.queryByText("Everything we need")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/One line from you/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/It goes live straight away/)).not.toBeInTheDocument();
+    // Publishing happens from the buttons under the form, not here.
+    expect(screen.queryByRole("button", { name: "Publish this experience" })).not.toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText(/One line from you/), "See you at the gate");
-    expect(screen.getByText("“See you at the gate”")).toBeInTheDocument();
+    const steps = within(screen.getByRole("list", { name: "Your experience, step by step" })).getAllByRole("listitem");
+    expect(steps).toHaveLength(10);
+    expect(within(steps[0]).getByText("Title and description")).toBeInTheDocument();
+    expect(within(steps[0]).getByText("Needs something")).toBeInTheDocument();
+    expect(within(steps[8]).getAllByText("Optional").length).toBeGreaterThan(0);
 
-    // Every listing books instantly for now, so there's nothing to choose.
-    expect(screen.queryByText("How guests book")).not.toBeInTheDocument();
-    expect(within(screen.getByRole("complementary")).getByText("Book now")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Publish this listing" })).toBeDisabled();
+    await userEvent.click(within(steps[0]).getByText("Title and description"));
+    expect(within(steps[0]).getByText("Title")).toBeVisible();
+    expect(within(steps[0]).getAllByText("Not added").length).toBeGreaterThan(0);
+    expect(within(steps[0]).getByRole("button", { name: "Edit Title and description" })).toBeInTheDocument();
   });
 });

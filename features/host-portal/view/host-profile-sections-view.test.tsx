@@ -4,27 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils/render";
 
 import type { HostProfileViewModel } from "../view-model/use-host-profile-view-model";
-import { DangerCard, NotificationsTable, PayoutsSection, PreviewCard, RowList, SetupCard, TaxSection } from "./host-profile-sections-view";
-
-describe("SetupCard", () => {
-  it("shows the count, the bar and a task that can be opened", async () => {
-    const onOpen = vi.fn();
-    const { user } = renderWithProviders(
-      <SetupCard
-        setup={{
-          count: "0 of 3 done",
-          percent: 6,
-          note: "You cannot be paid until these three are done.",
-          tasks: [{ title: "Confirm who you are", body: "Your NIN.", pane: "verify", done: false, onOpen }],
-        }}
-      />,
-    );
-
-    expect(screen.getByText("0 of 3 done")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Confirm who you are/ }));
-    expect(onOpen).toHaveBeenCalled();
-  });
-});
+import { DangerCard, NotificationsTable, PayoutsSection, PreviewCard, RowList, TaxSection } from "./host-profile-sections-view";
 
 describe("RowList", () => {
   it("shows each row and runs its action", async () => {

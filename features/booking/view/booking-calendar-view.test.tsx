@@ -49,6 +49,13 @@ describe("BookingCalendarView", () => {
     expect(screen.getByText("No times")).toBeInTheDocument();
   });
 
+  it("leaves out the key under the month when asked to", () => {
+    renderWithProviders(<BookingCalendarView {...props()} legend={false} />);
+    expect(screen.getByText("June 2030")).toBeInTheDocument();
+    expect(screen.queryByText("Few spots left")).not.toBeInTheDocument();
+    expect(screen.queryByText("No times")).not.toBeInTheDocument();
+  });
+
   it("fills a run of days between the start and the end", () => {
     renderWithProviders(<BookingCalendarView {...props({ selectedDate: new Date(2030, 5, 11), endDate: new Date(2030, 5, 13) })} />);
 

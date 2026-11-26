@@ -6,7 +6,7 @@ describe("HOST_NAV_ITEMS", () => {
   it("lists the seven destinations in order", () => {
     expect(HOST_NAV_ITEMS.map((i) => i.label)).toEqual([
       "Home",
-      "Listings",
+      "Experiences",
       "Calendar",
       "Bookings",
       "Earnings",
@@ -24,7 +24,7 @@ describe("activeNavKey", () => {
     expect(activeNavKey("/host/dashboard/earnings")).toBe("earnings");
   });
 
-  it("keeps Listings active while the builder is open", () => {
+  it("keeps Experiences active while the builder is open", () => {
     expect(activeNavKey("/host/dashboard/listings")).toBe("listings");
     expect(activeNavKey("/host/dashboard/listings/new")).toBe("listings");
     expect(activeNavKey("/host/dashboard/listings/abc/edit")).toBe("listings");

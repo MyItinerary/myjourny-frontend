@@ -1,7 +1,10 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { useSession } from "@/lib/auth/session-store";
+
 import { type HostAccess, useHostAccess } from "../model/host-access";
+import { useHostProfile, verificationSubmitted } from "../model/profile-data";
 import { usePreviewMode } from "./use-preview-mode";
 
 export type HostGuardViewModel = {
@@ -14,7 +17,7 @@ export type HostGuardViewModel = {
 const BANNERS: Partial<Record<HostAccess, HostGuardViewModel["banner"]>> = {
   pending: {
     title: "Your guide application is in review",
-    body: "Look around while we check it. We'll email you once you're approved, and then you can publish your first listing.",
+    body: "Look around while we check it. We'll email you once you're approved, and then you can publish your first experience.",
   },
   rejected: {
     title: "Your guide application wasn't approved",
@@ -28,8 +31,11 @@ export function useHostGuardViewModel(): HostGuardViewModel {
   const router = useRouter();
   const pathname = usePathname();
   const access = useHostAccess();
+  const preview = usePreviewMode();
+  const { user } = useSession();
+  const profile = useHostProfile(preview, user);
   // The design's sample host, while developing, needs no account.
-  const sample = usePreviewMode() === "full" && process.env.NODE_ENV !== "production";
+  const sample = preview === "full" && process.env.NODE_ENV !== "production";
 
   useEffect(() => {
     if (sample) return;
@@ -40,6 +46,7 @@ export function useHostGuardViewModel(): HostGuardViewModel {
   if (sample) return { ready: true, banner: null };
   return {
     ready: access === "approved" || access === "pending" || access === "rejected",
-    banner: BANNERS[access] ?? null,
+    // "In review" only once there's something to review: their verification details.
+    banner: access === "pending" && !verificationSubmitted(profile) ? null : (BANNERS[access] ?? null),
   };
 }

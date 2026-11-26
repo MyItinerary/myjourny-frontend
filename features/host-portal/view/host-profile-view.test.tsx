@@ -17,7 +17,6 @@ const vm = (over: Partial<HostProfileViewModel> = {}): HostProfileViewModel => (
   pane: "personal",
   title: "Personal information",
   subtitle: "Only you and MyJourny see this.",
-  setup: null,
   rows: [
     { label: "Legal name", value: "Tunde Oluwaseun Bakare", action: "Edit" },
     { label: "Home address", value: "Not provided", action: "Add", muted: true, help: "Never shown to guests." },
@@ -56,31 +55,6 @@ describe("HostProfileView, the panes and rows", () => {
 
     await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
     expect(props.onRowAction).toHaveBeenCalledWith(expect.objectContaining({ label: "Legal name" }));
-  });
-});
-
-describe("HostProfileView, finishing setup", () => {
-  it("shows progress and opens a task", async () => {
-    const onOpen = vi.fn();
-    const props = vm({
-      setup: {
-        count: "1 of 3 done",
-        percent: 33,
-        note: "You cannot be paid until these three are done.",
-        tasks: [
-          { title: "Confirm who you are", body: "Your NIN.", pane: "verify", done: true, onOpen },
-          { title: "Write your public profile", body: "A photo.", pane: "public", done: false, onOpen },
-        ],
-      },
-    });
-    const { user, container } = renderWithProviders(<HostProfileView vm={props} />);
-
-    expect(screen.getByText("Finish setting up")).toBeInTheDocument();
-    expect(screen.getByText("1 of 3 done")).toBeInTheDocument();
-    expect(container.querySelector("[style*='width: 33%']")).not.toBeNull();
-    expect(screen.getByText("✓")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Write your public profile/ }));
-    expect(onOpen).toHaveBeenCalled();
   });
 });
 

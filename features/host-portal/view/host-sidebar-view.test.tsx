@@ -8,7 +8,7 @@ import { HostSidebarView } from "./host-sidebar-view";
 
 const NAV = [
   ["dashboard", "Home", "dash", "/host/dashboard"],
-  ["listings", "Listings", "list", "/host/dashboard/listings"],
+  ["listings", "Experiences", "list", "/host/dashboard/listings"],
   ["calendar", "Calendar", "cal", "/host/dashboard/calendar"],
   ["bookings", "Bookings", "book", "/host/dashboard/bookings"],
   ["earnings", "Earnings", "earn", "/host/dashboard/earnings"],
@@ -53,7 +53,7 @@ describe("HostSidebarView, expanded", () => {
     expect(screen.getByText("myjourny")).toBeInTheDocument();
     const nav = screen.getByRole("navigation", { name: "Host portal" });
     expect(within(nav).getAllByRole("link").map((l) => l.textContent)).toEqual([
-      "Home", "Listings", "Calendar", "Bookings", "Earnings", "Profile", "Help",
+      "Home", "Experiences", "Calendar", "Bookings", "Earnings", "Profile", "Help",
     ]);
     expect(screen.getByText("Tunde Bakare")).toBeInTheDocument();
     expect(screen.getByText("Verified host")).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe("HostSidebarView, expanded", () => {
 
     expect(screen.getByRole("link", { name: "Bookings" })).toHaveAttribute("href", "/host/dashboard/bookings");
     expect(screen.getByRole("link", { name: "Bookings" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "Listings" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "Experiences" })).not.toHaveAttribute("aria-current");
   });
 
   it("draws every glyph filled, not stroked", () => {

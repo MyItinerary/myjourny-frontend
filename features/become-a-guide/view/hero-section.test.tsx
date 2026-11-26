@@ -20,7 +20,7 @@ describe("HeroSection", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Turn your city knowledge into income/i)).toBeInTheDocument();
 
-    const startBtn = screen.getByRole("button", { name: /Start your application/i });
+    const startBtn = screen.getByRole("button", { name: /Get Started/i });
     fireEvent.click(startBtn);
     expect(onStartApplication).toHaveBeenCalledTimes(1);
 

@@ -64,7 +64,7 @@ describe("HostBookingsView, the table", () => {
     renderWithProviders(<HostBookingsView vm={vm()} />);
 
     expect(screen.getAllByRole("row")).toHaveLength(3);
-    for (const heading of ["Reference", "Guest", "Listing", "Date", "Guests", "They pay", "You receive", "Status"]) {
+    for (const heading of ["Reference", "Guest", "Experience", "Date", "Guests", "They pay", "You receive", "Status"]) {
       expect(screen.getByRole("columnheader", { name: heading })).toBeInTheDocument();
     }
     expect(screen.getByText("MJ-4502")).toBeInTheDocument();

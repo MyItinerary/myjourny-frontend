@@ -33,8 +33,6 @@ export const PAYOUT_SCHEDULES: { key: PayoutSchedule; label: string; sub: string
   { key: "weekly", label: "All together on Tuesdays", sub: "One payment a week covering everything that cleared. Easier to reconcile." },
 ];
 
-export const SETUP_NOTE = "You cannot be paid until these three are done.";
-
 /** What the "Close your account" card says, given what's still in the way. */
 export function closingCopy({ upcoming, guests }: { upcoming: number; guests: number }): string {
   const tax = "Your reviews and your earnings history stay with us for six years for tax.";

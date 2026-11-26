@@ -28,7 +28,7 @@ export function HeroSection({ onStartApplication, onScrollToHowItWorks }: HeroSe
               onClick={onStartApplication}
               className="inline-flex h-12 cursor-pointer items-center justify-center rounded-full bg-[#F5032D] px-8 font-sans text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#D40226]"
             >
-              Start your application
+              Get Started
             </button>
 
             <button

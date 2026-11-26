@@ -10,7 +10,7 @@ export const SAMPLE_PROFILE: HostProfile = {
   rows: {
     personal: [
       row("Legal name", "Tunde Oluwaseun Bakare", "Edit"),
-      row("What guests call you", "Tunde", "Edit", { help: "Your first name only is shown on listings and in the guest app." }),
+      row("What guests call you", "Tunde", "Edit", { help: "Your first name only is shown on experiences and in the guest app." }),
       row("Phone number", "+234 803 555 0199", "Edit", {
         help: "Booking requests reach you here on WhatsApp. Guests only see it 24 hours before an experience.",
       }),
@@ -36,7 +36,7 @@ export const SAMPLE_PROFILE: HostProfile = {
       }),
       row("Certifications", "None on file", "Upload", {
         muted: true,
-        help: "Optional, and only relevant for water, fitness and food. When you have one it gets a badge on the listing.",
+        help: "Optional, and only relevant for water, fitness and food. When you have one it gets a badge on the experience.",
       }),
     ],
     payouts: [

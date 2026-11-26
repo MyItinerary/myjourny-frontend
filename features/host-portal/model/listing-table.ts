@@ -75,15 +75,15 @@ export function sortListings(listings: HostListing[], key: ListingSortKey, dir: 
 
 /** "All 8 listings", "1 listing", "3 listings" */
 export function resultLine(shown: number, total: number): string {
-  if (shown === total) return `All ${total} listings`;
-  return shown === 1 ? "1 listing" : `${shown} listings`;
+  if (shown === total) return `All ${total} experiences`;
+  return shown === 1 ? "1 experience" : `${shown} experiences`;
 }
 
 /** "8 listings · 1 live · 1 in review", for the page header. */
 export function listingsSummary(listings: HostListing[]): string {
   if (listings.length === 0) return "Nothing here yet";
   const count = (status: ListingStatus) => listings.filter((l) => l.status === status).length;
-  return `${listings.length} ${listings.length === 1 ? "listing" : "listings"} · ${count("Live")} live · ${count("In review")} in review`;
+  return `${listings.length} ${listings.length === 1 ? "experience" : "experiences"} · ${count("Live")} live · ${count("In review")} in review`;
 }
 
 /** The row menu: the same list for every listing, but a hidden one offers to show it again. */
@@ -92,7 +92,6 @@ export function rowActions(listing: HostListing): { action: ListingRowAction; la
     ["details", listing.status === "Draft" ? "Continue editing" : "See details"],
     ["edit", "Edit"],
     ["duplicate", "Duplicate"],
-    ["preview", "Preview as a guest"],
     ["copy-link", "Copy the link"],
     listing.status === "Hidden" ? ["show", "Show in search"] : ["hide", "Hide from search"],
     ["pause", "Pause new bookings"],

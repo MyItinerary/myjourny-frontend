@@ -10,12 +10,12 @@ const vm = (over: Partial<HostListingsViewModel> = {}) =>
   ({
     query: "",
     onQuery: vi.fn(),
-    resultLine: "3 listings",
+    resultLine: "3 experiences",
     hasFilters: true,
     onClearFilters: vi.fn(),
     groups: [{ key: "rating", label: "Rating", current: "4 and up", active: true, anyValue: "All", anyLabel: "Any rating", options: [{ value: "4 and up", label: "4 and up", selected: true, subs: [] }] }],
     onPick: vi.fn(),
-    selection: { count: 1, label: "1 listing selected", allSelected: false, onToggleAll: vi.fn(), onToggleRow: vi.fn(), onClear: vi.fn(), onBulk: vi.fn() },
+    selection: { count: 1, label: "1 experience selected", allSelected: false, onToggleAll: vi.fn(), onToggleRow: vi.fn(), onClear: vi.fn(), onBulk: vi.fn() },
     ...over,
   }) as unknown as HostListingsViewModel;
 
@@ -24,7 +24,7 @@ describe("Toolbar", () => {
     const props = vm();
     const { user } = renderWithProviders(<Toolbar vm={props} />);
 
-    expect(screen.getByText("3 listings")).toBeInTheDocument();
+    expect(screen.getByText("3 experiences")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Clear filters" }));
     expect(props.onClearFilters).toHaveBeenCalled();
   });
@@ -45,7 +45,7 @@ describe("BulkBar", () => {
     const props = vm();
     const { user } = renderWithProviders(<BulkBar vm={props} />);
 
-    expect(screen.getByText("1 listing selected")).toBeInTheDocument();
+    expect(screen.getByText("1 experience selected")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Hide from search" }));
     expect(props.selection.onBulk).toHaveBeenCalledWith("hide");
   });

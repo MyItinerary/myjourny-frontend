@@ -47,11 +47,19 @@ const SAMPLE_HOME: HostHomeData = {
   ],
 };
 
-const EXAMPLE_ITEMS = [
-  { imageUrl: "/1.jpg", eyebrow: "Art & creativity", title: "Golden hour portrait walk", sub: "Six people.", money: "8 guests × ₦10,000 = ₦80,000" },
-  { imageUrl: "/2.jpg", eyebrow: "Street life", title: "Market to plate, on camera", sub: "Two hours.", money: "6 guests × ₦12,000 = ₦72,000" },
-  { imageUrl: "/3.jpg", eyebrow: "Water activity", title: "Boat morning, film only", sub: "One boat.", money: "5 guests × ₦18,000 = ₦90,000" },
+const TEMPLATE_ITEMS = [
+  { id: "portrait-walk", href: "/host/dashboard/listings/new?template=portrait-walk", imageUrl: "/1.jpg", eyebrow: "Art & creativity", title: "Golden hour portrait walk", sub: "Six people.", money: "8 guests × ₦10,000 = ₦80,000" },
+  { id: "market-to-plate", href: "/host/dashboard/listings/new?template=market-to-plate", imageUrl: "/2.jpg", eyebrow: "Local food & drinks", title: "Market to plate", sub: "Three hours.", money: "6 guests × ₦12,000 = ₦72,000" },
+  { id: "boat-morning", href: "/host/dashboard/listings/new?template=boat-morning", imageUrl: "/3.jpg", eyebrow: "Water activity", title: "Boat morning", sub: "One boat.", money: "5 guests × ₦18,000 = ₦90,000" },
 ];
+
+const SETUP = {
+  heading: "Finish setting up",
+  count: "0 of 3 done",
+  percent: 6,
+  note: "We review every host before their experiences go live.",
+  tasks: [{ title: "Verify your account", body: "Your NIN.", done: false, href: "/host/dashboard/profile?pane=verify" }],
+};
 
 const base = {
   header: { title: "Good afternoon, Tunde", subtitle: "", actions: [] },
@@ -62,24 +70,25 @@ const base = {
     { label: "List an experience", href: "/host/dashboard/listings/new" },
     { label: "Report a problem with a booking", href: "/host/dashboard/bookings" },
   ],
+  setup: null,
   pitch: {
-    eyebrow: "You are approved",
-    heading: "You already know how to do the thing, now sell it to eight people at once.",
-    body: "A private shoot is one client.",
+    eyebrow: "Create your first experience",
+    heading: "You probably do this often, now you can make some money out of it.",
+    body: "When you list an experience, you get to keep 85% of the payout and get paid the same day.",
     cta: "Create your first experience",
   },
-  examples: { heading: "Three that work in your category", body: "Photography, Lagos.", items: EXAMPLE_ITEMS },
+  templates: { heading: "Templates you can start from", items: TEMPLATE_ITEMS },
   sellPoints: [
     { n: "1", title: "Sell the feeling, not the schedule", body: "Nobody books six locations." },
-    { n: "2", title: "One landmark beats any address", body: "The yellow gate." },
-    { n: "3", title: "Price the seat, not your day", body: "Work out your day rate." },
+    { n: "2", title: "Give one clear meeting point", body: "The yellow gate." },
+    { n: "3", title: "Price per guest, not per day", body: "Take your day rate." },
   ],
 };
 
 const full: HostHomeViewModel = { ...base, kind: "full", data: SAMPLE_HOME };
 const empty: HostHomeViewModel = { ...base, kind: "empty" };
 
-describe("HostHomeView, a host with listings", () => {
+describe("HostHomeView, a host with experiences", () => {
   it("shows the four numbers", () => {
     renderWithProviders(<HostHomeView {...full} />);
 
@@ -102,7 +111,7 @@ describe("HostHomeView, a host with listings", () => {
     expect(within(section).getByRole("link", { name: "Finish it" })).toHaveAttribute("href", "/host/dashboard/listings/new");
   });
 
-  it("shows the listings with a status chip each, and links to all of them", () => {
+  it("shows the experiences with a status chip each, and links to all of them", () => {
     renderWithProviders(<HostHomeView {...full} />);
 
     expect(screen.getByText("Live")).toHaveClass("text-[#0CBA65]");
@@ -146,19 +155,36 @@ describe("HostHomeView, a host with nothing listed", () => {
   it("pitches the first experience", () => {
     renderWithProviders(<HostHomeView {...empty} />);
 
-    expect(screen.getByText("You are approved")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /sell it to eight people at once/ })).toBeInTheDocument();
+    expect(screen.getByText("Create your first experience", { selector: "p" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /now you can make some money out of it/ })).toBeInTheDocument();
+    expect(screen.getByText(/keep 85% of the payout and get paid the same day/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Create your first experience" })).toHaveAttribute("href", "/host/dashboard/listings/new");
+    expect(screen.queryByText(/approved/i)).not.toBeInTheDocument();
   });
 
-  it("offers three examples to start from, and three selling points", () => {
+  it("offers three templates that each open a draft, and three selling points", () => {
     renderWithProviders(<HostHomeView {...empty} />);
 
-    expect(screen.getByText("Three that work in your category")).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Start from this" })).toHaveLength(3);
+    expect(screen.getByText("Templates you can start from")).toBeInTheDocument();
+    const links = screen.getAllByRole("link", { name: "Use this template" });
+    expect(links.map((l) => l.getAttribute("href"))).toEqual(TEMPLATE_ITEMS.map((t) => t.href));
     expect(screen.getByText("8 guests × ₦10,000 = ₦80,000")).toBeInTheDocument();
-    expect(screen.getByText("What makes one sell")).toBeInTheDocument();
+    expect(screen.getByText("What makes an experience sell")).toBeInTheDocument();
     expect(screen.getByText("Sell the feeling, not the schedule")).toBeInTheDocument();
     expect(screen.queryByText("Needs you today")).not.toBeInTheDocument();
+  });
+
+  it("puts the setup card under the pitch while there's setting up to do", () => {
+    renderWithProviders(<HostHomeView {...empty} setup={SETUP} />);
+
+    const pitch = screen.getByRole("heading", { name: /make some money/ });
+    const setup = screen.getByRole("heading", { name: "Finish setting up" });
+    expect(pitch.compareDocumentPosition(setup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Verify your account/ })).toHaveAttribute("href", "/host/dashboard/profile?pane=verify");
+  });
+
+  it("leaves the setup card out when there's nothing to set up", () => {
+    renderWithProviders(<HostHomeView {...empty} />);
+    expect(screen.queryByText("Finish setting up")).not.toBeInTheDocument();
   });
 });

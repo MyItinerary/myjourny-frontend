@@ -97,9 +97,8 @@ test("the booking sheet fits the phone and its guest buttons are easy to tap", a
   // The handle on the bar pulls the sheet up; "Book now" would start the booking instead.
   await page.getByRole("button", { name: "Open booking" }).click();
   const plus = page.getByRole("button", { name: "Increase guests" }).last();
-  const box = await plus.boundingBox();
-  expect(box!.width).toBeGreaterThanOrEqual(40);
-  expect(box!.height).toBeGreaterThanOrEqual(40);
+  // Measured once the sheet has finished sliding up; mid-animation it reads a hair under its size.
+  await expect.poll(async () => Math.min((await plus.boundingBox())?.width ?? 0, (await plus.boundingBox())?.height ?? 0)).toBeGreaterThanOrEqual(40);
   expect(await overflowing(page)).toEqual([]);
 });
 

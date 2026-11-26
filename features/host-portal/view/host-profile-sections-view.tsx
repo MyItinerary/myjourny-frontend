@@ -1,5 +1,3 @@
-import { ChevronRight } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 
 import type { HostProfileViewModel } from "../view-model/use-host-profile-view-model";
@@ -9,46 +7,6 @@ const CARD = "rounded-2xl bg-white shadow-[inset_0_0_0_1px_#E7E7E7]";
 const HEADING = "text-[14.5px] font-medium text-[#333134]";
 const SMALL_BUTTON =
   "h-8 cursor-pointer rounded-full bg-white px-[13px] text-[12.5px] font-medium text-[#333134] shadow-[inset_0_0_0_1px_#E7E7E7]";
-
-export function SetupCard({ setup }: { setup: NonNullable<HostProfileViewModel["setup"]> }) {
-  return (
-    <section className="mb-7 rounded-2xl bg-[#F4F2EE] px-[22px] py-5">
-      <div className="mb-1.5 flex items-center gap-3.5">
-        <h3 className="text-[15px] font-medium text-[#333134]">Finish setting up</h3>
-        <span className="ml-auto text-[12.5px] text-[#6F6B72]">{setup.count}</span>
-      </div>
-      <p className="mb-3.5 text-[13.5px] leading-[1.55] text-[#6F6B72]">{setup.note}</p>
-      <div className="mb-4 h-[5px] overflow-hidden rounded-full bg-[#E9E1D2]">
-        <div className="h-full rounded-full bg-[#F5032D]" style={{ width: `${setup.percent}%` }} />
-      </div>
-      <div className="flex flex-col gap-2">
-        {setup.tasks.map((task) => (
-          <button
-            key={task.title}
-            type="button"
-            onClick={task.onOpen}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-[14px] bg-white px-3.5 py-[13px] text-left hover:bg-[#FAF9F7]"
-          >
-            <span
-              aria-hidden
-              className={cn(
-                "flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] text-white",
-                task.done ? "bg-[#0CBA65]" : "shadow-[inset_0_0_0_1.5px_#D9D9D9]",
-              )}
-            >
-              {task.done ? "✓" : ""}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[13.5px] font-medium text-[#333134]">{task.title}</span>
-              <span className="mt-0.5 block text-[12.5px] leading-normal text-[#6F6B72]">{task.body}</span>
-            </span>
-            <ChevronRight aria-hidden className="size-4 shrink-0 text-[#6F6B72]" strokeWidth={1.9} />
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 export function RowList({ vm }: { vm: HostProfileViewModel }) {
   return (

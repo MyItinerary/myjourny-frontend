@@ -100,9 +100,9 @@ function Table({ vm }: { vm: HostListingsViewModel }) {
   const { selection } = vm;
   return (
     <div className={cn(CARD, "overflow-x-auto")}>
-      <div role="table" aria-label="Your listings" className="min-w-[1000px]">
+      <div role="table" aria-label="Your experiences" className="min-w-[1000px]">
         <div role="row" className="flex h-[42px] items-center gap-3.5 px-4 shadow-[inset_0_-1px_0_#E7E7E7]">
-          <Checkbox checked={selection.allSelected} label="Select all listings" onChange={selection.onToggleAll} />
+          <Checkbox checked={selection.allSelected} label="Select all experiences" onChange={selection.onToggleAll} />
           {vm.columns.map((column) => (
             <div
               key={column.key}
@@ -168,7 +168,7 @@ function Table({ vm }: { vm: HostListingsViewModel }) {
         {vm.noMatches && (
           <div className="px-6 py-14 text-center">
             <p className="mb-2 font-heading text-lg font-extrabold text-[#333134]">Nothing matches that</p>
-            <p className="mb-[18px] text-[13.5px] text-[#6F6B72]">No listing fits those filters right now.</p>
+            <p className="mb-[18px] text-[13.5px] text-[#6F6B72]">No experience fits those filters right now.</p>
             <button
               type="button"
               onClick={vm.onShowEverything}
@@ -190,10 +190,10 @@ function EmptyListings({ href }: { href: string }) {
     <div className={cn(CARD, "px-6 py-16 text-center")}>
       <h2 className="mb-2 font-heading text-lg font-extrabold text-[#333134]">Nothing here yet</h2>
       <p className="mx-auto mb-5 max-w-[420px] text-[13.5px] text-pretty text-[#6F6B72]">
-        Your listings will show up here, with their status, price, next date and bookings.
+        Your experiences will show up here, with their status, price, next date and bookings.
       </p>
       <Link href={href} className="inline-flex h-11 items-center rounded-full bg-[#F5032D] px-5 text-sm font-medium text-white hover:bg-[#FF4540]">
-        Start a new listing
+        Start a new experience
       </Link>
     </div>
   );
@@ -205,7 +205,7 @@ export function HostListingsView({ vm }: { vm: HostListingsViewModel }) {
   return (
     <div className="flex-1 overflow-y-auto bg-[#FCFCFC] px-7 pt-5 pb-[90px]">
       {vm.loading ? (
-        <p className="pt-3 text-sm text-[#6F6B72]">Loading your listings…</p>
+        <p className="pt-3 text-sm text-[#6F6B72]">Loading your experiences…</p>
       ) : vm.isEmpty ? (
         <EmptyListings href={vm.newListingHref} />
       ) : (

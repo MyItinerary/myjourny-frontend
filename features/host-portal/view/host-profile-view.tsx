@@ -7,7 +7,6 @@ import {
   PayoutsSection,
   PreviewCard,
   RowList,
-  SetupCard,
   TaxSection,
 } from "./host-profile-sections-view";
 
@@ -62,7 +61,6 @@ export function HostProfileView({ vm }: { vm: HostProfileViewModel }) {
           <h2 className="mb-1.5 font-heading text-[26px] font-extrabold text-[#333134]">{vm.title}</h2>
           <p className="mb-[26px] text-[14.5px] leading-[1.6] text-pretty text-[#6F6B72]">{vm.subtitle}</p>
 
-          {vm.setup && <SetupCard setup={vm.setup} />}
           <RowList vm={vm} />
           {vm.preview && <PreviewCard preview={vm.preview} />}
           {vm.notifications && <NotificationsTable notifications={vm.notifications} />}

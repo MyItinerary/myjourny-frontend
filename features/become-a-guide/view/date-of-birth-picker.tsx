@@ -105,10 +105,12 @@ export function DateOfBirthPicker({
       {/* Input container with dynamic active styling */}
       <div
         onClick={() => setIsOpen(true)}
-        className={`mt-2 flex w-full cursor-pointer items-center justify-between px-4 py-3.5 transition-all duration-200 ${
+        className={`flex h-12 w-full cursor-pointer items-center justify-between rounded-full px-4 transition-all duration-200 ${
           isOpen
-            ? "rounded-[20px] border border-[#F5032D] bg-white ring-1 ring-[#F5032D]/10"
-            : "rounded-[8px] border border-transparent bg-[#F4F2EE] hover:border-[#D1D5DB]"
+            ? "border border-[#F5032D] bg-white ring-1 ring-[#F5032D]/10"
+            : error
+              ? "border border-[#DC2626] bg-[#F4F2EE]"
+              : "border border-transparent bg-[#F4F2EE] hover:border-[#D1D5DB]"
         }`}
       >
         <input
@@ -118,12 +120,13 @@ export function DateOfBirthPicker({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           onFocus={() => setIsOpen(true)}
-          className="w-full bg-transparent font-sans text-sm text-[#130404] placeholder-[#A8A29E] focus:outline-hidden"
+          aria-invalid={error ? true : undefined}
+          className="w-full bg-transparent font-sans text-base font-medium text-[#17151C] placeholder:font-normal placeholder:text-[#5D5B60] focus:outline-hidden"
         />
         <Calendar className="size-4 shrink-0 text-[#6F6B72]" />
       </div>
 
-      {error && <p className="mt-1 font-sans text-xs text-[#DC2626]">{error}</p>}
+      {error && <p role="alert" className="mt-1.5 font-sans text-[13px] text-[#DC2626]">{error}</p>}
 
       {/* Dropdown Calendar Modal */}
       {isOpen && (

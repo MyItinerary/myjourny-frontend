@@ -34,7 +34,7 @@ describe("listingStatusOf", () => {
 });
 
 describe("toHostListing", () => {
-  it("fills a row of the listings table", () => {
+  it("fills a row of the experiences table", () => {
     expect(toHostListing(exp(), NAMES)).toEqual({
       id: "e1",
       imageUrl: "https://res.cloudinary.com/demo/kayak.jpg",
@@ -52,19 +52,19 @@ describe("toHostListing", () => {
     });
   });
 
-  it("says why a listing was taken down", () => {
+  it("says why an experience was taken down", () => {
     expect(toHostListing(exp({ status: "INACTIVE", review_note: "Use a photo from the trip." }), NAMES).note).toBe(
       "Taken down: Use a photo from the trip.",
     );
   });
 
-  it("says what an incomplete listing still needs", () => {
+  it("says what an incomplete experience still needs", () => {
     expect(toHostListing(exp({ status: "INACTIVE", missing_for_publish: ["pin", "photo"] }), NAMES).note).toBe(
       "Still needs a map pin and a photo",
     );
   });
 
-  it("copes with a listing that has no photo, price, rating or category yet", () => {
+  it("copes with an experience that has no photo, price, rating or category yet", () => {
     const row = toHostListing(exp({ cover_image_url: null, price_from: null, rating: null, interest_tags: [] }), NAMES);
     expect(row).toMatchObject({ imageUrl: "", price: 0, rating: "-", cat: "No category", subcat: "" });
   });
@@ -90,7 +90,7 @@ describe("labels", () => {
 });
 
 describe("toListingDetail", () => {
-  it("shows a live listing's rules and offers to copy its link", () => {
+  it("shows a live experience's rules and offers to copy its link", () => {
     const detail = toListingDetail(
       exp({ age_policy: "minimum_age", min_age: 12, fitness_level: "moderate", weather_dependent: true, headline: "Paddle at sunrise" }),
     );
@@ -104,18 +104,18 @@ describe("toListingDetail", () => {
       "Moderate",
       "We may move or cancel it",
     ]);
-    expect(detail.actions.map((a) => a.action)).toEqual(["edit", "preview", "copy-link"]);
+    expect(detail.actions.map((a) => a.action)).toEqual(["edit", "copy-link"]);
     expect(detail.banner).toBeUndefined();
   });
 
-  it("puts our note in the banner of a listing we took down", () => {
+  it("puts our note in the banner of an experience we took down", () => {
     const detail = toListingDetail(exp({ status: "INACTIVE", review_note: "Use a photo from the trip." }));
-    expect(detail.banner).toMatchObject({ kind: "rejected", title: "We took this listing down" });
+    expect(detail.banner).toMatchObject({ kind: "rejected", title: "We took this experience down" });
     expect(detail.banner?.body).toContain("Use a photo from the trip.");
-    expect(detail.actions.map((a) => a.action)).toEqual(["edit", "preview"]);
+    expect(detail.actions.map((a) => a.action)).toEqual(["edit"]);
   });
 
-  it("tells an incomplete listing what to add", () => {
+  it("tells an incomplete experience what to add", () => {
     const detail = toListingDetail(exp({ status: "INACTIVE", missing_for_publish: ["photo"] }));
     expect(detail.banner).toMatchObject({ title: "Not live yet", body: "Add a photo and publish it to go live." });
   });

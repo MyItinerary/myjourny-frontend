@@ -10,10 +10,6 @@ vi.mock("next/navigation", () => ({
 }));
 const toast = vi.hoisted(() => ({ info: vi.fn(), success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
-const fetchGuidePreviewToken = vi.hoisted(() => vi.fn());
-vi.mock("../model/guide-listings-api", () => ({ fetchGuidePreviewToken }));
-const openExperiencePreview = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/experience-preview", () => ({ openExperiencePreview }));
 // The design's samples for ?preview=full; `real` stands in for itin.
 const data = vi.hoisted(() => ({ real: null as null | { loading: boolean; found: boolean } }));
 vi.mock("../model/listing-detail-data", async () => {
@@ -38,16 +34,15 @@ beforeEach(() => {
   data.real = null;
   nav.push.mockReset();
   Object.values(toast).forEach((t) => t.mockReset());
-  openExperiencePreview.mockReset();
 });
 
 const render = (id: string) => renderHook(() => useHostListingDetailViewModel(id)).result;
 
-describe("a live listing", () => {
+describe("a live experience", () => {
   it("has the header, no banner, four stats and the coming-up dates", () => {
     const { current } = render("l1");
     expect(current.header).toMatchObject({ title: "Lagos Island Photowalk", chip: "Live" });
-    expect(current.header.actions[0]).toMatchObject({ label: "Edit listing", href: "/host/dashboard/listings/new" });
+    expect(current.header.actions[0]).toMatchObject({ label: "Edit experience", href: "/host/dashboard/listings/new" });
     expect(current.banner).toBeNull();
     expect(current.stats).toHaveLength(4);
     expect(current.dates.map((d) => d.seats)).toEqual(["6 of 8 booked", "3 of 8 booked", "1 of 8 booked", "No bookings yet, 8 places free", "All 8 places taken"]);
@@ -70,7 +65,7 @@ describe("a live listing", () => {
   it("sends actions where they belong", () => {
     const result = render("l1");
     const click = (label: string) => act(() => result.current.actions.find((a) => a.label === label)!.onClick());
-    click("Edit this listing");
+    click("Edit this experience");
     expect(nav.push).toHaveBeenLastCalledWith("/host/dashboard/listings/new");
     click("Block a date");
     expect(nav.push).toHaveBeenLastCalledWith("/host/dashboard/calendar");
@@ -97,8 +92,8 @@ describe("a live listing", () => {
 
 describe("the other statuses", () => {
   it.each([
-    ["l2", "amber", "In review", "Edit listing"],
-    ["l3", "grey", "Archived", "Duplicate this listing"],
+    ["l2", "amber", "In review", "Edit experience"],
+    ["l3", "grey", "Archived", "Duplicate this experience"],
     ["l5", "blue", "Sold out on Sun 21 Sept", "See guests"],
     ["l6", "grey", "Hidden from search", "Show in search"],
     ["l7", "amber", "Paused until 1 October", "Resume now"],
@@ -107,14 +102,14 @@ describe("the other statuses", () => {
     expect(render(id).current.banner).toMatchObject({ tone, title, button });
   });
 
-  it("an in-review listing has no dates, no reviews and no next date", () => {
+  it("an in-review experience has no dates, no reviews and no next date", () => {
     const { current } = render("l2");
     expect(current.dates).toEqual([]);
     expect(current.next).toBeNull();
-    expect(current.detail?.noDates).toMatch(/once the listing is approved/);
+    expect(current.detail?.noDates).toMatch(/once the experience is approved/);
   });
 
-  it("an archived listing has no Edit listing in the header", () => {
+  it("an archived experience has no Edit experience in the header", () => {
     expect(render("l3").current.header.actions).toEqual([]);
   });
 
@@ -133,7 +128,7 @@ describe("the other statuses", () => {
   });
 });
 
-describe("a listing that isn't there", () => {
+describe("an experience that isn't there", () => {
   it("is not found for an unknown id and for a host with nothing", () => {
     expect(render("zzz").current.notFound).toBe(true);
     nav.preview = null;
@@ -141,7 +136,7 @@ describe("a listing that isn't there", () => {
     expect(render("l1").current.notFound).toBe(true);
   });
 
-  it("edits and fixes a real listing in the builder", () => {
+  it("edits and fixes a real experience in the builder", () => {
     nav.preview = null;
     data.real = { loading: false, found: true };
     const result = render("e1");
@@ -150,7 +145,7 @@ describe("a listing that isn't there", () => {
     expect(nav.push).toHaveBeenLastCalledWith("/host/dashboard/listings/new?id=e1");
   });
 
-  it("isn't 'not found' while the listing is still loading", () => {
+  it("isn't 'not found' while the experience is still loading", () => {
     nav.preview = null;
     data.real = { loading: true, found: false };
     expect(render("e1").current).toMatchObject({ loading: true, notFound: false });
@@ -164,33 +159,8 @@ describe("a listing that isn't there", () => {
 });
 
 describe("preview as a guest", () => {
-  const previewAction = (result: ReturnType<typeof render>) =>
-    result.current.actions.find((a) => a.label === "Preview as a guest")!;
-
-  it("opens a sample listing's guest page in a new tab", () => {
-    const open = vi.spyOn(window, "open").mockReturnValue(null);
+  it("isn't offered any more", () => {
     const result = render("l1");
-    act(() => previewAction(result).onClick());
-    expect(open).toHaveBeenCalledWith("/experiences/l1", "_blank", "noopener");
-    expect(openExperiencePreview).not.toHaveBeenCalled();
-    open.mockRestore();
-  });
-
-  it("previews a real listing, live or not, with a token for it", async () => {
-    nav.preview = null;
-    data.real = { loading: false, found: true };
-    openExperiencePreview.mockResolvedValueOnce(undefined);
-    const result = render("l1");
-    await act(async () => previewAction(result).onClick());
-    expect(openExperiencePreview).toHaveBeenCalledWith("l1", fetchGuidePreviewToken);
-  });
-
-  it("says so when the preview can't be opened", async () => {
-    nav.preview = null;
-    data.real = { loading: false, found: true };
-    openExperiencePreview.mockRejectedValueOnce(new Error("404"));
-    const result = render("l1");
-    await act(async () => previewAction(result).onClick());
-    expect(toast.error).toHaveBeenCalledWith("Couldn't open the preview. Try again.");
+    expect(result.current.actions.map((a) => a.label)).not.toContain("Preview as a guest");
   });
 });

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useHostProfile } from "./profile-data";
+import { useHostProfile, verificationSubmitted } from "./profile-data";
 import { SAMPLE_PROFILE } from "./sample-profile";
 
 afterEach(() => vi.unstubAllEnvs());
@@ -19,5 +19,18 @@ describe("useHostProfile", () => {
   it("ignores the preview in production", () => {
     vi.stubEnv("NODE_ENV", "production");
     expect(useHostProfile("full", null)).not.toBe(SAMPLE_PROFILE);
+  });
+});
+
+describe("verificationSubmitted", () => {
+  const task = (pane: "verify" | "public", done: boolean) => ({ title: "", body: "", pane, done });
+
+  it("is true once the identity step is done, or nothing is left to set up", () => {
+    expect(verificationSubmitted({ setup: [task("verify", true), task("public", false)] })).toBe(true);
+    expect(verificationSubmitted({ setup: null })).toBe(true);
+  });
+
+  it("is false while the identity step is still to do", () => {
+    expect(verificationSubmitted({ setup: [task("verify", false), task("public", true)] })).toBe(false);
   });
 });

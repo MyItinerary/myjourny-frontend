@@ -3,7 +3,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { apiErrorMessage } from "@/lib/api-error";
-import { openExperiencePreview } from "@/lib/experience-preview";
 
 import {
   CATEGORY_TREE,
@@ -19,7 +18,7 @@ import {
   sortListings,
   STATUS_OPTIONS,
 } from "../model/listing-table";
-import { fetchGuidePreviewToken, useDeleteGuideExperience } from "../model/guide-listings-api";
+import { useDeleteGuideExperience } from "../model/guide-listings-api";
 import { isSample, useHostListings } from "../model/listings-data";
 import type { FilterGroup } from "../model/filter-group.types";
 import type {
@@ -87,7 +86,7 @@ export type HostListingsViewModel = {
 };
 
 const COLUMNS: { key: ListingSortKey; label: string }[] = [
-  { key: "title", label: "Listing" },
+  { key: "title", label: "Experience" },
   { key: "cat", label: "Category" },
   { key: "status", label: "Status" },
   { key: "price", label: "Price" },
@@ -98,8 +97,7 @@ const COLUMNS: { key: ListingSortKey; label: string }[] = [
 
 // Nothing is saved to itin from here yet: these stay as the design draws them
 // (the menu closes, the selection clears) and say so.
-const NOT_CONNECTED = "This will work once your listings are connected.";
-const PREVIEW_FAILED = "Couldn't open the preview. Try again.";
+const NOT_CONNECTED = "This will work once your experiences are connected.";
 
 export function useHostListingsViewModel(): HostListingsViewModel {
   const router = useRouter();
@@ -174,11 +172,6 @@ export function useHostListingsViewModel(): HostListingsViewModel {
         // The design's sample listings aren't in itin, so they open an empty builder.
         router.push(isSample(preview) ? newListingHref : `${newListingHref}?id=${listing.id}`);
         return;
-      case "preview":
-        // The design's sample listings aren't in itin, so there's nothing to get a token for.
-        if (isSample(preview)) window.open(`/experiences/${listing.id}`, "_blank", "noopener");
-        else void openExperiencePreview(listing.id, fetchGuidePreviewToken).catch(() => toast.error(PREVIEW_FAILED));
-        return;
       case "copy-link":
         void navigator.clipboard
           ?.writeText(`${window.location.origin}/experiences/${listing.id}`)
@@ -199,9 +192,9 @@ export function useHostListingsViewModel(): HostListingsViewModel {
 
   return {
     header: {
-      title: "Your listings",
+      title: "Your experiences",
       subtitle: loading ? "" : listingsSummary(listings),
-      actions: [{ label: "Start a new listing", href: newListingHref, primary: true }],
+      actions: [{ label: "Start a new experience", href: newListingHref, primary: true }],
     },
     loading,
     isEmpty: !loading && listings.length === 0,
@@ -229,7 +222,7 @@ export function useHostListingsViewModel(): HostListingsViewModel {
     onShowEverything: () => change(NO_FILTERS),
     selection: {
       count: visibleSelected.length,
-      label: `${visibleSelected.length} ${visibleSelected.length === 1 ? "listing" : "listings"} selected`,
+      label: `${visibleSelected.length} ${visibleSelected.length === 1 ? "experience" : "experiences"} selected`,
       allSelected,
       onToggleAll: () => setSelected(allSelected ? [] : shown.map((l) => l.id)),
       onToggleRow: (id) => setSelected((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id])),
@@ -253,7 +246,7 @@ export function useHostListingsViewModel(): HostListingsViewModel {
         const { title } = dialog;
         remove.mutate(dialog.id, {
           onSuccess: () => toast.success(`${title} is deleted`),
-          onError: (error) => toast.error(apiErrorMessage(error, "Couldn't delete the listing. Please try again.")),
+          onError: (error) => toast.error(apiErrorMessage(error, "Couldn't delete the experience. Please try again.")),
         });
       }
       setDialog(null);

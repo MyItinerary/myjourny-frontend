@@ -34,9 +34,9 @@ describe("emptyProfile", () => {
   it("lists the three things to finish, each leading to its pane", () => {
     const { setup } = emptyProfile(null);
     expect(setup!.map((t) => [t.title, t.pane, t.done])).toEqual([
-      ["Confirm who you are", "verify", false],
-      ["Write your public profile", "public", false],
-      ["Add the account we pay into", "payouts", false],
+      ["Verify your account", "verify", false],
+      ["Fill in your profile details", "public", false],
+      ["Add your bank details", "payouts", false],
     ]);
   });
 

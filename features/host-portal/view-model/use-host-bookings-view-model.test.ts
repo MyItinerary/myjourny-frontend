@@ -79,7 +79,7 @@ describe("search and filters", () => {
     const group = (key: string) => result.current.groups.find((g) => g.key === key)!;
     expect(result.current.groups.map((g) => [g.key, g.anyLabel])).toEqual([
       ["status", "Any status"],
-      ["listing", "Any listing"],
+      ["listing", "Any experience"],
       ["when", "All dates"],
     ]);
     expect(group("listing").options.map((o) => o.value)).toEqual(["Lagos Island Photowalk", "Freedom Park Portraits"]);

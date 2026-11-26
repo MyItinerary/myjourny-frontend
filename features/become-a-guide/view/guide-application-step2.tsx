@@ -2,235 +2,133 @@
 
 import Link from "next/link";
 
-import type {
-  GuideApplicationErrors,
-  GuideApplicationFormData,
-} from "../model/guide-application.types";
+import type { GuideApplicationViewModel } from "../view-model/use-guide-application-view-model";
+import { ActionButtons, Field, inputClass, Select, StepTitle } from "./guide-application-parts";
 
-export interface GuideApplicationStep2Props {
-  formData: GuideApplicationFormData;
-  errors: GuideApplicationErrors;
-  isSubmitting: boolean;
-  /** Signed in: the application goes on this account, so no email or password. */
-  signedInEmail?: string | null;
-  /** The email typed already has an account. */
-  accountExists?: boolean;
-  setField: (field: keyof GuideApplicationFormData, value: string) => void;
-  onContinue: () => void;
-  onBack: () => void;
-  onLogIn?: () => void;
-}
+export type GuideApplicationStep2Props = Pick<
+  GuideApplicationViewModel,
+  "formData" | "errors" | "isSubmitting" | "countries" | "applyingEmail" | "accountExists" | "setField"
+> & { onContinue: () => void; onBack: () => void; onLogIn: () => void };
 
+const describedBy = (id: string, error?: string) => (error ? `${id}-error` : undefined);
+
+// Figma "Guide (Individuals) 2" and "Guide (busiess) 2": step 2 of the host application.
 export function GuideApplicationStep2({
   formData,
   errors,
   isSubmitting,
-  signedInEmail = null,
-  accountExists = false,
+  countries,
+  applyingEmail,
+  accountExists,
   setField,
   onContinue,
   onBack,
   onLogIn,
 }: GuideApplicationStep2Props) {
-  const isBusiness = formData.verificationType === "business";
-  const signedIn = signedInEmail !== null;
-  const submitButtonText = signedIn ? "Submit application" : isBusiness ? "Create an account" : "Continue";
-
+  const business = formData.verificationType === "business";
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
-      {/* Step Heading */}
-      <div className="mb-8">
-        <span className="font-sans text-xs font-bold tracking-wider text-[#F5032D]">
-          {signedIn ? "ADD HOSTING TO YOUR ACCOUNT" : "CREATE AN ACCOUNT"}
-        </span>
-        <h1 className="mt-2 font-sans text-2xl font-extrabold tracking-tight text-[#130404] sm:text-3xl">
-          Let&apos;s get to know you
-        </h1>
-      </div>
+    <form
+      noValidate
+      className="flex flex-col gap-6"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onContinue();
+      }}
+    >
+      <StepTitle />
+      <div className="flex flex-col gap-5">
+        <Field
+          label={business ? "Company's brand name" : "Brand name (optional)"}
+          htmlFor="businessName"
+          hint={business ? "As it appears on your CAC certificate." : "The name guests see, if you host under one."}
+          error={errors.businessName}
+        >
+          <input
+            id="businessName"
+            autoComplete="organization"
+            placeholder={business ? "Samuel Tours Ltd" : "Samuel Tours"}
+            value={formData.businessName ?? ""}
+            onChange={(e) => setField("businessName", e.target.value)}
+            aria-invalid={!!errors.businessName || undefined}
+            aria-describedby={describedBy("businessName", errors.businessName)}
+            className={inputClass(!!errors.businessName)}
+          />
+        </Field>
 
-      <div className="space-y-6">
-        {/* Business-Only Fields */}
-        {isBusiness && (
-          <>
-            <div>
-              <label
-                htmlFor="businessName"
-                className="block font-sans text-sm font-semibold text-[#130404]"
-              >
-                Registered business name
-              </label>
-              <p className="mt-0.5 font-sans text-xs text-[#6F6B72]">
-                As it appears on your CAC certificate
-              </p>
-              <input
-                id="businessName"
-                type="text"
-                value={formData.businessName || ""}
-                onChange={(e) => setField("businessName", e.target.value)}
-                placeholder="Enter business name"
-                className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
-              />
-              {errors.businessName && (
-                <p className="mt-1 font-sans text-xs text-[#DC2626]">{errors.businessName}</p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="cacNumber"
-                className="block font-sans text-sm font-semibold text-[#130404]"
-              >
-                CAC registration number
-              </label>
-              <p className="mt-0.5 font-sans text-xs text-[#6F6B72]">RC or BN number.</p>
-              <input
-                id="cacNumber"
-                type="text"
-                value={formData.cacNumber || ""}
-                onChange={(e) => setField("cacNumber", e.target.value)}
-                placeholder="RC1234567"
-                className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
-              />
-              {errors.cacNumber && (
-                <p className="mt-1 font-sans text-xs text-[#DC2626]">{errors.cacNumber}</p>
-              )}
-            </div>
-          </>
+        {business && (
+          <Field label="CAC registration number" htmlFor="cacNumber" hint="Your RC or BN number." error={errors.cacNumber}>
+            <input
+              id="cacNumber"
+              placeholder="RC1234566"
+              value={formData.cacNumber ?? ""}
+              onChange={(e) => setField("cacNumber", e.target.value.toUpperCase())}
+              aria-invalid={!!errors.cacNumber || undefined}
+              aria-describedby={describedBy("cacNumber", errors.cacNumber)}
+              className={inputClass(!!errors.cacNumber)}
+            />
+          </Field>
         )}
 
-        {/* Website Field */}
-        <div>
-          <label htmlFor="website" className="block font-sans text-sm font-semibold text-[#130404]">
-            Add a website
-          </label>
+        <Field
+          label="Website (optional)"
+          htmlFor="website"
+          hint="We use it to check what your business does."
+          error={errors.website}
+        >
           <input
             id="website"
-            type="text"
+            type="url"
+            inputMode="url"
+            autoComplete="url"
+            placeholder="samuel.com"
             value={formData.website}
             onChange={(e) => setField("website", e.target.value)}
-            placeholder="website.com"
-            className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
+            aria-invalid={!!errors.website || undefined}
+            aria-describedby={describedBy("website", errors.website)}
+            className={inputClass(!!errors.website)}
           />
-          <p className="mt-1 font-sans text-xs text-[#6F6B72]">
-            We will use the website to verify your business activities.
-          </p>
-        </div>
+        </Field>
 
-        {signedIn ? (
-          <p className="rounded-[12px] bg-[#FAF9F7] px-4 py-3.5 font-sans text-sm text-[#130404]">
-            You&apos;re applying with <span className="font-semibold">{signedInEmail}</span>. You&apos;ll use the
-            same login for travelling and hosting.
-          </p>
+        <Field label="Where are you registered?" htmlFor="country" error={errors.country}>
+          <Select
+            id="country"
+            value={formData.country}
+            onChange={(v) => setField("country", v)}
+            invalid={!!errors.country}
+            placeholder="Country"
+            options={countries.map((c) => ({ value: c, label: c }))}
+          />
+        </Field>
+
+        {accountExists ? (
+          <div role="alert" className="rounded-[20px] bg-[#FEF2F3] px-4 py-3 font-sans text-base leading-6 text-[#333134]">
+            There&apos;s already an account with <span className="font-bold">{applyingEmail}</span>. Log in and we&apos;ll add hosting
+            to it.{" "}
+            <button type="button" onClick={onLogIn} className="cursor-pointer font-bold text-[#F5032D] underline underline-offset-2">
+              Log in to continue
+            </button>
+          </div>
         ) : (
-          <>
-            {/* Email Address */}
-            <div>
-              <label htmlFor="email" className="block font-sans text-sm font-semibold text-[#130404]">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setField("email", e.target.value)}
-                placeholder="email@gmail.com"
-                className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
-              />
-              {errors.email && (
-                <p className="mt-1 font-sans text-xs text-[#DC2626]">{errors.email}</p>
-              )}
-              {accountExists && (
-                <div role="alert" className="mt-3 rounded-[12px] bg-[#FFF1F3] px-4 py-3.5 font-sans text-sm text-[#130404]">
-                  <p>
-                    <span className="font-semibold">You already have a MyJourny account with this email.</span> Log in
-                    and you can add hosting to it. We&apos;ll keep what you&apos;ve filled in.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={onLogIn}
-                    className="mt-2 cursor-pointer font-semibold text-[#F5032D] hover:underline"
-                  >
-                    Log in to continue
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block font-sans text-sm font-semibold text-[#130404]">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setField("password", e.target.value)}
-                placeholder="Enter password"
-                className="mt-2 w-full rounded-[8px] border border-transparent bg-[#F4F2EE] px-4 py-3.5 font-sans text-sm text-[#130404] placeholder-[#A8A29E] transition-all duration-200 focus:rounded-[20px] focus:border-[#F5032D] focus:bg-white focus:outline-hidden"
-              />
-              {errors.password && (
-                <p className="mt-1 font-sans text-xs text-[#DC2626]">{errors.password}</p>
-              )}
-            </div>
-          </>
+          applyingEmail && (
+            <p className="rounded-[20px] bg-[#F4F2EE] px-4 py-3 font-sans text-base leading-6 text-black">
+              You&apos;re applying with <span className="font-bold">{applyingEmail}</span>. You&apos;ll use the same login for
+              travelling and hosting.
+            </p>
+          )
         )}
-
-        {/* Legal Disclaimer */}
-        <p className="pt-2 font-sans text-xs text-[#6F6B72]">
-          By continuing you agree to our{" "}
-          <Link href="/terms" className="font-semibold text-[#F5032D] hover:underline">
-            terms of service
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="font-semibold text-[#F5032D] hover:underline">
-            privacy policy
-          </Link>
-        </p>
-
-        {/* Buttons */}
-        <div className="pt-6">
-          {/* Desktop Layout */}
-          <div className="hidden items-center justify-center gap-4 sm:flex">
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={isSubmitting}
-              className="inline-flex h-11 min-w-[120px] cursor-pointer items-center justify-center rounded-full border border-[#D9D4CC] bg-white px-8 font-sans text-sm font-semibold text-[#130404] transition-colors hover:bg-[#FAF9F7] disabled:opacity-50"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={onContinue}
-              disabled={isSubmitting}
-              className="inline-flex h-11 min-w-[140px] cursor-pointer items-center justify-center rounded-full bg-[#F5032D] px-8 font-sans text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#D40226] disabled:opacity-50"
-            >
-              {isSubmitting ? "Submitting..." : submitButtonText}
-            </button>
-          </div>
-
-          {/* Mobile Layout */}
-          <div className="flex flex-col gap-3 sm:hidden">
-            <button
-              type="button"
-              onClick={onContinue}
-              disabled={isSubmitting}
-              className="inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-full bg-[#F5032D] px-6 font-sans text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#D40226] disabled:opacity-50"
-            >
-              {isSubmitting ? "Submitting..." : submitButtonText}
-            </button>
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={isSubmitting}
-              className="inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-[#D9D4CC] bg-white px-6 font-sans text-sm font-semibold text-[#130404] transition-colors hover:bg-[#FAF9F7] disabled:opacity-50"
-            >
-              Back
-            </button>
-          </div>
-        </div>
       </div>
-    </div>
+      <p className="font-sans text-base leading-6 text-black">
+        By continuing you agree to our{" "}
+        <Link href="/terms" target="_blank" className="font-bold text-[#F5032D]">
+          terms of service
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" target="_blank" className="font-bold text-[#F5032D]">
+          privacy policy
+        </Link>
+        .
+      </p>
+      <ActionButtons primaryLabel="Submit" onPrimary={onContinue} onBack={onBack} busy={isSubmitting} />
+    </form>
   );
 }
