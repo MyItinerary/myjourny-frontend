@@ -127,6 +127,16 @@ export function HostBookingsView({ vm }: { vm: HostBookingsViewModel }) {
           )}
         </div>
       </div>
+      {vm.hasMore && (
+        <button
+          type="button"
+          onClick={vm.onLoadMore}
+          disabled={vm.loadingMore}
+          className="mt-4 h-10 cursor-pointer rounded-full bg-white px-[18px] text-[13px] font-medium text-[#333134] shadow-[inset_0_0_0_1px_#E7E7E7] disabled:cursor-wait disabled:opacity-60"
+        >
+          {vm.loadingMore ? "Loading…" : "Show more bookings"}
+        </button>
+      )}
       <p className="mt-3.5 text-xs text-[#A09DA3]">Click any row for the full booking. Requests you have not answered sit at the top.</p>
 
       <BookingDetailView vm={vm} />

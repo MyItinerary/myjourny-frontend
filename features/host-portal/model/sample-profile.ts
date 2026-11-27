@@ -63,7 +63,6 @@ export const SAMPLE_PROFILE: HostProfile = {
     { label: "A review comes in", channels: [false, false, true, true] },
     { label: "Tips and things we have changed", channels: [false, false, true, false] },
   ],
-  schedule: "weekly",
   statements: [
     { year: "2026, so far", sub: "₦1,046,000 earned · ₦156,900 commission" },
     { year: "2025", sub: "You were not hosting yet" },

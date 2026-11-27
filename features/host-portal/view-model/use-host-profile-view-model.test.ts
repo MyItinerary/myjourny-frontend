@@ -6,20 +6,41 @@ import { useHostProfileViewModel } from "./use-host-profile-view-model";
 const nav = vi.hoisted(() => ({
   push: vi.fn(),
   query: "preview=full",
-  user: { fullName: "Tunde Bakare", email: "tunde.bakare@gmail.com" } as { fullName: string | null; email: string | null } | null,
+  user: { id: "guide-1", fullName: "Tunde Bakare", email: "tunde.bakare@gmail.com" } as { id: string; fullName: string | null; email: string | null } | null,
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: nav.push }),
   useSearchParams: () => new URLSearchParams(nav.query),
 }));
 vi.mock("@/lib/auth/session-store", () => ({ useSession: () => ({ user: nav.user }) }));
+const payoutMocks = vi.hoisted(() => ({
+  resolve: vi.fn((input: { accountNumber: string; bankCode: string }, options: { onSuccess: (value: { account_number: string; account_name: string }) => void }) =>
+    options.onSuccess({ account_number: input.accountNumber, account_name: "Ada Okafor" })),
+  save: vi.fn(),
+  stripe: vi.fn(),
+  refetch: vi.fn(),
+  refetchBanks: vi.fn(),
+}));
+vi.mock("../model/payouts-data", () => ({
+  usePayoutAccount: () => ({ data: { connected: false, provider: null, onboarding_completed: false }, isPending: false, isError: false, refetch: payoutMocks.refetch }),
+  usePaystackBanks: () => ({ data: [{ name: "Example Bank", code: "000" }], isPending: false, isError: false, refetch: payoutMocks.refetchBanks }),
+  useHostPayoutHistory: () => ({ data: [], isPending: false, isError: false }),
+  useResolvePaystackAccount: () => ({ isPending: false, mutate: payoutMocks.resolve }),
+  useSavePaystackRecipient: () => ({ isPending: false, mutate: payoutMocks.save }),
+  useCreateStripeOnboarding: () => ({ isPending: false, mutate: payoutMocks.stripe }),
+}));
 const toast = vi.hoisted(() => ({ info: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
 
 beforeEach(() => {
   nav.query = "preview=full";
-  nav.user = { fullName: "Tunde Bakare", email: "tunde.bakare@gmail.com" };
+  nav.user = { id: "guide-1", fullName: "Tunde Bakare", email: "tunde.bakare@gmail.com" };
   nav.push.mockReset();
+  payoutMocks.resolve.mockClear();
+  payoutMocks.save.mockClear();
+  payoutMocks.stripe.mockClear();
+  payoutMocks.refetch.mockClear();
+  payoutMocks.refetchBanks.mockClear();
   toast.info.mockReset();
 });
 
@@ -65,11 +86,15 @@ describe("a host who has finished setting up", () => {
     expect(result.current.danger).toBeNull();
   });
 
-  it("opens on the pane named in the address", () => {
+  it("opens the connected payout settings pane from the address", () => {
     nav.query = "preview=full&pane=payouts";
     const { current } = render();
     expect(current.pane).toBe("payouts");
-    expect(current.payouts?.schedules.find((s) => s.selected)?.key).toBe("weekly");
+    expect(current.rows).toEqual([]);
+    expect(current.payouts?.account).toEqual({ connected: false, provider: null, onboardingCompleted: false });
+    expect(current.payouts?.banks).toEqual([{ name: "Example Bank", code: "000" }]);
+    act(() => current.payouts!.onRetryBanks());
+    expect(payoutMocks.refetchBanks).toHaveBeenCalled();
   });
 
   it("ignores a pane that doesn't exist", () => {
@@ -96,26 +121,25 @@ describe("a host who has finished setting up", () => {
     expect(cell(3, 2).on).toBe(true);
   });
 
-  it("chooses how to be paid", () => {
+  it("verifies the Paystack account before saving it", () => {
     const result = render();
     act(() => result.current.onPane("payouts"));
-    act(() => result.current.payouts!.onSchedule("booking"));
-    expect(result.current.payouts!.schedules.find((s) => s.selected)?.key).toBe("booking");
+    act(() => result.current.payouts!.onBankChange("000"));
+    act(() => result.current.payouts!.onAccountNumberChange("0123456789"));
+    act(() => result.current.payouts!.onVerify());
+    expect(payoutMocks.resolve).toHaveBeenCalledWith({ accountNumber: "0123456789", bankCode: "000" }, expect.any(Object));
+    expect(result.current.payouts!.resolvedName).toBe("Ada Okafor");
+    act(() => result.current.payouts!.onSave());
+    expect(payoutMocks.save).not.toHaveBeenCalled();
+    act(() => result.current.payouts!.onConfirmNameChange(true));
+    act(() => result.current.payouts!.onSave());
+    expect(payoutMocks.save).toHaveBeenCalledWith({
+      name: "Ada Okafor", account_number: "0123456789", bank_code: "000", currency: "NGN", target_id: "guide-1", account_type: "guide",
+    }, expect.any(Object));
   });
 });
 
 describe("row actions", () => {
-  it("goes to earnings and help from the payouts rows", () => {
-    const result = render();
-    act(() => result.current.onPane("payouts"));
-    const [, , next, commission] = result.current.rows;
-
-    act(() => result.current.onRowAction(next));
-    expect(nav.push).toHaveBeenCalledWith("/host/dashboard/earnings");
-    act(() => result.current.onRowAction(commission));
-    expect(nav.push).toHaveBeenCalledWith("/host/dashboard/help?guide=1");
-  });
-
   it("says edits and uploads aren't connected yet", () => {
     const result = render();
     act(() => result.current.onRowAction(result.current.rows[0]));

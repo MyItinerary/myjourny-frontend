@@ -48,6 +48,9 @@ export type HostBookingsViewModel = {
   rows: BookingRow[];
   /** Waiting for the guide's bookings to load. */
   loading: boolean;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
   /** Nothing to show: no bookings yet, or the filters took them all away. */
   none: boolean;
   onShowEverything: () => void;
@@ -66,7 +69,7 @@ const NOT_CONNECTED = "This will work once your bookings are connected.";
 export function useHostBookingsViewModel(): HostBookingsViewModel {
   const preview = usePreviewMode();
   const today = useToday();
-  const { bookings, loading } = useHostBookings(preview, today);
+  const { bookings, loading, hasMore, loadingMore, onLoadMore } = useHostBookings(preview, today);
   const sample = isSample(preview);
   // Every real booking is instant, so there are no requests to filter by.
   const statusOptions = sample ? BOOKING_STATUS_OPTIONS : BOOKING_STATUS_OPTIONS.filter((o) => o !== "Requests");
@@ -105,7 +108,7 @@ export function useHostBookingsViewModel(): HostBookingsViewModel {
     header: { title: "Bookings", subtitle: bookingsSummary(bookings), actions: [] },
     query: filters.q,
     onQuery: (q) => setFilters((f) => ({ ...f, q })),
-    resultLine: bookingsResultLine(shown.length, bookings.length),
+    resultLine: bookingsResultLine(shown.length, bookings.length, hasMore),
     hasFilters: hasActiveBookingFilters(filters),
     onClearFilters: () => setFilters(NO_BOOKING_FILTERS),
     groups: [
@@ -117,6 +120,9 @@ export function useHostBookingsViewModel(): HostBookingsViewModel {
     scanHref: `${HOST_PORTAL_BASE}/bookings/scan`,
     rows: shown.map((booking) => ({ booking, chip: bookingChip(booking.status) })),
     loading,
+    hasMore,
+    loadingMore,
+    onLoadMore,
     none: !loading && shown.length === 0,
     onShowEverything: () => setFilters(NO_BOOKING_FILTERS),
     onOpen: setOpenId,

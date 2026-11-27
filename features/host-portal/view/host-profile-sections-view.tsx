@@ -157,59 +157,6 @@ export function NotificationsTable({ notifications }: { notifications: NonNullab
   );
 }
 
-export function PayoutsSection({ payouts }: { payouts: NonNullable<HostProfileViewModel["payouts"]> }) {
-  return (
-    <div className="mt-[26px]">
-      <h3 className={cn(HEADING, "mb-2.5")}>How you are paid</h3>
-      <div role="radiogroup" aria-label="How you are paid" className="mb-[26px] flex flex-col gap-[9px]">
-        {payouts.schedules.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            role="radio"
-            aria-checked={s.selected}
-            onClick={() => payouts.onSchedule(s.key)}
-            className={cn(
-              "flex w-full cursor-pointer items-start gap-[11px] rounded-xl bg-white p-3.5 text-left",
-              s.selected ? "shadow-[inset_0_0_0_2px_#F5032D]" : "shadow-[inset_0_0_0_1px_#E7E7E7]",
-            )}
-          >
-            <span
-              aria-hidden
-              className={cn(
-                "mt-px size-[18px] shrink-0 rounded-full",
-                s.selected ? "shadow-[inset_0_0_0_5.5px_#F5032D]" : "shadow-[inset_0_0_0_1.5px_#D2D2D2]",
-              )}
-            />
-            <span className="flex-1">
-              <span className="mb-[3px] block text-[13.5px] font-medium text-[#333134]">{s.label}</span>
-              <span className="block text-[12.5px] leading-normal text-[#6F6B72]">{s.sub}</span>
-            </span>
-          </button>
-        ))}
-      </div>
-
-      <h3 className={cn(HEADING, "mb-2.5")}>Currency</h3>
-      <div className={cn(CARD, "mb-2.5 flex items-center gap-3 px-[18px] py-4")}>
-        <span className="font-heading text-lg font-extrabold text-[#333134]">₦</span>
-        <div>
-          <p className="text-[13.5px] font-medium text-[#333134]">Naira</p>
-          <p className="mt-0.5 text-[12.5px] text-[#6F6B72]">Guests pay in Naira, you are paid in Naira. Nothing is converted.</p>
-        </div>
-        <span className="ml-auto rounded-full bg-[#F0FCF5] px-[9px] py-[3px] text-[11px] font-medium text-[#0CBA65]">In use</span>
-      </div>
-      <div className="flex items-center gap-3 rounded-2xl bg-[#FAF9F7] px-[18px] py-4 shadow-[inset_0_0_0_1px_#E7E7E7]">
-        <span className="font-heading text-lg font-extrabold text-[#BDBDBD]">$</span>
-        <div>
-          <p className="text-[13.5px] font-medium text-[#6F6B72]">Dollars and other currencies</p>
-          <p className="mt-0.5 text-[12.5px] text-[#A09DA3]">We are not paying out in anything but Naira yet. We will tell you the week it changes.</p>
-        </div>
-        <span className="ml-auto rounded-full bg-[#EEEEEE] px-[9px] py-[3px] text-[11px] font-medium text-[#6F6B72]">Coming later</span>
-      </div>
-    </div>
-  );
-}
-
 export function TaxSection({ tax }: { tax: NonNullable<HostProfileViewModel["tax"]> }) {
   return (
     <div className="mt-[26px]">

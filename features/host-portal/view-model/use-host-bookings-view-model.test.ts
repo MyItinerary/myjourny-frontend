@@ -52,7 +52,7 @@ describe("the table", () => {
 
   it("is empty with no bookings, and offers no Requests filter outside the preview", async () => {
     nav.preview = null;
-    server.use(http.get(apiUrl("/bookings/guide"), () => HttpResponse.json([])));
+    server.use(http.get(apiUrl("/bookings/guide"), () => HttpResponse.json({ items: [], total: 0, limit: 20, page: 1, has_more: false })));
     vi.useRealTimers();
     const result = render();
     expect(result.current.loading).toBe(true);

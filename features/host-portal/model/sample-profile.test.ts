@@ -20,10 +20,9 @@ describe("SAMPLE_PROFILE", () => {
     expect(links).toEqual([["Next payout", "earnings"], ["Commission", "help"]]);
   });
 
-  it("fills the notification matrix, the payout choice and the documents", () => {
+  it("fills the notification matrix and the documents", () => {
     expect(SAMPLE_PROFILE.notifications).toHaveLength(5);
     expect(SAMPLE_PROFILE.notifications[0].channels).toEqual([true, true, true, true]);
-    expect(SAMPLE_PROFILE.schedule).toBe("weekly");
     expect(SAMPLE_PROFILE.documents.filter((d) => d.checked)).toHaveLength(3);
     expect(SAMPLE_PROFILE.preview.badges).toHaveLength(3);
   });

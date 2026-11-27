@@ -1,14 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
 
-import type { GuideBooking } from "./guide-bookings.types";
+import type { GuideBookingsPage } from "./guide-bookings.types";
 
 /** Every booking on the guide's listings, newest session first. */
 export function useGuideBookings(enabled: boolean) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["guide", "bookings"],
-    queryFn: async () => (await apiClient.get<GuideBooking[]>("/bookings/guide")).data,
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) =>
+      (await apiClient.get<GuideBookingsPage>("/bookings/guide", { params: { page: pageParam } })).data,
+    getNextPageParam: (lastPage) => (lastPage.has_more ? lastPage.page + 1 : undefined),
     enabled,
   });
 }

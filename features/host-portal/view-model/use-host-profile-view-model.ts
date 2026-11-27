@@ -2,19 +2,22 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { apiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/lib/auth/session-store";
 
+import { formatAmount, sessionDate } from "../model/earnings";
+import { useCreateStripeOnboarding, useHostPayoutHistory, usePaystackBanks, usePayoutAccount, useResolvePaystackAccount, useSavePaystackRecipient } from "../model/payouts-data";
+import type { PaystackRecipientInput } from "../model/payouts.types";
 import {
   closingCopy,
   NOTIFICATION_CHANNELS,
   NOTIFICATION_NOTE,
   PANE_COPY,
-  PAYOUT_SCHEDULES,
   PROFILE_PANES,
   SETUP_NOTE,
 } from "../model/profile-copy";
 import { useHostProfile } from "../model/profile-data";
-import type { HostProfile, PayoutSchedule, ProfilePaneKey, ProfileRow, SetupTask } from "../model/profile.types";
+import type { HostProfile, ProfilePaneKey, ProfileRow, SetupTask } from "../model/profile.types";
 import { HOST_PORTAL_BASE } from "../model/nav";
 import type { HostPageHeader } from "./use-host-home-view-model";
 import { usePreviewMode } from "./use-preview-mode";
@@ -46,8 +49,31 @@ export type HostProfileViewModel = {
     onToggle: (row: number, channel: number) => void;
   } | null;
   payouts: {
-    schedules: { key: PayoutSchedule; label: string; sub: string; selected: boolean }[];
-    onSchedule: (schedule: PayoutSchedule) => void;
+    account: { connected: boolean; provider: string | null; onboardingCompleted: boolean } | null;
+    accountLoading: boolean;
+    accountError: string | null;
+    banks: { name: string; code: string }[];
+    banksLoading: boolean;
+    banksError: string | null;
+    bankCode: string;
+    accountNumber: string;
+    resolvedName: string | null;
+    confirmedName: boolean;
+    formError: string | null;
+    verifying: boolean;
+    saving: boolean;
+    startingStripe: boolean;
+    history: { id: string; date: string; experience: string; currency: string; amount: string }[];
+    historyLoading: boolean;
+    historyError: string | null;
+    onBankChange: (code: string) => void;
+    onAccountNumberChange: (accountNumber: string) => void;
+    onConfirmNameChange: (confirmed: boolean) => void;
+    onRetryBanks: () => void;
+    onVerify: () => void;
+    onSave: () => void;
+    onStripeSetup: () => void;
+    onRefreshAccount: () => void;
   } | null;
   tax: { statements: HostProfile["statements"]; documents: HostProfile["documents"]; onAction: () => void } | null;
   danger: { text: string; onStart: () => void } | null;
@@ -66,11 +92,86 @@ export function useHostProfileViewModel(): HostProfileViewModel {
   const fromUrl = params.get("pane");
   const [pane, setPane] = useState<ProfilePaneKey>(isPane(fromUrl) ? fromUrl : "personal");
   const [notifOverride, setNotif] = useState<HostProfile["notifications"] | null>(null);
-  const [scheduleOverride, setSchedule] = useState<PayoutSchedule | null>(null);
+  const [bankCode, setBankCode] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [resolved, setResolved] = useState<{ accountNumber: string; bankCode: string; name: string } | null>(null);
+  const [confirmedName, setConfirmedName] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const resolvedName = resolved?.accountNumber === accountNumber && resolved.bankCode === bankCode ? resolved.name : null;
 
   const notifications = notifOverride ?? profile.notifications;
-  const schedule = scheduleOverride ?? profile.schedule;
   const soon = () => toast.info(NOT_CONNECTED);
+  const payoutsOpen = pane === "payouts";
+  const payoutAccount = usePayoutAccount(payoutsOpen);
+  const banks = usePaystackBanks(payoutsOpen);
+  const payoutHistory = useHostPayoutHistory(payoutsOpen);
+  const resolveAccount = useResolvePaystackAccount();
+  const saveRecipient = useSavePaystackRecipient();
+  const createStripeOnboarding = useCreateStripeOnboarding();
+
+  const onVerify = () => {
+    setFormError(null);
+    setResolved(null);
+    setConfirmedName(false);
+    if (!bankCode || !/^\d{10}$/.test(accountNumber)) {
+      setFormError("Choose a bank and enter its 10-digit account number.");
+      return;
+    }
+    resolveAccount.mutate(
+      { accountNumber, bankCode },
+      {
+        onSuccess: (result) => {
+          if (result.account_number !== accountNumber) {
+            setFormError("The bank returned a different account number. Please verify it again.");
+            return;
+          }
+          setResolved({ accountNumber, bankCode, name: result.account_name });
+        },
+        onError: (error) => setFormError(apiErrorMessage(error, "We couldn't verify that account. Check the details and try again.")),
+      },
+    );
+  };
+
+  const onSave = () => {
+    setFormError(null);
+    if (!user?.id) {
+      setFormError("Sign in again before adding a payout account.");
+      return;
+    }
+    if (!bankCode || !resolvedName) {
+      setFormError("Verify the account name before saving the bank details.");
+      return;
+    }
+    if (!confirmedName) {
+      setFormError("Confirm that the verified account name is correct before saving.");
+      return;
+    }
+    const recipient: PaystackRecipientInput = {
+      name: resolvedName,
+      account_number: accountNumber,
+      bank_code: bankCode,
+      currency: "NGN",
+      target_id: user.id,
+      account_type: "guide",
+    };
+    saveRecipient.mutate(recipient, {
+      onSuccess: () => toast.success("Your Naira payout account is connected."),
+      onError: (error) => setFormError(apiErrorMessage(error, "We couldn't save the bank account. Please try again.")),
+    });
+  };
+
+  const onStripeSetup = () => {
+    if (!user?.id) {
+      toast.error("Sign in again before connecting a payout account.");
+      return;
+    }
+    createStripeOnboarding.mutate(user.id, {
+      onSuccess: ({ account_url }) => {
+        window.location.href = account_url;
+      },
+      onError: (error) => toast.error(apiErrorMessage(error, "We couldn't start Stripe onboarding. Please try again.")),
+    });
+  };
 
   const doneTasks = profile.setup?.filter((t) => t.done).length ?? 0;
 
@@ -99,7 +200,7 @@ export function useHostProfileViewModel(): HostProfileViewModel {
             tasks: profile.setup.map((task) => ({ ...task, onOpen: () => setPane(task.pane) })),
           }
         : null,
-    rows: pane === "notify" ? [] : profile.rows[pane],
+    rows: pane === "notify" || pane === "payouts" ? [] : profile.rows[pane],
     onRowAction: (row) => {
       if (row.link === "earnings") router.push(`${HOST_PORTAL_BASE}/earnings`);
       else if (row.link === "help") router.push(`${HOST_PORTAL_BASE}/help?guide=1`);
@@ -126,13 +227,57 @@ export function useHostProfileViewModel(): HostProfileViewModel {
             },
           }
         : null,
-    payouts:
-      pane === "payouts"
-        ? {
-            schedules: PAYOUT_SCHEDULES.map((s) => ({ ...s, selected: s.key === schedule })),
-            onSchedule: setSchedule,
-          }
-        : null,
+    payouts: payoutsOpen
+      ? {
+          account: payoutAccount.data
+            ? {
+                connected: payoutAccount.data.connected,
+                provider: payoutAccount.data.provider,
+                onboardingCompleted: payoutAccount.data.onboarding_completed,
+              }
+            : null,
+          accountLoading: payoutAccount.isPending,
+          accountError: payoutAccount.isError ? apiErrorMessage(payoutAccount.error, "Couldn't load your payout account.") : null,
+          banks: banks.data ?? [],
+          banksLoading: banks.isPending,
+          banksError: banks.isError ? apiErrorMessage(banks.error, "Couldn't load available banks. Please retry.") : null,
+          bankCode,
+          accountNumber,
+          resolvedName,
+          confirmedName,
+          formError,
+          verifying: resolveAccount.isPending,
+          saving: saveRecipient.isPending,
+          startingStripe: createStripeOnboarding.isPending,
+          history: (payoutHistory.data ?? []).map((payout) => ({
+            id: payout.id,
+            date: sessionDate(payout.created_at),
+            experience: payout.experience_title ?? "Experience",
+            currency: payout.currency,
+            amount: formatAmount(payout.amount, payout.currency),
+          })),
+          historyLoading: payoutHistory.isPending,
+          historyError: payoutHistory.isError ? apiErrorMessage(payoutHistory.error, "Couldn't load payout history.") : null,
+          onBankChange: (code) => {
+            setBankCode(code);
+            setResolved(null);
+            setConfirmedName(false);
+            setFormError(null);
+          },
+          onAccountNumberChange: (number) => {
+            setAccountNumber(number.replace(/\D/g, "").slice(0, 10));
+            setResolved(null);
+            setConfirmedName(false);
+            setFormError(null);
+          },
+          onConfirmNameChange: setConfirmedName,
+          onRetryBanks: () => void banks.refetch(),
+          onVerify,
+          onSave,
+          onStripeSetup,
+          onRefreshAccount: () => void payoutAccount.refetch(),
+        }
+      : null,
     tax: pane === "tax" ? { statements: profile.statements, documents: profile.documents, onAction: soon } : null,
     danger: pane === "security" ? { text: closingCopy(profile.closing), onStart: soon } : null,
   };

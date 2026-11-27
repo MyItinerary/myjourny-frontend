@@ -42,8 +42,8 @@ export function filterBookings(bookings: HostBooking[], f: BookingFilters): Host
 }
 
 /** "All 6 bookings", "1 booking" (never "All 1 bookings"), "3 bookings" */
-export function bookingsResultLine(shown: number, total: number): string {
-  if (shown === total && total !== 1) return `All ${total} bookings`;
+export function bookingsResultLine(shown: number, total: number, hasMore = false): string {
+  if (!hasMore && shown === total && total !== 1) return `All ${total} bookings`;
   return shown === 1 ? "1 booking" : `${shown} bookings`;
 }
 
