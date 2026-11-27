@@ -66,6 +66,17 @@ describe("PayoutsSection", () => {
     expect(props.onRetryBanks).toHaveBeenCalled();
   });
 
+  it("keeps bank option keys unique when the API repeats a bank", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    renderWithProviders(<PayoutsSection payouts={payouts({ banks: [
+      { name: "Example Bank", code: "50739" },
+      { name: "Example Bank", code: "50739" },
+    ] })} />);
+
+    expect(consoleError.mock.calls.flat().join(" ")).not.toContain("same key");
+    consoleError.mockRestore();
+  });
+
   it("shows payout history and an empty state", () => {
     const { rerender } = renderWithProviders(<PayoutsSection payouts={payouts()} />);
     expect(screen.getByText("No payouts have been recorded yet.")).toBeInTheDocument();

@@ -30,7 +30,7 @@ export function PayoutsSection({ payouts }: { payouts: NonNullable<HostProfileVi
             Bank
             <select className={field} value={payouts.bankCode} onChange={(event) => payouts.onBankChange(event.target.value)}>
               <option value="">Choose a bank</option>
-              {payouts.banks.map((bank) => <option key={bank.code} value={bank.code}>{bank.name}</option>)}
+              {payouts.banks.map((bank, index) => <option key={`${bank.code}-${bank.name}-${index}`} value={bank.code}>{bank.name}</option>)}
             </select>
           </label>
           {payouts.banksLoading && <p role="status" className="text-xs text-[#6F6B72]">Loading banks…</p>}
