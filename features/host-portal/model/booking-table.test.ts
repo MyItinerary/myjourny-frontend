@@ -48,6 +48,7 @@ describe("summaries", () => {
     expect(bookingsResultLine(1, 6)).toBe("1 booking");
     expect(bookingsResultLine(3, 6)).toBe("3 bookings");
     expect(bookingsResultLine(1, 1)).toBe("1 booking");
+    expect(bookingsResultLine(6, 6, true)).toBe("6 bookings");
   });
 
   it("summarises the page header", () => {

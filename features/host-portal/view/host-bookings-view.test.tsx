@@ -39,6 +39,9 @@ const vm = (over: Partial<HostBookingsViewModel> = {}): HostBookingsViewModel =>
   onQuery: vi.fn(),
   resultLine: "All 2 bookings",
   loading: false,
+  hasMore: false,
+  loadingMore: false,
+  onLoadMore: vi.fn(),
   hasFilters: false,
   onClearFilters: vi.fn(),
   groups: [{ key: "status", label: "Status", current: "Any", active: false, anyValue: "All", anyLabel: "Any status", options: [{ value: "Upcoming", label: "Upcoming", selected: false, subs: [] }] }],
@@ -89,6 +92,14 @@ describe("HostBookingsView, the table", () => {
     renderWithProviders(<HostBookingsView vm={vm({ rows: [], loading: true, none: false })} />);
     expect(screen.getByText("Loading your bookings…")).toBeInTheDocument();
     expect(screen.queryByText("No bookings here")).not.toBeInTheDocument();
+  });
+
+  it("offers to load the next backend page", async () => {
+    const props = vm({ hasMore: true });
+    const { user } = renderWithProviders(<HostBookingsView vm={props} />);
+
+    await user.click(screen.getByRole("button", { name: "Show more bookings" }));
+    expect(props.onLoadMore).toHaveBeenCalled();
   });
 
   it("says there are no bookings, and offers to show everything", async () => {

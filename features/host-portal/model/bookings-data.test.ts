@@ -1,4 +1,4 @@
-import { waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -20,7 +20,9 @@ const booking = (id: string, payment_status: string) => ({
 
 beforeEach(() => {
   access.current = "approved";
-  server.use(http.get(apiUrl("/bookings/guide"), () => HttpResponse.json([booking("b1", "paid"), booking("b2", "unpaid")])));
+  server.use(http.get(apiUrl("/bookings/guide"), () => HttpResponse.json({
+    items: [booking("b1", "paid"), booking("b2", "unpaid")], total: 2, limit: 20, page: 1, has_more: false,
+  })));
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -32,10 +34,26 @@ describe("useHostBookings", () => {
     expect(result.current.bookings.map((b) => [b.id, b.name, b.when])).toEqual([["b1", "Amaka Eze", "tomorrow"]]);
   });
 
+  it("uses paid bookings from each loaded backend page", async () => {
+    server.use(http.get(apiUrl("/bookings/guide"), ({ request }) => {
+      const page = Number(new URL(request.url).searchParams.get("page"));
+      return HttpResponse.json({
+        items: [booking(`b${page}`, "paid")], total: 2, limit: 1, page, has_more: page === 1,
+      });
+    }));
+    const { result } = renderHookWithProviders(() => useHostBookings(null, "2026-09-19"));
+    await waitFor(() => expect(result.current.bookings.map((item) => item.id)).toEqual(["b1"]));
+    expect(result.current.hasMore).toBe(true);
+
+    act(() => result.current.onLoadMore());
+    await waitFor(() => expect(result.current.bookings.map((item) => item.id)).toEqual(["b1", "b2"]));
+    expect(result.current.hasMore).toBe(false);
+  });
+
   it("doesn't ask itin for a traveller's bookings", () => {
     access.current = "traveller";
     const { result } = renderHookWithProviders(() => useHostBookings(null, "2026-09-19"));
-    expect(result.current).toEqual({ bookings: [], loading: false });
+    expect(result.current).toMatchObject({ bookings: [], loading: false, hasMore: false, loadingMore: false });
   });
 
   it("shows the six sample bookings for ?preview=full, but not in production", () => {
@@ -45,6 +63,6 @@ describe("useHostBookings", () => {
   });
 
   it("waits for today to be known", () => {
-    expect(renderHookWithProviders(() => useHostBookings(null, null)).result.current).toEqual({ bookings: [], loading: true });
+    expect(renderHookWithProviders(() => useHostBookings(null, null)).result.current).toMatchObject({ bookings: [], loading: true });
   });
 });

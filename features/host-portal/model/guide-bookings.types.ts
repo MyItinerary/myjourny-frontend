@@ -20,3 +20,12 @@ export type GuideBooking = {
   guest?: { name?: string | null; avatar_url?: string | null; phone?: string | null } | null;
   created_at: string;
 };
+
+/** One page of the guide's bookings returned by itin. */
+export type GuideBookingsPage = {
+  items: GuideBooking[];
+  total: number;
+  limit: number;
+  page: number;
+  has_more: boolean;
+};
