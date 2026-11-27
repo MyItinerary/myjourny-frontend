@@ -140,28 +140,63 @@ describe("HostProfileView, notifications", () => {
 });
 
 describe("HostProfileView, payouts", () => {
-  it("chooses a schedule and shows the currencies", async () => {
-    const onSchedule = vi.fn();
+  it("shows bank verification, Stripe onboarding, and payout history controls", async () => {
+    const onBankChange = vi.fn();
+    const onAccountNumberChange = vi.fn();
+    const onConfirmNameChange = vi.fn();
+    const onVerify = vi.fn();
+    const onSave = vi.fn();
+    const onStripeSetup = vi.fn();
+    const onRefreshAccount = vi.fn();
     const { user } = renderWithProviders(
       <HostProfileView
         vm={vm({
           rows: [],
           payouts: {
-            schedules: [
-              { key: "booking", label: "After every experience", sub: "Within 24 hours.", selected: false },
-              { key: "weekly", label: "All together on Tuesdays", sub: "One payment a week.", selected: true },
-            ],
-            onSchedule,
+            account: { connected: true, provider: "stripe", onboardingCompleted: false },
+            accountLoading: false,
+            accountError: null,
+            banks: [{ name: "Example Bank", code: "000" }],
+            banksLoading: false,
+            banksError: null,
+            bankCode: "000",
+            accountNumber: "0123456789",
+            resolvedName: "Ada Okafor",
+            confirmedName: true,
+            formError: null,
+            verifying: false,
+            saving: false,
+            startingStripe: false,
+            history: [{ id: "payout-1", date: "28 Nov 2026", experience: "Lagos art tour", currency: "NGN", amount: "₦3,000" }],
+            historyLoading: false,
+            historyError: null,
+            onBankChange,
+            onAccountNumberChange,
+            onConfirmNameChange,
+            onRetryBanks: vi.fn(),
+            onVerify,
+            onSave,
+            onStripeSetup,
+            onRefreshAccount,
           },
         })}
       />,
     );
 
-    expect(screen.getByRole("radio", { name: /All together on Tuesdays/ })).toHaveAttribute("aria-checked", "true");
-    await user.click(screen.getByRole("radio", { name: /After every experience/ }));
-    expect(onSchedule).toHaveBeenCalledWith("booking");
-    expect(screen.getByText("In use")).toBeInTheDocument();
-    expect(screen.getByText("Coming later")).toBeInTheDocument();
+    expect(screen.getByLabelText("Bank")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Example Bank" })).toBeInTheDocument();
+    expect(screen.getByText(/Verified account name:/)).toBeInTheDocument();
+    expect(screen.getByText("Setup pending")).toBeInTheDocument();
+    expect(screen.getByText("Lagos art tour")).toBeInTheDocument();
+    expect(screen.getByText("NGN")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Verify account" }));
+    await user.click(screen.getByRole("button", { name: "Save bank account" }));
+    await user.click(screen.getByRole("button", { name: "Check status" }));
+    await user.click(screen.getByRole("button", { name: "Continue Stripe setup" }));
+    expect(onVerify).toHaveBeenCalled();
+    expect(onSave).toHaveBeenCalled();
+    expect(onRefreshAccount).toHaveBeenCalled();
+    expect(onStripeSetup).toHaveBeenCalled();
   });
 });
 

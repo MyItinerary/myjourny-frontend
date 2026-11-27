@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { closingCopy, NOTIFICATION_CHANNELS, PANE_COPY, PAYOUT_SCHEDULES, PROFILE_PANES } from "./profile-copy";
+import { closingCopy, NOTIFICATION_CHANNELS, PANE_COPY, PROFILE_PANES } from "./profile-copy";
 
 describe("profile copy", () => {
   it("has the seven panes, each with its heading and a line under it", () => {
@@ -11,9 +11,9 @@ describe("profile copy", () => {
     }
   });
 
-  it("has four notification channels and two payout schedules", () => {
+  it("has four notification channels and explains payout currencies", () => {
     expect(NOTIFICATION_CHANNELS).toEqual(["WhatsApp", "SMS", "Email", "Push"]);
-    expect(PAYOUT_SCHEDULES.map((s) => s.key)).toEqual(["booking", "weekly"]);
+    expect(PANE_COPY.payouts.sub).toContain("Stripe");
   });
 });
 

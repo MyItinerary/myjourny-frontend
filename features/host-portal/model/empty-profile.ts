@@ -84,7 +84,6 @@ export function emptyProfile(user: { fullName: string | null; email: string | nu
       { label: "A review comes in", channels: [false, false, true, true] },
       { label: "Tips and things we have changed", channels: [false, false, true, false] },
     ],
-    schedule: "weekly",
     statements: [{ year: "This year, so far", sub: "Nothing earned yet" }],
     documents: [
       { name: "National identity number", sub: "Not sent yet", checked: false, action: "Upload" },

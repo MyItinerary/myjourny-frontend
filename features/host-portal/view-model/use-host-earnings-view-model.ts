@@ -1,88 +1,81 @@
-import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  earningsRow,
-  type EarningsRow,
-  earningsSummary,
-  RANGE_OPTIONS,
-  rangeFor,
-  statementCsv,
-  transactionsIn,
-} from "../model/earnings";
+import { apiErrorMessage } from "@/lib/api-error";
+
+import { formatAmount, payoutStatusLabel, sessionDate, statementCsv } from "../model/earnings";
 import { useHostEarnings } from "../model/earnings-data";
-import type { EarningsRange, EarningsStat } from "../model/earnings.types";
+import type { EarningsRow, EarningsStat } from "../model/earnings.types";
 import type { HostPageHeader } from "./use-host-home-view-model";
-import { useToday } from "./use-today";
-import { usePreviewMode } from "./use-preview-mode";
 
 export type HostEarningsViewModel = {
-  ready: boolean;
+  loading: boolean;
+  error: string | null;
   header: HostPageHeader;
-  /** "1 to 30 September 2026" */
-  rangeLabel: string;
-  range: EarningsRange;
-  ranges: { value: EarningsRange; selected: boolean }[];
-  onRange: (range: EarningsRange) => void;
   stats: EarningsStat[];
-  /** "Our 15 percent" */
-  commissionHeading: string;
   rows: EarningsRow[];
-  /** Nothing earned in this range (or at all). */
   none: boolean;
   noneMessage: string;
   onDownload: () => void;
 };
 
-const EMPTY_STATS: EarningsStat[] = [
-  { label: "Earned all time", value: "₦0", note: "nothing yet" },
-  { label: "Clearing now", value: "₦0", note: "nothing on its way" },
-  { label: "Already paid out", value: "₦0", note: "no payouts yet" },
-  { label: "Next payout", value: "None yet", note: "batched weekly, every Tuesday" },
-];
-
 export function useHostEarningsViewModel(): HostEarningsViewModel {
-  const preview = usePreviewMode();
-  const today = useToday();
-  const earnings = useHostEarnings(preview, today);
-  const [range, setRange] = useState<EarningsRange>("This month");
+  const earnings = useHostEarnings();
+  const bookings = earnings.data?.bookings ?? [];
+  const totals = earnings.data?.totals ?? [];
 
-  const span = rangeFor(range, today ?? "1970-01-01", earnings?.since ?? "your first booking");
-  const shown = earnings ? transactionsIn(earnings.transactions, span.start, span.end) : [];
-
-  // The statement is what's on screen: the bookings in this range.
   const onDownload = () => {
-    if (shown.length === 0) {
-      toast.info("There's nothing in this range to put in a statement.");
+    if (bookings.length === 0) {
+      toast.info("There's nothing to put in a statement yet.");
       return;
     }
-    const blob = new Blob([statementCsv(shown)], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob([statementCsv(bookings)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `myjourny-statement-${range.toLowerCase().replace(/\s+/g, "-")}.csv`;
+    link.download = "myjourny-earnings-statement.csv";
     link.click();
     URL.revokeObjectURL(url);
   };
 
+  const stats: EarningsStat[] = totals.flatMap((total) => [
+    { label: `${total.currency} earned`, value: formatAmount(total.earned, total.currency), note: "All time" },
+    { label: `${total.currency} pending`, value: formatAmount(total.pending, total.currency), note: "Awaiting payout" },
+    { label: `${total.currency} paid out`, value: formatAmount(total.paid_out, total.currency), note: "Ledger total" },
+  ]);
+
+  const rows: EarningsRow[] = bookings.map((booking) => ({
+    id: booking.booking_id,
+    booking: booking.booking_id,
+    experience: booking.experience_title,
+    date: sessionDate(booking.session_at),
+    currency: booking.currency,
+    earned: formatAmount(booking.earned, booking.currency),
+    pending: formatAmount(booking.pending, booking.currency),
+    paidOut: formatAmount(booking.paid_out, booking.currency),
+    status: booking.payout_status,
+    statusLabel: payoutStatusLabel(booking.payout_status),
+  }));
+
   return {
-    ready: today !== null,
+    loading: earnings.isPending,
+    error: earnings.isError ? apiErrorMessage(earnings.error, "Couldn't load your earnings. Please try again.") : null,
     header: {
       title: "Earnings",
-      subtitle: earnings ? earningsSummary(earnings.monthEarned, earnings.clearing, true) : earningsSummary(0, 0, false),
+      subtitle: earnings.isPending
+        ? "Loading your earnings"
+        : earnings.isError
+          ? "Your earnings could not be loaded"
+          : totals.length
+            ? "Ledger totals, shown separately by currency"
+            : "Nothing earned yet",
       actions: [{ label: "Download statement", onClick: onDownload, primary: false }],
     },
-    rangeLabel: span.label,
-    range,
-    ranges: RANGE_OPTIONS.map((value) => ({ value, selected: value === range })),
-    onRange: setRange,
-    stats: earnings?.stats ?? EMPTY_STATS,
-    commissionHeading: "Our 15 percent",
-    rows: shown.map(earningsRow),
-    none: shown.length === 0,
-    noneMessage: earnings
-      ? "Nothing earned in this range."
-      : "When a guest books and pays, it shows here with what we took and what you receive.",
+    stats,
+    rows,
+    none: !earnings.isPending && bookings.length === 0,
+    noneMessage: earnings.isError
+      ? "Your earnings could not be loaded. Please try again."
+      : "When a guest books, their ledger amounts and payout status will appear here.",
     onDownload,
   };
 }

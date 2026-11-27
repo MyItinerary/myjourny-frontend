@@ -1,132 +1,96 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { EarningsBooking, EarningsTotal } from "../model/earnings.types";
 import { useHostEarningsViewModel } from "./use-host-earnings-view-model";
 
-const nav = vi.hoisted(() => ({ preview: "full" as string | null, quiet: false }));
-vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(nav.preview ? `preview=${nav.preview}` : ""),
+const query = vi.hoisted(() => ({
+  response: {
+    totals: [
+      { currency: "NGN", earned: "48000.00", pending: "15000.00", paid_out: "33000.00" },
+      { currency: "USD", earned: "120.00", pending: "120.00", paid_out: "0.00" },
+    ],
+    bookings: [
+      {
+        booking_id: "booking-1", experience_title: "Lagos food walk", session_at: "2026-11-29T15:00:00",
+        currency: "NGN", earned: "30000.00", pending: "0.00", paid_out: "30000.00", payout_status: "paid" as const,
+      },
+      {
+        booking_id: "booking-2", experience_title: "Lagos art tour", session_at: "2026-12-03T17:00:00",
+        currency: "NGN", earned: "18000.00", pending: "15000.00", paid_out: "3000.00", payout_status: "partial" as const,
+      },
+    ],
+  } as { totals: EarningsTotal[]; bookings: EarningsBooking[] },
+  isPending: false,
+  isError: false,
+  error: null as unknown,
 }));
-vi.mock("../model/earnings-data", async (importOriginal) => {
-  const real = await importOriginal<typeof import("../model/earnings-data")>();
-  const { sampleEarnings } = await import("../model/sample-earnings");
-  return {
-    ...real,
-    // quiet: earnings exist, but none fall in any range.
-    useHostEarnings: (preview: string | null, today: string | null) =>
-      nav.quiet && preview === "full" && today ? { ...sampleEarnings(today), transactions: [] } : real.useHostEarnings(preview, today),
-  };
-});
+vi.mock("../model/earnings-data", () => ({ useHostEarnings: () => ({ data: query.response, isPending: query.isPending, isError: query.isError, error: query.error }) }));
 const toast = vi.hoisted(() => ({ info: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
 
-// Today is Saturday 19 September 2026.
 beforeEach(() => {
-  vi.useFakeTimers();
-  vi.setSystemTime(new Date(2026, 8, 19, 10, 0));
-  nav.preview = "full";
-  nav.quiet = false;
+  query.isPending = false;
+  query.isError = false;
+  query.error = null;
   toast.info.mockReset();
 });
-afterEach(() => vi.useRealTimers());
 
 const render = () => renderHook(() => useHostEarningsViewModel()).result;
-const refs = (result: { current: ReturnType<typeof useHostEarningsViewModel> }) => result.current.rows.map((r) => r.ref);
 
-describe("with earnings", () => {
-  it("summarises the month, words the range, and shows the numbers", () => {
+describe("useHostEarningsViewModel", () => {
+  it("shows totals separately for each currency and maps ledger booking lines", () => {
     const { current } = render();
 
-    expect(current.ready).toBe(true);
-    expect(current.header.title).toBe("Earnings");
-    expect(current.header.subtitle).toBe("₦248,000 this month · ₦68,000 clearing");
-    expect(current.range).toBe("This month");
-    expect(current.rangeLabel).toBe("1 to 30 September 2026");
-    expect(current.stats.map((s) => s.label)).toEqual(["Earned all time", "Clearing now", "Already paid out", "Next payout"]);
-    expect(current.commissionHeading).toBe("Our 15 percent");
+    expect(current.header).toMatchObject({ title: "Earnings", subtitle: "Ledger totals, shown separately by currency" });
+    expect(current.stats.map((stat) => [stat.label, stat.value])).toEqual([
+      ["NGN earned", "₦48,000"], ["NGN pending", "₦15,000"], ["NGN paid out", "₦33,000"],
+      ["USD earned", "$120"], ["USD pending", "$120"], ["USD paid out", "$0"],
+    ]);
+    expect(current.rows[0]).toEqual({
+      id: "booking-1", booking: "booking-1", experience: "Lagos food walk", date: "29 Nov 2026", currency: "NGN",
+      earned: "₦30,000", pending: "₦0", paidOut: "₦30,000", status: "paid", statusLabel: "Paid",
+    });
+    expect(current.rows[1].status).toBe("partial");
     expect(current.none).toBe(false);
   });
 
-  it("lists this month's bookings with what we took", () => {
-    const { current } = render();
-    expect(current.rows.map((r) => r.ref)).toEqual(["MJ-4471", "MJ-4468", "MJ-4455", "MJ-4502", "MJ-4503"]);
-    expect(current.rows[0]).toMatchObject({ gross: "₦40,000", commission: "- ₦6,000", net: "₦34,000", status: "Cleared" });
-  });
-
-  it("changes range, relabelling and refiltering", () => {
-    const result = render();
-    expect(result.current.ranges.find((r) => r.selected)!.value).toBe("This month");
-
-    act(() => result.current.onRange("Last month"));
-    expect(result.current.rangeLabel).toBe("1 to 31 August 2026");
-    expect(refs(result)).toEqual(["MJ-4431"]);
-
-    act(() => result.current.onRange("Everything"));
-    expect(result.current.rangeLabel).toBe("March 2026 to today");
-    expect(result.current.rows).toHaveLength(6);
-
-    act(() => result.current.onRange("Last 3 months"));
-    expect(result.current.rangeLabel).toBe("1 July to 30 September 2026");
-    expect(result.current.rows).toHaveLength(6);
-  });
-
-  it("says when a range has nothing in it", () => {
-    nav.quiet = true;
-    const { current } = render();
-
-    expect(current.header.subtitle).toBe("₦248,000 this month · ₦68,000 clearing");
-    expect(current.rows).toEqual([]);
-    expect(current.none).toBe(true);
-    expect(current.noneMessage).toBe("Nothing earned in this range.");
-  });
-});
-
-describe("downloading a statement", () => {
-  it("saves a CSV of the bookings shown", async () => {
-    const createObjectURL = vi.fn().mockReturnValue("blob:statement");
-    const revokeObjectURL = vi.fn();
-    Object.assign(URL, { createObjectURL, revokeObjectURL });
+  it("downloads a CSV statement containing the backend earnings", async () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
-    const result = render();
+    Object.assign(URL, { createObjectURL: vi.fn().mockReturnValue("blob:statement"), revokeObjectURL: vi.fn() });
+    const { current } = render();
 
-    act(() => result.current.onDownload());
-
-    const blob = createObjectURL.mock.calls[0][0] as Blob;
-    expect(blob.type).toBe("text/csv;charset=utf-8");
-    expect(await blob.text()).toContain("MJ-4471");
-    expect(await blob.text()).not.toContain("MJ-4431");
+    act(() => current.onDownload());
+    const blob = (URL.createObjectURL as ReturnType<typeof vi.fn>).mock.calls[0][0] as Blob;
+    expect(await blob.text()).toContain("booking-1,Lagos food walk");
     expect(click).toHaveBeenCalled();
-    expect(revokeObjectURL).toHaveBeenCalledWith("blob:statement");
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:statement");
     click.mockRestore();
   });
 
-  it("is the same action as the header button", () => {
-    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
-    Object.assign(URL, { createObjectURL: vi.fn().mockReturnValue("blob:x"), revokeObjectURL: vi.fn() });
-    const result = render();
-    act(() => result.current.header.actions[0].onClick?.());
-    expect(click).toHaveBeenCalled();
-    click.mockRestore();
+  it("shows loading and error states without presenting them as empty earnings", () => {
+    query.isPending = true;
+    expect(render().current).toMatchObject({ loading: true, header: { subtitle: "Loading your earnings" } });
+
+    query.isPending = false;
+    query.isError = true;
+    query.error = { response: { data: { detail: "Session expired" } } };
+    expect(render().current).toMatchObject({
+      error: "Session expired",
+      header: { subtitle: "Your earnings could not be loaded" },
+      noneMessage: "Your earnings could not be loaded. Please try again.",
+      none: true,
+    });
   });
 
-  it("says when there's nothing to put in it", () => {
-    nav.preview = null;
-    const result = render();
-    act(() => result.current.onDownload());
-    expect(toast.info).toHaveBeenCalledWith(expect.stringContaining("nothing in this range"));
-  });
-});
-
-describe("with no earnings", () => {
-  it("shows zeros and says what will appear", () => {
-    nav.preview = null;
+  it("handles an empty ledger and an empty statement", () => {
+    query.response = { totals: [], bookings: [] };
     const { current } = render();
-
     expect(current.header.subtitle).toBe("Nothing earned yet");
-    expect(current.stats.map((s) => s.value)).toEqual(["₦0", "₦0", "₦0", "None yet"]);
-    expect(current.rows).toEqual([]);
-    expect(current.none).toBe(true);
-    expect(current.noneMessage).toMatch(/When a guest books and pays/);
-    expect(current.rangeLabel).toBe("1 to 30 September 2026");
+    expect(current.stats).toEqual([]);
+    expect(current.noneMessage).toContain("ledger amounts");
+
+    act(() => current.onDownload());
+    expect(toast.info).toHaveBeenCalledWith("There's nothing to put in a statement yet.");
   });
 });

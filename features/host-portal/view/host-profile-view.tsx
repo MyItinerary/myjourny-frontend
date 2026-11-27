@@ -4,12 +4,12 @@ import type { HostProfileViewModel, ProfileNavItem } from "../view-model/use-hos
 import {
   DangerCard,
   NotificationsTable,
-  PayoutsSection,
   PreviewCard,
   RowList,
   SetupCard,
   TaxSection,
 } from "./host-profile-sections-view";
+import { PayoutsSection } from "./host-payouts-section-view";
 
 const ICONS: Record<ProfileNavItem["icon"], string> = {
   person: "M12 11.2a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zM5 20.2a7 7 0 0 1 14 0",

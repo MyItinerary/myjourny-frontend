@@ -1,79 +1,61 @@
 import { describe, expect, it } from "vitest";
 
-import { COMMISSION_RATE, earningsRow, earningsSummary, rangeFor, RANGE_OPTIONS, statementCsv, transactionsIn } from "./earnings";
-import { sampleEarnings } from "./sample-earnings";
+import type { EarningsBooking } from "./earnings.types";
+import { formatAmount, payoutStatusLabel, sessionDate, statementCsv } from "./earnings";
 
-const today = "2026-09-19";
-const txns = sampleEarnings(today).transactions;
-const refs = (list: { ref: string }[]) => list.map((t) => t.ref);
+const booking: EarningsBooking = {
+  booking_id: "a474ab19-9ae3-4f3d-b229-fc6434382fa0",
+  experience_title: "Lagos food walk",
+  session_at: "2026-11-29T15:00:00",
+  currency: "NGN",
+  earned: "30000.00",
+  pending: "0.00",
+  paid_out: "30000.00",
+  payout_status: "paid",
+};
 
-describe("rangeFor", () => {
-  it("words and bounds each range as of today", () => {
-    expect(rangeFor("This month", today, "March 2026")).toEqual({ start: "2026-09-01", end: "2026-09-30", label: "1 to 30 September 2026" });
-    expect(rangeFor("Last month", today, "March 2026")).toEqual({ start: "2026-08-01", end: "2026-08-31", label: "1 to 31 August 2026" });
-    expect(rangeFor("Last 3 months", today, "March 2026")).toEqual({ start: "2026-07-01", end: "2026-09-30", label: "1 July to 30 September 2026" });
-    expect(rangeFor("This year", today, "March 2026")).toEqual({ start: "2026-01-01", end: "2026-09-30", label: "1 January to 30 September 2026" });
-    expect(rangeFor("Everything", today, "March 2026")).toEqual({ start: null, end: null, label: "March 2026 to today" });
+describe("formatAmount", () => {
+  it("formats decimal strings without float rounding", () => {
+    expect(formatAmount("48000.00", "NGN")).toBe("₦48,000");
+    expect(formatAmount("12345678901234567890.50", "USD")).toBe("$12,345,678,901,234,567,890.50");
+    expect(formatAmount("120.5", "EUR")).toBe("€120.50");
   });
 
-  it("offers the five ranges", () => {
-    expect(RANGE_OPTIONS).toEqual(["This month", "Last month", "Last 3 months", "This year", "Everything"]);
-  });
-});
-
-describe("transactionsIn", () => {
-  it("keeps what falls in the range", () => {
-    const month = rangeFor("This month", today, "x");
-    expect(refs(transactionsIn(txns, month.start, month.end))).toEqual(["MJ-4471", "MJ-4468", "MJ-4455", "MJ-4502", "MJ-4503"]);
-    const last = rangeFor("Last month", today, "x");
-    expect(refs(transactionsIn(txns, last.start, last.end))).toEqual(["MJ-4431"]);
-    expect(transactionsIn(txns, null, null)).toHaveLength(6);
+  it("keeps an unknown currency readable", () => {
+    expect(formatAmount("12.00", "XYZ")).toBe("XYZ12");
   });
 });
 
-describe("earningsRow", () => {
-  it("works out the commission and what the host receives, and says it plainly", () => {
-    expect(COMMISSION_RATE).toBe(0.15);
-    expect(earningsRow(txns[0])).toEqual({
-      ref: "MJ-4471",
-      what: "Photowalk · Ifeoma Adeyemi, 4 places",
-      date: "13 Sept",
-      gross: "₦40,000",
-      commission: "- ₦6,000",
-      net: "₦34,000",
-      status: "Cleared",
-      plain: "₦40,000 booking, 15 percent commission ₦6,000, you receive ₦34,000.",
-    });
+describe("sessionDate", () => {
+  it("treats timestamps without an offset as UTC", () => {
+    expect(sessionDate("2026-11-29T15:00:00")).toBe("29 Nov 2026");
+    expect(sessionDate("2026-11-29T15:00:00Z")).toBe("29 Nov 2026");
   });
 
-  it("rounds the commission to the naira", () => {
-    expect(earningsRow({ ...txns[0], gross: 7550 }).commission).toBe("- ₦1,133");
+  it("handles missing and invalid session times", () => {
+    expect(sessionDate(null)).toBe("Not scheduled");
+    expect(sessionDate("not-a-date")).toBe("Not scheduled");
   });
 });
 
 describe("statementCsv", () => {
-  it("has a header and a line per booking", () => {
-    const lines = statementCsv(txns.slice(0, 2)).split("\n");
-    expect(lines).toEqual([
-      "Reference,Booking,Date,Guests paid,Commission,You receive,Status",
-      'MJ-4471,"Photowalk · Ifeoma Adeyemi, 4 places",2026-09-13,40000,6000,34000,Cleared',
-      'MJ-4468,"Photowalk · Segun Olaniyi, 2 places",2026-09-13,20000,3000,17000,Cleared',
+  it("exports the ledger values, one row per booking", () => {
+    expect(statementCsv([booking]).split("\n")).toEqual([
+      "Booking ID,Experience,Session date,Currency,Earned,Pending,Paid out,Payout status",
+      "a474ab19-9ae3-4f3d-b229-fc6434382fa0,Lagos food walk,2026-11-29T15:00:00,NGN,30000.00,0.00,30000.00,paid",
     ]);
   });
 
-  it("quotes cells with quotes in them", () => {
-    const csv = statementCsv([{ ...txns[0], what: 'He said "hi"' }]);
-    expect(csv.split("\n")[1]).toContain('"He said ""hi"""');
+  it("quotes CSV cells that contain commas or quotes", () => {
+    expect(statementCsv([{ ...booking, experience_title: 'Food walk, "old town"' }]).split("\n")[1])
+      .toContain('"Food walk, ""old town"""');
   });
 
-  it("is just the header with nothing to list", () => {
-    expect(statementCsv([])).toBe("Reference,Booking,Date,Guests paid,Commission,You receive,Status");
+  it("exports a header for an empty statement", () => {
+    expect(statementCsv([])).toBe("Booking ID,Experience,Session date,Currency,Earned,Pending,Paid out,Payout status");
   });
 });
 
-describe("earningsSummary", () => {
-  it("sums up the month and what's clearing", () => {
-    expect(earningsSummary(248000, 68000, true)).toBe("₦248,000 this month · ₦68,000 clearing");
-    expect(earningsSummary(0, 0, false)).toBe("Nothing earned yet");
-  });
+it("labels payout states", () => {
+  expect(payoutStatusLabel("partial")).toBe("Partial");
 });

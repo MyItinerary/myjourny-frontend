@@ -36,8 +36,6 @@ export type PublicPreview = {
 /** Where WhatsApp, SMS, email and push reach the host, for each thing that happens. */
 export type NotificationRow = { label: string; channels: [boolean, boolean, boolean, boolean] };
 
-export type PayoutSchedule = "booking" | "weekly";
-
 export type HostProfile = {
   /** Set while the host still has to finish getting set up. */
   setup: SetupTask[] | null;
@@ -45,7 +43,6 @@ export type HostProfile = {
   verifyLeft: number;
   rows: Record<Exclude<ProfilePaneKey, "notify">, ProfileRow[]>;
   notifications: NotificationRow[];
-  schedule: PayoutSchedule;
   statements: ProfileStatement[];
   documents: ProfileDocument[];
   preview: PublicPreview;

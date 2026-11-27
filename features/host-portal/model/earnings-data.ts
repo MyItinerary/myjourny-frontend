@@ -1,12 +1,16 @@
-import type { HostEarnings } from "./earnings.types";
-import { sampleEarnings } from "./sample-earnings";
+import { useQuery } from "@tanstack/react-query";
 
-// itin doesn't serve a host their earnings yet (its portal API is admin-only),
-// so every host sees "Nothing earned yet". Replace this with the real query
-// once that API exists.
-//
-// While the design is reviewed, `?preview=full` shows the design's numbers and
-// six bookings. That's off in production builds.
-export function useHostEarnings(preview: string | null, today: string | null): HostEarnings | null {
-  return preview === "full" && process.env.NODE_ENV !== "production" && today ? sampleEarnings(today) : null;
+import { apiClient } from "@/lib/api-client";
+
+import type { HostEarnings } from "./earnings.types";
+
+export const hostEarningsKey = ["guide", "earnings"] as const;
+
+/** Ledger totals and booking lines for the signed-in guide. */
+export function useHostEarnings(enabled = true) {
+  return useQuery({
+    queryKey: hostEarningsKey,
+    queryFn: async () => (await apiClient.get<HostEarnings>("/guide/earnings")).data,
+    enabled,
+  });
 }

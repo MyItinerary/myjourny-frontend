@@ -7,23 +7,22 @@ import type { HostEarningsViewModel } from "../view-model/use-host-earnings-view
 import { HostEarningsView } from "./host-earnings-view";
 
 const vm = (over: Partial<HostEarningsViewModel> = {}): HostEarningsViewModel => ({
-  ready: true,
-  header: { title: "Earnings", subtitle: "", actions: [] },
-  rangeLabel: "1 to 30 September 2026",
-  range: "This month",
-  ranges: ["This month", "Last month", "Last 3 months", "This year", "Everything"].map((value) => ({
-    value: value as HostEarningsViewModel["ranges"][number]["value"],
-    selected: value === "This month",
-  })),
-  onRange: vi.fn(),
+  loading: false,
+  error: null,
+  header: { title: "Earnings", subtitle: "Ledger totals, shown separately by currency", actions: [] },
   stats: [
-    { label: "Earned all time", value: "₦1,046,000", note: "since March 2026" },
-    { label: "Clearing now", value: "₦68,000", note: "in your bank Tue 22 Sept" },
+    { label: "NGN earned", value: "₦48,000", note: "All time" },
+    { label: "NGN pending", value: "₦15,000", note: "Awaiting payout" },
   ],
-  commissionHeading: "Our 15 percent",
   rows: [
-    { ref: "MJ-4471", what: "Photowalk · Ifeoma Adeyemi, 4 places", date: "13 Sept", gross: "₦40,000", commission: "- ₦6,000", net: "₦34,000", status: "Cleared", plain: "₦40,000 booking, 15 percent commission ₦6,000, you receive ₦34,000." },
-    { ref: "MJ-4502", what: "Photowalk · Amaka Eze, 2 places", date: "20 Sept", gross: "₦20,000", commission: "- ₦3,000", net: "₦17,000", status: "Clearing", plain: "₦20,000 booking, 15 percent commission ₦3,000, you receive ₦17,000." },
+    {
+      id: "booking-1", booking: "booking-1", experience: "Lagos food walk", date: "29 Nov 2026", currency: "NGN",
+      earned: "₦30,000", pending: "₦0", paidOut: "₦30,000", status: "paid", statusLabel: "Paid",
+    },
+    {
+      id: "booking-2", booking: "booking-2", experience: "Lagos art tour", date: "3 Dec 2026", currency: "USD",
+      earned: "$120", pending: "$120", paidOut: "$0", status: "partial", statusLabel: "Partial",
+    },
   ],
   none: false,
   noneMessage: "Nothing earned in this range.",
@@ -32,36 +31,20 @@ const vm = (over: Partial<HostEarningsViewModel> = {}): HostEarningsViewModel =>
 });
 
 describe("HostEarningsView", () => {
-  it("shows the range, the headline numbers and every booking", () => {
+  it("shows currency totals and the ledger amounts for each booking", () => {
     renderWithProviders(<HostEarningsView vm={vm()} />);
 
-    expect(screen.getByText("1 to 30 September 2026")).toBeInTheDocument();
-    expect(screen.getByText("₦1,046,000")).toBeInTheDocument();
-    expect(screen.getByText("in your bank Tue 22 Sept")).toBeInTheDocument();
-    expect(screen.getByText("Every booking, and what we took")).toBeInTheDocument();
-    for (const heading of ["Reference", "Listing and guest", "Date", "Guests paid", "Our 15 percent", "You receive", "Status"]) {
+    expect(screen.getByText("NGN earned")).toBeInTheDocument();
+    expect(screen.getByText("$120")).toBeInTheDocument();
+    expect(screen.getByText("Earnings by booking")).toBeInTheDocument();
+    for (const heading of ["Booking", "Experience", "Session", "Currency", "Earned", "Pending", "Paid out", "Status"]) {
       expect(screen.getByRole("columnheader", { name: heading })).toBeInTheDocument();
     }
     expect(screen.getAllByRole("row")).toHaveLength(3);
-    expect(screen.getByText("- ₦6,000")).toHaveClass("text-[#6F6B72]");
-    expect(screen.getByText("₦34,000")).toHaveClass("font-medium");
-    expect(screen.getByText("₦40,000 booking, 15 percent commission ₦6,000, you receive ₦34,000.")).toBeInTheDocument();
-  });
-
-  it("colours Cleared green and Clearing amber", () => {
-    renderWithProviders(<HostEarningsView vm={vm()} />);
-    expect(screen.getByText("Cleared")).toHaveClass("text-[#0CBA65]");
-    expect(screen.getByText("Clearing")).toHaveClass("text-[#B4760A]");
-  });
-
-  it("picks another range from the menu", async () => {
-    const props = vm();
-    const { user } = renderWithProviders(<HostEarningsView vm={props} />);
-
-    await user.click(screen.getByRole("button", { name: "Range: This month" }));
-    await user.click(await screen.findByRole("button", { name: "Last 3 months" }));
-
-    expect(props.onRange).toHaveBeenCalledWith("Last 3 months");
+    expect(screen.getByText("booking-1")).toBeInTheDocument();
+    expect(screen.getByText("Lagos food walk")).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toHaveClass("text-[#B4760A]");
+    expect(screen.getByText("Paid")).toHaveClass("text-[#0CBA65]");
   });
 
   it("downloads a statement", async () => {
@@ -71,14 +54,14 @@ describe("HostEarningsView", () => {
     expect(props.onDownload).toHaveBeenCalled();
   });
 
-  it("says when there's nothing to list", () => {
-    renderWithProviders(<HostEarningsView vm={vm({ rows: [], none: true })} />);
+  it("shows empty, loading and error states", () => {
+    const { rerender } = renderWithProviders(<HostEarningsView vm={vm({ rows: [], none: true })} />);
     expect(screen.getByText("Nothing earned in this range.")).toBeInTheDocument();
-    expect(screen.queryByText("MJ-4471")).not.toBeInTheDocument();
-  });
 
-  it("shows an empty frame until today is known", () => {
-    renderWithProviders(<HostEarningsView vm={vm({ ready: false })} />);
-    expect(screen.queryByText("Every booking, and what we took")).not.toBeInTheDocument();
+    rerender(<HostEarningsView vm={vm({ loading: true })} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Loading earnings");
+
+    rerender(<HostEarningsView vm={vm({ error: "Couldn't load your earnings." })} />);
+    expect(screen.getByRole("alert")).toHaveTextContent("Couldn't load your earnings.");
   });
 });

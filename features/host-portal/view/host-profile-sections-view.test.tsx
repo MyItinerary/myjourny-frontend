@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils/render";
 
 import type { HostProfileViewModel } from "../view-model/use-host-profile-view-model";
-import { DangerCard, NotificationsTable, PayoutsSection, PreviewCard, RowList, SetupCard, TaxSection } from "./host-profile-sections-view";
+import { DangerCard, NotificationsTable, PreviewCard, RowList, SetupCard, TaxSection } from "./host-profile-sections-view";
 
 describe("SetupCard", () => {
   it("shows the count, the bar and a task that can be opened", async () => {
@@ -64,17 +64,6 @@ describe("NotificationsTable", () => {
     );
     await user.click(screen.getByRole("checkbox", { name: "A review comes in, SMS" }));
     expect(onToggle).toHaveBeenCalledWith(0, 1);
-  });
-});
-
-describe("PayoutsSection", () => {
-  it("picks a schedule", async () => {
-    const onSchedule = vi.fn();
-    const { user } = renderWithProviders(
-      <PayoutsSection payouts={{ schedules: [{ key: "booking", label: "After every experience", sub: "Fast.", selected: false }], onSchedule }} />,
-    );
-    await user.click(screen.getByRole("radio", { name: /After every experience/ }));
-    expect(onSchedule).toHaveBeenCalledWith("booking");
   });
 });
 
